@@ -3,7 +3,7 @@ An EDMC Plugin that logs USS and Hyperdiction details through a google form to a
 
 
 
-gjhkgjh
+
 * Displays nearest patrol system prioritise by least visited.
 * User can click on patrol location to view in EDSM
 * User can click on clipboard icon to copy to clipboard
