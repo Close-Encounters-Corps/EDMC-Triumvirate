@@ -1,62 +1,42 @@
-# USS Survey 
-An EDMC Plugin that logs USS and Hyperdiction details through a google form to a spreadsheet.
+# EDMC-Canonn
+EDMC plugin to automatically collect accurate science data from the galaxy and coordinate missions
 
+Features will be added in the Project Board
 
+# Important
 
+The USS Survey and EDMC-Canonn are no longer compatible. However EDMC-Canonn now writes to the same google sheets as the USS-Survey so if you are using this plugin, then please disable the USS-Survey
 
-* Displays nearest patrol system prioritise by least visited.
-* User can click on patrol location to view in EDSM
-* User can click on clipboard icon to copy to clipboard
+# Features
 
-* When a user drops on a USS the USS details are [logged](https://docs.google.com/spreadsheets/d/1_LsPtmXS7aUGYTJ-OomdE4gsYqkrYsmS7qzSpIUhQ4s/edit?usp=sharing)
-* The user can manually [log additional information](https://docs.google.com/spreadsheets/d/10SwarpGE6208lY0GpvSZogdk8s0m0bQXoZlZCWkDe1w/edit?usp=sharing) about the USS
-* When a user is Hyperdicted the details are [logged](https://docs.google.com/spreadsheets/d/1grRDdXb6-6W1oxAVzPvvqTQDiVuExqAnvR97Q7cvrMA/edit?usp=sharing)
-* The user can manually [log additional information](https://docs.google.com/spreadsheets/d/1IA3HxotFUXh9qJi3v-wtcenvMF-znamfQ8JtNJbiZdo/edit#gid=1466834969) about the Hyperdiction
-* When a user arrives at a patrol destination their details are [logged.](https://docs.google.com/spreadsheets/d/1zlSh5fHg2ZM9fdLE4xl_GlPX0b0BFpbxarvKhRMUMi0/edit?usp=sharing)
-* The patrol list is prioritised to the the nearest least visitied system is offered to the user.
-* Users are notified of breaking news or upgrade availability
+## Patrol System
+The Patrol system will eventualy be used for directing people to places of interest to Canonn. This will be based on the legacy patrol system for now. In addition we now have two extra patrol types. 
+ 
+ * Canonn Influence Patrol: This tells you where systems have a Canonn Presence and gives some informatio about the current state
+ * Ship Locations: This tells you where your ships are located
+ 
+ ToDo: Controls to cycle through patrols.
 
-![Screenshot](screenshot.png)
+## Canonn News Feed
+See the top stories on rotation
 
-Users may also report USS without dropping while they are in supercruise. 
+## Hyperdiction reporting 
+Hyperdiction reporting is logged from the Thargoid Encounter Stats screen. There is also a button in the settings which will allow you to upload all hyperdictions from your journal. 
 
-![Screenshot](ussreport.png)
+## NHSS Reporting
+This captures NHSS information from the FSS scanner and USS Drops. Only logs one instance of each threat level per system
 
+## Codex
+This records the codex entries and a bit of extra info about body and lat lon. The codex entries are routed to the appropriate CAPI report. eg fgreports btreports etc.
 
-# Survey Results
+## Thargoid Kills 
+This records Thargoids kills. What else did you expect herds of wilderbeast running through the serengeti?
 
-![Statistics](https://docs.google.com/spreadsheets/d/e/2PACX-1vQGZ9meiqW_-5iDW2MKvwTBXK-RXJkCW53sNELRUH0jp99YZ1Qaj8yTYyFP89nwR803tHFRfEmENdjI/pubchart?oid=397514376&format=image)
+## Journal Data
+This records all journal entries that haven't specifically been excluded. NB the exclusion list needs to be bigger.
 
+## FSS Data
+This records FSSSignalDicovered Messages that havent beenexcluded. Also records AX Conflict Zones in their own model
 
-
-[USS results spreadheet](https://docs.google.com/spreadsheets/d/10SwarpGE6208lY0GpvSZogdk8s0m0bQXoZlZCWkDe1w/edit?usp=sharing)
-[Old USS results spreadheet](https://docs.google.com/spreadsheets/d/1_LsPtmXS7aUGYTJ-OomdE4gsYqkrYsmS7qzSpIUhQ4s/edit?usp=sharing)
-
-[Hyperdiction results spreadheet](https://docs.google.com/spreadsheets/d/1grRDdXb6-6W1oxAVzPvvqTQDiVuExqAnvR97Q7cvrMA/edit?usp=sharing)
-
-[Patrol Log spreadheet](https://docs.google.com/spreadsheets/d/1zlSh5fHg2ZM9fdLE4xl_GlPX0b0BFpbxarvKhRMUMi0/edit?usp=sharing)
-
-
-You can also view the results on a the [Canonn 3D Map](https://map.canonn.technology/all/)
-
-![Canonn Map](canonn3d.png)
-
-# Installation
-Download the [latest release](https://github.com/NoFoolLikeOne/EDMC-USS-Survey/releases), open the archive (zip) and extract the folder  to your EDMC plugin folder.
-
-To install a downloaded plugin:
-
-* On the Plugins settings tab press the “Open” button. This reveals the plugins folder where this app looks for plugins.
-* Open the .zip archive that you downloaded and move the folder contained inside into the plugins folder.
-
-You will need to re-start EDMC for it to notice the plugin.
-
-# Troubleshooting
-
-If you are using Kapersky Anti-Virus then it will probably be preventing the application from accessing the google spreadheets. Kaspersky Anti-Virus scans encrypted connections by substituting a requested security certificate with the self-signed one. Some applications like this plugin that initiate a connection reject the certificate, therefore failing to establish the connection. 
-
-You will need to turn of  the encrypted connection scan
-
-[Kapersy Support Issue](https://support.kaspersky.com/6851)
-
-
+## Legacy Reporting
+In the interests of launching the new plugin quicker I have integrated the legacy code that is used to opulate the spreadheets this will allow us to run reports in parallel. 
