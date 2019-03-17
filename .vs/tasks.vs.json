@@ -1,0 +1,20 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskName": "задача-EDMC-USS-Survey-triumvirate-edition",
+      "appliesTo": "/",
+      "type": "launch"
+    },
+    {
+      "taskName": "задача-tick3",
+      "appliesTo": "tick3.gif",
+      "type": "launch"
+    },
+    {
+      "taskName": "задача-EDMC-USS-Survey-triumvirate-edition",
+      "appliesTo": "/",
+      "type": "launch"
+    }
+  ]
+}
