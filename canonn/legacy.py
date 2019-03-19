@@ -35,23 +35,24 @@ def matches(d, field, value):
         
 def faction_kill(cmdr, is_beta, system, station, entry, state):
     if entry['event'] == "FactionKillBond":
+        debug("FactionKillBond",2)
         factionMatch=(matches(entry, 'VictimFaction', '$faction_Thargoid;') or matches(entry, 'VictimFaction', '$faction_Guardian;'))
         if factionMatch and 'Reward' in entry:
-            url="https://docs.google.com/forms/d/e/1FAIpQLSevc8RrhOzOq9U0a2VC29N_lgjRfVU9vlF-oKdjhvZu6YnLvw/formResponse?usp=pp_url"
-            url+="&entry.567957318="+quote_plus(cmdr)
+            url="https://docs.google.com/forms/d/e/1FAIpQLSdA-iypOHxi5L4iaINr57hVJYWaZj9d-rmx_rpLJ8mwPrlccQ/formResponse?usp=pp_url"
+            url+="&entry.1574172588="+quote_plus(cmdr);
             if is_beta:
                 beta='Y'
             else: 
                 beta='N'
-            url+="&entry.1848556807="+quote_plus(beta)
-            url+="&entry.1086702490="+quote_plus(system)
+            url+="&entry.1534486210="+quote_plus(beta)
+            url+="&entry.451904934="+quote_plus(system)
             if station is not None:
-                url+="&entry.1446740035="+quote_plus(station)
+                url+="&entry.666865209="+quote_plus(station)
             
-            url+="&entry.396335290="+str(entry["Reward"])
-            url+="&entry.576102634="+quote_plus(entry["AwardingFaction"])
-            url+="&entry.691973931="+quote_plus(entry["VictimFaction"])
-            Reporter(url).start()
+            url+="&entry.310344870="+str(entry["Reward"])
+            url+="&entry.706329985="+quote_plus(entry["AwardingFaction"])
+            url+="&entry.78713015="+quote_plus(entry["VictimFaction"])
+            Reporter(url).start() 
 
 def CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):
     #{ "timestamp":"2018-12-30T00:48:12Z", "event":"CodexEntry", "EntryID":2100301, "Name":"$Codex_Ent_Cone_Name;", "Name_Localised":"Bark Mounds", "SubCategory":"$Codex_SubCategory_Organic_Structures;", "SubCategory_Localised":"Organic structures", "Category":"$Codex_Category_Biology;", "Category_Localised":"Biological and Geological", "Region":"$Codex_RegionName_18;", "Region_Localised":"Inner Orion Spur", "System":"HIP 16378", "SystemAddress":1, "VoucherAmount":2500 }
