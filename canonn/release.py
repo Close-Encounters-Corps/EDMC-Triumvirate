@@ -21,7 +21,7 @@ from debug import Debug
 from debug import debug,error
 
 RELEASE_CYCLE=60 * 1000 * 60 # 1 Hour
-DEFAULT_URL = 'https://github.com/canonn-science/EDMC-Canonn/releases'
+DEFAULT_URL = 'https://github.com/VAKazakov/EDMC-USS-Survey-triumvirate-edition/releases'
 WRAP_LENGTH = 200
 
 def _callback(matches):
@@ -113,7 +113,7 @@ class Release(Frame):
         
     def release_pull(self):
         self.latest=False
-        self.latest=requests.get("https://api.github.com/repos/canonn-science/EDMC-Canonn/releases/latest").json()
+        self.latest=requests.get("https://github.com/VAKazakov/EDMC-USS-Survey-triumvirate-edition/releases/latest").json()
         debug("latest release downloaded")
         
     def release_update(self):
@@ -128,7 +128,7 @@ class Release(Frame):
             #checjed again in an hour
             self.after(RELEASE_CYCLE, self.update)    
             
-            #self.latest=requests.get("https://api.github.com/repos/canonn-science/EDMC-Canonn/releases/latest").json()
+            #self.latest=requests.get("https://github.com/VAKazakov/EDMC-USS-Survey-triumvirate-edition/releases/latest").json()
             
             current=self.version2number(self.release)
             release=self.version2number(self.latest.get("tag_name"))
@@ -178,7 +178,7 @@ class Release(Frame):
         config.set('NoVoices', self.novoices.get())      
         
     def installer(self,tag_name):
-        download=requests.get("https://github.com/canonn-science/EDMC-Canonn/archive/{}.zip".format(tag_name), stream=True)
+        download=requests.get("https://github.com/VAKazakov/EDMC-USS-Survey-triumvirate-edition/archive/{}.zip".format(tag_name), stream=True)
         z = zipfile.ZipFile(StringIO.StringIO(download.content))
         z.extractall(os.path.dirname(Release.plugin_dir))
         

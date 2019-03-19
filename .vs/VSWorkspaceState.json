@@ -1,7 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\canonn",
+    "\\icons",
+    "\\sounds"
   ],
-  "SelectedNode": "\\load.py",
+  "SelectedNode": "\\canonn\\patrol.py",
   "PreviewInSolutionExplorer": false
 }
