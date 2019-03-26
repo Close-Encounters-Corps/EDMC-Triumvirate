@@ -81,7 +81,7 @@ def CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):
         url+="&entry.1236018468="+quote_plus(str(entry["SystemAddress"]))
         if('VoucherAmount' in entry):
             url+="&entry.1250864566="+quote_plus(str(entry["VoucherAmount"]))
-                
+           
         
         Reporter(url).start()
 
