@@ -1,3 +1,4 @@
+
 """
 Module to provide the news.
 """
@@ -113,7 +114,7 @@ class Release(Frame):
         
     def release_pull(self):
         self.latest=False
-        self.latest=requests.get("https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest").json()
+        self.latest=requests.get("https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest").json()
         debug("latest release downloaded")
         
     def release_update(self):
@@ -128,7 +129,7 @@ class Release(Frame):
             #checjed again in an hour
             self.after(RELEASE_CYCLE, self.update)    
             
-            #self.latest=requests.get("https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest").json()
+            #self.latest=requests.get("https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest").json()
             
             current=self.version2number(self.release)
             release=self.version2number(self.latest.get("tag_name"))
@@ -153,7 +154,7 @@ class Release(Frame):
                 self.grid()
         else:
             debug("Latest is null")
-               self.after(1000,self.release.release_update)
+            self.after(1000,self.release.release_update)
     
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
         "Called to get a tk Frame for the settings dialog."
@@ -178,17 +179,19 @@ class Release(Frame):
         config.set('NoVoices', self.novoices.get())      
         
     def installer(self,tag_name):
+        # need to add some defensive code around this
         download=requests.get("https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip".format(tag_name), stream=True)
         z = zipfile.ZipFile(StringIO.StringIO(download.content))
         z.extractall(os.path.dirname(Release.plugin_dir))
         
+        #disable first in case we can't delete it
+        os.rename(Release.plugin_dir,"{}.disabled".format(Release.plugin_dir))
+        
         #keep a backup of the old release
         if self.rmbackup.get() == 1:
-            shutil.rmtree(Release.plugin_dir)
-        else:
-            os.rename(Release.plugin_dir,"{}.disabled".format(Release.plugin_dir))
-                
-        #This is going to require some defensive. In case the extract fails or the rename fails.
+            shutil.rmtree("{}.disabled".format(Release.plugin_dir))
+        
+        Release.plugin_dir=os.path.join(os.path.dirname(Release.plugin_dir),"EDMC-Triumvirate-{}".format(tag_name))
         
     @classmethod            
     def get_auto(cls):
@@ -213,4 +216,4 @@ def recursive_overwrite(src, dest, ignore=None):
                                     os.path.join(dest, f), 
                                     ignore)
     else:
-        shutil.copyfile(src, dest)    
+        shutil.copyfile(src, dest)

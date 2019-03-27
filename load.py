@@ -41,7 +41,7 @@ this.nearloc = {
 myPlugin = "EDMC-Triumvirate"
 
 
-this.version="1.0.0"
+this.version="1.0.1"
 this.client_version="{}.{}".format(myPlugin,this.version)
 this.body_name=None
     
@@ -85,7 +85,7 @@ def plugin_start(plugin_dir):
     
     
     
-    return 'Canonn'
+    return 'Triumvirate'
     
 def plugin_app(parent):
 
