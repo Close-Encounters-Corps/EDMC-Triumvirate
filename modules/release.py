@@ -113,10 +113,10 @@ class Release(Frame):
         ReleaseThread(self).start()
         
     def release_pull(self):
-        self.latest=False
+        self.latest={}
         r = requests.get("https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest")
-        latest=r.json
-        
+        latest=r.json()
+        #debug(latest)
         if not r.status_code == requests.codes.ok:
             
             error("Error fetching release from github")
@@ -141,7 +141,7 @@ class Release(Frame):
             #checjed again in an hour
             self.after(RELEASE_CYCLE, self.update)    
             
-            #self.latest=requests.get("https://api.github.com/reposVAKazakov/EDMC-Triumvirate/releases/latest").json()
+            #self.latest=requests.get("https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest").json()
             
             current=self.version2number(self.release)
             release=self.version2number(self.latest.get("tag_name"))
@@ -192,7 +192,7 @@ class Release(Frame):
         
     def installer(self,tag_name):
         # need to add some defensive code around this
-        download=requests.get("https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip".format(tag_name), stream=True)
+        download=requests.get("https://github.com/VAKazakov/EDMC-Triumviraten/archive/{}.zip".format(tag_name), stream=True)
         z = zipfile.ZipFile(StringIO.StringIO(download.content))
         z.extractall(os.path.dirname(Release.plugin_dir))
         
