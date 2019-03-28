@@ -1,10 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\canonn",
     "\\icons",
+    "\\modules",
     "\\sounds"
   ],
-  "SelectedNode": "\\canonn\\patrol.py",
+  "SelectedNode": "\\modules\\release.py",
   "PreviewInSolutionExplorer": false
 }

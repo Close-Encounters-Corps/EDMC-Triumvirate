@@ -4,20 +4,20 @@ from urllib import quote_plus
 import requests
 import json
 
-from canonn import journaldata
-from canonn import factionkill
-from canonn import nhss
-from canonn import codex
-from canonn import hdreport
-from canonn import news
-from canonn import release
-from canonn import legacy
-from canonn import clientreport
-from canonn import fssreports
-from canonn import patrol
-from canonn.systems import Systems
-from canonn.debug import Debug
-from canonn.debug import debug
+from modules import journaldata
+from modules import factionkill
+from modules import nhss
+from modules import codex
+from modules import hdreport
+from modules import news
+from modules import release
+from modules import legacy
+from modules import clientreport
+from modules import fssreports
+from modules import patrol
+from modules.systems import Systems
+from modules.debug import Debug
+from modules.debug import debug
 
 
 
@@ -41,7 +41,7 @@ this.nearloc = {
 myPlugin = "EDMC-Triumvirate"
 
 
-this.version="1.0.1"
+this.version="0.1.0"
 this.client_version="{}.{}".format(myPlugin,this.version)
 this.body_name=None
     

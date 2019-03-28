@@ -114,8 +114,20 @@ class Release(Frame):
         
     def release_pull(self):
         self.latest=False
-        self.latest=requests.get("https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest").json()
-        debug("latest release downloaded")
+        r = requests.get("https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest")
+        latest=r.json
+        
+        if not r.status_code == requests.codes.ok:
+            
+            error("Error fetching release from github")
+            error(r.status_code)
+            error(r.json())
+            
+        else:
+            self.latest=latest
+            debug("latest release downloaded")
+       
+        
         
     def release_update(self):
 
@@ -129,13 +141,13 @@ class Release(Frame):
             #checjed again in an hour
             self.after(RELEASE_CYCLE, self.update)    
             
-            #self.latest=requests.get("https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest").json()
+            #self.latest=requests.get("https://api.github.com/reposVAKazakov/EDMC-Triumvirate/releases/latest").json()
             
             current=self.version2number(self.release)
             release=self.version2number(self.latest.get("tag_name"))
             
             self.hyperlink['url'] = self.latest.get("html_url")
-            self.hyperlink['text'] = "EDMC-Triumvirate: {}".format(self.latest.get("tag_name"))
+            self.hyperlink['text'] = "EDMC-Canonn: {}".format(self.latest.get("tag_name"))
 
             if current==release:
                 self.grid_remove()
@@ -154,7 +166,7 @@ class Release(Frame):
                 self.grid()
         else:
             debug("Latest is null")
-            self.after(1000,self.release.release_update)
+            self.after(1000,self.release_update)
     
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
         "Called to get a tk Frame for the settings dialog."
@@ -191,7 +203,7 @@ class Release(Frame):
         if self.rmbackup.get() == 1:
             shutil.rmtree("{}.disabled".format(Release.plugin_dir))
         
-        Release.plugin_dir=os.path.join(os.path.dirname(Release.plugin_dir),"EDMC-Triumvirate-{}".format(tag_name))
+        Release.plugin_dir=os.path.join(os.path.dirname(Release.plugin_dir),"EDMC-Canonn-{}".format(tag_name))
         
     @classmethod            
     def get_auto(cls):
