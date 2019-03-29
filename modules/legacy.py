@@ -90,15 +90,15 @@ def AXZone(cmdr, is_beta, system,x,y,z,station, entry, state):
     #{ "timestamp":"2019-01-19T23:22:26Z", "event":"FSSSignalDiscovered", "SystemAddress":250414621860, "SignalName":"$Warzone_TG;", "SignalName_Localised":"AX Conflict Zone" }
     if entry['event'] == "FSSSignalDiscovered" and entry["SignalName"] == "$Warzone_TG;":
         
-        url="https://docs.google.com/forms/d/e/1FAIpQLSdHFZ8Mp4EHsJH6gUqXyeWkeEUt3YOGEaOO3X8H4m-gHNYzdQ/formResponse?usp=pp_url"
+        url="https://docs.google.com/forms/d/e/1FAIpQLSe7CZRzJfD63j3dAwg03L0OEKb0ThgUMLx2T084c_4w9JtTHw/formResponse?usp=pp_url"
 
         
-        url+="&entry.1257612503="+quote_plus(cmdr)
-        url+="&entry.1541680555="+quote_plus(system)
-        url+="&entry.484596368="+str(x)
-        url+="&entry.1443755704="+str(y)
-        url+="&entry.1285491432="+str(z)
-        url+="&entry.837147926="+str(entry.get("SystemAddress"))
+        url+="&entry.1947327871="+quote_plus(cmdr)
+        url+="&entry.983557123="+quote_plus(system)
+        url+="&entry.1158994338="+str(x)
+        url+="&entry.872815765="+str(y)
+        url+="&entry.923629350="+str(z)
+        url+="&entry.679751471="+str(entry.get("SystemAddress"))
         
         Reporter(url).start()
 
@@ -130,28 +130,29 @@ class Stats():
                 "tg_last_system": tge.get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM")
             }
             if new_tg_stats != this.tg_stats:
-
-                this.tg_stats=new_tg_stats
-                url="https://docs.google.com/forms/d/e/1FAIpQLScF_URtGFf1-CyMNr4iuTHkxyxOMWcrZ2ZycrKAiej0eC-hTA/formResponse?usp=pp_url"
-                url+="&entry.613206362="+quote_plus(cmdr)
+             
+                this.tg_stats = new_tg_stats
+                url = "https://docs.google.com/forms/d/e/1FAIpQLSeZLe794FXSfqzAl0bZe8wF4_LybnvgaGtmfLTn4ba6fYSDPA/formResponse?usp=pp_url"
+                url+="&entry.1391154225=" + quote_plus(cmdr)
                 if "TG_ENCOUNTER_WAKES" in entry['TG_ENCOUNTERS']:
-                    url+="&entry.1085684396="+str(entry['TG_ENCOUNTERS']["TG_ENCOUNTER_WAKES"])
+                    url+="&entry.1976561224=" + str(entry['TG_ENCOUNTERS']["TG_ENCOUNTER_WAKES"])
                 if "TG_ENCOUNTER_IMPRINT" in entry['TG_ENCOUNTERS']:
-                    url+="&entry.2026302508="+str(entry['TG_ENCOUNTERS']["TG_ENCOUNTER_IMPRINT"])
+                    url+="&entry.538722824=" + str(entry['TG_ENCOUNTERS']["TG_ENCOUNTER_IMPRINT"])
                 if "TG_ENCOUNTER_TOTAL" in entry['TG_ENCOUNTERS']:
-                    url+="&entry.1600696255="+str(entry['TG_ENCOUNTERS']["TG_ENCOUNTER_TOTAL"])
+                    url+="&entry.779348244" + str(entry['TG_ENCOUNTERS']["TG_ENCOUNTER_TOTAL"])
                 if "TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP" in entry['TG_ENCOUNTERS']:
-                    url+="&entry.712826938="+str(entry['TG_ENCOUNTERS']["TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP"])
+                    url+="&entry.1664525188=" + str(entry['TG_ENCOUNTERS']["TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP"])
                 if "TG_SCOUT_COUNT" in entry['TG_ENCOUNTERS']:
-                    url+="&entry.1384358412="+str(entry['TG_ENCOUNTERS']["TG_SCOUT_COUNT"])
+                    url+="&entry.674074529=" + str(entry['TG_ENCOUNTERS']["TG_SCOUT_COUNT"])
                 if "TG_ENCOUNTER_TOTAL_LAST_SYSTEM" in entry['TG_ENCOUNTERS']:
-                    url+="&entry.1091946522="+str(entry['TG_ENCOUNTERS']["TG_ENCOUNTER_TOTAL_LAST_SYSTEM"])
+                    url+="&entry.2124154577=" + str(entry['TG_ENCOUNTERS']["TG_ENCOUNTER_TOTAL_LAST_SYSTEM"])
                 Reporter(url).start()
-                
-        
-        
+
+
+
+
 def statistics(cmdr, is_beta, system, station, entry, state):  
-    Stats.statistics(cmdr, is_beta, system, station, entry, state)
+     Stats.statistics(cmdr, is_beta, system, station, entry, state)
 
 class NHSS(threading.Thread):
 
@@ -194,24 +195,24 @@ class NHSS(threading.Thread):
         dsol=getDistance(0,0,0,self.x,self.y,self.z)
         dmerope=getDistance(-78.59375,149.625,-340.53125,self.x,self.y,self.z)
         
-        url = "https://docs.google.com/forms/d/e/1FAIpQLScVk2LW6EkIW3hL8EhuLVI5j7jQ1ZmsYCLRxgCZlpHiN8JdcA/formResponse?usp=pp_url"
-        url+="&entry.106150081="+quote_plus(self.cmdr)
-        url+="&entry.582675236="+quote_plus(self.system)
-        url+="&entry.158339236="+str(self.x)
-        url+="&entry.608639155="+str(self.y)
-        url+="&entry.1737639503="+str(self.z)
-        url+="&entry.1398738264="+str(dsol)
-        url+="&entry.922392846="+str(dmerope)
-        url+="&entry.218543806="+quote_plus("$USS_Type_NonHuman;")
-        url+="&entry.455413428="+quote_plus("Non-Human signal source")
-        url+="&entry.790504343="+str(threatLevel)
+        url = "https://docs.google.com/forms/d/1EW3ihbe0QAlwU9PiNGeZTB3gAQY3mhNBU9ivPYNR7Xk/formResponse?usp=pp_url"
+        url+="&entry.416849485="+quote_plus(self.cmdr)
+        url+="&entry.1427504047="+quote_plus(self.system)
+        url+="&entry.51430732="+str(self.x)
+        url+="&entry.1699770669="+str(self.y)
+        url+="&entry.929649760="+str(self.z)
+        url+="&entry.764385252="+str(dsol)
+        url+="&entry.395372141="+str(dmerope)
+        url+="&entry.2064685945="+quote_plus("$USS_Type_NonHuman;")
+        url+="&entry.106345279="+quote_plus("Non-Human signal source")
+        url+="&entry.1303569057="+str(threatLevel)
         r=requests.post(url)  
         
-        url="https://docs.google.com/forms/d/e/1FAIpQLSeOBbUTiD64FyyzkIeZfO5UMfqeuU2lsRf3_Ulh7APddd91JA/formResponse?usp=pp_url"
-        url+="&entry.306505776="+quote_plus(self.system)
-        url+="&entry.1559250350=Non Human Signal"
-        url+="&entry.1031843658="+str(threatLevel)
-        url+="&entry.1519036101="+quote_plus(self.cmdr)
+        url="https://docs.google.com/forms/d/e/1FAIpQLScZWo6u9XseAn5zzBbcruRFHeRPJm9FxXXRnV3QWiU70fGo6g/formResponse?usp=pp_url"
+        url+="&entry.325296693="+quote_plus(self.system)
+        url+="&entry.28519330=Non Human Signal"
+        url+="&entry.1597640614="+str(threatLevel)
+        url+="&entry.1688366779="+quote_plus(self.cmdr)
         r=requests.post(url)  
 
 
