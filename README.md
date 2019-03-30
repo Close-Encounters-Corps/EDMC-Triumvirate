@@ -1,50 +1,50 @@
-# EDMC-Triumvirate
-Плагин для EDMC, который автоматически собирает научную информацию и позволяет координировать миссии
+п»ї# EDMC-Triumvirate
+РџР»Р°РіРёРЅ РґР»СЏ EDMC, РєРѕС‚РѕСЂС‹Р№ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё СЃРѕР±РёСЂР°РµС‚ РЅР°СѓС‡РЅСѓСЋ РёРЅС„РѕСЂРјР°С†РёСЋ Рё РїРѕР·РІРѕР»СЏРµС‚ РєРѕРѕСЂРґРёРЅРёСЂРѕРІР°С‚СЊ РјРёСЃСЃРёРё
 EDMC plugin to automatically collect accurate science data from the galaxy and coordinate missions
 
-# Важно!!!
+# Р’Р°Р¶РЅРѕ!!!
 
-Этот плагин не совместим с EDMC-USS-Survey, с EDMC-USS-Survey-Triumvirate-edition и с EDMC-Canonn. С первыми двумя просто потому что они устарели, а третий просто интегрирован в этот =)
+Р­С‚РѕС‚ РїР»Р°РіРёРЅ РЅРµ СЃРѕРІРјРµСЃС‚РёРј СЃ EDMC-USS-Survey, СЃ EDMC-USS-Survey-Triumvirate-edition Рё СЃ EDMC-Canonn. РЎ РїРµСЂРІС‹РјРё РґРІСѓРјСЏ РїСЂРѕСЃС‚Рѕ РїРѕС‚РѕРјСѓ С‡С‚Рѕ РѕРЅРё СѓСЃС‚Р°СЂРµР»Рё, Р° С‚СЂРµС‚РёР№ РїСЂРѕСЃС‚Рѕ РёРЅС‚РµРіСЂРёСЂРѕРІР°РЅ РІ СЌС‚РѕС‚ =)
 The USS Survey and EDMC-Canonn are no longer compatible. However EDMC-Canonn now writes to the same google sheets as the USS-Survey so if you are using this plugin, then please disable the USS-Survey
 
-# Функции
+# Р¤СѓРЅРєС†РёРё
   
-## Координационая система
+## РљРѕРѕСЂРґРёРЅР°С†РёРѕРЅР°СЏ СЃРёСЃС‚РµРјР°
 
-Система координирования может быть использована для направления людей на точки интереса. В систему входит:
+РЎРёСЃС‚РµРјР° РєРѕРѕСЂРґРёРЅРёСЂРѕРІР°РЅРёСЏ РјРѕР¶РµС‚ Р±С‹С‚СЊ РёСЃРїРѕР»СЊР·РѕРІР°РЅР° РґР»СЏ РЅР°РїСЂР°РІР»РµРЅРёСЏ Р»СЋРґРµР№ РЅР° С‚РѕС‡РєРё РёРЅС‚РµСЂРµСЃР°. Р’ СЃРёСЃС‚РµРјСѓ РІС…РѕРґРёС‚:
 The Patrol system will eventualy be used for directing people to places of interest to Canonn. This will be based on the legacy patrol system for now. In addition we now have two extra patrol types. 
  
- * Система слежения за Влиянием в системах: Этот инструмент дает краткую сводку по состоянию систем с нашими фракциями 
+ * РЎРёСЃС‚РµРјР° СЃР»РµР¶РµРЅРёСЏ Р·Р° Р’Р»РёСЏРЅРёРµРј РІ СЃРёСЃС‚РµРјР°С…: Р­С‚РѕС‚ РёРЅСЃС‚СЂСѓРјРµРЅС‚ РґР°РµС‚ РєСЂР°С‚РєСѓСЋ СЃРІРѕРґРєСѓ РїРѕ СЃРѕСЃС‚РѕСЏРЅРёСЋ СЃРёСЃС‚РµРј СЃ РЅР°С€РёРјРё С„СЂР°РєС†РёСЏРјРё 
  * Canonn Influence Patrol: This tells you where systems have a Canonn Presence and gives some informatio about the current state
- * Расположение кораблей: Инструмент, показывающий где находятся ваши корабли
+ * Р Р°СЃРїРѕР»РѕР¶РµРЅРёРµ РєРѕСЂР°Р±Р»РµР№: РРЅСЃС‚СЂСѓРјРµРЅС‚, РїРѕРєР°Р·С‹РІР°СЋС‰РёР№ РіРґРµ РЅР°С…РѕРґСЏС‚СЃСЏ РІР°С€Рё РєРѕСЂР°Р±Р»Рё
  * Ship Locations: This tells you where your ships are located
  
 
-## Новостной узел
-Читайте последние новости
+## РќРѕРІРѕСЃС‚РЅРѕР№ СѓР·РµР»
+Р§РёС‚Р°Р№С‚Рµ РїРѕСЃР»РµРґРЅРёРµ РЅРѕРІРѕСЃС‚Рё
 See the top stories on rotation
 
-## Отчеты об таргоидских перехватах
-Позволяет собирать информацию об таргоидских перехватах.
+## РћС‚С‡РµС‚С‹ РѕР± С‚Р°СЂРіРѕРёРґСЃРєРёС… РїРµСЂРµС…РІР°С‚Р°С…
+РџРѕР·РІРѕР»СЏРµС‚ СЃРѕР±РёСЂР°С‚СЊ РёРЅС„РѕСЂРјР°С†РёСЋ РѕР± С‚Р°СЂРіРѕРёРґСЃРєРёС… РїРµСЂРµС…РІР°С‚Р°С….
 Hyperdiction reporting is logged from the Thargoid Encounter Stats screen. There is also a button in the settings which will allow you to upload all hyperdictions from your journal. 
 
-## Отчеты об NHSS
-Собирает информацию об обнаруженых Таргоидских сигналах.
+## РћС‚С‡РµС‚С‹ РѕР± NHSS
+РЎРѕР±РёСЂР°РµС‚ РёРЅС„РѕСЂРјР°С†РёСЋ РѕР± РѕР±РЅР°СЂСѓР¶РµРЅС‹С… РўР°СЂРіРѕРёРґСЃРєРёС… СЃРёРіРЅР°Р»Р°С….
 This captures NHSS information from the FSS scanner and USS Drops. Only logs one instance of each threat level per system
 
-## Кодекс
-Собирает информацию об записях журнала
+## РљРѕРґРµРєСЃ
+РЎРѕР±РёСЂР°РµС‚ РёРЅС„РѕСЂРјР°С†РёСЋ РѕР± Р·Р°РїРёСЃСЏС… Р¶СѓСЂРЅР°Р»Р°
 This records the codex entries and a bit of extra info about body and lat lon. The codex entries are routed to the appropriate CAPI report. eg fgreports btreports etc.
 
-## Убийства таргоидов
-Записывает информацию об сбитых таргоидах
+## РЈР±РёР№СЃС‚РІР° С‚Р°СЂРіРѕРёРґРѕРІ
+Р—Р°РїРёСЃС‹РІР°РµС‚ РёРЅС„РѕСЂРјР°С†РёСЋ РѕР± СЃР±РёС‚С‹С… С‚Р°СЂРіРѕРёРґР°С…
 This records Thargoids kills. What else did you expect herds of wilderbeast running through the serengeti?
 
-## Информация из журнала
-Отправляет информацию из журнала нам, кроме той информации, которая нам не нужна.
+## РРЅС„РѕСЂРјР°С†РёСЏ РёР· Р¶СѓСЂРЅР°Р»Р°
+РћС‚РїСЂР°РІР»СЏРµС‚ РёРЅС„РѕСЂРјР°С†РёСЋ РёР· Р¶СѓСЂРЅР°Р»Р° РЅР°Рј, РєСЂРѕРјРµ С‚РѕР№ РёРЅС„РѕСЂРјР°С†РёРё, РєРѕС‚РѕСЂР°СЏ РЅР°Рј РЅРµ РЅСѓР¶РЅР°.
 This records all journal entries that haven't specifically been excluded. NB the exclusion list needs to be bigger.
 
-## FSS репортер
-Отправляет информацию об сигналах в системе
+## FSS СЂРµРїРѕСЂС‚РµСЂ
+РћС‚РїСЂР°РІР»СЏРµС‚ РёРЅС„РѕСЂРјР°С†РёСЋ РѕР± СЃРёРіРЅР°Р»Р°С… РІ СЃРёСЃС‚РµРјРµ
 This records FSSSignalDicovered Messages that havent beenexcluded. Also records AX Conflict Zones in their own model
 
