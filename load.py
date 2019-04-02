@@ -1,8 +1,13 @@
+
+
+
 from config import config
 import myNotebook as nb
 from urllib import quote_plus
 import requests
 import json
+
+
 
 from modules import journaldata
 from modules import factionkill
@@ -41,7 +46,7 @@ this.nearloc = {
 myPlugin = "EDMC-Triumvirate"
 
 
-this.version="0.1.2"
+this.version="0.1.4"
 this.client_version="{}.{}".format(myPlugin,this.version)
 this.body_name=None
     

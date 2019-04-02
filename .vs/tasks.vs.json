@@ -15,6 +15,11 @@
       "taskName": "задача-EDMC-USS-Survey-triumvirate-edition",
       "appliesTo": "/",
       "type": "launch"
+    },
+    {
+      "taskName": "задача-ru",
+      "appliesTo": "L10n/ru.strings",
+      "type": "launch"
     }
   ]
 }
