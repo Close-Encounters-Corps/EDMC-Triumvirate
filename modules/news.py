@@ -82,7 +82,7 @@ class CanonnNews(Frame):
         self.columnconfigure(1, weight=1)
         self.grid(row = gridrow, column = 0, sticky="NSEW",columnspan=2)
         
-        self.label=tk.Label(self, text=  "Canonn:")
+        self.label=tk.Label(self, text=  "News:")
         self.label.grid(row = 0, column = 0, sticky=sticky)
         self.label.bind("<Button-1>",self.click_news)
         
