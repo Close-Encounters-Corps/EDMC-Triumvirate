@@ -18,7 +18,7 @@ from debug import debug,error
 
 REFRESH_CYCLES = 60 ## how many cycles before we refresh
 NEWS_CYCLE=60 * 1000 # 60 seconds
-DEFAULT_NEWS_URL = 'https://canonn.science/wp-json/wp/v2/posts'
+DEFAULT_NEWS_URL = 'https://vk.com/close_encounters_corps'
 WRAP_LENGTH = 200
 
 def _callback(matches):
@@ -50,7 +50,7 @@ class NewsLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Fetching News...",
+            text="Coms array disabled, click here for get news page",
             url=DEFAULT_NEWS_URL,
             wraplength=50,  # updated in __configure_event below
             anchor=tk.NW
@@ -119,7 +119,8 @@ class CanonnNews(Frame):
             if self.news_data:
                     news=self.news_data[self.news_pos]
                     self.hyperlink['url'] = news['link']
-                    self.hyperlink['text'] = decode_unicode_references(news['title']['rendered'])
+                    #self.hyperlink['text'] = decode_unicode_references(news['title']['rendered'])
+                    self.hyperlink['text'] = "Comm's array error"
             else:
                 #keep trying until we have some data
                 #elf.hyperlink['text'] = "Fetching News..."
@@ -139,7 +140,7 @@ class CanonnNews(Frame):
         if self.isvisible:
         
             debug("Fetching News")
-            self.news_data = requests.get("https://canonn.science/wp-json/wp/v2/posts").json()
+            self.news_data = requests.get("https://vk.com/close_encounters_corps").json()
             self.news_count=len(self.news_data)-1
             self.news_pos=0
             self.minutes=REFRESH_CYCLES
