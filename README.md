@@ -15,8 +15,7 @@
 The Patrol system will eventualy be used for directing people to places of interest to Canonn. This will be based on the legacy patrol system for now. In addition we now have two extra patrol types. 
  
  * Система по отслеживанию уровней влияния фракций в подконтрольных системах. Этот инструмент дает краткую информационную сводку по состоянию систем с присутствием наших фракций.
- 
- *Дислокация  ваших судов: Инструмент, показывающий в реальном времени местонахождение ваших судов.
+ * Дислокация  ваших судов: Инструмент, показывающий в реальном времени местонахождение ваших судов.
  
 
 ## Новостной узел
