@@ -12,7 +12,6 @@
 ## Система ориентирования
 
 Система ориентирования используется для навигации  при полетах до точек интереса и включает в себя:
-The Patrol system will eventualy be used for directing people to places of interest to Canonn. This will be based on the legacy patrol system for now. In addition we now have two extra patrol types. 
  
  * Система по отслеживанию уровней влияния фракций в подконтрольных системах. Этот инструмент дает краткую информационную сводку по состоянию систем с присутствием наших фракций.
  * Дислокация  ваших судов: Инструмент, показывающий в реальном времени местонахождение ваших судов.
@@ -62,3 +61,5 @@ This records FSSSignalDicovered Messages that havent beenexcluded. Also records 
   <img src="https://github.com/VAKazakov/EDMC-Triumvirate/blob/master/.vs/EDMC-Main.PNG " alt="Скрин окна"> 
 </details>
    то перейти к шагу 6, иначе проверить правильность установки
+   
+   6) ***Вы Великолепны***
