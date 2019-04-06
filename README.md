@@ -24,11 +24,11 @@ The Patrol system will eventualy be used for directing people to places of inter
 Читайте последние новости
 See the top stories on rotation
 
-## Отчеты об таргоидских перехватах
-Позволяет собирать информацию об таргоидских перехватах.
+## Отчеты о Таргоидских перехватах
+Позволяет собирать информацию об Таргоидских перехватах.
 Hyperdiction reporting is logged from the Thargoid Encounter Stats screen. There is also a button in the settings which will allow you to upload all hyperdictions from your journal. 
 
-## Отчеты об NHSS
+## Отчеты о NHSS
 Собирает информацию об обнаруженых Таргоидских сигналах.
 This captures NHSS information from the FSS scanner and USS Drops. Only logs one instance of each threat level per system
 
@@ -36,8 +36,8 @@ This captures NHSS information from the FSS scanner and USS Drops. Only logs one
 Собирает информацию об записях журнала
 This records the codex entries and a bit of extra info about body and lat lon. The codex entries are routed to the appropriate CAPI report. eg fgreports btreports etc.
 
-## Убийства таргоидов
-Записывает информацию об сбитых таргоидах
+## Убийства Таргоидов
+Записывает информацию о сбитых Таргоидах
 This records Thargoids kills. What else did you expect herds of wilderbeast running through the serengeti?
 
 ## Информация из журнала
@@ -45,6 +45,6 @@ This records Thargoids kills. What else did you expect herds of wilderbeast runn
 This records all journal entries that haven't specifically been excluded. NB the exclusion list needs to be bigger.
 
 ## FSS репортер
-Отправляет информацию об сигналах в системе
+Отправляет информацию о системе
 This records FSSSignalDicovered Messages that havent beenexcluded. Also records AX Conflict Zones in their own model
 
