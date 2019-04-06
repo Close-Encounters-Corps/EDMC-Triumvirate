@@ -1,48 +1,48 @@
 ﻿# EDMC-Triumvirate
-Плагин для EDMC, который автоматически собирает научную информацию и позволяет координировать миссии
-EDMC plugin to automatically collect accurate science data from the galaxy and coordinate missions
+Плагин для Elite Dangerous Market Connector (EDMC), позволяет отслеживать влияние в подконтрольных системах,
+собирать научные данные, координировать работу исследователей и собирать статистические данные по Таргоидам.
 
 # Важно!!!
 
-Этот плагин не совместим с EDMC-USS-Survey, с EDMC-USS-Survey-Triumvirate-edition и с EDMC-Canonn. С первыми двумя просто потому что они устарели, а третий просто интегрирован в этот =)
-The USS Survey and EDMC-Canonn are no longer compatible. However EDMC-Canonn now writes to the same google sheets as the USS-Survey so if you are using this plugin, then please disable the USS-Survey
+Плагин Triumvirate несовместим с EDMC-USS-Survey, EDMC-USS-Survey-Triumvirate-edition и с EDMC-Canonn. 
+Первые два плагина устарели и более не поддерживаются, а третий изначально интегрирован в Triumvirate.
 
 # Функции
   
-## Координационая система
+## Система ориентирования
 
-Система координирования может быть использована для направления людей на точки интереса. В систему входит:
+Система ориентирования используется для навигации  при полетах до точек интереса и включает в себя:
 The Patrol system will eventualy be used for directing people to places of interest to Canonn. This will be based on the legacy patrol system for now. In addition we now have two extra patrol types. 
  
- * Система слежения за Влиянием в системах: Этот инструмент дает краткую сводку по состоянию систем с нашими фракциями 
- * Canonn Influence Patrol: This tells you where systems have a Canonn Presence and gives some informatio about the current state
- * Расположение кораблей: Инструмент, показывающий где находятся ваши корабли
- * Ship Locations: This tells you where your ships are located
+ * Система по отслеживанию уровней влияния фракций в подконтрольных системах. Этот инструмент дает краткую информационную сводку по состоянию систем с присутствием наших фракций.
+ 
+ *Дислокация  ваших судов: Инструмент, показывающий в реальном времени местонахождение ваших судов.
  
 
 ## Новостной узел
-Читайте последние новости
-See the top stories on rotation
 
-## Отчеты о Таргоидских перехватах
-Позволяет собирать информацию об Таргоидских перехватах.
-Hyperdiction reporting is logged from the Thargoid Encounter Stats screen. There is also a button in the settings which will allow you to upload all hyperdictions from your journal. 
+Позволяет ознакомиться с последними новостями и актуальной информацией.
+
+## Отчеты по перехватам Таргоидами
+
+Позволяет собирать информацию о времени и месте перехватов ваших судов Таргоидами. Служит для точной оценки масштабов инопланетного вторжения.
 
 ## Отчеты о NHSS
-Собирает информацию об обнаруженых Таргоидских сигналах.
-This captures NHSS information from the FSS scanner and USS Drops. Only logs one instance of each threat level per system
+
+Собирает информацию об обнаруженных инопланетных (чит. Таргоидских) сигналах.
 
 ## Кодекс
-Собирает информацию об записях журнала
-This records the codex entries and a bit of extra info about body and lat lon. The codex entries are routed to the appropriate CAPI report. eg fgreports btreports etc.
 
-## Убийства Таргоидов
-Записывает информацию о сбитых Таргоидах
-This records Thargoids kills. What else did you expect herds of wilderbeast running through the serengeti?
+Собирает информацию записей журнала и синхронизирует ее со службами.
 
-## Информация из журнала
-Отправляет информацию из журнала нам, кроме той информации, которая нам не нужна.
-This records all journal entries that haven't specifically been excluded. NB the exclusion list needs to be bigger.
+## Ликвидация Таргоидов
+Собирает и обрабатывает информацию о времени, месте, типе и количестве сбитых Таргоидских кораблей. Служит для подведения итогов недели и выстраивания четкого плана по противодействию вторжению.
+
+## Информация из журнала пилота
+
+Собирает и обрабатывает информацию из бортового журнала. Обеспечивает обновление информации о рынках, товарах, ценах. Помогает всем пилотам получать актуальные данные. Передаёт полученную информацию на профильные сайты INARA, EDSM, EDDB. 
+
+***Внимание!*** Конфиденциальная информация принципиально не собирается, не хранится и не обрабатывается.
 
 ## FSS репортер
 Отправляет информацию о системе
