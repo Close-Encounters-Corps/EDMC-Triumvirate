@@ -48,3 +48,13 @@ This records all journal entries that haven't specifically been excluded. NB the
 Отправляет информацию о системе
 This records FSSSignalDicovered Messages that havent beenexcluded. Also records AX Conflict Zones in their own model
 
+Инструкция по установке
+   1)Скачать EDMC:https://github.com/Marginal/EDMarketConnector/releases/latest
+
+   2)Установить EDMC 
+
+   3)Скачать этот плагин:https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest
+
+   4)Распоковать плагин в %USERPROFILE%\AppData\Local\EDMarketConnector\plugins
+
+   5)Запустить EDMC, если появилось окно такого вида , то перейти к шагу 6, иначе проверить правильность установки

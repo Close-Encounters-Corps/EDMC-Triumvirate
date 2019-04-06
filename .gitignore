@@ -1,6 +1,6 @@
 *.suo
 *.pyo
-/.vs/
+/
 /modules/__init__.pyc
 /modules/systems.pyc
 /modules/release.pyc
@@ -19,3 +19,4 @@
 /modules/clientreport.pyc
 /load.pyc
 /pyoDel.bat
+/.gitignore
