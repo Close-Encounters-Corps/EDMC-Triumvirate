@@ -57,4 +57,4 @@ This records FSSSignalDicovered Messages that havent beenexcluded. Also records 
 
    4)Распоковать плагин в %USERPROFILE%\AppData\Local\EDMarketConnector\plugins
 
-   5)Запустить EDMC, если появилось окно такого вида ![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1"), то перейти к шагу 6, иначе проверить правильность установки
+   5)Запустить EDMC, если появилось окно такого вида ![alt text](https://github.com/VAKazakov/EDMC-Triumvirate/blob/master/.vs/EDMC-Main.PNG " "), то перейти к шагу 6, иначе проверить правильность установки
