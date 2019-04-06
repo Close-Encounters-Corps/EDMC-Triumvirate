@@ -7,6 +7,60 @@ from urllib import quote_plus
 from debug import Debug
 from debug import debug,error
 
+# experimental
+# submitting to a google cloud function
+class gSubmitCodex(threading.Thread):
+    def __init__(self,cmdr, is_beta, system, x,y,z,entry, body,lat,lon,client):
+        threading.Thread.__init__(self)
+        self.cmdr=quote_plus(cmdr.encode('utf8'))
+        self.system=quote_plus(system.encode('utf8'))
+        self.x=x
+        self.y=y
+        self.z=z
+        self.body=quote_plus(body.encode('utf8'))
+        self.lat=lat
+        self.lon=lon
+        
+        if is_beta:
+            self.is_beta = 'Y'
+        else:
+            self.is_beta = 'N'    
+                    
+        self.entry=entry
+        
+        
+
+    def run(self):
+        
+        
+        debug("sending gSubmitCodex")
+        url="https://us-central1-canonn-api-236217.cloudfunctions.net/submitCodex?cmdrName={}".format(self.cmdr)
+        url=url+"&system={}".format(self.system)
+        url=url+"&x={}".format(self.x)
+        url=url+"&y={}".format(self.y)
+        url=url+"&z={}".format(self.z)
+        url=url+"&latitude={}".format(self.lat)
+        url=url+"&longitude={}".format(self.lon)
+        url=url+"&entryid={}".format(self.entry.get("EntryID"))
+        url=url+"&name={}".format(self.entry.get("Name").encode('utf8'))
+        url=url+"&name_localised={}".format(self.entry.get("Name_Localised").encode('utf8'))
+        url=url+"&category={}".format(self.entry.get("Category").encode('utf8'))
+        url=url+"&category_localised={}".format(self.entry.get("Category_Localised").encode('utf8'))
+        url=url+"&sub_category={}".format(self.entry.get("SubCategory").encode('utf8'))
+        url=url+"&sub_category_localised={}".format(self.entry.get("SubCategory_Localised").encode('utf8'))
+        url=url+"&region_name={}".format(self.entry.get("Region").encode('utf8'))
+        url=url+"&region_name_localised={}".format(self.entry.get("Region_Localised").encode('utf8'))
+        url=url+"&is_beta={}".format(self.is_beta)
+        
+                    
+        r=requests.get(url)
+    
+        if not r.status_code == requests.codes.ok:
+            error("gSubmitKills {} ".format(url))
+            error(r.status_code)
+            error(r.json())
+
+
 class codexEmitter(Emitter):
     types={}
     reporttypes={}
@@ -76,10 +130,13 @@ class codexEmitter(Emitter):
                 
     def getExcluded(self):
         if not codexEmitter.excludecodices:
+            tempexclude={}
             r=requests.get("{}/excludecodices&_limit=1000".format(self.getUrl()))  
             if r.status_code == requests.codes.ok:
                 for exc in r.json():
-                    codexEmitter.excludecodices["${}_name;".format(exc["codexName"])]=True
+                    tempexclude["${}_name;".format(exc["codexName"])]=True
+                
+                codexEmitter.excludecodices=tempexclude
                     
     def run(self):
         
@@ -88,7 +145,7 @@ class codexEmitter(Emitter):
         
         
         #is this a code entry and do we want to record it? 
-        if not codexEmitter.excludecodices.get(self.entry.get("Name").lower()):
+        if not codexEmitter.excludecodices.get(self.entry.get("Name").lower()) and not self.entry.get("Category") == '$Codex_Category_StellarBodies;':
             self.getReportTypes(self.entry.get("EntryID"))    
             url=self.getUrl()
             
@@ -114,3 +171,4 @@ class codexEmitter(Emitter):
 def submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):
     if entry["event"] == "CodexEntry" :
         codexEmitter(cmdr, is_beta, system, x,y,z,entry, body,lat,lon,client).start()   
+        gSubmitCodex(cmdr, is_beta, system, x,y,z,entry, body,lat,lon,client).start()   
