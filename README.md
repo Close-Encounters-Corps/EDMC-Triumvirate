@@ -60,6 +60,6 @@ This records FSSSignalDicovered Messages that havent beenexcluded. Also records 
 
 <details> 
   <summary>5)Запустить EDMC, если появилось окно такого вида,</summary>
-   ![alt text](https://github.com/VAKazakov/EDMC-Triumvirate/blob/master/.vs/EDMC-Main.PNG " ") 
+  <img src="https://github.com/VAKazakov/EDMC-Triumvirate/blob/master/.vs/EDMC-Main.PNG " alt="Скрин окна"> 
 </details>
    то перейти к шагу 6, иначе проверить правильность установки
