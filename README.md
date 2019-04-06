@@ -46,7 +46,7 @@
 Отправляет информацию о системе
 This records FSSSignalDicovered Messages that havent beenexcluded. Also records AX Conflict Zones in their own model
 
-Инструкция по установке:
+## Инструкция по установке:
 
    1)Скачать EDMC:https://github.com/Marginal/EDMarketConnector/releases/latest
 
