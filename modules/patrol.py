@@ -1,3 +1,4 @@
+# coding=utf-8
 """
 Patrols
 """
@@ -372,16 +373,19 @@ class CanonnPatrol(Frame):
             # pstates=" Pending: {}".format(self.getStates("pending_states",bgs))
         # else:
             # pstates=""
-        
+        if faction =="EG Union":
+            contact = " #pilot_bgs or contact @HEúCMuT#1242 on EGP discord "
+        if faction =="Close Encounters Corps":
+            contact = " #political_and_military or contact @AntonyVern [СЕС]#5904 on CEC discord "
         
         
         #debug(bgs)
         if target:
             retval =  "{} Influence {}%{}{}".format(faction,round(float(bgs.get("influence")*100),2),states,update_text)
         if  over:
-            retval =   "{} Influence {}%{} Check #mission_minor_faction on discord for instructions.{}".format(faction,round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =   "{} Influence {}%{}. Check {} for instructions.{}".format(faction,round(float(bgs.get("influence")*100),2),states,contact,update_text)
         if under:
-            retval =  "{} Influence {}%{} Please complete missions for Canonn to increase our influence{}".format(faction,round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =  "{} Influence {}%{} Please complete missions for {} to increase our influence{}".format(faction,round(float(bgs.get("influence")*100),2),states,faction,update_text)
 
         debug("{}: {}".format(bgs.get("system_name"),retval))
         return retval    

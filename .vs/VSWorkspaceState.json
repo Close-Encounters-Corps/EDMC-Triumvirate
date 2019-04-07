@@ -1,10 +1,10 @@
 {
   "ExpandedNodes": [
     "",
-    "\\icons",
+    "\\.github",
     "\\modules",
     "\\sounds"
   ],
-  "SelectedNode": "\\README.md",
+  "SelectedNode": "\\modules\\systems.py",
   "PreviewInSolutionExplorer": false
 }
