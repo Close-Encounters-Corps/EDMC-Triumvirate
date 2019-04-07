@@ -12,11 +12,9 @@
 ## Система ориентирования
 
 Система ориентирования используется для навигации  при полетах до точек интереса и включает в себя:
-The Patrol system will eventualy be used for directing people to places of interest to Canonn. This will be based on the legacy patrol system for now. In addition we now have two extra patrol types. 
  
  * Система по отслеживанию уровней влияния фракций в подконтрольных системах. Этот инструмент дает краткую информационную сводку по состоянию систем с присутствием наших фракций.
- 
- *Дислокация  ваших судов: Инструмент, показывающий в реальном времени местонахождение ваших судов.
+ * Дислокация  ваших судов: Инструмент, показывающий в реальном времени местонахождение ваших судов.
  
 
 ## Новостной узел
@@ -48,18 +46,20 @@ The Patrol system will eventualy be used for directing people to places of inter
 Отправляет информацию о системе
 This records FSSSignalDicovered Messages that havent beenexcluded. Also records AX Conflict Zones in their own model
 
-Инструкция по установке:
+## Инструкция по установке:
 
-   1)Скачать EDMC:https://github.com/Marginal/EDMarketConnector/releases/latest
+   1)Скачать последнюю версию EDMC:https://github.com/Marginal/EDMarketConnector/releases/latest
 
-   2)Установить EDMC 
+   2)Установить последнюю версию EDMC 
 
-   3)Скачать этот плагин:https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest
+   3)Скачать последний релиз плагина Triumvirate:https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest
 
-   4)Распокавать плагин в %USERPROFILE%\AppData\Local\EDMarketConnector\plugins (это можно вставить в адресную строку проводника)
+   4)Распаковать плагин в %USERPROFILE%\AppData\Local\EDMarketConnector\plugins (это можно вставить в адресную строку проводника)
 
 <details> 
   <summary>5)Запустить EDMC, если появилось окно такого вида,</summary>
   <img src="https://github.com/VAKazakov/EDMC-Triumvirate/blob/master/.vs/EDMC-Main.PNG " alt="Скрин окна"> 
 </details>
    то перейти к шагу 6, иначе проверить правильность установки
+   
+   6) ***Вы Великолепны***
