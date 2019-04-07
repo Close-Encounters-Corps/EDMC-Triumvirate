@@ -62,7 +62,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
     Debug.plugin_prefs(frame,this.client_version,4)
     hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,5)
-    
+    this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,6)
     
     
     return frame
@@ -75,6 +75,7 @@ def prefs_changed(cmdr, is_beta):
     this.news.prefs_changed(cmdr, is_beta)
     this.release.prefs_changed(cmdr, is_beta)
     this.patrol.prefs_changed(cmdr, is_beta)
+    this.codexcontrol.prefs_changed(cmdr, is_beta)
     Debug.prefs_changed()
     
    
@@ -87,6 +88,7 @@ def plugin_start(plugin_dir):
     release.Release.plugin_start(plugin_dir)
     Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
+    codex.CodexTypes.plugin_start(plugin_dir)
     
     
     
@@ -110,6 +112,7 @@ def plugin_app(parent):
     
     this.news = news.CanonnNews(table,0)
     this.release = release.Release(table,this.version,1)
+    this.codexcontrol = codex.CodexTypes(table,2)
     this.patrol = patrol.CanonnPatrol(table,2)
     
     
@@ -140,19 +143,21 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     
 # Detect journal events
 def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client):
-    factionkill.submit(cmdr, is_beta, system, station, entry,client)
-    nhss.submit(cmdr, is_beta, system, station, entry,client)
-    hdreport.submit(cmdr, is_beta, system, station, entry,client)
-    codex.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
-    fssreports.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
-    journaldata.submit(cmdr, is_beta, system, station, entry,client)
-    clientreport.submit(cmdr,is_beta,client,entry)
+    
+    factionkill.submit(cmdr, is_beta, system, station, entry,client) #legacyOk
+    nhss.submit(cmdr, is_beta, system, station, entry,client) #legacyOk
+    hdreport.submit(cmdr, is_beta, system, station, entry,client) #legacyOk
+    codex.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client) #legacyOk
+    fssreports.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client) #legacyOk
+    journaldata.submit(cmdr, is_beta, system, station, entry,client) #k
+    clientreport.submit(cmdr,is_beta,client,entry) 
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
+    this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
-    legacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
+    legacy.fssreports(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client) 
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
         
