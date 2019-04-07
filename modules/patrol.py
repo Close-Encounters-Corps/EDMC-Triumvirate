@@ -377,11 +377,11 @@ class CanonnPatrol(Frame):
         
         #debug(bgs)
         if target:
-            retval =  "Canonn Influence {}%{}{}".format(round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =  "{} Influence {}%{}{}".format(bgs.get("faction"),round(float(bgs.get("influence")*100),2),states,update_text)
         if  over:
-            retval =   "Canonn Influence {}%{} Check #mission_minor_faction on discord for instructions.{}".format(round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =   "{} Influence {}%{} Check #mission_minor_faction on discord for instructions.{}".format(bgs.get("faction"),round(float(bgs.get("influence")*100),2),states,update_text)
         if under:
-            retval =  "Canonn Influence {}%{} Please complete missions for Canonn to increase our influence{}".format(round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =  "{} Influence {}%{} Please complete missions for Canonn to increase our influence{}".format(bgs.get("faction"),round(float(bgs.get("influence")*100),2),states,update_text)
 
         debug("{}: {}".format(bgs.get("system_name"),retval))
         return retval    
