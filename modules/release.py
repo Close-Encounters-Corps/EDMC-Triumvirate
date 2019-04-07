@@ -147,7 +147,7 @@ class Release(Frame):
             release=self.version2number(self.latest.get("tag_name"))
             
             self.hyperlink['url'] = self.latest.get("html_url")
-            self.hyperlink['text'] = "EDMC-Canonn: {}".format(self.latest.get("tag_name"))
+            self.hyperlink['text'] = "EDMC-Triumvirate: {}".format(self.latest.get("tag_name"))
 
             if current==release:
                 self.grid_remove()
@@ -192,7 +192,7 @@ class Release(Frame):
         
     def installer(self,tag_name):
         # need to add some defensive code around this
-        download=requests.get("https://github.com/VAKazakov/EDMC-Triumviraten/archive/{}.zip".format(tag_name), stream=True)
+        download=requests.get("https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip".format(tag_name), stream=True)
         z = zipfile.ZipFile(StringIO.StringIO(download.content))
         z.extractall(os.path.dirname(Release.plugin_dir))
         
@@ -203,7 +203,7 @@ class Release(Frame):
         if self.rmbackup.get() == 1:
             shutil.rmtree("{}.disabled".format(Release.plugin_dir))
         
-        Release.plugin_dir=os.path.join(os.path.dirname(Release.plugin_dir),"EDMC-Canonn-{}".format(tag_name))
+        Release.plugin_dir=os.path.join(os.path.dirname(Release.plugin_dir),"EDMC-Triumvirate-{}".format(tag_name))
         
     @classmethod            
     def get_auto(cls):
