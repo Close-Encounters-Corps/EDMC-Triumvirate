@@ -344,7 +344,7 @@ class CanonnPatrol(Frame):
         else:
             return None
 
-    def getBGSInstructions(self,bgs):
+    def getBGSInstructions(self,bgs,faction):
         target=0.50 <= float(bgs.get("influence")) <= 0.65
         over=float(bgs.get("influence"))>0.65
         under=float(bgs.get("influence"))<0.50
@@ -377,18 +377,18 @@ class CanonnPatrol(Frame):
         
         #debug(bgs)
         if target:
-            retval =  "{} Influence {}%{}{}".format(bgs.get("faction"),round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =  "{} Influence {}%{}{}".format(faction,round(float(bgs.get("influence")*100),2),states,update_text)
         if  over:
-            retval =   "{} Influence {}%{} Check #mission_minor_faction on discord for instructions.{}".format(bgs.get("faction"),round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =   "{} Influence {}%{} Check #mission_minor_faction on discord for instructions.{}".format(faction,round(float(bgs.get("influence")*100),2),states,update_text)
         if under:
-            retval =  "{} Influence {}%{} Please complete missions for Canonn to increase our influence{}".format(bgs.get("faction"),round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =  "{} Influence {}%{} Please complete missions for Canonn to increase our influence{}".format(faction,round(float(bgs.get("influence")*100),2),states,update_text)
 
         debug("{}: {}".format(bgs.get("system_name"),retval))
         return retval    
             
-    def getBGSPatrol(self,bgs):
+    def getBGSPatrol(self,bgs,faction):
         x,y,z=Systems.edsmGetSystem(bgs.get("system_name"))
-        return newPatrol("BGS",bgs.get("system_name"),(x,y,z),self.getBGSInstructions(bgs),"https://elitebgs.app/system/{}".format(bgs.get("system_id")))
+        return newPatrol("BGS",bgs.get("system_name"),(x,y,z),self.getBGSInstructions(bgs,faction),"https://elitebgs.app/system/{}".format(bgs.get("system_id")))
             
         
                 
@@ -405,7 +405,7 @@ class CanonnPatrol(Frame):
         if j:
             for bgs in j.get("docs")[0].get("faction_presence"):
                 
-                patrol.append(self.getBGSPatrol(bgs))
+                patrol.append(self.getBGSPatrol(bgs,faction))
         
         
         return patrol

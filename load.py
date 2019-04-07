@@ -46,7 +46,7 @@ this.nearloc = {
 myPlugin = "EDMC-Triumvirate"
 
 
-this.version="0.2.2"
+this.version="1.0.0"
 this.client_version="{}.{}".format(myPlugin,this.version)
 this.body_name=None
     

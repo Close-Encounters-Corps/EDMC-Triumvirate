@@ -57,9 +57,9 @@ This records FSSSignalDicovered Messages that havent beenexcluded. Also records 
    4)Распаковать плагин в %USERPROFILE%\AppData\Local\EDMarketConnector\plugins (это можно вставить в адресную строку проводника)
 
 <details> 
-  <summary>5)Запустить EDMC, если появилось окно такого вида,</summary>
+  <summary>5)Запустить EDMC, если появилось окно такого вида, то перейти к шагу 6, иначе проверить правильность установки
+</summary>
   <img src="https://github.com/VAKazakov/EDMC-Triumvirate/blob/master/.vs/EDMC-Main.PNG " alt="Скрин окна"> 
 </details>
-   то перейти к шагу 6, иначе проверить правильность установки
    
    6) ***Вы Великолепны***
