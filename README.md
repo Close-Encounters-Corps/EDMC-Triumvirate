@@ -53,6 +53,7 @@ This records FSSSignalDicovered Messages that havent beenexcluded. Also records 
    2)Установить последнюю версию EDMC 
 
    3)Скачать последний релиз плагина Triumvirate:https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest
+![sourcecode](https://user-images.githubusercontent.com/47143965/55719690-7ecac680-5a07-11e9-8a7b-03560403bdf4.PNG)
 
    4)Распаковать плагин в %USERPROFILE%\AppData\Local\EDMarketConnector\plugins (это можно вставить в адресную строку проводника)
 
