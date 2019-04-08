@@ -1,13 +1,31 @@
+# coding=utf-8
 
-
-
+import sys
+import re
+import ttk
+import Tkinter as tk
+import requests
+import os
+import csv
+import json
+import uuid
+import inspect	
+from urllib import quote_plus
+from  math import sqrt,pow,trunc
+from ttkHyperlinkLabel import HyperlinkLabel
+import datetime
+import webbrowser
+import threading
+from winsound import *
+import ctypes
+import os
 from config import config
 import myNotebook as nb
 from urllib import quote_plus
 import requests
 import json
-
-
+import inspect	
+import ctypes
 
 from modules import journaldata
 from modules import factionkill
@@ -46,7 +64,7 @@ this.nearloc = {
 myPlugin = "EDMC-Triumvirate"
 
 
-this.version="1.0.0"
+this.version="1.0.1"
 this.client_version="{}.{}".format(myPlugin,this.version)
 this.body_name=None
     
@@ -77,21 +95,32 @@ def prefs_changed(cmdr, is_beta):
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
     Debug.prefs_changed()
-    
-   
+ 
+
+#def plugin_dir():
+#    buf = ctypes.create_unicode_buffer(1024)
+#    ctypes.windll.kernel32.GetEnvironmentVariableW(u"USERPROFILE", buf, 1024)
+#    home_dir = buf.value
+#    plugin_base = os.path.basename(os.path.dirname(__file__))
+#    return home_dir+'\\AppData\\Local\\EDMarketConnector\\plugins\\'+plugin_base
+
+
+
 def plugin_start(plugin_dir):
     """
     Load Template plugin into EDMC
     """
-    
-    #print this.patrol
+    #set a new variable
+    #goodPluginDir = plugin_dir()
+
+    #then use it
     release.Release.plugin_start(plugin_dir)
     Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
-    
-    
-    
+
+
+
     return 'Triumvirate'
     
 def plugin_app(parent):
