@@ -516,8 +516,8 @@ class CanonnPatrol(Frame):
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
         
         nb.Label(frame,text="Patrol Settings").grid(row=0,column=0,sticky="NW")
-        nb.Checkbutton(frame, text="Hide Canonn Patrols", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW")
-        nb.Checkbutton(frame, text="Hide Canonn Faction Systems", variable=self.factionbtn).grid(row = 1, column = 2,sticky="NW")
+        nb.Checkbutton(frame, text="Hide Triumvirate Patrols", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW")
+        nb.Checkbutton(frame, text="Hide Triumvirate Faction Systems", variable=self.factionbtn).grid(row = 1, column = 2,sticky="NW")
         nb.Checkbutton(frame, text="Hide Your Ships", variable=self.hideshipsbtn).grid(row = 1, column = 3,sticky="NW")
         nb.Checkbutton(frame, text="Automatically copy the patrol to the clipboard", variable=self.copypatrolbtn).grid(row = 2, column = 0,sticky="NW",)
         

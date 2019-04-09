@@ -152,7 +152,7 @@ class CanonnNews(Frame):
         
         #frame = nb.Frame(parent)
         #frame.columnconfigure(1, weight=1)
-        return nb.Checkbutton(parent, text="Hide Canonn News", variable=self.hidden).grid(row = gridrow, column = 0,sticky="NSEW")
+        return nb.Checkbutton(parent, text="Hide CEC News", variable=self.hidden).grid(row = gridrow, column = 0,sticky="NSEW")
         
         #return frame
 
