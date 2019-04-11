@@ -64,7 +64,7 @@ this.nearloc = {
 myPlugin = "EDMC-Triumvirate"
 
 
-this.version="1.0.2"
+this.version="1.0.3"
 this.client_version="{}.{}".format(myPlugin,this.version)
 this.body_name=None
     
@@ -79,8 +79,9 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.release.plugin_prefs(frame, cmdr, is_beta,2)
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
     Debug.plugin_prefs(frame,this.client_version,4)
-    hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,5)
-    this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,6)
+    this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
+    hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,6)
+    
     
     
     return frame
@@ -184,7 +185,8 @@ def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,bod
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     
     # legacy logging to google sheets
-    legacy.statistics(cmdr, is_beta, system, station, entry, state)
+    #legacy.stat(cmdr, is_beta, system, station, entry, state)
+    legacy.Stats.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
     legacy.fssreports(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client) 
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
