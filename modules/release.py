@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 """
-Module to provide the news.
+Module to provide the releases.
 """
 
 import Tkinter as tk

@@ -33,58 +33,58 @@ def getDistanceSol(x1,y1,z1):
 def matches(d, field, value):
     return field in d and value == d[field]     
         
-def faction_kill(cmdr, is_beta, system, station, entry, state):
+def faction_kill(cmdr, is_beta, system, station, entry, state):#Сделано
     if entry['event'] == "FactionKillBond":
         factionMatch=(matches(entry, 'VictimFaction', '$faction_Thargoid;') or matches(entry, 'VictimFaction', '$faction_Guardian;'))
         if factionMatch and 'Reward' in entry:
-            url="https://docs.google.com/forms/d/e/1FAIpQLSevc8RrhOzOq9U0a2VC29N_lgjRfVU9vlF-oKdjhvZu6YnLvw/formResponse?usp=pp_url"
-            url+="&entry.567957318="+quote_plus(cmdr)
+            url="https://docs.google.com/forms/d/e/1FAIpQLSdA-iypOHxi5L4iaINr57hVJYWaZj9d-rmx_rpLJ8mwPrlccQ/formResponse?usp=pp_url"
+            url+="&entry.1574172588="+quote_plus(cmdr)
             if is_beta:
                 beta='Y'
             else: 
                 beta='N'
-            url+="&entry.1848556807="+quote_plus(beta)
-            url+="&entry.1086702490="+quote_plus(system)
+            url+="&entry.1534486210="+quote_plus(beta)
+            url+="&entry.451904934="+quote_plus(system)
             if station is not None:
-                url+="&entry.1446740035="+quote_plus(station)
+                url+="&entry.666865209="+quote_plus(station)
             
-            url+="&entry.396335290="+str(entry["Reward"])
-            url+="&entry.576102634="+quote_plus(entry["AwardingFaction"])
-            url+="&entry.691973931="+quote_plus(entry["VictimFaction"])
+            url+="&entry.310344870="+str(entry["Reward"])
+            url+="&entry.706329985="+quote_plus(entry["AwardingFaction"])
+            url+="&entry.78713015="+quote_plus(entry["VictimFaction"])
             Reporter(url).start()
 
-def CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):
+def CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):#сделано
     #{ "timestamp":"2018-12-30T00:48:12Z", "event":"CodexEntry", "EntryID":2100301, "Name":"$Codex_Ent_Cone_Name;", "Name_Localised":"Bark Mounds", "SubCategory":"$Codex_SubCategory_Organic_Structures;", "SubCategory_Localised":"Organic structures", "Category":"$Codex_Category_Biology;", "Category_Localised":"Biological and Geological", "Region":"$Codex_RegionName_18;", "Region_Localised":"Inner Orion Spur", "System":"HIP 16378", "SystemAddress":1, "VoucherAmount":2500 }
     if entry['event'] == "CodexEntry":
-        url="https://docs.google.com/forms/d/e/1FAIpQLSfdr7GFj6JJ1ubeRXP_uZu3Xx9HPYT6507lRLqqC0oUZyj-Jg/formResponse?usp=pp_url"
+        url="https://docs.google.com/forms/d/e/1FAIpQLSfw5LtkhGRqQIXA9wG_-ByfAJ7R1DUrs7rGJ15CMr7mSP0VFQ/formResponse?usp=pp_url"
 
-        url+="&entry.1415400073="+quote_plus(cmdr)
-        url+="&entry.1860059185="+quote_plus(system)
-        url+="&entry.810133478="+str(x)
-        url+="&entry.226558470="+str(y)
-        url+="&entry.1643947574="+str(z)
+        url+="&entry.225040908="+quote_plus(cmdr)
+        url+="&entry.1726574817="+quote_plus(system)
+        url+="&entry.763596647="+str(x)
+        url+="&entry.1058472073="+str(y)
+        url+="&entry.2082187150="+str(z)
         if body:
-            url+="&entry.1432569164="+quote_plus(body)
+            url+="&entry.1996921251="+quote_plus(body)
         if lat:
-            url+="&entry.1891952962="+str(lat)
-            url+="&entry.405491858="+str(lon)
-        url+="&entry.1531581549="+quote_plus(str(entry["EntryID"]))
-        url+="&entry.1911890028="+quote_plus(entry["Name"])
-        url+="&entry.1057995915="+quote_plus(entry["Name_Localised"])
-        url+="&entry.598514572="+quote_plus(entry["SubCategory"])
-        url+="&entry.222515268="+quote_plus(entry["SubCategory_Localised"])
-        url+="&entry.198049318="+quote_plus(entry["Category"])
-        url+="&entry.348683576="+quote_plus(entry["Category_Localised"])
-        url+="&entry.761612585="+quote_plus(entry["Region"])
-        url+="&entry.216399442="+quote_plus(entry.get("Region_Localised").encode('utf8'))
-        url+="&entry.1236018468="+quote_plus(str(entry["SystemAddress"]))
+            url+="&entry.1610549351="+str(lat)
+            url+="&entry.594657555="+str(lon)
+        url+="&entry.684427446="+quote_plus(str(entry["EntryID"]))
+        url+="&entry.1284748079="+quote_plus(entry["Name"])
+        url+="&entry.763283762="+quote_plus(entry["Name_Localised"])
+        url+="&entry.1357457545="+quote_plus(entry["SubCategory"])
+        url+="&entry.1137878415="+quote_plus(entry["SubCategory_Localised"])
+        url+="&entry.145132650="+quote_plus(entry["Category"])
+        url+="&entry.1517395872="+quote_plus(entry["Category_Localised"])
+        url+="&entry.744185618="+quote_plus(entry["Region"])
+        url+="&entry.873911354="+quote_plus(entry.get("Region_Localised").encode('utf8'))
+        url+="&entry.263943315="+quote_plus(str(entry["SystemAddress"]))
         if('VoucherAmount' in entry):
-            url+="&entry.1250864566="+quote_plus(str(entry["VoucherAmount"]))
+            url+="&entry.246809407="+quote_plus(str(entry["VoucherAmount"]))
                 
         
         Reporter(url).start()
 
-        
+"""        
 def AXZone(cmdr, is_beta, system,x,y,z,station, entry, state):
     #{ "timestamp":"2019-01-19T23:22:26Z", "event":"FSSSignalDiscovered", "SystemAddress":250414621860, "SignalName":"$Warzone_TG;", "SignalName_Localised":"AX Conflict Zone" }
     if entry['event'] == "FSSSignalDiscovered" and entry["SignalName"] == "$Warzone_TG;":
@@ -249,3 +249,4 @@ class NHSS(threading.Thread):
                     NHSS.fss[system]={ threatLevel: True}
 
                 NHSS(cmdr, is_beta, system,x,y,z, station, entry,client).start()
+"""

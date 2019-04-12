@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Patrols
 """
@@ -344,7 +345,7 @@ class CanonnPatrol(Frame):
         else:
             return None
 
-    def getBGSInstructions(self,bgs):
+    def getBGSInstructions(self,bgs,faction):
         target=0.50 <= float(bgs.get("influence")) <= 0.65
         over=float(bgs.get("influence"))>0.65
         under=float(bgs.get("influence"))<0.50
@@ -372,23 +373,25 @@ class CanonnPatrol(Frame):
             # pstates=" Pending: {}".format(self.getStates("pending_states",bgs))
         # else:
             # pstates=""
-        
-        
+        if faction =="Close Encounters Corps":
+            contact = ""
+        if faction =="EG Union":
+            contact = ""        
         
         #debug(bgs)
         if target:
-            retval =  "Canonn Influence {}%{}{}".format(round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =  "{} Influence {}%{}{}".format(faction,round(float(bgs.get("influence")*100),2),states,update_text)
         if  over:
-            retval =   "Canonn Influence {}%{} Check #mission_minor_faction on discord for instructions.{}".format(round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =   "{} Influence {}%{} {}.{}".format(faction,round(float(bgs.get("influence")*100),2),states,contact,update_text)
         if under:
-            retval =  "Canonn Influence {}%{} Please complete missions for Canonn to increase our influence{}".format(round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =  "{} Influence {}%{} Please complete missions for {} to increase our influence{}".format(faction,round(float(bgs.get("influence")*100),2),states,faction,update_text)
 
         debug("{}: {}".format(bgs.get("system_name"),retval))
         return retval    
             
-    def getBGSPatrol(self,bgs):
+    def getBGSPatrol(self,bgs,faction):
         x,y,z=Systems.edsmGetSystem(bgs.get("system_name"))
-        return newPatrol("BGS",bgs.get("system_name"),(x,y,z),self.getBGSInstructions(bgs),"https://elitebgs.app/system/{}".format(bgs.get("system_id")))
+        return newPatrol("BGS",bgs.get("system_name"),(x,y,z),self.getBGSInstructions(bgs,faction),"https://elitebgs.app/system/{}".format(bgs.get("system_id")))
             
         
                 
@@ -405,7 +408,7 @@ class CanonnPatrol(Frame):
         if j:
             for bgs in j.get("docs")[0].get("faction_presence"):
                 
-                patrol.append(self.getBGSPatrol(bgs))
+                patrol.append(self.getBGSPatrol(bgs,faction))
         
         
         return patrol
@@ -467,8 +470,8 @@ class CanonnPatrol(Frame):
             patrol_list=[]
             if self.faction != 1:
                 debug("Getting Faction Data")
-                patrol_list.extend(self.getFactionData("Canonn"))
-                patrol_list.extend(self.getFactionData("Canonn Deep Space Research"))
+                patrol_list.extend(self.getFactionData("Close Encounters Corps"))
+                patrol_list.extend(self.getFactionData("EG Union"))
                 
             if self.ships and self.HideMyShips != 1:
                 patrol_list.extend(self.ships)
