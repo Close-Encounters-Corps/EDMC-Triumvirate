@@ -1,4 +1,3 @@
-# coding=utf-8
 """
 Patrols
 """
@@ -191,15 +190,15 @@ class CanonnPatrol(Frame):
         self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Canonn.patrol')
         
         
-        self.canonnbtn=tk.IntVar(value=config.getint("HideCanonn"))
-        self.factionbtn=tk.IntVar(value=config.getint("HideFaction"))
-        self.hideshipsbtn=tk.IntVar(value=config.getint("HideShips"))
-        self.copypatrolbtn=tk.IntVar(value=config.getint("CopyPatrol"))
+        self.canonnbtn=tk.IntVar(value=config.getint("HidePatrol"))
+        self.factionbtn=tk.IntVar(value=config.getint("Hidefactions"))
+        self.hideshipsbtn=tk.IntVar(value=config.getint("HideMyShips"))
+        self.copypatrolbtn=tk.IntVar(value=config.getint("CopyPatrolAdr"))
         
         self.canonn=self.canonnbtn.get()
         self.faction=self.factionbtn.get()
-        self.hideships=self.hideshipsbtn.get()
-        self.copypatrol=self.copypatrolbtn.get()
+        self.HideMyShips=self.hideshipsbtn.get()
+        self.CopyPatrolAdr=self.copypatrolbtn.get()
         
         self.columnconfigure(1, weight=1)
         self.columnconfigure(4, weight=4)
@@ -275,7 +274,7 @@ class CanonnPatrol(Frame):
             self.nearest["excluded"]=True
             self.patrol_list[index]["excluded"]=True
             self.update()
-            if self.copypatrol ==1:
+            if self.CopyPatrolAdr ==1:
                 copyclip(self.nearest.get("system"))
             #if there are excluded closer then we might need to deal with it
             #self.prev.grid()
@@ -290,7 +289,7 @@ class CanonnPatrol(Frame):
         if index > 0:
             self.patrol_list[index-1]["excluded"]=False
             self.update()          
-            if self.copypatrol ==1:
+            if self.CopyPatrolAdr ==1:
                 copyclip(self.nearest.get("system"))
         
         
@@ -345,7 +344,7 @@ class CanonnPatrol(Frame):
         else:
             return None
 
-    def getBGSInstructions(self,bgs,faction):
+    def getBGSInstructions(self,bgs):
         target=0.50 <= float(bgs.get("influence")) <= 0.65
         over=float(bgs.get("influence"))>0.65
         under=float(bgs.get("influence"))<0.50
@@ -373,26 +372,23 @@ class CanonnPatrol(Frame):
             # pstates=" Pending: {}".format(self.getStates("pending_states",bgs))
         # else:
             # pstates=""
-        if faction =="EG Union":
-            contact = " #pilot_bgs or contact @HEúCMuT#1242 on EGP discord "
-        if faction =="Close Encounters Corps":
-            contact = " #political_and_military or contact @AntonyVern [СЕС]#5904 on CEC discord "
+        
         
         
         #debug(bgs)
         if target:
-            retval =  "{} Influence {}%{}{}".format(faction,round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =  "Canonn Influence {}%{}{}".format(round(float(bgs.get("influence")*100),2),states,update_text)
         if  over:
-            retval =   "{} Influence {}%{}. Check {} for instructions.{}".format(faction,round(float(bgs.get("influence")*100),2),states,contact,update_text)
+            retval =   "Canonn Influence {}%{} Check #mission_minor_faction on discord for instructions.{}".format(round(float(bgs.get("influence")*100),2),states,update_text)
         if under:
-            retval =  "{} Influence {}%{} Please complete missions for {} to increase our influence{}".format(faction,round(float(bgs.get("influence")*100),2),states,faction,update_text)
+            retval =  "Canonn Influence {}%{} Please complete missions for Canonn to increase our influence{}".format(round(float(bgs.get("influence")*100),2),states,update_text)
 
         debug("{}: {}".format(bgs.get("system_name"),retval))
         return retval    
             
-    def getBGSPatrol(self,bgs,faction):
+    def getBGSPatrol(self,bgs):
         x,y,z=Systems.edsmGetSystem(bgs.get("system_name"))
-        return newPatrol("BGS",bgs.get("system_name"),(x,y,z),self.getBGSInstructions(bgs,faction),"https://elitebgs.app/system/{}".format(bgs.get("system_id")))
+        return newPatrol("BGS",bgs.get("system_name"),(x,y,z),self.getBGSInstructions(bgs),"https://elitebgs.app/system/{}".format(bgs.get("system_id")))
             
         
                 
@@ -409,7 +405,7 @@ class CanonnPatrol(Frame):
         if j:
             for bgs in j.get("docs")[0].get("faction_presence"):
                 
-                patrol.append(self.getBGSPatrol(bgs,faction))
+                patrol.append(self.getBGSPatrol(bgs))
         
         
         return patrol
@@ -424,7 +420,7 @@ class CanonnPatrol(Frame):
         
     def getCanonnPatrol(self):    
         canonnpatrol=[]
-        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_Ww6PRFCjmr5D_l7SVyWP5vtW-WdYMn_VCAJNh_Pjs-e9nRy54xWj3a8VLPnFJzybpaezLinfxGc/pub?gid=2025469746&single=true&output=tsv"        
+        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vQgIlIQE8XMugQVchWr417uB9yvOcgn1ak0LGxwmNnGg2wjJudNXrntpppcH_KFR_xTuPsKPS6uBvSb/pub?gid=0&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
             reader = csv.reader(r.iter_lines(), delimiter='\t')
             next(reader)
@@ -471,10 +467,10 @@ class CanonnPatrol(Frame):
             patrol_list=[]
             if self.faction != 1:
                 debug("Getting Faction Data")
-                patrol_list.extend(self.getFactionData("Close Encounters Corps"))
-                patrol_list.extend(self.getFactionData("EG Union"))
+                patrol_list.extend(self.getFactionData("Canonn"))
+                patrol_list.extend(self.getFactionData("Canonn Deep Space Research"))
                 
-            if self.ships and self.hideships != 1:
+            if self.ships and self.HideMyShips != 1:
                 patrol_list.extend(self.ships)
 
             if self.canonn != 1:
@@ -499,15 +495,15 @@ class CanonnPatrol(Frame):
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
         "Called to get a tk Frame for the settings dialog."
         
-        self.canonnbtn=tk.IntVar(value=config.getint("HideCanonn"))
-        self.factionbtn=tk.IntVar(value=config.getint("HideFaction"))
-        self.hideshipsbtn=tk.IntVar(value=config.getint("HideShips"))
-        self.copypatrolbtn=tk.IntVar(value=config.getint("CopyPatrol"))
+        self.canonnbtn=tk.IntVar(value=config.getint("HidePatrol"))
+        self.factionbtn=tk.IntVar(value=config.getint("Hidefactions"))
+        self.hideshipsbtn=tk.IntVar(value=config.getint("HideMyShips"))
+        self.copypatrolbtn=tk.IntVar(value=config.getint("CopyPatrolAdr"))
         
         self.canonn=self.canonnbtn.get()
         self.faction=self.factionbtn.get()
-        self.hideships=self.hideshipsbtn.get()
-        self.copypatrol=self.copypatrolbtn.get()
+        self.HideMyShips=self.hideshipsbtn.get()
+        self.CopyPatrolAdr=self.copypatrolbtn.get()
         
         
         
@@ -516,19 +512,19 @@ class CanonnPatrol(Frame):
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
         
         nb.Label(frame,text="Patrol Settings").grid(row=0,column=0,sticky="NW")
-        nb.Checkbutton(frame, text="Hide Triumvirate Patrols", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW")
-        nb.Checkbutton(frame, text="Hide Triumvirate Faction Systems", variable=self.factionbtn).grid(row = 1, column = 2,sticky="NW")
+        nb.Checkbutton(frame, text="Hide Canonn Patrols", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW")
+        nb.Checkbutton(frame, text="Hide Canonn Faction Systems", variable=self.factionbtn).grid(row = 1, column = 2,sticky="NW")
         nb.Checkbutton(frame, text="Hide Your Ships", variable=self.hideshipsbtn).grid(row = 1, column = 3,sticky="NW")
         nb.Checkbutton(frame, text="Automatically copy the patrol to the clipboard", variable=self.copypatrolbtn).grid(row = 2, column = 0,sticky="NW",)
         
         
-        debug("canonn: {}, faction: {} hideships {}".format(self.canonn,self.faction,self.hideships))
+        debug("canonn: {}, faction: {} HideMyShips {}".format(self.canonn,self.faction,self.HideMyShips))
         
         return frame
 
     def visible(self):
         
-        nopatrols=self.canonn == 1 and self.faction ==1 and self.hideships ==1
+        nopatrols=self.canonn == 1 and self.faction ==1 and self.HideMyShips ==1
         
         if nopatrols:
             self.grid_remove()
@@ -561,22 +557,22 @@ class CanonnPatrol(Frame):
             
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set('HideCanonn', self.canonnbtn.get())      
-        config.set('HideFaction', self.factionbtn.get())      
-        config.set('HideShips', self.hideshipsbtn.get())      
-        config.set('CopyPatrol', self.copypatrolbtn.get())      
+        config.set('HidePatrol', self.canonnbtn.get())      
+        config.set('Hidefactions', self.factionbtn.get())      
+        config.set('HideMyShips', self.hideshipsbtn.get())      
+        config.set('CopyPatrolAdr', self.copypatrolbtn.get())      
         
         self.canonn=self.canonnbtn.get()
         self.faction=self.factionbtn.get()
-        self.hideships=self.hideshipsbtn.get()
-        self.copypatrol=self.copypatrolbtn.get()
+        self.HideMyShips=self.hideshipsbtn.get()
+        self.CopyPatrolAdr=self.copypatrolbtn.get()
         
         if self.visible():
             # we should fire off an extra download
             UpdateThread(self).start()
             self.update_ui()
             
-        debug("canonn: {}, faction: {} hideships {}".format(self.canonn,self.faction,self.hideships))
+        debug("canonn: {}, faction: {} HideMyShips {}".format(self.canonn,self.faction,self.HideMyShips))
         
     def trigger(self,system,entry):
         # exit if the events dont match
@@ -611,7 +607,7 @@ class CanonnPatrol(Frame):
             debug("Refresshing Patrol ({})".format(entry.get("event")))
             self.system=system
             self.update_ui()
-            if self.nearest and self.copypatrol == 1:
+            if self.nearest and self.CopyPatrolAdr == 1:
                 copyclip(self.nearest.get("system"))
         # else:
             # error("nope {}".format(entry.get("event")))

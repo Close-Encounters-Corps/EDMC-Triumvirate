@@ -1,31 +1,8 @@
-# coding=utf-8
-
-import sys
-import re
-import ttk
-import Tkinter as tk
-import requests
-import os
-import csv
-import json
-import uuid
-import inspect	
-from urllib import quote_plus
-from  math import sqrt,pow,trunc
-from ttkHyperlinkLabel import HyperlinkLabel
-import datetime
-import webbrowser
-import threading
-from winsound import *
-import ctypes
-import os
 from config import config
 import myNotebook as nb
 from urllib import quote_plus
 import requests
 import json
-import inspect	
-import ctypes
 
 from modules import journaldata
 from modules import factionkill
@@ -35,6 +12,7 @@ from modules import hdreport
 from modules import news
 from modules import release
 from modules import legacy
+from modules import legacyCanonn as Clegacy
 from modules import clientreport
 from modules import fssreports
 from modules import patrol
@@ -64,7 +42,7 @@ this.nearloc = {
 myPlugin = "EDMC-Triumvirate"
 
 
-this.version="1.0.4"
+this.version="1.0.5"
 this.client_version="{}.{}".format(myPlugin,this.version)
 this.body_name=None
     
@@ -79,8 +57,8 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.release.plugin_prefs(frame, cmdr, is_beta,2)
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
     Debug.plugin_prefs(frame,this.client_version,4)
-    this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
     hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,6)
+    this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
     
     
     
@@ -96,33 +74,29 @@ def prefs_changed(cmdr, is_beta):
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
     Debug.prefs_changed()
- 
-
-#def plugin_dir():
-#    buf = ctypes.create_unicode_buffer(1024)
-#    ctypes.windll.kernel32.GetEnvironmentVariableW(u"USERPROFILE", buf, 1024)
-#    home_dir = buf.value
-#    plugin_base = os.path.basename(os.path.dirname(__file__))
-#    return home_dir+'\\AppData\\Local\\EDMarketConnector\\plugins\\'+plugin_base
-
-
-
+    
+   
 def plugin_start(plugin_dir):
     """
     Load Template plugin into EDMC
     """
-    #set a new variable
-    #goodPluginDir = plugin_dir()
-
-    #then use it
+    
+    #print this.patrol
     release.Release.plugin_start(plugin_dir)
     Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
-
-
-
+    
+    
+    
     return 'Triumvirate'
+    
+def plugin_stop():
+    """
+    EDMC is closing
+    """
+    debug("Stopping the plugin")
+    this.patrol.plugin_stop()
     
 def plugin_app(parent):
 
@@ -143,7 +117,8 @@ def plugin_app(parent):
     this.news = news.CanonnNews(table,0)
     this.release = release.Release(table,this.version,1)
     this.codexcontrol = codex.CodexTypes(table,2)
-    this.patrol = patrol.CanonnPatrol(table,2)
+    this.patrol = patrol.CanonnPatrol(table,3)
+    
     
     
     
@@ -173,25 +148,32 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     
 # Detect journal events
 def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client):
-    
-    factionkill.submit(cmdr, is_beta, system, station, entry,client) #legacyOk
-    nhss.submit(cmdr, is_beta, system, station, entry,client) #legacyOk
-    hdreport.submit(cmdr, is_beta, system, station, entry,client) #legacyOk
-    codex.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client) #legacyOk
-    fssreports.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client) #legacyOk
-    journaldata.submit(cmdr, is_beta, system, station, entry,client) #k
-    clientreport.submit(cmdr,is_beta,client,entry) 
+    factionkill.submit(cmdr, is_beta, system, station, entry,client)
+    nhss.submit(cmdr, is_beta, system, station, entry,client)
+    hdreport.submit(cmdr, is_beta, system, station, entry,client)
+    codex.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
+    fssreports.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
+    journaldata.submit(cmdr, is_beta, system, station, entry,client)
+    clientreport.submit(cmdr,is_beta,client,entry)
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     
     # legacy logging to google sheets
-    #legacy.stat(cmdr, is_beta, system, station, entry, state)
-    legacy.Stats.statistics(cmdr, is_beta, system, station, entry, state)
+    legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
-    legacy.fssreports(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client) 
+    legacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
-        
+    
+    #legacy to canonn
+    Clegacy.statistics(cmdr, is_beta, system, station, entry, state)
+    Clegacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
+    Clegacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
+    Clegacy.faction_kill(cmdr, is_beta, system, station, entry, state)
+    Clegacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
+
+
+    
     
 def dashboard_entry(cmdr, is_beta, entry):
       

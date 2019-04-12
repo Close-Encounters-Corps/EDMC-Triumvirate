@@ -1,11 +1,8 @@
 {
   "ExpandedNodes": [
     "",
-    "\\.github",
-    "\\L10n",
-    "\\modules",
-    "\\sounds"
+    "\\modules"
   ],
-  "SelectedNode": "\\modules\\legacy.py",
+  "SelectedNode": "\\load.py",
   "PreviewInSolutionExplorer": false
 }
