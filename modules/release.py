@@ -1,4 +1,4 @@
-"""
+﻿"""
 Module to provide the news.
 """
 

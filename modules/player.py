@@ -1,4 +1,4 @@
-import threading
+﻿import threading
 from winsound import *
 
 class Player(threading.Thread):

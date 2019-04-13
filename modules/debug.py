@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import Tkinter as tk
 from Tkinter import Frame
 import myNotebook as nb
