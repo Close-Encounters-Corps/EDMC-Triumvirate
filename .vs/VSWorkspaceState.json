@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\modules"
+    "\\modules",
+    "\\sounds"
   ],
-  "SelectedNode": "\\load.py",
+  "SelectedNode": "\\modules\\release.py",
   "PreviewInSolutionExplorer": false
 }

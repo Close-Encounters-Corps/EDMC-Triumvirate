@@ -22,7 +22,7 @@ from debug import debug,error
 import plug
 
 RELEASE_CYCLE=60 * 1000 * 60 # 1 Hour
-DEFAULT_URL = 'https://github.com/canonn-science/EDMC-Canonn/releases'
+DEFAULT_URL = 'https://github.com/VAKazakov/EDMC-Triumvirate/releases'
 WRAP_LENGTH = 200
 
 def _callback(matches):
@@ -135,7 +135,7 @@ class Release(Frame):
         
     def release_pull(self):
         self.latest={}
-        r = requests.get("https://api.github.com/repos/canonn-science/EDMC-Canonn/releases/latest")
+        r = requests.get("https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest")
         latest=r.json()
         #debug(latest)
         if not r.status_code == requests.codes.ok:
@@ -162,7 +162,7 @@ class Release(Frame):
                 #checjed again in an hour
                 self.after(RELEASE_CYCLE, self.update)    
                 
-                #self.latest=requests.get("https://api.github.com/repos/canonn-science/EDMC-Canonn/releases/latest").json()
+                #self.latest=requests.get("https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest").json()
                 
                 current=self.version2number(self.release)
                 release=self.version2number(self.latest.get("tag_name"))
@@ -242,7 +242,7 @@ class Release(Frame):
                 
         try:
             debug("Downloading new version")
-            download=requests.get("https://github.com/canonn-science/EDMC-Canonn/archive/{}.zip".format(tag_name), stream=True)
+            download=requests.get("https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip".format(tag_name), stream=True)
             z = zipfile.ZipFile(StringIO.StringIO(download.content))
             z.extractall(os.path.dirname(Release.plugin_dir))
         except:

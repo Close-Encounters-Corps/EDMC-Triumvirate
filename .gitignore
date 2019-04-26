@@ -1,5 +1,6 @@
 *.suo
 *.pyo
+
 /
 /modules/__init__.pyc
 /modules/systems.pyc
@@ -20,3 +21,5 @@
 /load.pyc
 /pyoDel.bat
 /.gitignore
+
+/EDMC.log
