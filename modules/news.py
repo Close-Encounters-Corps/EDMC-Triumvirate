@@ -51,7 +51,7 @@ class NewsLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text='Coms array disabled, click here for get news page',
+            text="Com's array disabled, click here for get news page",
             url=DEFAULT_NEWS_URL,
             wraplength=50,  # updated in __configure_event below
             anchor=tk.NW
@@ -62,6 +62,8 @@ class NewsLink(HyperlinkLabel):
         'Handle resizing.'
 
         self.configure(wraplength=event.width)
+
+
 
 class CanonnNews(Frame):
 
@@ -96,7 +98,7 @@ class CanonnNews(Frame):
         self.visible()
         #self.hyperlink.bind('<Configure>', self.hyperlink.configure_event)
         self.after(250, self.news_update)
-        
+    
     def news_update(self):
     
         if self.isvisible:
@@ -121,7 +123,7 @@ class CanonnNews(Frame):
                     news=self.news_data[self.news_pos]
                     self.hyperlink['url'] = news['link']
                     #self.hyperlink['text'] = decode_unicode_references(news['title']['rendered'])
-                    self.hyperlink['text'] = 'Comm's array error'
+                    self.hyperlink['text'] = "Comm's array error"
             else:
                 #keep trying until we have some data
                 #elf.hyperlink['text'] = 'Fetching News...'
