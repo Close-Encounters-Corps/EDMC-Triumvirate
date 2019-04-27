@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
-"""
+'''
 Module to provide the news.
-"""
+'''
 
 import Tkinter as tk
 from Tkinter import Frame
@@ -35,14 +35,14 @@ class UpdateThread(threading.Thread):
         self.widget=widget
     
     def run(self):
-        debug("News: UpdateThread")
+        debug('News: UpdateThread')
         # download cannot contain any tkinter changes
         self.widget.download()
         
         
 
 def decode_unicode_references(data):
-    return re.sub("&#(\d+)(;|(?=\s))", _callback, data)
+    return re.sub('&#(\d+)(;|(?=\s))', _callback, data)
 
 class NewsLink(HyperlinkLabel):
 
@@ -51,7 +51,7 @@ class NewsLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Coms array disabled, click here for get news page",
+            text='Coms array disabled, click here for get news page',
             url=DEFAULT_NEWS_URL,
             wraplength=50,  # updated in __configure_event below
             anchor=tk.NW
@@ -59,14 +59,14 @@ class NewsLink(HyperlinkLabel):
         self.bind('<Configure>', self.__configure_event)
 
     def __configure_event(self, event):
-        "Handle resizing."
+        'Handle resizing.'
 
         self.configure(wraplength=event.width)
 
 class CanonnNews(Frame):
 
     def __init__(self, parent,gridrow):
-        "Initialise the ``News``."
+        'Initialise the ``News``.'
 
         padx, pady = 10, 5  # formatting
         sticky = tk.EW + tk.N  # full width, stuck to the top
@@ -77,18 +77,18 @@ class CanonnNews(Frame):
             parent
         )
 
-        self.hidden=tk.IntVar(value=config.getint("HideNews"))                
+        self.hidden=tk.IntVar(value=config.getint('HideNews'))                
         
         self.news_data=[]
         self.columnconfigure(1, weight=1)
-        self.grid(row = gridrow, column = 0, sticky="NSEW",columnspan=2)
+        self.grid(row = gridrow, column = 0, sticky='NSEW',columnspan=2)
         
-        self.label=tk.Label(self, text=  "News:")
+        self.label=tk.Label(self, text=  'News:')
         self.label.grid(row = 0, column = 0, sticky=sticky)
-        self.label.bind("<Button-1>",self.click_news)
+        self.label.bind('<Button-1>',self.click_news)
         
         self.hyperlink=NewsLink(self)
-        self.hyperlink.grid(row = 0, column = 1,sticky="NSEW")
+        self.hyperlink.grid(row = 0, column = 1,sticky='NSEW')
         
         self.news_count=0
         self.news_pos=0
@@ -121,10 +121,10 @@ class CanonnNews(Frame):
                     news=self.news_data[self.news_pos]
                     self.hyperlink['url'] = news['link']
                     #self.hyperlink['text'] = decode_unicode_references(news['title']['rendered'])
-                    self.hyperlink['text'] = "Comm's array error"
+                    self.hyperlink['text'] = 'Comm's array error'
             else:
                 #keep trying until we have some data
-                #elf.hyperlink['text'] = "Fetching News..."
+                #elf.hyperlink['text'] = 'Fetching News...'
                 self.after(1000, self.update)
 
     def click_news(self,event):
@@ -136,24 +136,24 @@ class CanonnNews(Frame):
         self.update()
         
     def download(self):
-        "Update the news."
+        'Update the news.'
         
         if self.isvisible:
         
-            debug("Fetching News")
-            self.news_data = requests.get("https://vk.com/close_encounters_corps").json()
+            debug('Fetching News')
+            self.news_data = requests.get('https://vk.com/close_encounters_corps').json()
             self.news_count=len(self.news_data)-1
             self.news_pos=0
             self.minutes=REFRESH_CYCLES
 
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
-        "Called to get a tk Frame for the settings dialog."
+        'Called to get a tk Frame for the settings dialog.'
 
-        self.hidden=tk.IntVar(value=config.getint("HideNews"))
+        self.hidden=tk.IntVar(value=config.getint('HideNews'))
         
         #frame = nb.Frame(parent)
         #frame.columnconfigure(1, weight=1)
-        return nb.Checkbutton(parent, text="Hide CEC News", variable=self.hidden).grid(row = gridrow, column = 0,sticky="NSEW")
+        return nb.Checkbutton(parent, text='Hide CEC News', variable=self.hidden).grid(row = gridrow, column = 0,sticky='NSEW')
         
         #return frame
 
@@ -168,7 +168,7 @@ class CanonnNews(Frame):
             return True
 
     def prefs_changed(self, cmdr, is_beta):
-        "Called when the user clicks OK on the settings dialog."
+        'Called when the user clicks OK on the settings dialog.'
         config.set('HideNews', self.hidden.get())      
         if self.visible():
             self.news_update()

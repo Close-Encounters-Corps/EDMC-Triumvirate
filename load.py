@@ -39,17 +39,17 @@ this.nearloc = {
 }
 
 
-myPlugin = "EDMC-Triumvirate"
+myPlugin = 'EDMC-Triumvirate'
 
 
-this.version="1.0.6"
-this.client_version="{}.{}".format(myPlugin,this.version)
+this.version='1.0.6'
+this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body_name=None
     
 def plugin_prefs(parent, cmdr, is_beta):
-    """
+    '''
     Return a TK Frame for adding to the EDMC settings dialog.
-    """
+    '''
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
     
@@ -57,8 +57,9 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.release.plugin_prefs(frame, cmdr, is_beta,2)
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
     Debug.plugin_prefs(frame,this.client_version,4)
-    hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,6)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
+    hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,6)
+    print('lalala')
     
     
     
@@ -66,9 +67,9 @@ def plugin_prefs(parent, cmdr, is_beta):
 
     
 def prefs_changed(cmdr, is_beta):
-    """
+    '''
     Save settings.
-    """
+    '''
     this.news.prefs_changed(cmdr, is_beta)
     this.release.prefs_changed(cmdr, is_beta)
     this.patrol.prefs_changed(cmdr, is_beta)
@@ -77,9 +78,9 @@ def prefs_changed(cmdr, is_beta):
     
    
 def plugin_start(plugin_dir):
-    """
+    '''
     Load Template plugin into EDMC
-    """
+    '''
     
     #print this.patrol
     release.Release.plugin_start(plugin_dir)
@@ -92,10 +93,10 @@ def plugin_start(plugin_dir):
     return 'Triumvirate'
     
 def plugin_stop():
-    """
+    '''
     EDMC is closing
-    """
-    debug("Stopping the plugin")
+    '''
+    debug('Stopping the plugin')
     this.patrol.plugin_stop()
     
 def plugin_app(parent):
@@ -111,7 +112,7 @@ def plugin_app(parent):
 
     table = tk.Frame(frame)
     table.columnconfigure(1, weight=1)
-    table.grid(sticky="NSEW")
+    table.grid(sticky='NSEW')
     
     
     this.news = news.CanonnNews(table,0)
@@ -159,9 +160,9 @@ def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,bod
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     
     # legacy logging to google sheets
-    #legacy.statistics(cmdr, is_beta, system, station, entry, state)
+    legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
-    #legacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
+    legacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     #legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
     
@@ -182,7 +183,7 @@ def dashboard_entry(cmdr, is_beta, entry):
     this.SCmode = entry['Flags'] & 1<<4 and True or False
     this.SRVmode = entry['Flags'] & 1<<26 and True or False
     this.landed = this.landed or this.SRVmode
-      #print "LatLon = {}".format(entry['Flags'] & 1<<21 and True or False)
+      #print 'LatLon = {}'.format(entry['Flags'] & 1<<21 and True or False)
       #print entry
     if(entry['Flags'] & 1<<21 and True or False):
         if('Latitude' in entry):
@@ -194,8 +195,8 @@ def dashboard_entry(cmdr, is_beta, entry):
         this.nearloc['Longitude'] = None    
     
 def cmdr_data(data, is_beta):
-    """
+    '''
     We have new data on our commander
-    """
+    '''
     #debug(json.dumps(data,indent=4))
     this.patrol.cmdr_data(data, is_beta)
