@@ -1,5 +1,4 @@
-﻿# -*- coding: utf-8 -*-
-import threading    
+﻿import threading    
 import requests
 import sys
 import json
@@ -17,12 +16,9 @@ import os
 import time
 
 '''
-
 We want to record the system where the user was last hyperdicted
 Ths is in the statistics event which appears evert time the user
 returns from the main menu. We want to record   
-
-
 '''
 
 
@@ -158,7 +154,7 @@ class HDInspector(Frame):
         url=self.getUrl()
         if not HDReport.hdsystems:
             debug("getting old hdsystems")
-            r = requests.get("{}/{}?cmdrName={}&_sort=created_at:DESC&_limit=2000".format(url,"hdreports",self.commander))           
+            r = requests.get("{}/{}?cmdrName={}&_sort=created_at:DESC&_limit=100".format(url,"hdreports",self.commander))           
             for hd in r.json():
                 debug("excluding: {}".format(hd.get("fromSystemName")))
                 HDReport.hdsystems[hd.get("fromSystemName")]=hd.get("fromSystemName")
