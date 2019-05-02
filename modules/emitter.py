@@ -1,5 +1,4 @@
-﻿# -*- coding: utf-8 -*-
-import threading
+﻿import threading
 import requests
 import sys
 import json
@@ -42,13 +41,27 @@ class Emitter(threading.Thread):
         if Emitter.route:
             return Emitter.route
         else:
-            ## this url will need to bechanged to the live server whenready
-            r=requests.get("{}/clientroutes?clientversion={}".format(Emitter.urls.get("live"),client))
+            # first check to see if we are an official release
+            repo,tag=client.split(".",1)
+            r=requests.get("https://api.github.com/repos/VAKazakov/{}/releases/tags/{}".format(repo,tag))
+            j=r.json()
+            if r.status_code == 404:
+                debug("Release not in github")
+                Emitter.route=Emitter.urls.get("development")
+            elif j.get("prerelease"):
+                debug("Prerelease in github")
+                Emitter.route=Emitter.urls.get("staging")
+            else:
+                debug("Release in github")
+                Emitter.route=Emitter.urls.get("live")
+            
+            r=requests.get("{}/clientroutes?clientVersion={}".format(Emitter.urls.get("live"),client))
             j = r.json()
             if not r.status_code == requests.codes.ok or not j:
-                Emitter.route=Emitter.urls.get("development")
+                debug("Using {}".format(Emitter.route))
             else:   
                 Emitter.route=j[0].get("route")
+                debug("Route override to {}".format(Emitter.route))
                 
         return Emitter.route
 
@@ -86,9 +99,3 @@ class Emitter(threading.Thread):
             error(json.dumps(payload))
         else:
             debug("{}?id={}".format(fullurl,r.json().get("id")))
-
-
-            
-
-
-            

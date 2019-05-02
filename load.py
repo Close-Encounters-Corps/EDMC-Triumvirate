@@ -16,6 +16,7 @@ from modules import legacyCanonn as Clegacy
 from modules import clientreport
 from modules import fssreports
 from modules import patrol
+#from modules import friendfoe as FF
 from modules.systems import Systems
 from modules.debug import Debug
 from modules.debug import debug
@@ -58,8 +59,9 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
     Debug.plugin_prefs(frame,this.client_version,4)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
-    hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,6)
-    
+    #this.FF.FriendFoe.plugin_prefs(frame, cmdr, is_beta,6)
+    hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
+    #release.versionInSettings(frame, cmdr, is_beta,8)
     
     
     
@@ -146,8 +148,11 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     
     return journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,this.body_name,this.nearloc['Latitude'],this.nearloc['Longitude'],this.client_version)    
     
-# Detect journal events
+
 def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client):
+    '''
+    Detect journal events
+    '''
     factionkill.submit(cmdr, is_beta, system, station, entry,client)
     nhss.submit(cmdr, is_beta, system, station, entry,client)
     hdreport.submit(cmdr, is_beta, system, station, entry,client)
@@ -158,13 +163,6 @@ def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,bod
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     
-    # legacy logging to google sheets
-    legacy.statistics(cmdr, is_beta, system, station, entry, state)
-    legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
-    legacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
-    legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
-    #legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
-    
     #legacy to canonn
     Clegacy.statistics(cmdr, is_beta, system, station, entry, state)
     Clegacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
@@ -172,6 +170,17 @@ def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,bod
     Clegacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     Clegacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
 
+    #Triumvirate reporting
+
+
+    # legacy logging to google sheets
+    legacy.statistics(cmdr, is_beta, system, station, entry, state)
+    legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
+    legacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
+    legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
+    #legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
+    
+    
 
     
     

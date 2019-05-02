@@ -215,7 +215,13 @@ class Release(Frame):
         "Called when the user clicks OK on the settings dialog."
         config.set('AutoUpdate', self.auto.get())      
         config.set('RemoveBackup', self.rmbackup.get())      
-        config.set('NoVoices', self.novoices.get())      
+        config.set('NoVoices', self.novoices.get())   
+        
+
+
+    #def versionInSettings(self, parent, cmdr, is_beta,version,gridrow):
+     #   frame = nb.Frame(parent)
+      #  nb.Label(frame, text="Current version is"+version)
         
     def click_installer(self):
         self.button.grid_remove()
