@@ -44,7 +44,6 @@
 
 ## FSS репортер
 Отправляет информацию о системе
-This records FSSSignalDicovered Messages that havent beenexcluded. Also records AX Conflict Zones in their own model
 
 ## Инструкция по установке:
 
