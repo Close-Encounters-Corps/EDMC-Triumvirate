@@ -21,6 +21,7 @@ from modules.systems import Systems
 from modules.debug import Debug
 from modules.debug import debug
 
+from modules.whitelist import whiteList
 
 
 
@@ -120,7 +121,8 @@ def plugin_app(parent):
     this.release = release.Release(table,this.version,1)
     this.codexcontrol = codex.CodexTypes(table,2)
     this.patrol = patrol.CanonnPatrol(table,3)
-    
+    whitelist=whiteList(parent)
+    whitelist.fetchData()
     
     
     
@@ -162,7 +164,10 @@ def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,bod
     clientreport.submit(cmdr,is_beta,client,entry)
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
-    
+    whiteList.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
+
+
+
     #legacy to canonn
     Clegacy.statistics(cmdr, is_beta, system, station, entry, state)
     Clegacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
