@@ -23,7 +23,7 @@ from modules.debug import debug
 
 from modules.whitelist import whiteList
 
-
+from l10n import Translations
 
 
 import ttk
@@ -136,7 +136,8 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     # capture some stats when we launch not read for that yet
     # startup_stats(cmdr)
 
-    
+    if entry.get("event") == "FSDJump":
+        Systems.storeSystem(system,entry.get("StarPos"))
         
     if ('Body' in entry):
             this.body_name = entry['Body']        
