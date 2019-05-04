@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
+    "\\L10n",
     "\\modules"
   ],
-  "SelectedNode": "\\L10n",
+  "SelectedNode": "\\modules\\patrol.py",
   "PreviewInSolutionExplorer": false
 }
