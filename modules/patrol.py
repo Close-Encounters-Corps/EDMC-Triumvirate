@@ -23,7 +23,7 @@ from contextlib import closing
 from urllib import quote_plus
 from datetime import datetime
 from release import Release
-
+from l10n import Locale
 
 
 CYCLE=60 * 1000 * 60 # 60 minutes
@@ -312,7 +312,7 @@ class CanonnPatrol(Frame):
                 self.nearest=self.getNearest(p)               
                 self.hyperlink['text']=self.nearest.get("system")
                 self.hyperlink['url']="https://www.edsm.net/en/system?systemName={}".format(quote_plus(self.nearest.get("system")))
-                self.distance['text']="{}ly".format(round(getDistance(p,self.nearest.get("coords")),2))
+                self.distance['text']="{}ly".format(Locale.stringFromNumber(getDistance(p,self.nearest.get("coords")),2))
                 self.infolink['text']=self.nearest.get("instructions")
                 self.infolink['url']=self.nearest.get("url")
                 
@@ -380,11 +380,11 @@ class CanonnPatrol(Frame):
         
         #debug(bgs)
         if target:
-            retval =  "{} Influence {}%{}{}".format(faction,round(float(bgs.get("influence")*100),2),states,update_text)
+            retval =  "{} Influence {}%{}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,update_text)
         if  over:
-            retval =   "{} Influence {}%{} {}.{}".format(faction,round(float(bgs.get("influence")*100),2),states,contact,update_text)
+            retval =   "{} Influence {}%{} {}.{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,contact,update_text)
         if under:
-            retval =  "{} Influence {}%{} Please complete missions for {} to increase our influence{}".format(faction,round(float(bgs.get("influence")*100),2),states,faction,update_text)
+            retval =  "{} Influence {}%{} Please complete missions for {} to increase our influence{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,faction,update_text)
 
         debug("{}: {}".format(bgs.get("system_name"),retval))
         return retval    
