@@ -405,7 +405,6 @@ class codexEmitter(Emitter):
         self.getExcluded()
         
         
-        
         #is this a code entry and do we want to record it? 
         if not codexEmitter.excludecodices.get(self.entry.get("Name").lower()) and not self.entry.get("Category") == '$Codex_Category_StellarBodies;':
             self.getReportTypes(self.entry.get("EntryID"))    
