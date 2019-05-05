@@ -91,6 +91,19 @@ class FriendFoe(Frame):
         config.set('HideFF', self.hidden.get())      
         if self.visible():
             self.news_update()
+    
+    def isCMDR(input):
+        types={
+            '$cmdr_decorate':'cmdr',
+            '$npc_name_decorate':'npc'}
+        type=input.split(':')
+        output=types[type[0]]
+        return output
 
 
-    def friendFoe():
+    def friendFoe(cmdr, system, station, entry, state):
+        if entry['event']=='ShipTargeted':
+            if isCMDR(entry['PilotName'])=='cmdr':
+                tCMDR=entry['PilotName'].split(':')
+                tCMDR=tCMDR[1]
+                debug("in sight cmdr "+tCMDR)            

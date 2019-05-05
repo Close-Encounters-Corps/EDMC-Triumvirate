@@ -251,3 +251,6 @@ class NHSS(threading.Thread):
                     NHSS.fss[system]={ threatLevel: True}
 
                 NHSS(cmdr, is_beta, system,x,y,z, station, entry,client).start()
+
+
+

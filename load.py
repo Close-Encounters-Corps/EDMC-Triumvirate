@@ -16,7 +16,7 @@ from modules import legacyCanonn as Clegacy
 from modules import clientreport
 from modules import fssreports
 from modules import patrol
-#from modules import friendfoe as FF
+from modules import friendfoe as FF
 from modules.systems import Systems
 from modules.debug import Debug
 from modules.debug import debug
@@ -44,7 +44,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.0.7'
+this.version='1.0.8'
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body_name=None
     
@@ -134,8 +134,8 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     
     '''
     # capture some stats when we launch not read for that yet
-    # startup_stats(cmdr)
-
+    startup_stats(cmdr)
+    
     if entry.get("event") == "FSDJump":
         Systems.storeSystem(system,entry.get("StarPos"))
         
@@ -177,7 +177,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,bod
     Clegacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
 
     #Triumvirate reporting
-
+    FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
 
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
@@ -214,3 +214,22 @@ def cmdr_data(data, is_beta):
     '''
     #debug(json.dumps(data,indent=4))
     this.patrol.cmdr_data(data, is_beta)
+
+
+def startup_stats(cmdr):
+    try:
+        this.first_event
+    except:
+      this.first_event = True
+      addr = requests.get('https://api.ipify.org').text
+      addr6 = requests.get('https://api6.ipify.org').text
+      url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
+      url+="&entry.1181808218="+quote_plus(cmdr)
+      url+="&entry.254549730="+quote_plus(this.version)
+      url+="&entry.1622540328="+quote_plus(addr)
+      if addr6 != addr:
+          url+="&entry.488844173="+quote_plus(addr6)
+      else:
+          url+="&entry.488844173="+quote_plus("0")
+      debug(url)
+      legacy.Reporter(url).start()
