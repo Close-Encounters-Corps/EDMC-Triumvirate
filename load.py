@@ -23,7 +23,6 @@ from modules.debug import debug
 
 from modules.whitelist import whiteList
 
-from l10n import Translations
 
 
 import ttk
