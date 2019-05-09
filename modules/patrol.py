@@ -423,7 +423,7 @@ class CanonnPatrol(Frame):
         
     def getCanonnPatrol(self):    
         canonnpatrol=[]
-        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vQgIlIQE8XMugQVchWr417uB9yvOcgn1ak0LGxwmNnGg2wjJudNXrntpppcH_KFR_xTuPsKPS6uBvSb/pub?gid=0&single=true&output=tsv"        
+        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_Ww6PRFCjmr5D_l7SVyWP5vtW-WdYMn_VCAJNh_Pjs-e9nRy54xWj3a8VLPnFJzybpaezLinfxGc/pub?gid=887786618&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
             reader = csv.reader(r.iter_lines(), delimiter='\t')
             next(reader)
