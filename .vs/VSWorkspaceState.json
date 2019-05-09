@@ -1,9 +1,8 @@
 {
   "ExpandedNodes": [
     "",
-    "\\L10n",
     "\\modules"
   ],
-  "SelectedNode": "\\load.py",
+  "SelectedNode": "\\modules\\news.py",
   "PreviewInSolutionExplorer": false
 }

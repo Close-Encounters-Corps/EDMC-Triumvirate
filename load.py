@@ -9,7 +9,7 @@ from modules import factionkill
 from modules import nhss
 from modules import codex
 from modules import hdreport
-#from modules import news
+from modules import news
 from modules import release
 from modules import legacy
 from modules import legacyCanonn as Clegacy
@@ -54,7 +54,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
     
-    #this.news.plugin_prefs(frame, cmdr, is_beta,1)
+    this.news.plugin_prefs(frame, cmdr, is_beta,1)
     this.release.plugin_prefs(frame, cmdr, is_beta,2)
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
     Debug.plugin_prefs(frame,this.client_version,4)
@@ -72,7 +72,7 @@ def prefs_changed(cmdr, is_beta):
     '''
     Save settings.
     '''
-    #this.news.prefs_changed(cmdr, is_beta)
+    this.news.prefs_changed(cmdr, is_beta)
     this.release.prefs_changed(cmdr, is_beta)
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
@@ -116,7 +116,7 @@ def plugin_app(parent):
     table.columnconfigure(1, weight=1)
     table.grid(sticky='NSEW')
     
-    #this.news = news.CanonnNews(table,0)
+    this.news = news.CECNews(table,0)
     this.release = release.Release(table,this.version,1)
     this.codexcontrol = codex.CodexTypes(table,2)
     this.patrol = patrol.CanonnPatrol(table,3)

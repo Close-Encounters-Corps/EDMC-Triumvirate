@@ -65,7 +65,7 @@ class NewsLink(HyperlinkLabel):
 
 
 
-class CanonnNews(Frame):
+class CECNews(Frame):
 
     def __init__(self, parent,gridrow):
         'Initialise the ``News``.'
@@ -93,7 +93,7 @@ class CanonnNews(Frame):
         self.hyperlink.grid(row = 0, column = 1,sticky='NSEW')
         
         self.news_count=0
-        self.news_pos=0
+        self.news_pos=1
         self.minutes=0
         self.visible()
         #self.hyperlink.bind('<Configure>', self.hyperlink.configure_event)
@@ -104,7 +104,7 @@ class CanonnNews(Frame):
         if self.isvisible:
         
             if self.news_count == self.news_pos:           
-                self.news_pos=0
+                self.news_pos=1
             else:
                 self.news_pos+=1
             
@@ -120,10 +120,12 @@ class CanonnNews(Frame):
     def update(self):
         if self.visible():
             if self.news_data:
-                    news=self.news_data[self.news_pos]
-                    self.hyperlink['url'] = news['link']
-                    #self.hyperlink['text'] = decode_unicode_references(news['title']['rendered'])
-                    self.hyperlink['text'] = "Comm's array error"
+                    feed = self.news_data.content.split("\r\n")
+                    lines=feed[self.news_pos]
+                    news= lines.split("\t")
+                    self.hyperlink['url'] = news[1]
+                    self.hyperlink['text'] = decode_unicode_references(news[2])
+                    debug("News debug"+str(news))
             else:
                 #keep trying until we have some data
                 #elf.hyperlink['text'] = 'Fetching News...'
@@ -131,7 +133,7 @@ class CanonnNews(Frame):
 
     def click_news(self,event):
         if self.news_count == self.news_pos:           
-            self.news_pos=0
+            self.news_pos=1
         else:
             self.news_pos+=1
             
@@ -143,9 +145,11 @@ class CanonnNews(Frame):
         if self.isvisible:
         
             debug('Fetching News')
-            self.news_data = requests.get('https://vk.com/close_encounters_corps').json()
+            self.news_data = requests.get('https://docs.google.com/spreadsheets/d/1UnrH5ULSycKzySonUDA79aPBqxUbvNOEOSlW85NY1a0/export?&format=tsv')
+            debug(news_data)
             self.news_count=len(self.news_data)-1
-            self.news_pos=0
+            
+            self.news_pos=1
             self.minutes=REFRESH_CYCLES
 
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
