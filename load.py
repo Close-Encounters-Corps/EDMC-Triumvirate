@@ -1,4 +1,5 @@
-﻿from config import config
+﻿#coding = utf-8
+from config import config
 import myNotebook as nb
 from urllib import quote_plus
 import requests

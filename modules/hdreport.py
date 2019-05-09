@@ -138,7 +138,7 @@ class HDInspector(Frame):
         self.commander=cmdr
         self.is_beta=is_beta
         self.grid(row = gridrow, column = 0)
-        self.button=Button(self, text="Click here to scan all your journals for Hyperdictions")
+        self.button=Button(self, text="Нажмите, что бы проверить журнал на предмет АХ перехватов")
         self.button.bind('<Button-1>',self.run)
         self.button.grid(row=0,column = 0)
         Emitter.setRoute(is_beta,client)
