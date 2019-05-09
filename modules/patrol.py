@@ -130,7 +130,7 @@ class PatrolLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Загрузка патруля...",
+            text="Fetching Patrol...",
             url=DEFAULT_URL,
             popup_copy = True,
             #wraplength=50,  # updated in __configure_event below
@@ -150,7 +150,7 @@ class InfoLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Загрузка патруля...",
+            text="Fetching Patrol...",
             url=DEFAULT_URL,
             popup_copy = True,
             wraplength=50,  # updated in __configure_event below
@@ -188,7 +188,7 @@ class CanonnPatrol(Frame):
         self.IMG_PREV = tk.PhotoImage(file = u'{}\\icons\\left_arrow.gif'.format(CanonnPatrol.plugin_dir))
         self.IMG_NEXT = tk.PhotoImage(file = u'{}\\icons\\right_arrow.gif'.format(CanonnPatrol.plugin_dir))
         
-        self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Triumvirate.patrol')
+        self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Canonn.patrol')
         
         
         self.canonnbtn=tk.IntVar(value=config.getint("HidePatrol"))
@@ -206,7 +206,7 @@ class CanonnPatrol(Frame):
         self.grid(row = gridrow, column = 0, sticky="NSEW",columnspan=2)
         
         ## Text Instructions for the patrol
-        self.label=tk.Label(self, text=  "Патруль:")         
+        self.label=tk.Label(self, text=  "Patrol:")         
         self.label.grid(row = 0, column = 0, sticky=sticky)
         
         self.hyperlink=PatrolLink(self)
@@ -324,9 +324,9 @@ class CanonnPatrol(Frame):
                 
             else:
                 if self.system:
-                    self.hyperlink['text'] = "Получение патруля"
+                    self.hyperlink['text'] = "Fetching patrols..."
                 else:
-                    self.hyperlink['text'] = "Ожидание данных о местоположении"
+                    self.hyperlink['text'] = "Waiting for location"
                 self.infolink.grid_remove()
                 self.distance.grid_remove()
                 self.prev.grid_remove()
@@ -514,11 +514,11 @@ class CanonnPatrol(Frame):
         frame.columnconfigure(1, weight=1)
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
         
-        nb.Label(frame,text="Настройки Патруля").grid(row=0,column=0,sticky="NW")
-        nb.Checkbutton(frame, text="Скрыть Патруль", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW")
-        nb.Checkbutton(frame, text="Скрыть данные по БГС", variable=self.factionbtn).grid(row = 1, column = 1,sticky="NW")
-        nb.Checkbutton(frame, text="Скрыть данные по Вашим кораблям", variable=self.hideshipsbtn).grid(row = 2, column = 1,sticky="NW")
-        nb.Checkbutton(frame, text="Автоматически копировать \nназвание системы в буфер обмена", variable=self.copypatrolbtn).grid(row = 2,column = 0,sticky="NW",)
+        nb.Label(frame,text="Patrol Settings").grid(row=0,column=0,sticky="NW")
+        nb.Checkbutton(frame, text="Hide Canonn Patrols", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW")
+        nb.Checkbutton(frame, text="Hide Canonn Faction Systems", variable=self.factionbtn).grid(row = 1, column = 2,sticky="NW")
+        nb.Checkbutton(frame, text="Hide Your Ships", variable=self.hideshipsbtn).grid(row = 1, column = 3,sticky="NW")
+        nb.Checkbutton(frame, text="Automatically copy the patrol to the clipboard", variable=self.copypatrolbtn).grid(row = 2, column = 0,sticky="NW",)
         
         
         debug("canonn: {}, faction: {} HideMyShips {}".format(self.canonn,self.faction,self.HideMyShips))
