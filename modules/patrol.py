@@ -93,9 +93,27 @@ ship_types={
         'viper_mkiv': 'Viper MkIV',
         'vulture': 'Vulture'
 }
+state_list={
+    "civilliberty":"Civil liberty",
+    "none":"none",
+    "boom":"Boom1",
+    "bust" : "Bust",
+    "civilunrest":"CivilUnrest",
+    "civilwar":"CivilWar",
+    "election":"Election",
+    "expansion":"Expansion",
+    "famine":"Famine",
+    "investment":"Investment",
+    "lockdown":"Lockdown",
+    "outbreak":"Outbreak",
+    "retreat":"Retreat",
+    "war":"War"}
 
 def getShipType(key):
-    name=ship_types.get(key.lower())
+    try:
+        name=ship_types.get(key.lower())
+    except:
+        return "NONE"
     if name:
         return name
     else:
@@ -350,8 +368,14 @@ class CanonnPatrol(Frame):
         over=float(bgs.get("influence"))>0.65
         under=float(bgs.get("influence"))<0.50
         
-        if  self.getStates("active_states",bgs):       
-            states=" States: {}".format(self.getStates("active_states",bgs))
+        if  self.getStates("active_states",bgs):   
+            statesraw=self.getStates("active_states",bgs).split(",")
+            debug(statesraw)
+            #statesraw=" States: {}".format(self.getStates("active_states",bgs))
+            states=""
+            
+            for i in range(len(statesraw)):
+                states=states+", "+ state_list[statesraw[i]]
         else:
             states=""
             
@@ -423,7 +447,7 @@ class CanonnPatrol(Frame):
         
     def getCanonnPatrol(self):    
         canonnpatrol=[]
-        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_Ww6PRFCjmr5D_l7SVyWP5vtW-WdYMn_VCAJNh_Pjs-e9nRy54xWj3a8VLPnFJzybpaezLinfxGc/pub?gid=887786618&single=true&output=tsv"        
+        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_Ww6PRFCjmr5D_l7SVyWP5vtW-WdYMn_VCAJNh_Pjs-e9nRy54xWj3a8VLPnFJzybpaezLinfxGc/pub?gid=887786618&single=true&output=csv"        
         with closing(requests.get(url, stream=True)) as r:
             reader = csv.reader(r.iter_lines(), delimiter='\t')
             next(reader)
