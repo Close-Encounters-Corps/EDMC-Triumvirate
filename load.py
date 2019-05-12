@@ -16,7 +16,7 @@ from modules import legacyCanonn as Clegacy
 from modules import clientreport
 from modules import fssreports
 from modules import patrol
-from modules import friendfoe as FF
+#from modules import friendfoe as FF
 from modules.systems import Systems
 from modules.debug import Debug
 from modules.debug import debug
@@ -116,9 +116,9 @@ def plugin_app(parent):
     table.columnconfigure(1, weight=1)
     table.grid(sticky='NSEW')
     
-    this.news = news.CECNews(table,0)
-    this.release = release.Release(table,this.version,1)
-    this.codexcontrol = codex.CodexTypes(table,2)
+    this.codexcontrol = codex.CodexTypes(table,0)
+    this.news = news.CECNews(table,1)
+    this.release = release.Release(table,this.version,2)
     this.patrol = patrol.CanonnPatrol(table,3)
     whitelist=whiteList(parent)
     whitelist.fetchData()
@@ -176,7 +176,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,bod
     Clegacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
 
     #Triumvirate reporting
-    FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
+    #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
 
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)

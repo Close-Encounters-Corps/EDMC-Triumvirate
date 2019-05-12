@@ -100,7 +100,7 @@ class FriendFoe(Frame):
         output=types[type[0]]
         return output
 
-
+    @classmethod
     def friendFoe(cmdr, system, station, entry, state):
         if entry['event']=='ShipTargeted':
             if isCMDR(entry['PilotName'])=='cmdr':
