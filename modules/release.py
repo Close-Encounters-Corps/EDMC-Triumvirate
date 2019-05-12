@@ -88,14 +88,14 @@ class Release(Frame):
         self.columnconfigure(1, weight=1)
         self.grid(row = gridrow, column = 0, sticky="NSEW",columnspan=2)
         
-        self.label=tk.Label(self, text=  "Release:")
+        self.label=tk.Label(self, text=  "Версия:")
         self.label.grid(row = 0, column = 0, sticky=sticky)
         
         
         self.hyperlink=ReleaseLink(self)
         self.hyperlink.grid(row = 0, column = 1,sticky="NSEW")
         
-        self.button=tk.Button(self, text="Click here to upgrade", command=self.click_installer)
+        self.button=tk.Button(self, text="Нажмите что бы обновить", command=self.click_installer)
         self.button.grid(row = 1, column = 0,columnspan=2,sticky="NSEW")
         self.button.grid_remove()
         
@@ -173,20 +173,20 @@ class Release(Frame):
                 if current==release:
                     self.grid_remove()
                 elif current > release:
-                    self.hyperlink['text'] = "Experimental Release {}".format(self.release)
+                    self.hyperlink['text'] = "Тестовая версия {}".format(self.release)
                     self.grid()
                 else:
                     
                     if self.auto.get() == 1:
-                        self.hyperlink['text'] = "Release {}  Installed Please Restart".format(self.latest.get("tag_name"))     
+                        self.hyperlink['text'] = "Версия {}  установлена. Пожалуйста, перезапустите EDMC".format(self.latest.get("tag_name"))     
                         
                         if self.installer():
-                            self.hyperlink['text'] = "Release {}  Installed Please Restart".format(self.latest.get("tag_name"))     
+                            self.hyperlink['text'] = "Версия {}  установлена. Пожалуйста, перезапустите EDMC".format(self.latest.get("tag_name"))     
                         else:
-                            self.hyperlink['text'] = "Release {}  Upgrade Failed".format(self.latest.get("tag_name"))     
+                            self.hyperlink['text'] = "Обновление до версии {} не удалось".format(self.latest.get("tag_name"))     
                         
                     else:
-                        self.hyperlink['text'] = "Please Upgrade {}".format(self.latest.get("tag_name"))
+                        self.hyperlink['text'] = "Пожалуйста поставьте версию {}".format(self.latest.get("tag_name"))
                         self.button.grid()
                         if self.novoices.get() != 1:
                             Player(Release.plugin_dir,["sounds\\prefix.wav","sounds\\nag1.wav"]).start()
@@ -205,9 +205,9 @@ class Release(Frame):
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
-        nb.Checkbutton(frame, text="Auto Update This Plugin", variable=self.auto).grid(row = 0, column = 0,sticky="NW")
-        nb.Checkbutton(frame, text="Remove backup", variable=self.rmbackup).grid(row = 0, column = 1,sticky="NW")
-        nb.Checkbutton(frame, text="Stop talking to me", variable=self.novoices).grid(row = 0, column = 2,sticky="NW")
+        nb.Checkbutton(frame, text="Включить автообновление", variable=self.auto).grid(row = 0, column = 0,sticky="NW")
+        nb.Checkbutton(frame, text="Удалять бекапы версий", variable=self.rmbackup).grid(row = 0, column = 1,sticky="NW")
+        nb.Checkbutton(frame, text="Отключить голосовые сообщения", variable=self.novoices).grid(row = 0, column = 2,sticky="NW")
         
         return frame
 

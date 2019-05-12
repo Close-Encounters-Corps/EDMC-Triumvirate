@@ -51,7 +51,7 @@ class NewsLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Com's array disabled, click here for get news page",
+            text="Получение новостей...",
             url=DEFAULT_NEWS_URL,
             wraplength=50,  # updated in __configure_event below
             anchor=tk.NW
@@ -85,7 +85,7 @@ class CECNews(Frame):
         self.columnconfigure(1, weight=1)
         self.grid(row = gridrow, column = 0, sticky='NSEW',columnspan=2)
         
-        self.label=tk.Label(self, text=  'News:')
+        self.label=tk.Label(self, text=  'Новости:')
         self.label.grid(row = 0, column = 0, sticky=sticky)
         self.label.bind('<Button-1>',self.click_news)
         
@@ -146,9 +146,9 @@ class CECNews(Frame):
         
             debug('Fetching News')
             self.news_data = requests.get('https://docs.google.com/spreadsheets/d/1UnrH5ULSycKzySonUDA79aPBqxUbvNOEOSlW85NY1a0/export?&format=tsv')
-            debug(news_data)
-            self.news_count=len(self.news_data)-1
-            
+            debug(self.news_data)
+            #self.news_count=len(self.news_data)-1
+            self.news_count=5
             self.news_pos=1
             self.minutes=REFRESH_CYCLES
 
@@ -159,7 +159,7 @@ class CECNews(Frame):
         
         #frame = nb.Frame(parent)
         #frame.columnconfigure(1, weight=1)
-        return nb.Checkbutton(parent, text='Hide CEC News', variable=self.hidden).grid(row = gridrow, column = 0,sticky='NSEW')
+        return nb.Checkbutton(parent, text='Скрыть новости СЕС', variable=self.hidden).grid(row = gridrow, column = 0,sticky='NSEW')
         
         #return frame
 

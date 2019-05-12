@@ -31,83 +31,83 @@ DEFAULT_URL = ""
 WRAP_LENGTH = 200
 
 ship_types={   
-        'adder': 'Adder',
-        'typex_3': 'Alliance Challenger',
-        'typex': 'Alliance Chieftain',
-        'typex_2': 'Alliance Crusader',
-        'anaconda': 'Anaconda',
-        'asp explorer': 'Asp Explorer',
-        'asp': 'Asp Explorer',
-        'asp scout': 'Asp Scout',
-        'asp_scout': 'Asp Scout',
-        'beluga liner': 'Beluga Liner',
-        'belugaliner': 'Beluga Liner',
-        'cobra mk. iii': 'Cobra MkIII',
-        'cobramkiii':  'Cobra MkIII',
-        'cobra mk. iv': 'Cobra MkIV',
-        'cobramkiv': 'Cobra MkIV',
-        'diamondback explorer': 'Diamondback Explorer',
-        'diamondbackxl': 'Diamondback Explorer',
-        'diamondback scout': 'Diamondback Scout',
-        'diamondback': 'Diamondback Scout',
-        'dolphin': 'Dolphin',
-        'eagle': 'Eagle',
-        'federal assault ship': 'Federal Assault Ship',
-        'federation_dropship_mkii': 'Federal Assault Ship',       
-        'federal corvette': 'Federal Corvette',
-        'federation_corvette': 'Federal Corvette',
-        'federal dropship': 'Federal Dropship',
-        'federation_dropship': 'Federal Dropship',
-        'federal gunship': 'Federal Gunship',
-        'federation_gunship': 'Federal Gunship',
-        'fer-de-lance': 'Fer-de-Lance',
-        'ferdelance': 'Fer-de-Lance',
-        'hauler': 'Hauler',
-        'imperial clipper': 'Imperial Clipper',
-        'empire_trader': 'Imperial Clipper',
-        'imperial courier': 'Imperial Courier',
-        'empire_courier': 'Imperial Courier',
-        'imperial cutter': 'Imperial Cutter',
-        'cutter': 'Imperial Cutter',
-        'imperial eagle': 'Imperial Eagle',
-        'empire_eagle': 'Imperial Eagle',
-        'keelback': 'Keelback',
-        'independant_trader': 'Keelback',
-        'krait_mkii': 'Krait MkII',
-        'krait_light': 'Krait Phantom',
-        'mamba': 'Mamba',
-        'orca': 'Orca',
-        'python': 'Python',
-        'sidewinder': 'Sidewinder',
-        'type 6 transporter': 'Type-6 Transporter',
-        'type6': 'Type-6 Transporter',
-        'type 7 transporter': 'Type-7 Transporter',
-        'type7':'Type-7 Transporter',
-        'type 9 heavy': 'Type-9 Heavy',
-        'type9': 'Type-9 Heavy',
-        'type 10 defender': 'Type-10 Defender',
-        'type9_military': 'Type-10 Defender',
-        'viper mk. iii': 'Viper MkIII',
-        'viper': 'Viper MkIII',
-        'viper mk. iv': 'Viper MkIV',
-        'viper_mkiv': 'Viper MkIV',
-        'vulture': 'Vulture'
+        'adder': ' Adder',
+        'typex_3': ' Alliance Challenger',
+        'typex': ' Alliance Chieftain',
+        'typex_2': ' Alliance Crusader',
+        'anaconda': 'а Anaconda',
+        'asp explorer': ' Asp Explorer',
+        'asp': ' Asp Explorer',
+        'asp scout': ' Asp Scout',
+        'asp_scout': ' Asp Scout',
+        'beluga liner': 'а Beluga Liner',
+        'belugaliner': 'а Beluga Liner',
+        'cobra mk. iii': 'а Cobra MkIII',
+        'cobramkiii':  'а Cobra MkIII',
+        'cobra mk. iv': 'а Cobra MkIV',
+        'cobramkiv': 'а Cobra MkIV',
+        'diamondback explorer': ' Diamondback Explorer',
+        'diamondbackxl': ' Diamondback Explorer',
+        'diamondback scout': ' Diamondback Scout',
+        'diamondback': ' Diamondback Scout',
+        'dolphin': ' Dolphin',
+        'eagle': ' Eagle',
+        'federal assault ship': ' Federal Assault Ship',
+        'federation_dropship_mkii': ' Federal Assault Ship',       
+        'federal corvette': ' Federal Corvette',
+        'federation_corvette': ' Federal Corvette',
+        'federal dropship': ' Federal Dropship',
+        'federation_dropship': ' Federal Dropship',
+        'federal gunship': ' Federal Gunship',
+        'federation_gunship': ' Federal Gunship',
+        'fer-de-lance': ' Fer-de-Lance',
+        'ferdelance': ' Fer-de-Lance',
+        'hauler': ' Hauler',
+        'imperial clipper': ' Imperial Clipper',
+        'empire_trader': ' Imperial Clipper',
+        'imperial courier': ' Imperial Courier',
+        'empire_courier': ' Imperial Courier',
+        'imperial cutter': ' Imperial Cutter',
+        'cutter': ' Imperial Cutter',
+        'imperial eagle': ' Imperial Eagle',
+        'empire_eagle': ' Imperial Eagle',
+        'keelback': ' Keelback',
+        'independant_trader': ' Keelback',
+        'krait_mkii': ' Krait MkII',
+        'krait_light': ' Krait Phantom',
+        'mamba': 'а Mamba',
+        'orca': 'а Orca',
+        'python': ' Python',
+        'sidewinder': ' Sidewinder',
+        'type 6 transporter': ' Type-6 Transporter',
+        'type6': ' Type-6 Transporter',
+        'type 7 transporter': ' Type-7 Transporter',
+        'type7':' Type-7 Transporter',
+        'type 9 heavy': ' Type-9 Heavy',
+        'type9': ' Type-9 Heavy',
+        'type 10 defender': ' Type-10 Defender',
+        'type9_military': ' Type-10 Defender',
+        'viper mk. iii': ' Viper MkIII',
+        'viper': ' Viper MkIII',
+        'viper mk. iv': ' Viper MkIV',
+        'viper_mkiv': ' Viper MkIV',
+        'vulture': 'а Vulture'
 }
 state_list={
-    "civilliberty":"Civil liberty",
-    "none":"none",
-    "boom":"Boom1",
-    "bust" : "Bust",
-    "civilunrest":"CivilUnrest",
-    "civilwar":"CivilWar",
-    "election":"Election",
-    "expansion":"Expansion",
-    "famine":"Famine",
-    "investment":"Investment",
-    "lockdown":"Lockdown",
-    "outbreak":"Outbreak",
-    "retreat":"Retreat",
-    "war":"War"}
+    "civilliberty":"Гражданские свободы",
+    "none":"",
+    "boom":"Бум",
+    "bust" : "Спад",
+    "civilunrest":"Гражданские беспорядки",
+    "civilwar":"Гражданская война",
+    "election":"Выборы",
+    "expansion":"Экспансия",
+    "famine":"Голод",
+    "investment":"Инвестиции",
+    "lockdown":"Изоляция",
+    "outbreak":"Эпдемия",
+    "retreat":"Отступление",
+    "war":"Война"}
 
 def getShipType(key):
     try:
@@ -148,7 +148,7 @@ class PatrolLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Fetching Patrol...",
+            text="Получение патруля",
             url=DEFAULT_URL,
             popup_copy = True,
             #wraplength=50,  # updated in __configure_event below
@@ -168,7 +168,7 @@ class InfoLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Fetching Patrol...",
+            text="Получение патруля",
             url=DEFAULT_URL,
             popup_copy = True,
             wraplength=50,  # updated in __configure_event below
@@ -224,7 +224,7 @@ class CanonnPatrol(Frame):
         self.grid(row = gridrow, column = 0, sticky="NSEW",columnspan=2)
         
         ## Text Instructions for the patrol
-        self.label=tk.Label(self, text=  "Patrol:")         
+        self.label=tk.Label(self, text=  "Патруль:")         
         self.label.grid(row = 0, column = 0, sticky=sticky)
         
         self.hyperlink=PatrolLink(self)
@@ -330,7 +330,7 @@ class CanonnPatrol(Frame):
                 self.nearest=self.getNearest(p)               
                 self.hyperlink['text']=self.nearest.get("system")
                 self.hyperlink['url']="https://www.edsm.net/en/system?systemName={}".format(quote_plus(self.nearest.get("system")))
-                self.distance['text']="{}ly".format(Locale.stringFromNumber(getDistance(p,self.nearest.get("coords")),2))
+                self.distance['text']="{} СГ".format(Locale.stringFromNumber(getDistance(p,self.nearest.get("coords")),2))
                 self.infolink['text']=self.nearest.get("instructions")
                 self.infolink['url']=self.nearest.get("url")
                 
@@ -342,9 +342,9 @@ class CanonnPatrol(Frame):
                 
             else:
                 if self.system:
-                    self.hyperlink['text'] = "Fetching patrols..."
+                    self.hyperlink['text'] = "Получение патруля..."
                 else:
-                    self.hyperlink['text'] = "Waiting for location"
+                    self.hyperlink['text'] = "Ожидание данных о местоположении..."
                 self.infolink.grid_remove()
                 self.distance.grid_remove()
                 self.prev.grid_remove()
@@ -387,11 +387,11 @@ class CanonnPatrol(Frame):
         if last_updated == 0:
             update_text=""
         elif last_updated == 1:
-            update_text=". Last updated 1 day ago"
+            update_text=". Данные обновлены 1 день назад"
         elif last_updated < 7:    
-            update_text=". Last updated {} days ago".format(last_updated)
+            update_text=". Последнее обновление данных {} дней назад".format(last_updated)
         elif last_updated > 6:    
-            update_text=". Last updated {} days ago. Please jump into the system to update the stats".format(last_updated)
+            update_text=". Последнее обновление данных {} дней назад. Пожалуйста прыгните в эту систему что бы обновить данные".format(last_updated)
         
         # if  self.getStates("pending_states",bgs):       
             # pstates=" Pending: {}".format(self.getStates("pending_states",bgs))
@@ -404,11 +404,11 @@ class CanonnPatrol(Frame):
         
         #debug(bgs)
         if target:
-            retval =  "{} Influence {}%{}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,update_text)
+            retval =  "{} Влияние {}%{}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,update_text)
         if  over:
-            retval =   "{} Influence {}%{} {}.{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,contact,update_text)
+            retval =   "{} Влияние {}%{} {}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,contact,update_text)
         if under:
-            retval =  "{} Influence {}%{} Please complete missions for {} to increase our influence{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,faction,update_text)
+            retval =  "{} Влияние {}%{} Пожалуйста выполняйте миссии для {} что бы увеличить наше влияние {}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,faction,update_text)
 
         debug("{}: {}".format(bgs.get("system_name"),retval))
         return retval    
@@ -538,11 +538,11 @@ class CanonnPatrol(Frame):
         frame.columnconfigure(1, weight=1)
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
         
-        nb.Label(frame,text="Patrol Settings").grid(row=0,column=0,sticky="NW")
-        nb.Checkbutton(frame, text="Hide Canonn Patrols", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW")
-        nb.Checkbutton(frame, text="Hide Canonn Faction Systems", variable=self.factionbtn).grid(row = 1, column = 2,sticky="NW")
-        nb.Checkbutton(frame, text="Hide Your Ships", variable=self.hideshipsbtn).grid(row = 1, column = 3,sticky="NW")
-        nb.Checkbutton(frame, text="Automatically copy the patrol to the clipboard", variable=self.copypatrolbtn).grid(row = 2, column = 0,sticky="NW",)
+        nb.Label(frame,text="Настройки патруля").grid(row=0,column=0,sticky="NW")
+        nb.Checkbutton(frame, text="Скрыть патруль", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW")
+        nb.Checkbutton(frame, text="Скрыть бгс", variable=self.factionbtn).grid(row = 1, column = 1,sticky="NW")
+        nb.Checkbutton(frame, text="Скрыть данные ваших кораблей", variable=self.hideshipsbtn).grid(row = 2, column = 1,sticky="NW")
+        nb.Checkbutton(frame, text="Автоматически копировать \nпатруль в буфер обмена", variable=self.copypatrolbtn).grid(row = 2, column = 0,sticky="NW",)
         
         
         debug("canonn: {}, faction: {} HideMyShips {}".format(self.canonn,self.faction,self.HideMyShips))
@@ -728,18 +728,18 @@ class CanonnPatrol(Frame):
                 ship_type=getShipType(shipsystems.get(system)[0].get("name"))
                 ship_name=shipsystems.get(system)[0].get("shipName")
                 ship_station=shipsystems.get(system)[0].get("station").get("name")
-                ship_info="Your {}, {} is docked at {}".format(ship_type,ship_name,ship_station)
+                ship_info="Ваш{}, {} пристыкован(а) к {}".format(ship_type,ship_name,ship_station)
             elif ship_count == 2:
                 
                 if shipsystems.get(system)[0].get("station").get("name") == shipsystems.get(system)[1].get("station").get("name"):
-                    ship_info="Your {} ({}) and {} ({}) are docked at {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name"))        
+                    ship_info="Ваш{} ({}) и ваш{} ({}) пристыкованы к {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name"))        
                     debug(ship_info)
                 else:
                 
-                    ship_info="Your {} ({}) is docked at {} and your {} ({}) is docked at {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),shipsystems.get(system)[1].get("station").get("name"),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name"))        
+                    ship_info="Ваш{} ({}) Пристыкован(а) к {} и ваш{} ({}) пристыкован к {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),shipsystems.get(system)[1].get("station").get("name"),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name"))        
                     debug(ship_info)
             else:
-                ship_info="You have {} ships stored in this system".format(ship_count)
+                ship_info="У вас {} Кораблей в этой системе".format(ship_count)
                 debug(ship_info)
 
             self.ships.append(newPatrol("SHIPS",system,ship_pos,ship_info,None))
