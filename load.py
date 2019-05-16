@@ -20,6 +20,7 @@ from modules import patrol
 from modules.systems import Systems
 from modules.debug import Debug
 from modules.debug import debug
+from modules import materialReport
 
 from modules.whitelist import whiteList
 
@@ -165,6 +166,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,bod
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     whiteList.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
+    materialReport.submit(cmdr, is_beta, system, station, entry,client)
 
 
 
