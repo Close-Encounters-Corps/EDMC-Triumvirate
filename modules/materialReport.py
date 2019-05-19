@@ -39,7 +39,7 @@ from debug import debug,error
 
 class MeterialsCollected(Emitter):
     
-    def __init__(cmdr, is_beta, system, station, entry,client,lat,lon,body,state):
+    def __init__(self,cmdr, is_beta, system, station, entry,client,lat,lon,body,state):
         Emitter.__init__(self,cmdr, is_beta, system, None,None,None, entry, None,None,None,client)
         self.modelreport="materialreports"
         
