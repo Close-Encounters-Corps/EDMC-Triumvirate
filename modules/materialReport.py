@@ -39,21 +39,26 @@ from debug import debug,error
 
 class MeterialsCollected(Emitter):
     
-    def __init__(self,cmdr, is_beta, system,entry,client):
+    def __init__(cmdr, is_beta, system, station, entry,client,lat,lon,body,state):
         Emitter.__init__(self,cmdr, is_beta, system, None,None,None, entry, None,None,None,client)
         self.modelreport="materialreports"
         
     def setPayload(self):
         payload={}
-        payload["system"]=self.system 
+        payload["system"]=self.system
+        payload["body"]=  self.body
+        payload["latitude"]=  self.lat
+        payload["longitude"]=  self.lon
         payload["category"]=self.entry["Category"]
         payload["journalName"]=self.entry["Name"]
-        payload["journalLocalised"]=self.entry.get("Name_Localised")
+        #payload["journalLocalised"]=unicode(self.entry.get(u"Name_Localised"))
         payload["count"]=self.entry["Count"]
-        #payload["playMode"]=
+        #payload["distanceFromMainStar"] = #TODO find method to calculate distance
+        #payload["playMode"] = #TODO find method to see play mode
         payload["isbeta"]= self.is_beta
         payload["clientVersion"]= self.client
-           
+        #pauload["state"]=self.state #TODO Дождаться добавления столбца в схему
+
         return payload
 
 
@@ -64,7 +69,7 @@ def matches(d, field, value):
     from canonn import journaldata
     journaldata.submit(cmdr, system, station, entry)
 '''
-def submit(cmdr, is_beta, system, station, entry,client):
+def submit(cmdr, is_beta, system, station, entry,client,lat,lon,body,state):
     if entry["event"] == "MaterialCollected" :
-        MeterialsCollected(cmdr, is_beta, system,  entry, client).start()   
+        MeterialsCollected(cmdr, is_beta, system, station, entry,client,lat,lon,body,state).start()   
         
