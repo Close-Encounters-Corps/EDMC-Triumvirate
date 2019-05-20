@@ -228,9 +228,9 @@ class CanonnPatrol(Frame):
         self.label.grid(row = 0, column = 0, sticky=sticky)
         
         self.hyperlink=PatrolLink(self)
-        self.hyperlink.grid(row = 0, column = 1)
+        self.hyperlink.grid(row = 0, column = 2)
         self.distance=tk.Label(self, text=  "...")         
-        self.distance.grid(row = 0, column = 2,sticky="NSEW")
+        self.distance.grid(row = 0, column = 3,sticky="NSEW")
         self.distance.grid_remove()
         
         ## Text Instructions for the patrol
@@ -414,8 +414,10 @@ class CanonnPatrol(Frame):
         return retval    
             
     def getBGSPatrol(self,bgs,faction):
+        debug("bgsDebugSys"+bgs.get("system_name"))
         x,y,z=Systems.edsmGetSystem(bgs.get("system_name"))
         return newPatrol("BGS",bgs.get("system_name"),(x,y,z),self.getBGSInstructions(bgs,faction),"https://elitebgs.app/system/{}".format(bgs.get("system_id")))
+        #TODO модифицировать код таким образом, что бы была возможность переназначать задачи из гуглодока    
             
         
                 
@@ -434,9 +436,6 @@ class CanonnPatrol(Frame):
                 
                 patrol.append(self.getBGSPatrol(bgs,faction))
         
-        
-        return patrol
-        
     def parseurl(self,url):
         '''
         We will provided some sunstitute variables for the urls
@@ -447,7 +446,7 @@ class CanonnPatrol(Frame):
         
     def getCanonnPatrol(self):    
         canonnpatrol=[]
-        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_Ww6PRFCjmr5D_l7SVyWP5vtW-WdYMn_VCAJNh_Pjs-e9nRy54xWj3a8VLPnFJzybpaezLinfxGc/pub?gid=887786618&single=true&output=csv"        
+        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_Ww6PRFCjmr5D_l7SVyWP5vtW-WdYMn_VCAJNh_Pjs-e9nRy54xWj3a8VLPnFJzybpaezLinfxGc/pub?gid=887786618&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
             reader = csv.reader(r.iter_lines(), delimiter='\t')
             next(reader)
@@ -455,7 +454,10 @@ class CanonnPatrol(Frame):
                 
                 type,system,x,y,z,instructions,url,event=row
                 if system != '':
-                    canonnpatrol.append(newPatrol(type,system,(float(x),float(y),float(z)),instructions,self.parseurl(url),event))
+                    try:
+                        canonnpatrol.append(newPatrol(type,system,(float(x),float(y),float(z)),instructions,self.parseurl(url),event))
+                    except:
+                        error("patrol {},{},{},{},{},{},{},{}".format(type,system,x,y,z,instructions,self.parseurl(url),event))
                 else:
                     error("Patrol contains blank lines")
                 
@@ -494,8 +496,11 @@ class CanonnPatrol(Frame):
             patrol_list=[]
             if self.faction != 1:
                 debug("Getting Faction Data")
-                patrol_list.extend(self.getFactionData("Close Encounters Corps"))
-                patrol_list.extend(self.getFactionData("EG Union"))
+                try:
+                    patrol_list.extend(self.getFactionData("Close Encounters Corps"))
+                except: debug("CEC BGS Patrol complete")
+                try: patrol_list.extend(self.getFactionData("EG Union"))
+                except: debug("EGP BGS Patrol complete")
                 
             if self.ships and self.HideMyShips != 1:
                 patrol_list.extend(self.ships)
