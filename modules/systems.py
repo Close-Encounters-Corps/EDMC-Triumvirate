@@ -27,7 +27,7 @@ class Systems():
         "HIP 15412":[-41.0625,-100.875,-159.21875],
         "HIP 20827":[4.96875,-65.65625,-158.5625],
         "HIP 19757":[10.3125,-82.3125,-153.125],
-        "HIP 19796":[6.34375 / -67.4375 / -130.40625],
+        "HIP 19796":[6.34375 , -67.4375 , -130.40625],
         #Системы ЕГП
         "Euryale":[35.375,-68.96875,24.8125],
         "Mamaragan":[33.875,-49.09375,26.4375],
@@ -80,7 +80,7 @@ class Systems():
     def edsmGetSystem(cls,system):
         
         if cls.systemCache.has_key(system):
-            debug(cls.systemCache[system])
+            #debug(cls.systemCache[system])
             return cls.systemCache[system]
             
         else:
