@@ -228,9 +228,9 @@ class CanonnPatrol(Frame):
         self.label.grid(row = 0, column = 0, sticky=sticky)
         
         self.hyperlink=PatrolLink(self)
-        self.hyperlink.grid(row = 0, column = 2)
+        self.hyperlink.grid(row = 0, column = 1)
         self.distance=tk.Label(self, text=  "...")         
-        self.distance.grid(row = 0, column = 3,sticky="NSEW")
+        self.distance.grid(row = 0, column = 2,sticky="NSEW")
         self.distance.grid_remove()
         
         ## Text Instructions for the patrol
@@ -398,15 +398,15 @@ class CanonnPatrol(Frame):
         # else:
             # pstates=""
         if faction =="Close Encounters Corps":
-            contact = ""
+            contact = "Пожалуйста, свяжитесь с AntonyVern [СЕС]#5904 на сервере СЕС для получения инструкций"
         if faction =="EG Union":
-            contact = ""        
+            contact = "Пожалуйста, свяжитесь с HEúCMuT#1242 на сервере ЕГП для получения инструкций"        
         
         #debug(bgs)
         if target:
             retval =  "{} Влияние {}%{}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,update_text)
         if  over:
-            retval =   "{} Влияние {}%{} {}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,contact,update_text)
+            retval =   "{} Влияние {}%{} {}.{}.".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,contact,update_text)
         if under:
             retval =  "{} Влияние {}%{} Пожалуйста выполняйте миссии для {} что бы увеличить наше влияние {}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,faction,update_text)
 
