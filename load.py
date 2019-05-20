@@ -44,7 +44,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.0.8'
+this.version='1.0.9'
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body_name=None
     
@@ -90,8 +90,8 @@ def plugin_start(plugin_dir):
     Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
-    
-    
+    SQID=config.get("SQID")
+    debug(SQID)
     
     return 'Triumvirate'
     
@@ -140,8 +140,19 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         Systems.storeSystem(system,entry.get("StarPos"))
         
     if ('Body' in entry):
-            this.body_name = entry['Body']        
-        
+            this.body_name = entry['Body']
+            
+
+    if entry.get("event")== "JoinedSquadron":
+        if entry["SquadronName"]== "EG PILOTS":
+           SQID="EGPU"
+        elif entry["SquadronName"]== "Close Encouters Corps":
+            SQID = "SCEC"
+        else:
+            SQID = None
+        debug(SQID)
+        config.set('SQID', SQID.get())
+
     if system:
         x,y,z=Systems.edsmGetSystem(system)
     else:
@@ -207,7 +218,8 @@ def dashboard_entry(cmdr, is_beta, entry):
     else:
         this.body_name = None
         this.nearloc['Latitude'] = None
-        this.nearloc['Longitude'] = None    
+        this.nearloc['Longitude'] = None  
+    
     
 def cmdr_data(data, is_beta):
     '''
@@ -232,5 +244,4 @@ def startup_stats(cmdr):
           url+="&entry.488844173="+quote_plus(addr6)
       else:
           url+="&entry.488844173="+quote_plus("0")
-      debug(url)
       legacy.Reporter(url).start()
