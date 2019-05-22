@@ -57,7 +57,7 @@ class MeterialsCollected(Emitter):
         #payload["playMode"] = #TODO find method to see play mode
         payload["isbeta"]= self.is_beta
         payload["clientVersion"]= self.client
-        pauload["factionState"]=self.state 
+        #pauload["factionState"]=self.state 
 
         return payload
 
