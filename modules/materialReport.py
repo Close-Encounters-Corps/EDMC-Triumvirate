@@ -39,7 +39,7 @@ from debug import debug,error
 
 class MeterialsCollected(Emitter):
     
-    def __init__(self,cmdr, is_beta, system, station, entry,client,lat,lon,body,state):
+    def __init__(self,cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z):
         Emitter.__init__(self,cmdr, is_beta, system, None,None,None, entry, body, lat, lon,client)
         self.modelreport="materialreports"
         
@@ -54,10 +54,12 @@ class MeterialsCollected(Emitter):
         #payload["journalLocalised"]=unicode(self.entry.get(u"Name_Localised"))
         payload["count"]=self.entry["Count"]
         #payload["distanceFromMainStar"] = #TODO find method to calculate distance
-        #payload["playMode"] = #TODO find method to see play mode
+        payload["coordX"] = self.x
+        payload["coordY"] = self.y
+        payload["coordZ"] = self.z
         payload["isbeta"]= self.is_beta
         payload["clientVersion"]= self.client
-        #pauload["factionState"]=self.state 
+        payload["factionState"]=self.state 
 
         return payload
 

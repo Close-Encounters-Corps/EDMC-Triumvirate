@@ -31,7 +31,11 @@ import Tkinter as tk
 import sys
     
 this = sys.modules[__name__]
-
+    
+this.Squadrons=[
+    ' ',
+    "CEC",
+    "EGP"]
 this.nearloc = {
    'Latitude' : None,
    'Longitude' : None,
@@ -52,6 +56,10 @@ def plugin_prefs(parent, cmdr, is_beta):
     '''
     Return a TK Frame for adding to the EDMC settings dialog.
     '''
+    this.SquadronID = config.get("SquadronID")	# Retrieve saved value from config
+    this.SquadronID_conf= ""
+
+
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
     
@@ -63,6 +71,8 @@ def plugin_prefs(parent, cmdr, is_beta):
     #this.FF.FriendFoe.plugin_prefs(frame, cmdr, is_beta,6)
     hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
     #release.versionInSettings(frame, cmdr, is_beta,8)
+    entry=nb.Entry(frame,None)
+    nb.OptionMenu(frame, entry, this.SquadronID, *this.Squadrons).grid(row = 9, column = 0,columnspan=2,sticky=tk.W)
     
     
     
@@ -77,6 +87,7 @@ def prefs_changed(cmdr, is_beta):
     this.release.prefs_changed(cmdr, is_beta)
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
+    config.set('SquadronID', this.SquadronID_conf)
     Debug.prefs_changed()
     
    
@@ -90,8 +101,8 @@ def plugin_start(plugin_dir):
     Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
-    SQID=config.get("SQID")
-    debug(SQID)
+    this.SquadronID=config.get("SquadronID")
+    debug(this.SquadronID)
     
     return 'Triumvirate'
     
@@ -143,15 +154,15 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.body_name = entry['Body']
             
 
-    if entry.get("event")== "JoinedSquadron":
-        if entry["SquadronName"]== "EG PILOTS":
-           SQID="EGPU"
-        elif entry["SquadronName"]== "Close Encouters Corps":
-            SQID = "SCEC"
-        else:
-            SQID = None
-        debug(SQID)
-        config.set('SQID', SQID.get())
+    #if entry.get("event")== "JoinedSquadron":
+    #    if entry["SquadronName"]== "EG PILOTS":
+    #       this.SquadronID="EGPU"
+    #    elif entry["SquadronName"]== "Close Encouters Corps":
+    #        this.SquadronID = "SCEC"
+    #    else:
+    #        this.SquadronID = None
+    #    debug(this.SquadronID)
+    #    config.set('this.SquadronID', this.SquadronID.get())
 
     if system:
         x,y,z=Systems.edsmGetSystem(system)
@@ -177,7 +188,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,bod
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     whiteList.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
-    materialReport.submit(cmdr, is_beta, system, station, entry,client,lat,lon,body,state)
+    materialReport.submit(cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z)
 
 
 
