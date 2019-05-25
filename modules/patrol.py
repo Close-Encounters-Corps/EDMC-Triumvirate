@@ -424,7 +424,7 @@ class CanonnPatrol(Frame):
             next(reader)
             for row in reader:
                 
-                system,x,y,z,TINF,TFAC,Description=row
+                squadron,system,x,y,z,TINF,TFAC,Description=row
                 instructions=   Description.format(TFAC,TINF)
                 SystemsOvireden=[]
                # sysLink= "https://elitebgs.app/system/{}".format()
@@ -437,7 +437,7 @@ class CanonnPatrol(Frame):
                 else:
                     error("Patrol contains blank lines")
         debug(BGSOveride)        
-        return BGSOveride   , SystemsOvireden
+        return BGSOveride   , SystemsOvireden 
     
 
 
@@ -538,8 +538,9 @@ class CanonnPatrol(Frame):
                 except: debug("CEC BGS Patrol complete")
                 try: patrol_list.extend(self.getFactionData("EG Union",BGSOSys))
                 except: debug("EGP BGS Patrol complete")
-                patrol_list.remove(None)
-                
+                try:
+                    patrol_list.remove(None)
+                except: debug("nothing to delete")
             if self.ships and self.HideMyShips != 1:
                 patrol_list.extend(self.ships)
 
