@@ -40,7 +40,10 @@ from debug import debug,error
 class MeterialsCollected(Emitter):
     
     def __init__(self,cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z):
-        Emitter.__init__(self,cmdr, is_beta, system, None,None,None, entry, body, lat, lon,client)
+        self.state=state
+        debug("MAterial rep FacState "+str(self.state))
+        Emitter.__init__(self,cmdr, is_beta, system, x,y,z, entry, body, lat, lon,client)        #,
+
         self.modelreport="materialreports"
         
     def setPayload(self):
@@ -59,7 +62,7 @@ class MeterialsCollected(Emitter):
         payload["coordZ"] = self.z
         payload["isbeta"]= self.is_beta
         payload["clientVersion"]= self.client
-        payload["factionState"]=self.state 
+        payload["factionState"]=self.state
 
         return payload
 
@@ -71,7 +74,7 @@ def matches(d, field, value):
     from canonn import journaldata
     journaldata.submit(cmdr, system, station, entry)
 '''
-def submit(cmdr, is_beta, system, station, entry,client,lat,lon,body,state):
+def submit(cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z):
     if entry["event"] == "MaterialCollected" :
-        MeterialsCollected(cmdr, is_beta, system, station, entry,client,lat,lon,body,state).start()   
+        MeterialsCollected(cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z).start()   
         

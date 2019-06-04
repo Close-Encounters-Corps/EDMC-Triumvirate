@@ -51,7 +51,7 @@ myPlugin = 'EDMC-Triumvirate'
 this.version='1.0.9'
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body_name=None
-    
+this.SysFactionState=None    
 def plugin_prefs(parent, cmdr, is_beta):
     '''
     Return a TK Frame for adding to the EDMC settings dialog.
@@ -71,8 +71,8 @@ def plugin_prefs(parent, cmdr, is_beta):
     #this.FF.FriendFoe.plugin_prefs(frame, cmdr, is_beta,6)
     hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
     #release.versionInSettings(frame, cmdr, is_beta,8)
-    entry=nb.Entry(frame,None)
-    nb.OptionMenu(frame, entry, this.SquadronID, *this.Squadrons).grid(row = 9, column = 0,columnspan=2,sticky=tk.W)
+   # entry=nb.Entry(frame,None)
+    nb.OptionMenu(frame, variable=this.SquadronID_conf, default = this.SquadronID, *this.Squadrons).grid(row = 9, column = 0,columnspan=2,sticky=tk.W)
     
     
     
@@ -152,8 +152,17 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         
     if ('Body' in entry):
             this.body_name = entry['Body']
-            
-
+    
+    if "SystemFaction" in entry:
+        ''' "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }'''
+        SystemFaction=entry.get("SystemFaction")
+        debug(SystemFaction)
+        try:
+            this.SysFactionState= SystemFaction["FactionState"]
+        except: 
+            this.SysFactionState=None
+        debug(this.SysFactionState)
+    
     #if entry.get("event")== "JoinedSquadron":
     #    if entry["SquadronName"]== "EG PILOTS":
     #       this.SquadronID="EGPU"
@@ -171,10 +180,10 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         y=None
         z=None    
     
-    return journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,this.body_name,this.nearloc['Latitude'],this.nearloc['Longitude'],this.client_version)    
+    return journal_entry_wrapper(cmdr, is_beta, system,this.SysFactionState, station, entry, state,x,y,z,this.body_name,this.nearloc['Latitude'],this.nearloc['Longitude'],this.client_version)    
     
 
-def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client):
+def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState, station, entry, state,x,y,z,body,lat,lon,client):
     '''
     Detect journal events
     '''
@@ -188,7 +197,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, station, entry, state,x,y,z,bod
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     whiteList.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
-    materialReport.submit(cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z)
+    materialReport.submit(cmdr, is_beta, system, station, entry,client,lat,lon,body,SysFactionState,x,y,z)
 
 
 
@@ -256,3 +265,9 @@ def startup_stats(cmdr):
       else:
           url+="&entry.488844173="+quote_plus("0")
       legacy.Reporter(url).start()
+
+
+
+
+
+
