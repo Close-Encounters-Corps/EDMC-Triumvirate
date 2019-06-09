@@ -1,6 +1,6 @@
 *.suo
 *.pyo
-
+*.patrol
 /
 /modules/__init__.pyc
 /modules/systems.pyc
@@ -20,7 +20,6 @@
 /modules/clientreport.pyc
 /load.pyc
 /*.bat
-/.gitignore
-
+/data/EDMC-Canonn.patrol
 /EDMC.log
 *.pyc
