@@ -3,7 +3,7 @@ import myNotebook as nb
 from urllib import quote_plus
 import requests
 import json
-
+import webbrowser
 from modules import journaldata
 from modules import factionkill
 from modules import nhss
@@ -21,9 +21,9 @@ from modules.systems import Systems
 from modules.debug import Debug
 from modules.debug import debug
 from modules import materialReport
-
+from contextlib import closing
 from modules.whitelist import whiteList
-
+import csv
 
 
 import ttk
@@ -53,14 +53,14 @@ this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body_name=None
 this.SysFactionState=None 
 this.DistFromStarLS=None
+this.Nag=0
+this.cmdr_SQID=None
+this.CMDR=None
 def plugin_prefs(parent, cmdr, is_beta):
     '''
     Return a TK Frame for adding to the EDMC settings dialog.
     '''
-    this.SquadronID = config.get("SquadronID")	# Retrieve saved value from config
-    this.SquadronID_conf= ""
-
-
+    
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
     
@@ -73,7 +73,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
     #release.versionInSettings(frame, cmdr, is_beta,8)
    # entry=nb.Entry(frame,None)
-    nb.OptionMenu(frame, variable=this.SquadronID_conf, default = this.SquadronID, *this.Squadrons).grid(row = 9, column = 0,columnspan=2,sticky=tk.W)
+    
     
     
     
@@ -88,9 +88,45 @@ def prefs_changed(cmdr, is_beta):
     this.release.prefs_changed(cmdr, is_beta)
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
-    config.set('SquadronID', this.SquadronID_conf)
+    
     Debug.prefs_changed()
     
+
+def Alegiance_get(CMDR):
+
+    if CMDR!= this.CMDR:
+        
+        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"        
+        with closing(requests.get(url, stream=True)) as r:
+            reader = csv.reader(r.iter_lines(), delimiter='\t')
+            next(reader)
+            SQ=None
+            debug("aleg check initiated")
+            for row in reader:
+                
+                cmdr,squadron,SQID=row
+                
+                if cmdr == CMDR:
+                    try:
+                        SQ=SQID
+                        debug("your SQID is "+str(SQ))
+                    except:
+                        error("Set SQID Failed")
+                
+        if SQ != None:
+            debug("SQ ID IS OK")
+            this.CMDR=CMDR
+            return SQ 
+        else: 
+            if this.Nag==0:
+                debug("SQID need to be instaled")
+                url="https://docs.google.com/forms/d/e/1FAIpQLSeERKxF6DlrQ3bMqFdceycSlBV0kwkzziIhYD0ctDzrytm8ug/viewform?usp=pp_url"
+                url+="&entry.42820869="+quote_plus(CMDR)
+                this.Nag=this.Nag+1
+                debug("SQID "+str(url))
+                webbrowser.open(url)
+
+
    
 def plugin_start(plugin_dir):
     '''
@@ -102,8 +138,7 @@ def plugin_start(plugin_dir):
     Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
-    this.SquadronID=config.get("SquadronID")
-    debug(this.SquadronID)
+    
     
     return 'Triumvirate'
     
@@ -148,6 +183,11 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     # capture some stats when we launch not read for that yet
     startup_stats(cmdr)
     
+
+    this.cmdr_SQID=Alegiance_get(cmdr)
+    debug(this.cmdr_SQID)
+
+
     
     if "SystemFaction" in entry:
         ''' "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }'''
