@@ -398,28 +398,61 @@ class CanonnPatrol(Frame):
         # else:
             # pstates=""
         if faction =="Close Encounters Corps":
-            contact = ""
+            contact = "Пожалуйста, свяжитесь с AntonyVern [СЕС]#5904 на сервере СЕС для получения инструкций"
         if faction =="EG Union":
-            contact = ""        
+            contact = "Пожалуйста, свяжитесь с HEúCMuT#1242 на сервере ЕГП для получения инструкций"        
         
         #debug(bgs)
         if target:
             retval =  "{} Влияние {}%{}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,update_text)
         if  over:
-            retval =   "{} Влияние {}%{} {}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,contact,update_text)
+            retval =   "{} Влияние {}%{} {}{}.".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,contact,update_text)
         if under:
             retval =  "{} Влияние {}%{} Пожалуйста выполняйте миссии для {} что бы увеличить наше влияние {}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,faction,update_text)
 
         debug("{}: {}".format(bgs.get("system_name"),retval))
         return retval    
-            
-    def getBGSPatrol(self,bgs,faction):
+
+
+
+
+    def getBGSOveride(self):    
+        BGSOveride=[]
+        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vQQZFJ4O0nb3L1WJk5oMEPJrr1w5quBSnPRwSbz66XCYx0Lq6aAexm9s1t8N8iRxpdbUOtrhKqQMayY/pub?gid=0&single=true&output=tsv"        
+        with closing(requests.get(url, stream=True)) as r:
+            reader = csv.reader(r.iter_lines(), delimiter='\t')
+            next(reader)
+            for row in reader:
+                
+                squadron,system,x,y,z,TINF,TFAC,Description=row
+                instructions=   Description.format(TFAC,TINF)
+                SystemsOvireden=[]
+               # sysLink= "https://elitebgs.app/system/{}".format()
+                if system != '':
+                    try:
+                        BGSOveride.append(newPatrol("BGSO",system,(float(x),float(y),float(z)),instructions,None,None))
+                        SystemsOvireden.append(system)
+                    except:
+                        error("patrol {},{},{},{},{},{},{},{}".format("BGSO",system,x,y,z,instructions,None,None))
+                else:
+                    error("Patrol contains blank lines")
+        debug(BGSOveride)        
+        return BGSOveride   , SystemsOvireden 
+    
+
+
+    def getBGSPatrol(self,bgs,faction,BGSOSys):
+        debug("bgsDebugSys"+bgs.get("system_name"))
         x,y,z=Systems.edsmGetSystem(bgs.get("system_name"))
-        return newPatrol("BGS",bgs.get("system_name"),(x,y,z),self.getBGSInstructions(bgs,faction),"https://elitebgs.app/system/{}".format(bgs.get("system_id")))
+        if bgs.get("system_name") in BGSOSys:
+            return 
+        else:
+            return newPatrol("BGS",bgs.get("system_name"),(x,y,z),self.getBGSInstructions(bgs,faction),"https://elitebgs.app/system/{}".format(bgs.get("system_id")))
+
             
         
                 
-    def getFactionData(self,faction):
+    def getFactionData(self,faction,BGSOSys):
         '''
             We will get Canonn faction data using an undocumented elitebgs api
             NB: It is possible this could get broken so need to contact CMDR Garud 
@@ -431,12 +464,13 @@ class CanonnPatrol(Frame):
         j = requests.get(url).json()
         if j:
             for bgs in j.get("docs")[0].get("faction_presence"):
-                
-                patrol.append(self.getBGSPatrol(bgs,faction))
-        
-        
+                 
+                patrol.append(self.getBGSPatrol(bgs,faction,BGSOSys))
+
+
         return patrol
-        
+
+
     def parseurl(self,url):
         '''
         We will provided some sunstitute variables for the urls
@@ -447,7 +481,7 @@ class CanonnPatrol(Frame):
         
     def getCanonnPatrol(self):    
         canonnpatrol=[]
-        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_Ww6PRFCjmr5D_l7SVyWP5vtW-WdYMn_VCAJNh_Pjs-e9nRy54xWj3a8VLPnFJzybpaezLinfxGc/pub?gid=887786618&single=true&output=csv"        
+        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_Ww6PRFCjmr5D_l7SVyWP5vtW-WdYMn_VCAJNh_Pjs-e9nRy54xWj3a8VLPnFJzybpaezLinfxGc/pub?gid=887786618&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
             reader = csv.reader(r.iter_lines(), delimiter='\t')
             next(reader)
@@ -455,7 +489,10 @@ class CanonnPatrol(Frame):
                 
                 type,system,x,y,z,instructions,url,event=row
                 if system != '':
-                    canonnpatrol.append(newPatrol(type,system,(float(x),float(y),float(z)),instructions,self.parseurl(url),event))
+                    try:
+                        canonnpatrol.append(newPatrol(type,system,(float(x),float(y),float(z)),instructions,self.parseurl(url),event))
+                    except:
+                        error("patrol {},{},{},{},{},{},{},{}".format(type,system,x,y,z,instructions,self.parseurl(url),event))
                 else:
                     error("Patrol contains blank lines")
                 
@@ -494,9 +531,16 @@ class CanonnPatrol(Frame):
             patrol_list=[]
             if self.faction != 1:
                 debug("Getting Faction Data")
-                patrol_list.extend(self.getFactionData("Close Encounters Corps"))
-                patrol_list.extend(self.getFactionData("EG Union"))
-                
+                BGSO,BGSOSys=self.getBGSOveride()
+                try: patrol_list.extend(BGSO)
+                except: debug("BGS Overide Complete")
+                try: patrol_list.extend(self.getFactionData("Close Encounters Corps",BGSOSys))
+                except: debug("CEC BGS Patrol complete")
+                try: patrol_list.extend(self.getFactionData("EG Union",BGSOSys))
+                except: debug("EGP BGS Patrol complete")
+                try:
+                    patrol_list.remove(None)
+                except: debug("nothing to delete")
             if self.ships and self.HideMyShips != 1:
                 patrol_list.extend(self.ships)
 
@@ -506,6 +550,7 @@ class CanonnPatrol(Frame):
                 
             # add exclusions from configuration
             for num,val in enumerate(patrol_list):
+                #debug(val)
                 system=val.get("system")
                 type=val.get("type")
                 
