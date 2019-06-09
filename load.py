@@ -51,7 +51,8 @@ myPlugin = 'EDMC-Triumvirate'
 this.version='1.0.9'
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body_name=None
-this.SysFactionState=None    
+this.SysFactionState=None 
+this.DistFromStarLS=None
 def plugin_prefs(parent, cmdr, is_beta):
     '''
     Return a TK Frame for adding to the EDMC settings dialog.
@@ -147,11 +148,6 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     # capture some stats when we launch not read for that yet
     startup_stats(cmdr)
     
-    if entry.get("event") == "FSDJump":
-        Systems.storeSystem(system,entry.get("StarPos"))
-        
-    if ('Body' in entry):
-            this.body_name = entry['Body']
     
     if "SystemFaction" in entry:
         ''' "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }'''
@@ -161,8 +157,27 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.SysFactionState= SystemFaction["FactionState"]
         except: 
             this.SysFactionState=None
-        debug(this.SysFactionState)
+        debug("SysFaction's state is"+str(this.SysFactionState))
     
+    if "DistFromStarLS" in entry:
+        '''"DistFromStarLS":144.821411'''
+        try:
+            this.DistFromStarLS=entry.get("DistFromStarLS")
+        except:
+            this.DistFromStarLS=None
+        debug("DistFromStarLS="+str(this.DistFromStarLS))
+    
+        
+        
+    if entry.get("event") == "FSDJump":
+        Systems.storeSystem(system,entry.get("StarPos"))
+        this.DistFromStarLS=None
+        
+    if ('Body' in entry):
+            this.body_name = entry['Body']
+    
+
+
     #if entry.get("event")== "JoinedSquadron":
     #    if entry["SquadronName"]== "EG PILOTS":
     #       this.SquadronID="EGPU"
@@ -173,17 +188,17 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     #    debug(this.SquadronID)
     #    config.set('this.SquadronID', this.SquadronID.get())
 
-    if system:
+    if system: 
         x,y,z=Systems.edsmGetSystem(system)
     else:
         x=None
         y=None
         z=None    
     
-    return journal_entry_wrapper(cmdr, is_beta, system,this.SysFactionState, station, entry, state,x,y,z,this.body_name,this.nearloc['Latitude'],this.nearloc['Longitude'],this.client_version)    
+    return journal_entry_wrapper(cmdr, is_beta, system,this.SysFactionState,this.DistFromStarLS, station, entry, state,x,y,z,this.body_name,this.nearloc['Latitude'],this.nearloc['Longitude'],this.client_version)    
     
 
-def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState, station, entry, state,x,y,z,body,lat,lon,client):
+def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client):
     '''
     Detect journal events
     '''
@@ -197,7 +212,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState, station, entry,
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     whiteList.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
-    materialReport.submit(cmdr, is_beta, system, station, entry,client,lat,lon,body,SysFactionState,x,y,z)
+    materialReport.submit(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, x,y,z,body,lat,lon,client)
 
 
 
@@ -265,9 +280,3 @@ def startup_stats(cmdr):
       else:
           url+="&entry.488844173="+quote_plus("0")
       legacy.Reporter(url).start()
-
-
-
-
-
-

@@ -8,55 +8,36 @@ from emitter import Emitter
 from debug import Debug
 from debug import debug,error
 
-'''
-{      Схема у каноннов
-  "system": "string",
-  "body": "string",
-  "latitude": 0,
-  "longitude": 0,
-  "category": "string",
-  "journalName": "string",
-  "journalLocalised": "string",
-  "count": 0,
-  "distanceFromMainStar": 0,
-  "playMode": "string",
-  "isBeta": false,
-  "clientVersion": "string"
-}
-{ "timestamp":"2019-05-16T10:59:15Z", 
-"event":"MaterialCollected", 
-"Category":"Encoded", 
-"Name":"compactemissionsdata", 
-"Name_Localised":"Аномальные компактные данные об излучении", 
-"Count":3 }
-'''
 
-# experimental
-# submitting to a google cloud function
-
-                        
               
 
-class MeterialsCollected(Emitter):
+class MaterialsCollected(Emitter):
     
-    def __init__(self,cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z):
+    def __init__(self,cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z,DistFromStarLS):
         self.state=state
+        self.DistFromStarLS=DistFromStarLS
+        debug("MAterial rep star dist "+str(self.DistFromStarLS))
         debug("MAterial rep FacState "+str(self.state))
-        Emitter.__init__(self,cmdr, is_beta, system, x,y,z, entry, body, lat, lon,client)        #,
+        Emitter.__init__(self,cmdr, is_beta, system, x,y,z, entry, body, lat, lon,client)       
 
         self.modelreport="materialreports"
         
     def setPayload(self):
         payload={}
         payload["system"]=self.system
-        payload["body"]=  self.body
-        payload["latitude"]=  self.lat
-        payload["longitude"]=  self.lon
+        if self.body!=None:
+            payload["body"]=  self.body
+            payload["latitude"]=  self.lat
+            payload["longitude"]=  self.lon
+        else:
+            payload["body"]=  None
+            payload["latitude"]=  self.lat
+            payload["longitude"]=  self.lon
+
         payload["category"]=self.entry["Category"]
-        payload["journalName"]=self.entry["Name"]
-        #payload["journalLocalised"]=unicode(self.entry.get(u"Name_Localised"))
+        payload["journalName"]=self.entry["Name"]        
         payload["count"]=self.entry["Count"]
-        #payload["distanceFromMainStar"] = #TODO find method to calculate distance
+        payload["distanceFromMainStar"] = self.DistFromStarLS
         payload["coordX"] = self.x
         payload["coordY"] = self.y
         payload["coordZ"] = self.z
@@ -70,11 +51,9 @@ class MeterialsCollected(Emitter):
 def matches(d, field, value):
     return field in d and value == d[field]    
     
-'''
-    from canonn import journaldata
-    journaldata.submit(cmdr, system, station, entry)
-'''
-def submit(cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z):
+
+
+def submit(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, x,y,z,body,lat,lon,client):
     if entry["event"] == "MaterialCollected" :
-        MeterialsCollected(cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z).start()   
+        MaterialsCollected(cmdr, is_beta, system, station, entry,client,lat,lon,body,SysFactionState,x,y,z,DistFromStarLS).start()   
         
