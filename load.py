@@ -16,7 +16,7 @@ from modules import legacyCanonn as Clegacy
 from modules import clientreport
 from modules import fssreports
 from modules import patrol
-#from modules import friendfoe as FF
+from modules import friendfoe as FF
 from modules.systems import Systems
 from modules.debug import Debug
 from modules.debug import debug
