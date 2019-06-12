@@ -24,7 +24,7 @@ from urllib import quote_plus
 from datetime import datetime
 from release import Release
 from l10n import Locale
-
+import time
 
 CYCLE=60 * 1000 * 60 # 60 minutes
 DEFAULT_URL = ""
@@ -266,6 +266,8 @@ class CanonnPatrol(Frame):
         self.system=""
         self.started=False
         
+        self.SQID=None #Переменная для хранения информации об сквадроне пилота
+
         # wait 10 seconds before updatinb the ui
         self.after(1000, self.update_ui)
         
@@ -416,7 +418,7 @@ class CanonnPatrol(Frame):
 
 
 
-    def getBGSOveride(self):    
+    def getBGSOveride(self,SQID):    
         BGSOveride=[]
         url="https://docs.google.com/spreadsheets/d/e/2PACX-1vQQZFJ4O0nb3L1WJk5oMEPJrr1w5quBSnPRwSbz66XCYx0Lq6aAexm9s1t8N8iRxpdbUOtrhKqQMayY/pub?gid=0&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
@@ -429,11 +431,12 @@ class CanonnPatrol(Frame):
                 SystemsOvireden=[]
                # sysLink= "https://elitebgs.app/system/{}".format()
                 if system != '':
-                    try:
-                        BGSOveride.append(newPatrol("BGSO",system,(float(x),float(y),float(z)),instructions,None,None))
-                        SystemsOvireden.append(system)
-                    except:
-                        error("patrol {},{},{},{},{},{},{},{}".format("BGSO",system,x,y,z,instructions,None,None))
+                    if squadron == SQID:
+                        try:
+                            BGSOveride.append(newPatrol("BGSO",system,(float(x),float(y),float(z)),instructions,None,None))
+                            SystemsOvireden.append(system)
+                        except:
+                            error("patrol {},{},{},{},{},{},{},{}".format("BGSO",system,x,y,z,instructions,None,None))
                 else:
                     error("Patrol contains blank lines")
         debug(BGSOveride)        
@@ -516,7 +519,16 @@ class CanonnPatrol(Frame):
         
         self.patrol_list=patrol_list
     
+        
+    def SQID_set(self,SQID):
+        if SQID != "":
+            self.SQID=SQID
+        else: self.SQID="None"
+
     def download(self):
+        while self.SQID ==None:
+            debug("Ожидание информации об сквадроне")
+            time.sleep(5)
         debug("Download Patrol Data")
         
         # if patrol list is populated then was can save
@@ -531,7 +543,7 @@ class CanonnPatrol(Frame):
             patrol_list=[]
             if self.faction != 1:
                 debug("Getting Faction Data")
-                BGSO,BGSOSys=self.getBGSOveride()
+                BGSO,BGSOSys=self.getBGSOveride(self.SQID)
                 try: patrol_list.extend(BGSO)
                 except: debug("BGS Overide Complete")
                 try: patrol_list.extend(self.getFactionData("Close Encounters Corps",BGSOSys))

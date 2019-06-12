@@ -84,6 +84,7 @@ class Systems():
             return cls.systemCache[system]
             
         else:
+            debug("edsm Get Sys debug:"+str(system))
             url = 'https://www.edsm.net/api-v1/system?systemName='+quote_plus(system)+'&showCoordinates=1'      
             r = requests.get(url)
             s =  r.json()
