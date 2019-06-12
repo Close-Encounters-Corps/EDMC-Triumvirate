@@ -69,7 +69,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
     Debug.plugin_prefs(frame,this.client_version,4)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
-   
+    this.FF.plugin_prefs(frame, cmdr, is_beta,6)
     hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
     #release.versionInSettings(frame, cmdr, is_beta,8)
    # entry=nb.Entry(frame,None)
@@ -169,6 +169,7 @@ def plugin_app(parent):
     this.news = news.CECNews(table,1)
     this.release = release.Release(table,this.version,2)
     this.patrol = patrol.CanonnPatrol(table,3)
+    this.FF = FF.FriendFoe(table,4)
     whitelist=whiteList(parent)
     whitelist.fetchData()
     
