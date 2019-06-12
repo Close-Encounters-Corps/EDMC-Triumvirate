@@ -544,12 +544,19 @@ class CanonnPatrol(Frame):
             if self.faction != 1:
                 debug("Getting Faction Data")
                 BGSO,BGSOSys=self.getBGSOveride(self.SQID)
-                try: patrol_list.extend(BGSO)
-                except: debug("BGS Overide Complete")
-                try: patrol_list.extend(self.getFactionData("Close Encounters Corps",BGSOSys))
-                except: debug("CEC BGS Patrol complete")
-                try: patrol_list.extend(self.getFactionData("EG Union",BGSOSys))
-                except: debug("EGP BGS Patrol complete")
+                
+                try: patrol_list.extend(BGSO)            # Секция, отвечающаяя за загрузку заданий из гуглофайла
+                except: debug("BGS Overide Complete")    #
+
+                if self.SQID=="SCEC":
+                    try: patrol_list.extend(self.getFactionData("Close Encounters Corps",BGSOSys))       # Секция, отвечающаяя за фракцию 1
+                    except: debug("CEC BGS Patrol complete")                                             #
+                elif self.SQID=="EGPU":
+                    try: patrol_list.extend(self.getFactionData("EG Union",BGSOSys))                     # Секция, отвечающаяя за фракцию 2                                             
+                    except: debug("EGP BGS Patrol complete")                                             #
+                #elif self.SQID=="Имя сквадрона":                                                        # Секция шаблон, для применения в случае расширения списка фракций или сообществ
+                #try: patrol_list.extend(self.getFactionData("Название фракции",BGSOSys))                #
+                #except: debug("Название фракции(сокр) BGS Patrol complete")                             #
                 try:
                     patrol_list.remove(None)
                 except: debug("nothing to delete")
