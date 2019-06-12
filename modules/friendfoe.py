@@ -47,7 +47,58 @@ from debug import debug,error
 Заметка №1.2 стоит посмотреть, как определяются нпс пилоты истребителей
 Заметка №2 скорее всего, проще всего определять имя пилота по той же строке, что и неписей
 Заметка №2.1 имеет смысл убирать #name= через строчные функции
+Заметка №3 модуль не должно быть видно, пока нет данных. так же как это реализовано в release.py
 '''
+
+REFRESH_CYCLES = 60 ## how many cycles before we refresh
+NEWS_CYCLE=60 * 1000 # 60 seconds
+DEFAULT_NEWS_URL = 'https://vk.com/close_encounters_corps'
+WRAP_LENGTH = 200
+
+
+def _callback(matches):
+    id = matches.group(1)
+    try:
+        return unichr(int(id))
+    except:
+        return id
+
+class UpdateThread(threading.Thread):
+    def __init__(self,widget):
+        threading.Thread.__init__(self)
+        self.widget=widget
+    
+    def run(self):
+        debug('News: UpdateThread')
+        # download cannot contain any tkinter changes
+        self.widget.download()
+        
+        
+
+def decode_unicode_references(data):
+    return re.sub('&#(\d+)(;|(?=\s))', _callback, data)
+
+class NewsLink(HyperlinkLabel):
+
+    def __init__(self, parent):
+
+        HyperlinkLabel.__init__(
+            self,
+            parent,
+            text="Получение новостей...",
+            url=DEFAULT_NEWS_URL,
+            wraplength=50,  # updated in __configure_event below
+            anchor=tk.NW
+        )
+        self.bind('<Configure>', self.__configure_event)
+
+    def __configure_event(self, event):
+        'Handle resizing.'
+
+        self.configure(wraplength=event.width)
+
+
+
 
 class FriendFoe(Frame):
 
@@ -63,13 +114,13 @@ class FriendFoe(Frame):
             parent
         )
 
-        self.hidden=tk.IntVar(value=config.getint('HideNews'))                
+        self.hidden=tk.IntVar(value=config.getint('HideFF'))                
         
         self.news_data=[]
         self.columnconfigure(1, weight=1)
         self.grid(row = gridrow, column = 0, sticky='NSEW',columnspan=2)
         
-        self.label=tk.Label(self, text=  'Новости:')
+        self.label=tk.Label(self, text=  'История целей:')
         self.label.grid(row = 0, column = 0, sticky=sticky)
         self.label.bind('<Button-1>',self.click_news)
         
