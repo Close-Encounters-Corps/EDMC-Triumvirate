@@ -116,7 +116,7 @@ def Alegiance_get(CMDR):
         if SQ != None:
             debug("SQ ID IS OK")
             this.CMDR=CMDR
-            patrol.SQID_set(SQ)
+            patrol.SQID_set(SQ) #Функция для отправки данных о сквадроне в модули, использовать как шаблон 
             return SQ 
         else: 
             if this.Nag==0:
