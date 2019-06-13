@@ -554,7 +554,10 @@ class CanonnPatrol(Frame):
                 elif self.SQID=="EGPU":
                     try: patrol_list.extend(self.getFactionData("EG Union",BGSOSys))                     # Секция, отвечающаяя за фракцию 2                                             
                     except: debug("EGP BGS Patrol complete")                                             #
-                #elif self.SQID=="Имя сквадрона":                                                        # Секция шаблон, для применения в случае расширения списка фракций или сообществ
+                elif self.SQID=="RPSG":                                                        # Секция шаблон, для применения в случае расширения списка фракций или сообществ
+                    try: patrol_list.extend(self.getFactionData("Royal Phoenix Corporation",BGSOSys))                #
+                    except: debug("RPSG BGS Patrol complete")
+                #elif self.SQID=="Позывной сквадрона":                                                        # Секция шаблон, для применения в случае расширения списка фракций или сообществ
                 #try: patrol_list.extend(self.getFactionData("Название фракции",BGSOSys))                #
                 #except: debug("Название фракции(сокр) BGS Patrol complete")                             #
                 try:
