@@ -7,6 +7,7 @@ from  math import sqrt,pow,trunc
 from debug import Debug
 from debug import debug,error
 
+
 class Reporter(threading.Thread):
     def __init__(self, payload):
         threading.Thread.__init__(self)
@@ -253,4 +254,17 @@ class NHSS(threading.Thread):
                 NHSS(cmdr, is_beta, system,x,y,z, station, entry,client).start()
 
 
+class BGS():
+    def __init__(self):
+        self.bgsTasks= {}
 
+
+    def bgsTasksSet(bgsTasks):
+        self.bgsTasks=bgsTasks
+
+    def TaskCheck(cmdr, is_beta, system, station, entry, client):
+
+        if "MissionCompleted" in entry or "SellExplorationData" in entry or  "MultiSellExplorationData" in entry or "RedeemVoucher" in entry:
+            if system in self.bgsTasks:
+                None
+            
