@@ -402,9 +402,9 @@ class CanonnPatrol(Frame):
         if faction =="Close Encounters Corps":
             contact = "Пожалуйста, свяжитесь с AntonyVern [СЕС]#5904 на сервере СЕС для получения инструкций"
         if faction =="EG Union":
-            contact = "Пожалуйста, свяжитесь с HEúCMuT#1242 на сервере ЕГП для получения инструкций"        
+            contact = "Пожалуйста, свяжитесь с HEúCMuT#1242 на сервере EGP для получения инструкций"        
         if faction =="Royal Phoenix Corporation":
-            contact = "Пожалуйста, свяжитесь с Saswitz#9598 на сервере ЕГП для получения инструкций"
+            contact = "Пожалуйста, свяжитесь с Saswitz#9598 на сервере RPSG для получения инструкций"
         #debug(bgs)
         if target:
             retval =  "{} Влияние {}%{}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,update_text)
