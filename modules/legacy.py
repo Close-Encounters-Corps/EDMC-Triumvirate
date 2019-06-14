@@ -266,5 +266,29 @@ class BGS():
 
         if "MissionCompleted" in entry or "SellExplorationData" in entry or  "MultiSellExplorationData" in entry or "RedeemVoucher" in entry:
             if system in self.bgsTasks:
-                None
+                if "MissionCompleted" in entry:
+                    if factionMatch and 'Reward' in entry:
+                        url='https://docs.google.com/forms/d/e/1FAIpQLSdA-iypOHxi5L4iaINr57hVJYWaZj9d-rmx_rpLJ8mwPrlccQ/formResponse?usp=pp_url'
+                        url+='&entry.1574172588='+quote_plus(cmdr)
+                        if is_beta:
+                            beta='Y'
+                        else: 
+                            beta='N'
+                        url+='&entry.1534486210='+quote_plus(beta)
+                        url+='&entry.451904934='+quote_plus(system)
+                        if station is not None:
+                            url+='&entry.666865209='+quote_plus(station)
+                    
+                        url+='&entry.310344870='+str(entry['Reward'])
+                        url+='&entry.706329985='+quote_plus(entry['AwardingFaction'])
+                        url+='&entry.78713015='+quote_plus(entry['VictimFaction'])
+                        Reporter(url).start()
+                if "SellExplorationData" in entry:
+                    None
+                if "MultiSellExplorationData" in entry:
+                    None
+                if  "RedeemVoucher" in entry:
+                    None
+                #if "ACTION NAME(LOGS)" in entry:
+                #   None 
             
