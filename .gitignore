@@ -24,3 +24,6 @@
 /EDMC.log
 *.pyc
 /.vs/slnx.sqlite
+/.vs
+/git
+/github
