@@ -189,7 +189,8 @@ class Release(Frame):
                         self.hyperlink['text'] = "Пожалуйста поставьте версию {}".format(self.latest.get("tag_name"))
                         self.button.grid()
                         if self.novoices.get() != 1:
-                            Player(Release.plugin_dir,["sounds\\prefix.wav","sounds\\nag1.wav"]).start()
+                            pass
+                            #Player(Release.plugin_dir,["sounds\\prefix.wav","sounds\\nag1.wav"]).start()
                     self.grid()
             else:
                 debug("Latest is null")
