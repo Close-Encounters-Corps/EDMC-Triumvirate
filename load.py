@@ -24,7 +24,7 @@ from modules import materialReport
 from contextlib import closing
 from modules.whitelist import whiteList
 import csv
-
+import plug
 
 import ttk
 import Tkinter as tk
@@ -93,7 +93,7 @@ def prefs_changed(cmdr, is_beta):
     
 
 def Alegiance_get(CMDR):
-
+    debug("aleg check initiated")
     if CMDR!= this.CMDR:
         
         url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"        
@@ -101,7 +101,7 @@ def Alegiance_get(CMDR):
             reader = csv.reader(r.iter_lines(), delimiter='\t')
             next(reader)
             SQ=None
-            debug("aleg check initiated")
+            
             for row in reader:
                 
                 cmdr,squadron,SQID=row
@@ -171,7 +171,8 @@ def plugin_app(parent):
     this.patrol = patrol.CanonnPatrol(table,3)
     whitelist=whiteList(parent)
     whitelist.fetchData()
-    
+    for plugin in plug.PLUGINS:
+        debug(plugin)
     
     
     return frame
@@ -185,8 +186,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     startup_stats(cmdr)
     
 
-    this.cmdr_SQID=Alegiance_get(cmdr)
-    debug(this.cmdr_SQID)
+
 
 
     
@@ -294,7 +294,10 @@ def dashboard_entry(cmdr, is_beta, entry):
     else:
         this.body_name = None
         this.nearloc['Latitude'] = None
-        this.nearloc['Longitude'] = None  
+        this.nearloc['Longitude'] = None
+        
+    this.cmdr_SQID=Alegiance_get(cmdr)
+    debug(this.cmdr_SQID)
     
     
 def cmdr_data(data, is_beta):
