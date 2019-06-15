@@ -25,6 +25,7 @@ from datetime import datetime
 from release import Release
 from l10n import Locale
 import time
+import legacy
 
 CYCLE=60 * 1000 * 60 # 60 minutes
 DEFAULT_URL = ""
@@ -428,6 +429,7 @@ class CanonnPatrol(Frame):
             for row in reader:
                 
                 squadron,system,x,y,z,TINF,TFAC,Description=row
+                bgsSysAndFac={system:TFAC}
                 instructions=   Description.format(TFAC,TINF)
                 SystemsOvireden=[]
                # sysLink= "https://elitebgs.app/system/{}".format()
@@ -435,12 +437,16 @@ class CanonnPatrol(Frame):
                     if squadron == SQID:
                         try:
                             BGSOveride.append(newPatrol("BGSO",system,(float(x),float(y),float(z)),instructions,None,None))
+                            self.bgsSystemsAndfactions.update(bgsSysAndFac)
                             SystemsOvireden.append(system)
                         except:
                             error("patrol {},{},{},{},{},{},{},{}".format("BGSO",system,x,y,z,instructions,None,None))
                 else:
                     error("Patrol contains blank lines")
+        
         debug(BGSOveride)        
+        debug("bgslist is "+str(self.bgsSystemsAndfactions))
+        legacy.BGS.bgsTasksSet(self.bgsSystemsAndfactions)
         return BGSOveride   , SystemsOvireden 
     
 
@@ -483,7 +489,9 @@ class CanonnPatrol(Frame):
         
         return r
         
-    def getCanonnPatrol(self):    
+    
+    def getCanonnPatrol(self):
+        
         canonnpatrol=[]
         url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTg_Ww6PRFCjmr5D_l7SVyWP5vtW-WdYMn_VCAJNh_Pjs-e9nRy54xWj3a8VLPnFJzybpaezLinfxGc/pub?gid=887786618&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
@@ -542,6 +550,7 @@ class CanonnPatrol(Frame):
         # no point if we have no idea where we are
         if self.system:
             patrol_list=[]
+            self.bgsSystemsAndfactions={}
             if self.faction != 1:
                 debug("Getting Faction Data")
                 BGSO,BGSOSys=self.getBGSOveride(self.SQID)
