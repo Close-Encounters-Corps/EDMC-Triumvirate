@@ -1,4 +1,5 @@
-﻿from config import config
+﻿#coding=utf-8 
+from config import config
 import myNotebook as nb
 from urllib import quote_plus
 import requests
@@ -32,10 +33,7 @@ import sys
     
 this = sys.modules[__name__]
     
-this.Squadrons=[
-    ' ',
-    "CEC",
-    "EGP"]
+
 this.nearloc = {
    'Latitude' : None,
    'Longitude' : None,
