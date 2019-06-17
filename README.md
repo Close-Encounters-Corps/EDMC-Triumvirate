@@ -59,7 +59,7 @@
 <details> 
   <summary>5)Запустить EDMC, если появилось окно такого вида, то перейти к шагу 6, иначе проверить правильность установки
 </summary>
-  <img src="https://github.com/VAKazakov/EDMC-Triumvirate/blob/master/.vs/EDMC-Main.PNG " alt="Скрин окна"> 
+  <img src="https://cdn.discordapp.com/attachments/518418556615000074/590004329692397579/unknown.png" alt="Скрин окна"> 
 </details>
    
    6) ***Вы Великолепны***
