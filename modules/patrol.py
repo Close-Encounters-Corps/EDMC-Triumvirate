@@ -422,6 +422,7 @@ class CanonnPatrol(Frame):
 
     def getBGSOveride(self,SQID):    
         BGSOveride=[]
+        SystemsOvireden=[]
         url="https://docs.google.com/spreadsheets/d/e/2PACX-1vQQZFJ4O0nb3L1WJk5oMEPJrr1w5quBSnPRwSbz66XCYx0Lq6aAexm9s1t8N8iRxpdbUOtrhKqQMayY/pub?gid=0&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
             reader = csv.reader(r.iter_lines(), delimiter='\t')
@@ -431,7 +432,7 @@ class CanonnPatrol(Frame):
                 squadron,system,x,y,z,TINF,TFAC,Description=row
                 bgsSysAndFac={system:TFAC}
                 instructions=   Description.format(TFAC,TINF)
-                SystemsOvireden=[]
+                
                # sysLink= "https://elitebgs.app/system/{}".format()
                 if system != '':
                     if squadron == SQID:

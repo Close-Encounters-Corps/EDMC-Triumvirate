@@ -256,19 +256,22 @@ class NHSS(threading.Thread):
 
 class BGS():
     def __init__(self):
-        self.bgsTasks= {}
+        self.bgsTasks={}
 
+    @classmethod
+    def bgsTasksSet(cls,bgsTask):
+        cls.bgsTasks=bgsTask
 
-    def bgsTasksSet(bgsTasks):
-        self.bgsTasks=bgsTasks
-
-    def TaskCheck(cmdr, is_beta, system, station, entry, client):
-        if "MissionCompleted" in entry:
+    def TaskCheck(self,cmdr, is_beta, system, station, entry, client):
+        #if "MissionCompleted" in entry:
+                debug("test5")
             #if system in self.bgsTasks:
                 url='https://docs.google.com/forms/d/e/1FAIpQLSd1HNysgZRf4p0_I_hHxbwWz4N8EFEWtjsVaK9wR3RB66kiTQ/formResponse?usp=pp_url'
                 url+='&entry.2038615400='+quote_plus(cmdr)
-                url+='&entry.569295685='+quote_plus(entry)
-
+                url+='&entry.1807008459='+quote_plus(entry["event"])
+                url+='&entry.569295685='+quote_plus(str(entry))
+                debug(url)
+                Reporter(url).start()
 
         #if "MissionCompleted" in entry or "SellExplorationData" in entry or  "MultiSellExplorationData" in entry or "RedeemVoucher" in entry:
         #    if system in self.bgsTasks:

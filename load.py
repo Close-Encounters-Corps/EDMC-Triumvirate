@@ -1,4 +1,4 @@
-﻿#coding=utf-8 
+# -*- coding: utf-8 -*- 
 
 from config import config
 import myNotebook as nb
@@ -53,7 +53,7 @@ this.body_name=None
 this.SysFactionState=None 
 this.DistFromStarLS=None
 this.Nag=0
-this.cmdr_SQID=None
+this.cmdr_SQID=None    #variable for allegiance check
 this.CMDR=None
 def plugin_prefs(parent, cmdr, is_beta):
     '''
@@ -171,7 +171,7 @@ def plugin_app(parent):
     whitelist=whiteList(parent)
     whitelist.fetchData()
     for plugin in plug.PLUGINS:
-        debug(plugin)
+        debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
     
     
     return frame
@@ -272,7 +272,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     legacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
-    legacy.TaskCheck(cmdr, is_beta, system, station, entry, client)
+    legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
     
     
 
