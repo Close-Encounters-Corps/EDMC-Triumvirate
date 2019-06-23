@@ -263,8 +263,8 @@ class BGS():
         cls.bgsTasks=bgsTask
 
     def TaskCheck(self,cmdr, is_beta, system, station, entry, client):
-        #if "MissionCompleted" in entry:
-                debug("test5")
+        if entry["event"]== "MissionCompleted" or  entry["event"]== "SellExplorationData" or  entry["event"]== "MultiSellExplorationData" or  entry["event"]== "RedeemVoucher":
+            debug("BGS TESTS")
             #if system in self.bgsTasks:
                 url='https://docs.google.com/forms/d/e/1FAIpQLSd1HNysgZRf4p0_I_hHxbwWz4N8EFEWtjsVaK9wR3RB66kiTQ/formResponse?usp=pp_url'
                 url+='&entry.2038615400='+quote_plus(cmdr)
