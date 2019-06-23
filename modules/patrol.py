@@ -436,12 +436,14 @@ class CanonnPatrol(Frame):
                 #sysLink= "https://elitebgs.app/system/{}".format()
                 if system != '':
                     if squadron == SQID:
-                        try:
-                            BGSOveride.append(newPatrol("BGSO",system,(float(x),float(y),float(z)),instructions,None,None))
+                        if Description!="Cancel":
+                            try:
+                                BGSOveride.append(newPatrol("BGSO",system,(float(x),float(y),float(z)),instructions,None,None))
+                            except:
+                                error("patrol {},{},{},{},{},{},{},{}".format("BGSO",system,x,y,z,instructions,None,None))
                             self.bgsSystemsAndfactions.update(bgsSysAndFac)
-                            SystemsOvireden.append(system)
-                        except:
-                            error("patrol {},{},{},{},{},{},{},{}".format("BGSO",system,x,y,z,instructions,None,None))
+                        SystemsOvireden.append(system)
+                        
                 else:
                     error("Patrol contains blank lines")
         
@@ -558,7 +560,7 @@ class CanonnPatrol(Frame):
                 
                 try: patrol_list.extend(BGSO)            # Секция, отвечающаяя за загрузку заданий из гуглофайла
                 except: debug("BGS Overide Complete")    #
-
+                debug(BGSO+BGSOSys)
                 if self.SQID=="SCEC":
                     try: patrol_list.extend(self.getFactionData("Close Encounters Corps",BGSOSys))       # Секция, отвечающаяя за фракцию 1
                     except: debug("CEC BGS Patrol complete")                                             #
