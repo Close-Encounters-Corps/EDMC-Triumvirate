@@ -433,7 +433,7 @@ class CanonnPatrol(Frame):
                 bgsSysAndFac={system:TFAC}
                 instructions=   Description.format(TFAC,TINF)
                 
-               # sysLink= "https://elitebgs.app/system/{}".format()
+                #sysLink= "https://elitebgs.app/system/{}".format()
                 if system != '':
                     if squadron == SQID:
                         try:
@@ -574,7 +574,7 @@ class CanonnPatrol(Frame):
                 if None in patrol_list:
                     while None in patrol_list:
                         patrol_list.remove(None)
-                    debug("junk cleared")
+                    debug("None Patrols cleared")
                 
             if self.ships and self.HideMyShips != 1:
                 patrol_list.extend(self.ships)
