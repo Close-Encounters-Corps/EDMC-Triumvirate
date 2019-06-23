@@ -571,19 +571,21 @@ class CanonnPatrol(Frame):
                 #elif self.SQID=="Позывной сквадрона":                                                        # Секция шаблон, для применения в случае расширения списка фракций или сообществ
                 #try: patrol_list.extend(self.getFactionData("Название фракции",BGSOSys))                #
                 #except: debug("Название фракции(сокр) BGS Patrol complete")                             #
-                try:
-                    patrol_list.remove(None)
-                except: debug("nothing to delete")
+                if None in patrol_list:
+                    while None in patrol_list:
+                        patrol_list.remove(None)
+                    debug("junk cleared")
+                
             if self.ships and self.HideMyShips != 1:
                 patrol_list.extend(self.ships)
 
             if self.canonn != 1:
                 self.canonnpatrol=self.getCanonnPatrol()
                 patrol_list.extend(self.canonnpatrol)
-                
+            debug(patrol_list)    
             # add exclusions from configuration
             for num,val in enumerate(patrol_list):
-                #debug(val)
+                debug(val)
                 system=val.get("system")
                 type=val.get("type")
                 
