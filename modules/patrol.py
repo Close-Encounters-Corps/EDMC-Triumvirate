@@ -558,7 +558,7 @@ class CanonnPatrol(Frame):
                 debug("Getting Faction Data")
                 BGSO,BGSOSys=self.getBGSOveride(self.SQID)
                 
-                try: patrol_list.extend(BGSO)            # Секция, отвечающаяя за загрузку заданий из гуглофайла
+                try: patrol_list.extend(BGSO)            # Секция, отвечающая за загрузку заданий из гуглофайла
                 except: debug("BGS Overide Complete")    #
                 debug(BGSO+BGSOSys)
                 if self.SQID=="SCEC":

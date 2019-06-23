@@ -48,6 +48,7 @@ myPlugin = 'EDMC-Triumvirate'
 
 
 this.version='1.1.3'
+this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body_name=None
 this.SysFactionState=None 
@@ -176,6 +177,30 @@ def plugin_app(parent):
     
     return frame
     
+def Squadronsend(CMDR,entry):
+      
+        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1113444368&single=true&output=tsv"        
+        with closing(requests.get(url, stream=True)) as r:
+            reader = csv.reader(r.iter_lines(), delimiter='\t')
+            next(reader)
+            
+            
+            for row in reader:
+                
+                cmdr,squadron=row
+                
+                if CMDR in row:
+                    if entry==squadron:
+                        this.SQNag==1
+        
+        if this.SQNag==0:
+            debug("SQName need to be sended")
+            url="https://docs.google.com/forms/d/e/1FAIpQLScZvs3MB2AK6pPwFoSCpdaarfAeu_P-ineIhtO1mOPgr09q8A/formResponse?usp=pp_url"
+            url+="&entry.558317192="+quote_plus(CMDR)
+            url+="&entry.1042067605="+quote_plus(entry)
+            this.SQNag=this.Nag+1
+            debug("SQName "+str(url))
+            legacy.Reporter(url).start()
    
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     '''
@@ -216,7 +241,8 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     if ('Body' in entry):
             this.body_name = entry['Body']
     
-
+    if entry["event"]=="JoinedSquadron":
+        Squadronsend(cmdr,entry["SquadronName"])
 
     #if entry.get("event")== "JoinedSquadron":
     #    if entry["SquadronName"]== "EG PILOTS":
