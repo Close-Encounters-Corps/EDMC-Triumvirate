@@ -323,4 +323,6 @@ def startup_stats(cmdr):
           url+="&entry.488844173="+quote_plus(addr6)
       else:
           url+="&entry.488844173="+quote_plus("0")
+      url+="&entry.1210213202="+str(release.get_auto())
+      
       legacy.Reporter(url).start()

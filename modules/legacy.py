@@ -266,12 +266,12 @@ class BGS():
         if entry["event"]== "MissionCompleted" or  entry["event"]== "SellExplorationData" or  entry["event"]== "MultiSellExplorationData" or  entry["event"]== "RedeemVoucher":
             debug("BGS TESTS")
             #if system in self.bgsTasks:
-                url='https://docs.google.com/forms/d/e/1FAIpQLSd1HNysgZRf4p0_I_hHxbwWz4N8EFEWtjsVaK9wR3RB66kiTQ/formResponse?usp=pp_url'
-                url+='&entry.2038615400='+quote_plus(cmdr)
-                url+='&entry.1807008459='+quote_plus(entry["event"])
-                url+='&entry.569295685='+quote_plus(str(entry))
-                debug(url)
-                Reporter(url).start()
+            url='https://docs.google.com/forms/d/e/1FAIpQLSd1HNysgZRf4p0_I_hHxbwWz4N8EFEWtjsVaK9wR3RB66kiTQ/formResponse?usp=pp_url'
+            url+='&entry.2038615400='+quote_plus(cmdr)
+            url+='&entry.1807008459='+quote_plus(entry["event"])
+            url+='&entry.569295685='+quote_plus(str(entry))
+            debug(url)
+            Reporter(url).start()
 
         #if "MissionCompleted" in entry or "SellExplorationData" in entry or  "MultiSellExplorationData" in entry or "RedeemVoucher" in entry:
         #    if system in self.bgsTasks:

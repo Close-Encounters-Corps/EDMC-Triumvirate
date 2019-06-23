@@ -11,7 +11,7 @@ class Systems():
         we start the plugin
     '''
     systemCache={
-        'Euryale':[35,375,-68,96875,24,8125],
+        'Euryale':[35.375,-68.96875,24.8125],
         'LTT 305':[27.6875,-75.28125,21.8125],
         'LFT 78':[33,-58.875,21.71875],
         'Algreit':[-8.3125,-11.78125,53.28125],
@@ -102,7 +102,7 @@ class Systems():
     def edsmGetSystem(cls,system):
         
         if cls.systemCache.has_key(system):
-            #debug(cls.systemCache[system])
+            #debug(system + str(cls.systemCache[system]))
             return cls.systemCache[system]
             
         else:
