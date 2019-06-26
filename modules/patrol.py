@@ -412,7 +412,7 @@ class CanonnPatrol(Frame):
         if  over:
             retval =   "{} Влияние {}%{} {}{}.".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,contact,update_text)
         if under:
-            retval =  "{} Влияние {}%{} Пожалуйста выполняйте миссии для {} что бы увеличить наше влияние {}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,faction,update_text)
+            retval =  "{} Влияние {}%{} Пожалуйста выполняйте миссии за {}, чтобы увеличить наше влияние {}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,faction,update_text)
 
         debug("{}: {}".format(bgs.get("system_name"),retval))
         return retval    
