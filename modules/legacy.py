@@ -253,6 +253,18 @@ class NHSS(threading.Thread):
 
                 NHSS(cmdr, is_beta, system,x,y,z, station, entry,client).start()
 
+def shipscan(cmdr, is_beta, system, station, entry):
+    if entry["event"]=='ShipTargeted' and entry['ScanStage']==3 and entry["PilotName"].find("$cmdr_decorate:#name=;")==-1:
+        url='https://docs.google.com/forms/d/e/1FAIpQLScdc9kTaPUG-e7Hi-Qi1BrAvFxHUefaaHlAUTSTrsZV586Wgw/formResponse?usp=pp_url'
+        url+='&entry.1346797392='+quote_plus(cmdr)
+        url+='&entry.674028188='+quote_plus(system)
+        url+='&entry.577969913='+quote_plus(entry["Ship"])
+        url+='&entry.1641514781='+quote_plus(entry["PilotName"])
+        url+='&entry.76739667='+quote_plus(entry["PilotName_Localised"])
+        url+='&entry.2138128921='+quote_plus(entry["Faction"])
+        url+='&entry.1100547048='+quote_plus(entry["PilotRank"])
+        debug("ship scan to "+url)
+        Reporter(url).start()
 
 class BGS():
     def __init__(self):
@@ -264,13 +276,13 @@ class BGS():
 
     def TaskCheck(self,cmdr, is_beta, system, station, entry, client):
         if entry["event"]== "MissionCompleted" or  entry["event"]== "SellExplorationData" or  entry["event"]== "MultiSellExplorationData" or  entry["event"]== "RedeemVoucher":
-            debug("BGS TESTS")
+            
             #if system in self.bgsTasks:
             url='https://docs.google.com/forms/d/e/1FAIpQLSd1HNysgZRf4p0_I_hHxbwWz4N8EFEWtjsVaK9wR3RB66kiTQ/formResponse?usp=pp_url'
             url+='&entry.2038615400='+quote_plus(cmdr)
             url+='&entry.1807008459='+quote_plus(entry["event"])
             url+='&entry.569295685='+quote_plus(str(entry))
-            debug(url)
+            debug("BGS TESTS "+url)
             Reporter(url).start()
 
         #if "MissionCompleted" in entry or "SellExplorationData" in entry or  "MultiSellExplorationData" in entry or "RedeemVoucher" in entry:
