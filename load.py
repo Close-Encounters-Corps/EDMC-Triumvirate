@@ -47,7 +47,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.1.6'
+this.version='1.1.4'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body_name=None
@@ -135,7 +135,7 @@ def plugin_start(plugin_dir):
     '''
     
     #print this.patrol
-    release.Release.plugin_start(plugin_dir)
+    release.Release.plugin_start(plugin_dir.encode("utf8") )
     Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
