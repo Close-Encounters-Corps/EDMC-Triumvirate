@@ -1,4 +1,5 @@
-﻿import threading
+﻿# -*- coding: utf-8 -*-
+import threading
 import requests
 import sys
 import json
@@ -89,8 +90,8 @@ class Emitter(threading.Thread):
         self.send(payload,url)
     
     def send(self,payload,url):
-        fullurl="{}/{}".format(url,self.modelreport)
-        r=requests.post(fullurl,data=json.dumps(payload, ensure_ascii=False).encode('utf8'),headers={"content-type":"application/json"})  
+        fullurl="{}/{}".format(url,self.modelreport)          #
+        r=requests.post(fullurl,data=json.dumps(payload, ensure_ascii=False).encode('utf_8'),headers={"content-type":"application/json"})  
         
         if not r.status_code == requests.codes.ok:
             error("{}/{}".format(url,self.modelreport))
