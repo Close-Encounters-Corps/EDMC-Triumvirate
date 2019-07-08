@@ -46,19 +46,13 @@ EDMC-Canonn изначально интегрирован в Triumvirate.
 
 ## Инструкция по установке:
 
-   1)Скачать последнюю версию EDMC:https://github.com/Marginal/EDMarketConnector/releases/latest
+1) Скачать и установить последнюю версию [EDMarketConnector](https://github.com/Marginal/EDMarketConnector/blob/rel-342/README.md#installation) (если не установлен)
 
-   2)Установить последнюю версию EDMC 
+2) Скачать последний релиз плагина [EDMC-Triumvirate](https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest), нажав на кнопку Source code(zip)
 
-   3)Скачать последний релиз плагина Triumvirate:https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest
-![sourcecode](https://user-images.githubusercontent.com/47143965/55719690-7ecac680-5a07-11e9-8a7b-03560403bdf4.PNG)
+3) Распаковать папку с плагином в %USERPROFILE%\AppData\Local\EDMarketConnector\plugins (это можно вставить в адресную строку проводника)
 
-   4)Распаковать плагин в %USERPROFILE%\AppData\Local\EDMarketConnector\plugins (это можно вставить в адресную строку проводника)
+ 5)  Запустить EDMC, если появилось окно [такого](https://cdn.discordapp.com/attachments/518418556615000074/590004329692397579/unknown.png) вида, то перейти к шагу 6, иначе проверить правильность установки  
 
-<details> 
-  <summary>5)Запустить EDMC, если появилось окно такого вида, то перейти к шагу 6, иначе проверить правильность установки
-</summary>
-  <img src="https://cdn.discordapp.com/attachments/518418556615000074/590004329692397579/unknown.png" alt="Скрин окна"> 
-</details>
-   
-   6) ***Вы Великолепны***
+6)  ***Вы Великолепны***
+ 
