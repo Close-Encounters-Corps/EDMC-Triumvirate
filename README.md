@@ -52,7 +52,7 @@ Elite Dangerous Market Connector (EDMC) с плагином Triumvirate явля
 
 3) Распаковать папку с плагином в %USERPROFILE%\AppData\Local\EDMarketConnector\plugins (это можно вставить в адресную строку проводника)
 
-5) Запустить EDMC, если появилось окно [такого](https://cdn.discordapp.com/attachments/518418556615000074/590004329692397579/unknown.png) вида, то перейти к шагу 6, иначе проверить правильность установки  
+5) Запустить EDMC, если появилось окно [такого](https://cdn.discordapp.com/attachments/518418556615000074/590004329692397579/unknown.png) вида, то перейти к шагу 6, иначе вам будет необходимо проверить правильность установки  
  
 6) Включить в настройках плагина Triumvirate (вкладка Triumvirate находится в настройках EDMC) автообновление
 
