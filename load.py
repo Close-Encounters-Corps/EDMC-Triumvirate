@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*- 
 
+from modules import Discord
 from config import config
 import myNotebook as nb
 from urllib import quote_plus
@@ -116,6 +117,7 @@ def Alegiance_get(CMDR):
         if SQ != None:
             debug("SQ ID IS OK")
             this.CMDR=CMDR
+            Discord.webhook(SQ)
             patrol.SQID_set(SQ) #Функция для отправки данных о сквадроне в модули, использовать как шаблон 
             return SQ 
         else: 
@@ -135,7 +137,7 @@ def plugin_start(plugin_dir):
     '''
     
     #print this.patrol
-    release.Release.plugin_start(plugin_dir.encode("utf8") )
+    release.Release.plugin_start(plugin_dir)
     Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
