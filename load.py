@@ -117,7 +117,7 @@ def Alegiance_get(CMDR):
         if SQ != None:
             debug("SQ ID IS OK")
             this.CMDR=CMDR
-            Discord.webhook(SQ)
+            #Discord.SQID_SET(SQ)
             patrol.SQID_set(SQ) #Функция для отправки данных о сквадроне в модули, использовать как шаблон 
             return SQ 
         else: 
@@ -142,7 +142,7 @@ def plugin_start(plugin_dir):
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     
-    
+
     return 'Triumvirate'
     
 def plugin_stop():
@@ -281,7 +281,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     whiteList.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     materialReport.submit(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, x,y,z,body,lat,lon,client)
-
+  
 
 
     #legacy to canonn
