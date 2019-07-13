@@ -100,7 +100,7 @@ def prefs_changed(cmdr, is_beta):
     Debug.prefs_changed()
     
 
-def Alegiance_get(CMDR):
+def Alegiance_get(CMDR,SQ_old):
     debug("aleg check initiated")
     if CMDR!= this.CMDR:
         
@@ -124,7 +124,7 @@ def Alegiance_get(CMDR):
         if SQ != None:
             debug("SQ ID IS OK")
             this.CMDR=CMDR
-            #Discord.SQID_SET(SQ)
+            Discord.SQID_set(SQ)
             patrol.SQID_set(SQ) #Функция для отправки данных о сквадроне в модули, использовать как шаблон 
             return SQ 
         else: 
@@ -135,6 +135,7 @@ def Alegiance_get(CMDR):
                 this.Nag=this.Nag+1
                 debug("SQID "+str(url))
                 webbrowser.open(url)
+    else: return      SQ_old
 
 
    
@@ -301,7 +302,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
     legacy.shipscan(cmdr, is_beta, system, station, entry)
-    Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons)
+    Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons,this.cmdr_SQID)
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
@@ -352,7 +353,7 @@ def dashboard_entry(cmdr, is_beta, entry):
         this.nearloc['Latitude'] = None
         this.nearloc['Longitude'] = None
         
-    this.cmdr_SQID=Alegiance_get(cmdr)
+    this.cmdr_SQID=Alegiance_get(cmdr,this.cmdr_SQID)
     debug(this.cmdr_SQID)
     
     
