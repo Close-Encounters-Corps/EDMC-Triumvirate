@@ -4,7 +4,7 @@ import Discord
 import load
 import datetime
 from debug import debug
-def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
+def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,SQID):
     LifeSupportList={
         "int_lifesupport_size1_class1":"5:00",
 "int_lifesupport_size1_class2":"7:30",
@@ -53,8 +53,9 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
     
     LifeSupport=state["Modules"]['LifeSupport']['Item']
     params.update({"Etitle":"SOS",
-                        "EDesc":unicode("Требуется заправка"),
+                        "EDesc":unicode(u"Требуется заправка"),
                         "EColor":"16711680",
+                        "Avatar":"https://cdn.discordapp.com/attachments/518418556615000074/599610037773664276/kisspng-stop-sign-clip-art-sos-5ac4dd7ef16d32.png",
                         "params":{
                             unicode(u"Местоположение:"):system+", "+unicode(DistFromStarLS),
                             unicode(u"Топлива осталось:"):unicode(str(fuel["FuelMain"]+fuel["FuelReservoir"])+u" тонн"),
@@ -65,10 +66,8 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
           
 
 
-def commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,fuel,fuel_cons):
+def commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,fuel,fuel_cons,SQID):
     if entry['event']=="SendText":
-        debug("command? "+str(entry["Message"]))
-        debug("com? "+str(entry["Message"]=='!sos'))
-        if entry['Message']=='!sos':
-            debug("SOS?")
-            sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons)   
+        if entry['Message'].lower()=='!sos':
+            
+            sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,SQID)   
