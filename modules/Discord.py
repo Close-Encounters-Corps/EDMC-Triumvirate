@@ -12,26 +12,52 @@ logging.basicConfig()
 
 #this = sys.modules[__name__]
 
+contentlist={
+        "EGPU":
+            {
+                "FuelAlarm":"<@&597996086959013900>",
+                #"ActionName":"WebhoouAdr",
+            },
+       "SCEC":
+            {
+                "FuelAlarm":"",
+                "Example":"",
+            } ,
+       "RPSG":
+           {
+                "FuelAlarm":"<@&524926198560587777>",
 
+           },
+       }
 
 webhookList={
         "EGPU":
             {
-            "FuelAlarm":"",
-            #"ActionName":"WebhoouAdr",
+                "FuelAlarm":"",
+                #"ActionName":"WebhoouAdr",
             },
        "SCEC":
             {
-            "FuelAlarm":"",
-            "Example":"599240932663230505/HGgJcfmqPwLvDXh4z6mZ1gBUq7TQkBvy4YrvfHsPjeGlgktgma8ZcHXDiG10OgUYKFMu",
+                "FuelAlarm":"599634967768596490/FbNF1iE1pK-s3EZ9Q0Vg6VBdsGPUKO4nMtaYNmYrYQpmsN9QK-xkOvMtbDHtYy7SVQMM",
+                "Example":"599240932663230505/HGgJcfmqPwLvDXh4z6mZ1gBUq7TQkBvy4YrvfHsPjeGlgktgma8ZcHXDiG10OgUYKFMu",
             } ,
+       "RPSG":
+           {
+                "FuelAlarm":"599627968112885787/9AC__aLYB8qsxC2ioWoGLLmyomDWNCRVHF2M9QTtlaNygZ97b1R-Bc4yTWYsPhJfy5Z5",
+
+           },
        }
 #class Send:
     
    #def __init__(SQ):
         
-        
-    
+SQID=""       
+def SQID_set(SQ):
+        global SQID
+        if SQ != "":
+            SQID=SQ
+        else: SQID="None"
+        debug("SQID DIS"+SQID)
 
 
 
@@ -43,11 +69,15 @@ def send(cmdr,action,params):    #
         params - dist of parametrs
         '''
         #SQID=load.SQID
+
         debug("Webhook Initiatet")
-        webhook = DiscordWebhook(url='https://discordapp.com/api/webhooks/599240932663230505/HGgJcfmqPwLvDXh4z6mZ1gBUq7TQkBvy4YrvfHsPjeGlgktgma8ZcHXDiG10OgUYKFMu',                        #.format(webhookList[SQID][action]
+        debug(SQID)
+        #if webhookList[SQID][action] =="None":
+        #    return
+        webhook = DiscordWebhook(url='https://discordapp.com/api/webhooks/{}'.format(webhookList[SQID][action]),                        #.format(webhookList[SQID][action]
                                 username=action,
-                                avatar_url="https://cdn.discordapp.com/attachments/518418556615000074/599610037773664276/kisspng-stop-sign-clip-art-sos-5ac4dd7ef16d32.png" ,
-                                content='<@264863927265918976>' )
+                                avatar_url=params["Avatar"] ,
+                                content= contentlist[SQID][action])
         embed = DiscordEmbed(title=params["Etitle"], description=params["EDesc"], color=params["EColor"])
         embed.set_author(name=cmdr)
         #embed.set_footer(text=)
