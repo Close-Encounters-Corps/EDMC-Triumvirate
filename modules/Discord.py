@@ -26,7 +26,7 @@ webhookList={
             "Example":"599240932663230505/HGgJcfmqPwLvDXh4z6mZ1gBUq7TQkBvy4YrvfHsPjeGlgktgma8ZcHXDiG10OgUYKFMu",
             } ,
        }
-class Send:
+#class Send:
     
    #def __init__(SQ):
         
@@ -35,34 +35,35 @@ class Send:
 
 
 
-    def send(self,cmdr,action,params):    #
+def send(cmdr,action,params):    #
 
         '''
         cmdr- User of Plugin
         action- name of webhook
         params - dist of parametrs
         '''
-        self.SQID=load.SQID
-        debug("Webhook Initiatet"+self.SQID)
-        self.webhook = DiscordWebhook(url='https://discordapp.com/api/webhooks/599240932663230505/HGgJcfmqPwLvDXh4z6mZ1gBUq7TQkBvy4YrvfHsPjeGlgktgma8ZcHXDiG10OgUYKFMu',                        #.format(webhookList[SQID][action]
+        #SQID=load.SQID
+        debug("Webhook Initiatet")
+        webhook = DiscordWebhook(url='https://discordapp.com/api/webhooks/599240932663230505/HGgJcfmqPwLvDXh4z6mZ1gBUq7TQkBvy4YrvfHsPjeGlgktgma8ZcHXDiG10OgUYKFMu',                        #.format(webhookList[SQID][action]
                                 username=action,
+                                avatar_url="https://vignette.wikia.nocookie.net/elite-dangerous/images/7/70/Fuel_Rats_Logo_2.png/revision/latest?cb=20171019194129" ,
                                 content='<@264863927265918976>' )
-        self.embed = DiscordEmbed(title=params["Etitle"], description=params["EDesc"], color=params["EColor"])
-        self.embed.set_author(name=cmdr)
-        #self.embed.set_footer(text=)
-        self.embed.set_timestamp()
+        embed = DiscordEmbed(title=params["Etitle"], description=params["EDesc"], color=params["EColor"])
+        embed.set_author(name=cmdr)
+        #embed.set_footer(text=)
+        embed.set_timestamp()
         for key, entry  in params["params"].iteritems():
             debug("webhook"+key+entry)
-            self.embed.add_embed_field(name=key, value=entry)
+            embed.add_embed_field(name=key, value=entry)
             
             
-        debug(self.embed)
-        self.webhook.add_embed(self.embed)
-        debug(self.webhook)
-        self.webhook.execute()
+        debug(embed)
+        webhook.add_embed(embed)
+        debug(webhook)
+        webhook.execute()
 
 def Sender(cmdr,action,params):
-     Send.send(cmdr,action,params)
+     send(cmdr,action,params)
 '''
        Discord.Sender("KAZAK0V","FuelAlarm",{
             "Etitle":"SOS",

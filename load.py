@@ -28,7 +28,7 @@ from contextlib import closing
 from modules.whitelist import whiteList
 import csv
 import plug
-
+from modules import Commands
 import ttk
 import Tkinter as tk
 import sys
@@ -210,7 +210,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     '''
     # capture some stats when we launch not read for that yet
     startup_stats(cmdr)
-    
+    debug(state)
 
 
 
@@ -294,6 +294,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
     legacy.shipscan(cmdr, is_beta, system, station, entry)
+    Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel)
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
@@ -308,7 +309,8 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     
 def dashboard_entry(cmdr, is_beta, entry):
       
-    
+    this.fuel=entry["Fuel"]
+    debug("dashboard update "+str(entry["Fuel"]))
     this.landed = entry['Flags'] & 1<<1 and True or False
     this.SCmode = entry['Flags'] & 1<<4 and True or False
     this.SRVmode = entry['Flags'] & 1<<26 and True or False
