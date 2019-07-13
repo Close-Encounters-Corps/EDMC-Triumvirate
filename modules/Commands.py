@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*- 
 import Discord
 import load
+import datetime
 from debug import debug
-def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel):
+def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
     LifeSupportList={
         "int_lifesupport_size1_class1":"5:00",
 "int_lifesupport_size1_class2":"7:30",
@@ -48,22 +49,26 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel):
     debug("Sos Initiated")
     params={}
     #fuel=load.fuel
+    time_to_go=datetime.timedelta(seconds=(fuel["FuelMain"]+fuel["FuelReservoir"])/fuel_cons)
+    
     LifeSupport=state["Modules"]['LifeSupport']['Item']
     params.update({"Etitle":"SOS",
-                        "EDesc":"requesting help",
+                        "EDesc":unicode("Требуется заправка"),
                         "EColor":"16711680",
                         "params":{
-                            "Location":system+", "+str(DistFromStarLS),
-                            "Fuel left":str(fuel["FuelMain"]+fuel["FuelReservoir"]),
-                            "Time to oxigen depleting":LifeSupportList[LifeSupport]}})
+                            unicode(u"Местоположение:"):system+", "+unicode(DistFromStarLS),
+                            unicode(u"Топлива осталось:"):unicode(str(fuel["FuelMain"]+fuel["FuelReservoir"])+u" тонн"),
+                            #"Time to oxigen depleting":LifeSupportList[LifeSupport],
+                            unicode(u"Времени до отключения:"):unicode(time_to_go),
+                            }})
     Discord.Sender(cmdr,"FuelAlarm",params)
           
 
 
-def commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,fuel):
+def commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,fuel,fuel_cons):
     if entry['event']=="SendText":
         debug("command? "+str(entry["Message"]))
         debug("com? "+str(entry["Message"]=='!sos'))
         if entry['Message']=='!sos':
             debug("SOS?")
-            sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel)   
+            sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons)   
