@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*- 
-
+from datetime import datetime
 from modules import Discord
 from config import config
 import myNotebook as nb
@@ -57,6 +57,13 @@ this.DistFromStarLS=None
 this.Nag=0
 this.cmdr_SQID=None    #variable for allegiance check
 this.CMDR=None
+
+this.old_time=0  
+this.fuel=0
+this.fuel_cons = 0
+
+
+
 def plugin_prefs(parent, cmdr, is_beta):
     '''
     Return a TK Frame for adding to the EDMC settings dialog.
@@ -294,7 +301,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
     legacy.shipscan(cmdr, is_beta, system, station, entry)
-    Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel)
+    Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons)
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
@@ -304,13 +311,32 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
     
     
+def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
+    debug(old_timestamp==entry["timestamp"])
+    if  entry["timestamp"] !=old_timestamp and old_fuel!=0:
+        fuel_cons=((old_fuel["FuelMain"]+old_fuel["FuelReservoir"])-(entry["Fuel"]["FuelMain"]+entry["Fuel"]["FuelReservoir"]))/float((datetime.strptime (entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")-old_timestamp).total_seconds())
+        debug("Fuel cons is "+str(fuel_cons))
+        return fuel_cons
+    else:
+        debug("cant calculate")
+        return old_fuel_cons
+    
 
-    
-    
+
+
 def dashboard_entry(cmdr, is_beta, entry):
-      
+    debug(entry)
+    try:
+        debug("checking fuel cons")
+        this.fuel_cons=fuel_consumption(entry,this.fuel,this.old_time,this.fuel_cons)
+    except NameError :
+        debug("cant check fuel cons, waiting for data")
+        this.fuel_cons = 0
+    this.old_time=datetime.strptime (entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
     this.fuel=entry["Fuel"]
     debug("dashboard update "+str(entry["Fuel"]))
+    
+
     this.landed = entry['Flags'] & 1<<1 and True or False
     this.SCmode = entry['Flags'] & 1<<4 and True or False
     this.SRVmode = entry['Flags'] & 1<<26 and True or False
