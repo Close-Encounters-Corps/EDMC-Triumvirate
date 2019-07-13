@@ -68,6 +68,6 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,SQID):
 
 def commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,fuel,fuel_cons,SQID):
     if entry['event']=="SendText":
-        if entry['Message'].lower()=='!sos':
+        if entry['Message'].lower()=='?sos':
             
             sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,SQID)   

@@ -21,13 +21,17 @@ contentlist={
        "SCEC":
             {
                 "FuelAlarm":"<@&589109509843320852> <@&589110175668109317> <@&301455749874188289> ",
-                "Example":"",
+                "Dev":"",
             } ,
        "RPSG":
            {
                 "FuelAlarm":"<@&524926198560587777>",
 
            },
+      "N/A":
+            {
+                "FuelAlarm":"Независимый пилот запрашивает помощь!",
+            },
        }
 
 webhookList={
@@ -39,13 +43,18 @@ webhookList={
        "SCEC":
             {
                 "FuelAlarm":"599634967768596490/FbNF1iE1pK-s3EZ9Q0Vg6VBdsGPUKO4nMtaYNmYrYQpmsN9QK-xkOvMtbDHtYy7SVQMM",
-                "Example":"599240932663230505/HGgJcfmqPwLvDXh4z6mZ1gBUq7TQkBvy4YrvfHsPjeGlgktgma8ZcHXDiG10OgUYKFMu",
+                "Dev":"599240932663230505/HGgJcfmqPwLvDXh4z6mZ1gBUq7TQkBvy4YrvfHsPjeGlgktgma8ZcHXDiG10OgUYKFMu",
             } ,
        "RPSG":
            {
                 "FuelAlarm":"599627968112885787/9AC__aLYB8qsxC2ioWoGLLmyomDWNCRVHF2M9QTtlaNygZ97b1R-Bc4yTWYsPhJfy5Z5",
 
            },
+        "N/A":
+            {
+                "FuelAlarm":"599627968112885787/9AC__aLYB8qsxC2ioWoGLLmyomDWNCRVHF2M9QTtlaNygZ97b1R-Bc4yTWYsPhJfy5Z5",
+            },
+
        }
 #class Send:
     
