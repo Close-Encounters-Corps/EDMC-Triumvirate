@@ -622,7 +622,7 @@ class CanonnPatrol(Frame):
         
         nb.Label(frame,text="Настройки патруля").grid(row=0,column=0,sticky="NW")
         nb.Checkbutton(frame, text="Скрыть патруль", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW")
-        nb.Checkbutton(frame, text="Скрыть бгс", variable=self.factionbtn).grid(row = 1, column = 1,sticky="NW")
+        nb.Checkbutton(frame, text="Скрыть BGS", variable=self.factionbtn).grid(row = 1, column = 1,sticky="NW")
         nb.Checkbutton(frame, text="Скрыть данные ваших кораблей", variable=self.hideshipsbtn).grid(row = 2, column = 1,sticky="NW")
         nb.Checkbutton(frame, text="Автоматически копировать \nпатруль в буфер обмена", variable=self.copypatrolbtn).grid(row = 2, column = 0,sticky="NW",)
         
