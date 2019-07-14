@@ -62,7 +62,7 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
         params.update({"Etitle":"SOS",
                         "EDesc":unicode(u"Требуется заправка"),
                         "EColor":"16776960",
-                        "Avatar":"https://github.com/VAKazakov/EDMC-Triumvirate/blob/master/.github/FuelAlarmIcon.png",
+                        "Avatar":"https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
                         "Foouter":"Расчетное время отключения:"  ,
                         "Timestamp":(time_to_go),
                         "params":{
@@ -73,7 +73,7 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
     else: params.update({"Etitle":"SOS",
                         "EDesc":unicode(u"Срочно требуется топливо, произведено отключение всех систем!!!"),
                         "EColor":"16711680",
-                        "Avatar":"https://github.com/VAKazakov/EDMC-Triumvirate/blob/master/.github/FuelAlarmIcon.png",
+                        "Avatar":"https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
                         "Foouter":unicode("Расчетное время смерти:"),
                         "Timestamp":(time_to_go),
                         "params":{
