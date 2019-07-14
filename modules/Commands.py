@@ -4,7 +4,7 @@ import Discord
 import load
 import datetime
 from debug import debug
-def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,SQID):
+def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
     LifeSupportList={
         "int_lifesupport_size1_class1":"5:00",
 "int_lifesupport_size1_class2":"7:30",
@@ -49,25 +49,44 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,SQID):
     debug("Sos Initiated")
     params={}
     #fuel=load.fuel
-    time_to_go=datetime.timedelta(seconds=(fuel["FuelMain"]+fuel["FuelReservoir"])/fuel_cons)
     
+    if DistFromStarLS is not None:
+        Distance=unicode(", "+DistFromStarLS+" С.С.")
+    else:   Distance=unicode("")
     LifeSupport=state["Modules"]['LifeSupport']['Item']
-    params.update({"Etitle":"SOS",
+    if (fuel["FuelMain"]+fuel["FuelReservoir"])!=0:
+        sec_to_go=(fuel["FuelMain"]+fuel["FuelReservoir"])/fuel_cons
+        time_to_go=datetime.timedelta(seconds=sec_to_go)
+
+        params.update({"Etitle":"SOS",
                         "EDesc":unicode(u"Требуется заправка"),
-                        "EColor":"16711680",
+                        "EColor":"16776960",
                         "Avatar":"https://cdn.discordapp.com/attachments/518418556615000074/599610037773664276/kisspng-stop-sign-clip-art-sos-5ac4dd7ef16d32.png",
+                        "Foouter":"Расчетное время отключения:"  ,
+                        "Timestamp":(time_to_go),
                         "params":{
-                            unicode(u"Местоположение:"):system+", "+unicode(DistFromStarLS),
+                            unicode(u"Местоположение:"):unicode(system+Distance),
                             unicode(u"Топлива осталось:"):unicode(str(fuel["FuelMain"]+fuel["FuelReservoir"])+u" тонн"),
                             #"Time to oxigen depleting":LifeSupportList[LifeSupport],
                             unicode(u"Времени до отключения:"):unicode(time_to_go),
+                            }})
+    else: params.update({"Etitle":"SOS",
+                        "EDesc":unicode(u"Срочно требуется топливо, произведено отключение всех систем!!!"),
+                        "EColor":"16711680",
+                        "Avatar":"https://cdn.discordapp.com/attachments/518418556615000074/599610037773664276/kisspng-stop-sign-clip-art-sos-5ac4dd7ef16d32.png",
+                        "Foouter":"Расчетное время смерти:",
+                        "params":{
+                            unicode(u"Местоположение:"):unicode(system+", "+Distance),
+                            unicode(u"Топлива осталось:"):unicode(str(fuel["FuelMain"]+fuel["FuelReservoir"])+u" тонн"),
+                            unicode(u"Кислород кончится через (прим.)"):LifeSupportList[LifeSupport],
+                            #unicode(u"Времени до отключения:"):unicode(time_to_go),
                             }})
     Discord.Sender(cmdr,"FuelAlarm",params)
           
 
 
-def commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,fuel,fuel_cons,SQID):
+def commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,fuel,fuel_cons):
     if entry['event']=="SendText":
         if entry['Message'].lower()=='/sos':
             
-            sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,SQID)   
+            sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons)   

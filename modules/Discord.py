@@ -5,10 +5,10 @@ import load
 from discord_webhook import    DiscordWebhook, DiscordEmbed
 import sys
 from debug import debug
-
+import datetime 
 import logging
 logging.basicConfig()
-
+import time
 
 #this = sys.modules[__name__]
 
@@ -37,7 +37,7 @@ contentlist={
 webhookList={
         "EGPU":
             {
-                "FuelAlarm":"",
+                "FuelAlarm":"600027420392685599/OKcfg9XfGPDQb4WKVWkhQ9kqpzPXtQlcMLc7W-lTP0OOVxuLyrtHGO1bzjPdIgjjgqtN",
                 #"ActionName":"WebhoouAdr",
             },
        "SCEC":
@@ -90,7 +90,10 @@ def send(cmdr,action,params):    #
         embed = DiscordEmbed(title=params["Etitle"], description=params["EDesc"], color=params["EColor"])
         embed.set_author(name=cmdr)
         #embed.set_footer(text=)
-        embed.set_timestamp()
+        embed.set_footer(text=params["Foouter"])
+        if "Timestamp" in params:
+            embed.set_timestamp(str(datetime.datetime.utcfromtimestamp(time.time())+params["Timestamp"]) )
+        else:embed.set_timestamp()
         for key, entry  in params["params"].iteritems():
             #debug("webhook"+unicode(key)+unicode(entry))
             embed.add_embed_field(name=key, value=entry)
