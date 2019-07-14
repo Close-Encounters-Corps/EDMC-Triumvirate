@@ -45,7 +45,7 @@ class MaterialsCollected(Emitter):
         payload["isbeta"]= self.is_beta
         payload["clientVersion"]= self.client
         payload["factionState"]=self.state
-        debug(payload["journalLocalised"])
+        #debug(payload["journalLocalised"])
 
         return payload
 
