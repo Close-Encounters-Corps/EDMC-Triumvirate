@@ -55,11 +55,12 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
     else:   Distance=unicode("")
     LifeSupport=state["Modules"]['LifeSupport']['Item']
     if (fuel["FuelMain"]+fuel["FuelReservoir"])!=0:
-        try: sec_to_go=(fuel["FuelMain"]+fuel["FuelReservoir"])/fuel_cons
-        except ZeroDivisionError: sec_to_go=99999999999
-        time_to_go=datetime.timedelta(seconds=sec_to_go)
+        if fuel_cons!=0 :
+            sec_to_go=(fuel["FuelMain"]+fuel["FuelReservoir"])/fuel_cons
+        
+            time_to_go=datetime.timedelta(seconds=sec_to_go)
 
-        params.update({"Etitle":"SOS",
+            params.update({"Etitle":"SOS",
                         "EDesc":unicode(u"Требуется заправка"),
                         "EColor":"16776960",
                         "Avatar":"https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
@@ -69,6 +70,18 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
                             unicode(u"Местоположение:"):unicode(system+Distance),
                             unicode(u"Топлива осталось:"):unicode(str(fuel["FuelMain"]+fuel["FuelReservoir"])+u" тонн"),
                             unicode(u"Времени до отключения:"):unicode(time_to_go),
+                            }})
+        else:
+            params.update({"Etitle":"SOS",
+                        "EDesc":unicode(u"Требуется заправка"),
+                        "EColor":"16776960",
+                        "Avatar":"https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
+                        
+                        
+                        "params":{
+                            unicode(u"Местоположение:"):unicode(system+Distance),
+                            unicode(u"Топлива осталось:"):unicode(str(fuel["FuelMain"]+fuel["FuelReservoir"])+u" тонн"),
+                            unicode(u"Времени до отключения:"):unicode(u"Не кончится"),
                             }})
     else: params.update({"Etitle":"SOS",
                         "EDesc":unicode(u"Срочно требуется топливо, произведено отключение всех систем!!!"),
