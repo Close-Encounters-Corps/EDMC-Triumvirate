@@ -51,7 +51,7 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
     #fuel=load.fuel
     
     if DistFromStarLS is not None:
-        Distance=unicode(", "+DistFromStarLS+" С.С.")
+        Distance=unicode(", "+unicode(DistFromStarLS)+" С.С.")
     else:   Distance=unicode("")
     LifeSupport=state["Modules"]['LifeSupport']['Item']
     if (fuel["FuelMain"]+fuel["FuelReservoir"])!=0:
