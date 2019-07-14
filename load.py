@@ -81,7 +81,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
     #release.versionInSettings(frame, cmdr, is_beta,8)
    # entry=nb.Entry(frame,None)
-    
+    nb.Label(frame,text="В случае возникновения проблем с плагином \nили в случае, если Вы поставили неправильный сквадрон в гугл форме, \nпишите в личку Дискорда Казаков#4700").grid(row=9,column=0,sticky="NW")
     
     
     
@@ -302,7 +302,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
     legacy.shipscan(cmdr, is_beta, system, station, entry)
-    Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons,this.cmdr_SQID)
+    Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons)
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
