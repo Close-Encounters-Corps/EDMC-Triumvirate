@@ -20,7 +20,7 @@ from  player import Player
 from debug import Debug
 from debug import debug,error
 import plug
-
+import random
 RELEASE_CYCLE=60 * 1000 * 60 # 1 Hour
 DEFAULT_URL = 'https://github.com/VAKazakov/EDMC-Triumvirate/releases'
 WRAP_LENGTH = 200
@@ -189,8 +189,10 @@ class Release(Frame):
                         self.hyperlink['text'] = "Пожалуйста поставьте версию {}".format(self.latest.get("tag_name"))
                         self.button.grid()
                         if self.novoices.get() != 1:
-                            pass
-                            #Player(Release.plugin_dir,["sounds\\prefix.wav","sounds\\nag1.wav"]).start()
+                            nag_sel=random.randint(0,1)
+                            if nag_sel==1:
+                                Player(Release.plugin_dir,["sounds\\nag1.wav"]).start()
+                            else: Player(Release.plugin_dir,["sounds\\nag0.wav"]).start()
                     self.grid()
             else:
                 debug("Latest is null")
