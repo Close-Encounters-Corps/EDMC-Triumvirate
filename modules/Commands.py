@@ -55,7 +55,8 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
     else:   Distance=unicode("")
     LifeSupport=state["Modules"]['LifeSupport']['Item']
     if (fuel["FuelMain"]+fuel["FuelReservoir"])!=0:
-        sec_to_go=(fuel["FuelMain"]+fuel["FuelReservoir"])/fuel_cons
+        try: sec_to_go=(fuel["FuelMain"]+fuel["FuelReservoir"])/fuel_cons
+        except ZeroDivisionError: sec_to_go=99999999999
         time_to_go=datetime.timedelta(seconds=sec_to_go)
 
         params.update({"Etitle":"SOS",
