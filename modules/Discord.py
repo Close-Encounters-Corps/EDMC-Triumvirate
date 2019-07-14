@@ -1,7 +1,6 @@
 
 # -*- coding: utf-8 -*- 
 
-import load
 from discord_webhook import    DiscordWebhook, DiscordEmbed
 import sys
 from debug import debug
@@ -77,7 +76,7 @@ def send(cmdr,action,params):    #
         action- name of webhook
         params - dist of parametrs
         '''
-        #SQID=load.SQID
+        
 
         debug("Webhook Initiated")
         #if webhookList[SQID][action] =="None":
