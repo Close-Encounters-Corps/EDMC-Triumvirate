@@ -79,8 +79,7 @@ def send(cmdr,action,params):    #
         '''
         #SQID=load.SQID
 
-        debug("Webhook Initiatet")
-        debug(SQID)
+        debug("Webhook Initiated")
         #if webhookList[SQID][action] =="None":
         #    return
         webhook = DiscordWebhook(url='https://discordapp.com/api/webhooks/{}'.format(webhookList[SQID][action]),                        #.format(webhookList[SQID][action]
@@ -90,7 +89,8 @@ def send(cmdr,action,params):    #
         embed = DiscordEmbed(title=params["Etitle"], description=params["EDesc"], color=params["EColor"])
         embed.set_author(name=cmdr)
         #embed.set_footer(text=)
-        embed.set_footer(text=params["Foouter"])
+        if "Foouter" in params:
+            embed.set_footer(text=params["Foouter"])
         if "Timestamp" in params:
             embed.set_timestamp(str(datetime.datetime.utcfromtimestamp(time.time())+params["Timestamp"]) )
         else:embed.set_timestamp()
@@ -101,7 +101,7 @@ def send(cmdr,action,params):    #
             
         #debug(embed)
         webhook.add_embed(embed)
-        debug(webhook)
+        debug("Webhook sended")
         webhook.execute()
 
 def Sender(cmdr,action,params):

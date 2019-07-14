@@ -32,7 +32,7 @@ class clientReport(Emitter):
 
     def run(self):
         if not clientReport.done:           
-            debug("sending client report")    
+            debug("Sending client report")    
             #configure the payload       
             payload=self.setPayload()
             url=self.getUrl()

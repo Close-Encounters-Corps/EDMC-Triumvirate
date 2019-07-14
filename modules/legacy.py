@@ -255,7 +255,7 @@ class NHSS(threading.Thread):
                 NHSS(cmdr, is_beta, system,x,y,z, station, entry,client).start()
  #self.entry.get("Name_Localised").encode('utf8'))
 def shipscan(cmdr, is_beta, system, station, entry):
-    debug("shipscan")
+    
     if entry["event"]=='ShipTargeted' and entry['ScanStage']==3 and entry["PilotName"].find("$cmdr_decorate:#name=;")==-1:
         url='https://docs.google.com/forms/d/e/1FAIpQLScdc9kTaPUG-e7Hi-Qi1BrAvFxHUefaaHlAUTSTrsZV586Wgw/formResponse?usp=pp_url'
         url+='&entry.1346797392='+quote_plus(cmdr)

@@ -101,9 +101,9 @@ def prefs_changed(cmdr, is_beta):
     
 
 def Alegiance_get(CMDR,SQ_old):
-    debug("aleg check initiated")
+    
     if CMDR!= this.CMDR:
-        
+        debug("Community Check started")
         url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
             reader = csv.reader(r.iter_lines(), delimiter='\t')
@@ -181,8 +181,8 @@ def plugin_app(parent):
     this.patrol = patrol.CanonnPatrol(table,3)
     whitelist=whiteList(parent)
     whitelist.fetchData()
-    for plugin in plug.PLUGINS:
-        debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
+    #for plugin in plug.PLUGINS:
+    #    debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
     
     
     return frame
@@ -209,7 +209,7 @@ def Squadronsend(CMDR,entry):
             url+="&entry.558317192="+quote_plus(CMDR)
             url+="&entry.1042067605="+quote_plus(entry)
             this.SQNag=this.Nag+1
-            debug("SQName "+str(url))
+            
             legacy.Reporter(url).start()
    
 def journal_entry(cmdr, is_beta, system, station, entry, state):
@@ -218,7 +218,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     '''
     # capture some stats when we launch not read for that yet
     startup_stats(cmdr)
-    debug(state)
+    #debug(state)
 
 
 
@@ -227,7 +227,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     if "SystemFaction" in entry:
         ''' "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }'''
         SystemFaction=entry.get("SystemFaction")
-        debug(SystemFaction)
+        #debug(SystemFaction)
         try:
             this.SysFactionState= SystemFaction["FactionState"]
         except: 
@@ -313,13 +313,13 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     
     
 def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
-    debug(old_timestamp==entry["timestamp"])
+    #debug(old_timestamp==entry["timestamp"])
     if  entry["timestamp"] !=old_timestamp and old_fuel!=0:
         fuel_cons=((old_fuel["FuelMain"]+old_fuel["FuelReservoir"])-(entry["Fuel"]["FuelMain"]+entry["Fuel"]["FuelReservoir"]))/float((datetime.strptime (entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")-old_timestamp).total_seconds())
-        debug("Fuel cons is "+str(fuel_cons))
+        debug("Fuel consumption is "+str(fuel_cons))
         return fuel_cons
     else:
-        debug("cant calculate")
+        debug("Can't calculate fuel consumption")
         return old_fuel_cons
     
 
@@ -328,14 +328,14 @@ def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
 def dashboard_entry(cmdr, is_beta, entry):
     debug(entry)
     try:
-        debug("checking fuel cons")
+        #debug("Checking fuel consumption")
         this.fuel_cons=fuel_consumption(entry,this.fuel,this.old_time,this.fuel_cons)
     except NameError :
-        debug("cant check fuel cons, waiting for data")
+        #debug("Can't check fuel consumption, waiting for data")
         this.fuel_cons = 0
     this.old_time=datetime.strptime (entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
     this.fuel=entry["Fuel"]
-    debug("dashboard update "+str(entry["Fuel"]))
+    #debug("Dashboard update "+str(entry["Fuel"]))
     
 
     this.landed = entry['Flags'] & 1<<1 and True or False
@@ -354,7 +354,7 @@ def dashboard_entry(cmdr, is_beta, entry):
         this.nearloc['Longitude'] = None
         
     this.cmdr_SQID=Alegiance_get(cmdr,this.cmdr_SQID)
-    debug(this.cmdr_SQID)
+    #debug(this.cmdr_SQID)
     
     
 def cmdr_data(data, is_beta):
