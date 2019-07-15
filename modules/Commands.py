@@ -52,7 +52,7 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
     if state["ShipType"]=="SRV":
         return ("SOS отключена, пока вы в СРВ")
     if DistFromStarLS is not None:
-        Distance=unicode(u"\n, "+unicode(DistFromStarLS)+u" С.С.")
+        Distance=unicode(u",\n"+unicode(DistFromStarLS)+u" Св.Сек.")
     else:   Distance=unicode("")
     LifeSupport=state["Modules"]['LifeSupport']['Item']
     if (fuel["FuelMain"]+fuel["FuelReservoir"])!=0:
