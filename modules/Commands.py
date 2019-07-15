@@ -49,8 +49,10 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
     debug("Sos Initiated")
     params={}
     #fuel=load.fuel
+    if state['Role'] != None:
+        return "Вы находитесь в экипаже, SOS отключено"
     if state["ShipType"]=="SRV":
-        return ("SOS отключена, пока вы в СРВ")
+        return ("SOS отключен, пока вы в СРВ")
     if DistFromStarLS is not None:
         Distance=unicode(u",\n"+unicode(DistFromStarLS)+u" Св.Сек.")
     else:   Distance=unicode("")
