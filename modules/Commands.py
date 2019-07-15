@@ -49,9 +49,10 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
     debug("Sos Initiated")
     params={}
     #fuel=load.fuel
-    
+    if entry["ShipType"]=="SRV":
+        return ("SOS отключена, пока вы в СРВ")
     if DistFromStarLS is not None:
-        Distance=unicode(", "+unicode(DistFromStarLS)+" С.С.")
+        Distance=unicode(u", "+unicode(DistFromStarLS)+u" С.С.")
     else:   Distance=unicode("")
     LifeSupport=state["Modules"]['LifeSupport']['Item']
     if (fuel["FuelMain"]+fuel["FuelReservoir"])!=0:
@@ -95,10 +96,11 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons):
                             unicode(u"Кислород кончится через (прим.):"):LifeSupportList[LifeSupport],
                             }})
     Discord.Sender(cmdr,"FuelAlarm",params)
+    return "Сигнал о помощи послан, ожидайте"
           
 
 
 def commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,fuel,fuel_cons):
     if entry['event']=="SendText":
         if entry['Message'].lower()=='/sos':
-            sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons)   
+            return sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons)   
