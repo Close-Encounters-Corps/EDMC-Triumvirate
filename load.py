@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 from datetime import datetime
-import modules.Discord
+import modules.Discord   as Discord
 from config import config
 import myNotebook as nb
 from urllib import quote_plus
@@ -28,7 +28,7 @@ from contextlib import closing
 from modules.whitelist import whiteList
 import csv
 import plug
-import modules.Commands
+import modules.Commands     
 import ttk
 import Tkinter as tk
 import sys
@@ -302,7 +302,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
     legacy.shipscan(cmdr, is_beta, system, station, entry)
-    Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons)
+    modules.Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons)
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
