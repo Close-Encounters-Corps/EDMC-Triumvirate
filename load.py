@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 from datetime import datetime
-from modules import Discord
+import modules.Discord
 from config import config
 import myNotebook as nb
 from urllib import quote_plus
@@ -28,7 +28,7 @@ from contextlib import closing
 from modules.whitelist import whiteList
 import csv
 import plug
-from modules import Commands
+import modules.Commands
 import ttk
 import Tkinter as tk
 import sys
