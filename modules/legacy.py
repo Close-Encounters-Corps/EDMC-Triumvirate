@@ -255,18 +255,18 @@ class NHSS(threading.Thread):
                 NHSS(cmdr, is_beta, system,x,y,z, station, entry,client).start()
  #self.entry.get("Name_Localised").encode('utf8'))
 def shipscan(cmdr, is_beta, system, station, entry):
-    
-    if entry["event"]=='ShipTargeted' and entry['ScanStage']==3 and entry["PilotName"].find("$cmdr_decorate:#name=;")==-1:
-        url='https://docs.google.com/forms/d/e/1FAIpQLScdc9kTaPUG-e7Hi-Qi1BrAvFxHUefaaHlAUTSTrsZV586Wgw/formResponse?usp=pp_url'
-        url+='&entry.1346797392='+quote_plus(cmdr)
-        url+='&entry.674028188='+quote_plus(system)
-        url+='&entry.577969913='+quote_plus(entry["Ship"])
-        url+='&entry.1641514781='+quote_plus(entry["PilotName"])
-        url+='&entry.76739667='+quote_plus(entry.get("PilotName_Localised").encode('utf8') )
-        url+='&entry.2138128921='+quote_plus(entry["Faction"])
-        url+='&entry.1100547048='+quote_plus(entry["PilotRank"])
-        debug("ship scan to "+url)
-        Reporter(url).start()
+    if entry["event"]=='ShipTargeted' and entry["TargetLocked"]==true:
+        if entry['ScanStage']==3 :
+            url='https://docs.google.com/forms/d/e/1FAIpQLScdc9kTaPUG-e7Hi-Qi1BrAvFxHUefaaHlAUTSTrsZV586Wgw/formResponse?usp=pp_url'
+            url+='&entry.1346797392='+quote_plus(cmdr)
+            url+='&entry.674028188='+quote_plus(system)
+            url+='&entry.577969913='+quote_plus(entry["Ship"])
+            url+='&entry.1641514781='+quote_plus(entry["PilotName"])
+            url+='&entry.76739667='+quote_plus(unicode((entry.get("PilotName_Localised")))  )
+            url+='&entry.2138128921='+quote_plus(entry["Faction"])
+            url+='&entry.1100547048='+quote_plus(entry["PilotRank"])
+            debug("ship scan to "+url)
+            Reporter(url).start()
 
 class BGS():
     def __init__(self):
