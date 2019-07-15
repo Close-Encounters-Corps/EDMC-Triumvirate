@@ -349,9 +349,13 @@ def dashboard_entry(cmdr, is_beta, entry):
             this.nearloc['Latitude'] = entry['Latitude']
             this.nearloc['Longitude'] = entry['Longitude']
     else:
-        this.body_name = None
+       
         this.nearloc['Latitude'] = None
         this.nearloc['Longitude'] = None
+    if entry.get("BodyName"):
+        this.body_name=entry.get("BodyName")
+    else:
+        this.body_name = None   
         
     this.cmdr_SQID=Alegiance_get(cmdr,this.cmdr_SQID)
     #debug(this.cmdr_SQID)
