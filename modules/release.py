@@ -230,9 +230,9 @@ class Release(Frame):
         self.button.grid_remove()
                 
         if self.installer():
-            self.hyperlink['text'] = "Release {}  Installed Please Restart".format(self.latest.get("tag_name"))     
+            self.hyperlink['text'] = "Релиз {}  Установлен, пожалуйста перезагрузите EDMC".format(self.latest.get("tag_name"))     
         else:
-            self.hyperlink['text'] = "Release {}  Upgrade Failed".format(self.latest.get("tag_name"))     
+            self.hyperlink['text'] = "Релиз {}  Не установлен, ошибка".format(self.latest.get("tag_name"))     
         
         
     def installer(self):

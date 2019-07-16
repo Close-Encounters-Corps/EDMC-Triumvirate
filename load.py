@@ -145,6 +145,7 @@ def plugin_start(plugin_dir):
     '''
     
     #print this.patrol
+    plugin_dir=unicode(plugin_dir)
     release.Release.plugin_start(plugin_dir)
     Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
