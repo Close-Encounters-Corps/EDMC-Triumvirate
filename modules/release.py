@@ -241,12 +241,12 @@ class Release(Frame):
         
         debug("Installing {}".format(tag_name))
         
-        new_plugin_dir=os.path.join(os.path.dirname(Release.plugin_dir),"EDMC-Triumvirate-{}".format(tag_name))
+        new_plugin_dir=os.path.join(os.path.dirname(Release.plugin_dir),"EDMC-Canonn-{}".format(tag_name))
         
         debug("Checking for pre-existence")
         if os.path.isdir(new_plugin_dir):
             error("Download already exists: {}".format(new_plugin_dir))
-            plug.show_error("Triumvirate upgrade failed")
+            plug.show_error("Canonn upgrade failed")
             return False
                 
         try:
@@ -256,14 +256,14 @@ class Release(Frame):
             z.extractall(os.path.dirname(Release.plugin_dir))
         except:
             error("Download failed: {}".format(new_plugin_dir))
-            plug.show_error("Triumvirate upgrade failed")
+            plug.show_error("Canonn upgrade failed")
             return False
         
         #If we got this far then we have a new plugin so any failures and we will need to delete it
         
         debug("disable the current plugin")
         try:
-            os.rename(Release.plugin_dir,unicode("{}.disabled".format(Release.plugin_dir)))
+            os.rename(Release.plugin_dir,"{}.disabled".format(Release.plugin_dir))
             debug("Renamed {} to {}".format(Release.plugin_dir,"{}.disabled".format(Release.plugin_dir)))
         except:
             error("Upgrade failed reverting: {}".format(new_plugin_dir))
@@ -288,7 +288,7 @@ class Release(Frame):
         
     @classmethod    
     def plugin_start(cls,plugin_dir):
-        cls.plugin_dir=unicode(plugin_dir)
+        cls.plugin_dir=plugin_dir
 
 
 

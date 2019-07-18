@@ -34,10 +34,7 @@ import Tkinter as tk
 import sys
     
 this = sys.modules[__name__]
-
-import l10n
-import functools
-_ = functools.partial(l10n.Translations.translate, context=__file__)    
+    
 
 this.nearloc = {
    'Latitude' : None,
@@ -54,7 +51,6 @@ myPlugin = 'EDMC-Triumvirate'
 this.version='1.1.6'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
-this.body=None
 this.body_name=None
 this.SysFactionState=None 
 this.DistFromStarLS=None
@@ -226,7 +222,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     #debug(state)
 
 
-    
+
 
     
     if "SystemFaction" in entry:
@@ -252,11 +248,9 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     if entry.get("event") == "FSDJump":
         Systems.storeSystem(system,entry.get("StarPos"))
         this.DistFromStarLS=None
-        this.body = None
         
     if ('Body' in entry):
-            this.body = entry['Body']
-            debug(this.body)
+            this.body_name = entry['Body']
     
     if entry["event"]=="JoinedSquadron":
         Squadronsend(cmdr,entry["SquadronName"])
@@ -278,14 +272,13 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         y=None
         z=None    
     
-    return journal_entry_wrapper(cmdr, is_beta, system,this.SysFactionState,this.DistFromStarLS, station, entry, state,x,y,z,this.body,this.nearloc['Latitude'],this.nearloc['Longitude'],this.client_version)    
+    return journal_entry_wrapper(cmdr, is_beta, system,this.SysFactionState,this.DistFromStarLS, station, entry, state,x,y,z,this.body_name,this.nearloc['Latitude'],this.nearloc['Longitude'],this.client_version)    
     
 
 def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client):
     '''
     Detect journal events
     '''
-    Return=None
     factionkill.submit(cmdr, is_beta, system, station, entry,client)
     nhss.submit(cmdr, is_beta, system, station, entry,client)
     hdreport.submit(cmdr, is_beta, system, station, entry,client)
@@ -310,7 +303,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
     legacy.shipscan(cmdr, is_beta, system, station, entry)
-    Return=modules.Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons,this.SRVmode,this.Fightermode)
+    modules.Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons)
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
@@ -318,7 +311,6 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
     legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
-    return Return
     
     
 def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
@@ -350,7 +342,6 @@ def dashboard_entry(cmdr, is_beta, entry):
     this.landed = entry['Flags'] & 1<<1 and True or False
     this.SCmode = entry['Flags'] & 1<<4 and True or False
     this.SRVmode = entry['Flags'] & 1<<26 and True or False
-    this.Fightermode = entry['Flags'] & 1<<25 and True or False
     this.landed = this.landed or this.SRVmode
       #print 'LatLon = {}'.format(entry['Flags'] & 1<<21 and True or False)
       #print entry
@@ -366,7 +357,7 @@ def dashboard_entry(cmdr, is_beta, entry):
         this.body_name=entry.get("BodyName")
     else:
         this.body_name = None   
-    debug(this.body_name)    
+        
     this.cmdr_SQID=Alegiance_get(cmdr,this.cmdr_SQID)
     #debug(this.cmdr_SQID)
     

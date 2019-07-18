@@ -262,7 +262,7 @@ def shipscan(cmdr, is_beta, system, station, entry):
             url+='&entry.674028188='+quote_plus(system)
             url+='&entry.577969913='+quote_plus(entry["Ship"])
             url+='&entry.1641514781='+quote_plus(unicode(entry["PilotName"]) )
-            url+='&entry.76739667='+unicode(quote_plus((entry.get("PilotName_Localised")))  )
+            url+='&entry.76739667='+quote_plus(unicode((entry.get("PilotName_Localised")))  )
             url+='&entry.2138128921='+quote_plus(entry["Faction"])
             url+='&entry.1100547048='+quote_plus(entry["PilotRank"])
             debug("ship scan to "+url)
@@ -270,25 +270,24 @@ def shipscan(cmdr, is_beta, system, station, entry):
 
 class BGS():
     def __init__(self):
-        self.bgsTasks = {}
+        self.bgsTasks={}
 
     @classmethod
     def bgsTasksSet(cls,bgsTask):
-        cls.bgsTasks = bgsTask
+        cls.bgsTasks=bgsTask
 
     def TaskCheck(self,cmdr, is_beta, system, station, entry, client):
-        if entry["event"] == "MissionCompleted" or entry["event"] == "SellExplorationData" or entry["event"] == "MultiSellExplorationData" or entry["event"] == "RedeemVoucher":
+        if entry["event"]== "MissionCompleted" or  entry["event"]== "SellExplorationData" or  entry["event"]== "MultiSellExplorationData" or  entry["event"]== "RedeemVoucher":
             
             #if system in self.bgsTasks:
-            url = 'https://docs.google.com/forms/d/e/1FAIpQLSd1HNysgZRf4p0_I_hHxbwWz4N8EFEWtjsVaK9wR3RB66kiTQ/formResponse?usp=pp_url'
-            url+='&entry.2038615400=' + quote_plus(cmdr)
-            url+='&entry.1807008459=' + quote_plus(entry["event"])
-            url+='&entry.569295685=' + quote_plus(str(entry))
-            debug("BGS TESTS " + url)
+            url='https://docs.google.com/forms/d/e/1FAIpQLSd1HNysgZRf4p0_I_hHxbwWz4N8EFEWtjsVaK9wR3RB66kiTQ/formResponse?usp=pp_url'
+            url+='&entry.2038615400='+quote_plus(cmdr)
+            url+='&entry.1807008459='+quote_plus(entry["event"])
+            url+='&entry.569295685='+quote_plus(str(entry))
+            debug("BGS TESTS "+url)
             Reporter(url).start()
 
-        #if "MissionCompleted" in entry or "SellExplorationData" in entry or
-        #"MultiSellExplorationData" in entry or "RedeemVoucher" in entry:
+        #if "MissionCompleted" in entry or "SellExplorationData" in entry or  "MultiSellExplorationData" in entry or "RedeemVoucher" in entry:
         #    if system in self.bgsTasks:
         #        if "MissionCompleted" in entry:
         #            if factionMatch and 'Reward' in entry:
@@ -296,7 +295,7 @@ class BGS():
         #                url+='&entry.1574172588='+quote_plus(cmdr)
         #                if is_beta:
         #                    beta='Y'
-        #                else:
+        #                else: 
         #                    beta='N'
         #                url+='&entry.1534486210='+quote_plus(beta)
         #                url+='&entry.451904934='+quote_plus(system)
@@ -311,8 +310,8 @@ class BGS():
         #            None
         #        if "MultiSellExplorationData" in entry:
         #            None
-        #        if "RedeemVoucher" in entry:
+        #        if  "RedeemVoucher" in entry:
                    # None
                 #if "ACTION NAME(LOGS)" in entry:
-                #   None
-      
+                #   None 
+            
