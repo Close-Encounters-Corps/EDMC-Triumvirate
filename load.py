@@ -61,7 +61,7 @@ this.DistFromStarLS=None
 this.Nag=0
 this.cmdr_SQID=None    #variable for allegiance check
 this.CMDR=None
-
+this.SRVmode,this.Fightermode=False,False
 this.old_time=0  
 this.fuel=0
 this.fuel_cons = 0
