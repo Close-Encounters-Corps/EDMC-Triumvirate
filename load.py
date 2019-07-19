@@ -156,7 +156,7 @@ def plugin_start(plugin_dir):
     codex.CodexTypes.plugin_start(plugin_dir)
     
 
-    return 'Triumvirate'
+    return 'Triumvirate-{}'.format(this.version)
     
 def plugin_stop():
     '''
@@ -223,7 +223,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     '''
     # capture some stats when we launch not read for that yet
     startup_stats(cmdr)
-    #debug(state)
+    
 
 
     
@@ -261,15 +261,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     if entry["event"]=="JoinedSquadron":
         Squadronsend(cmdr,entry["SquadronName"])
 
-    #if entry.get("event")== "JoinedSquadron":
-    #    if entry["SquadronName"]== "EG PILOTS":
-    #       this.SquadronID="EGPU"
-    #    elif entry["SquadronName"]== "Close Encouters Corps":
-    #        this.SquadronID = "SCEC"
-    #    else:
-    #        this.SquadronID = None
-    #    debug(this.SquadronID)
-    #    config.set('this.SquadronID', this.SquadronID.get())
+
 
     if system: 
         x,y,z=Systems.edsmGetSystem(system)
