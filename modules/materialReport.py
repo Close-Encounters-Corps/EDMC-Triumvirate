@@ -16,8 +16,8 @@ class MaterialsCollected(Emitter):
     def __init__(self,cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z,DistFromStarLS):
         self.state=state
         self.DistFromStarLS=DistFromStarLS
-        debug("MAterial rep star dist "+str(self.DistFromStarLS))
-        debug("MAterial rep FacState "+str(self.state))
+        debug("Material rep star dist "+str(self.DistFromStarLS))
+        debug("Material rep FacState "+str(self.state))
         Emitter.__init__(self,cmdr, is_beta, system, x,y,z, entry, body, lat, lon,client)       
 
         self.modelreport="materialreports"
@@ -33,7 +33,10 @@ class MaterialsCollected(Emitter):
             payload["body"]=  None
             payload["latitude"]=  self.lat
             payload["longitude"]=  self.lon
-
+        if self.entry["Category"]=="Encoded":
+            payload["enum"]="scanned"
+        else: 
+            payload["enum"]="collected"
         payload["category"]=self.entry["Category"]
         payload["journalName"]=self.entry["Name"]
         #payload["journalLocalised"]=self.entry.get("Name_Localised").encode('utf8')
@@ -72,7 +75,7 @@ class MaterialsReward(Emitter):
             payload["body"]=  None
             payload["latitude"]=  self.lat
             payload["longitude"]=  self.lon
-
+        payload["enum"]="missionReward"
         payload["category"]=self.entry["MaterialsReward"][0]["Category"]
         payload["journalName"]=self.entry["MaterialsReward"][0]["Name"]
         #payload["journalLocalised"]=unicode(self.entry["MaterialsReward"][0].get("Name_Localised"))
