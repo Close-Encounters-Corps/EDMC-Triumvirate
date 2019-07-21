@@ -75,7 +75,7 @@ class MaterialsReward(Emitter):
             payload["body"]=  None
             payload["latitude"]=  self.lat
             payload["longitude"]=  self.lon
-
+        payload["enum"]="missionReward"
         payload["category"]=self.entry["MaterialsReward"][0]["Category"]
         payload["journalName"]=self.entry["MaterialsReward"][0]["Name"]
         #payload["journalLocalised"]=unicode(self.entry["MaterialsReward"][0].get("Name_Localised"))
