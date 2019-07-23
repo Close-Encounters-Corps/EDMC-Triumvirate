@@ -51,7 +51,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.1.6'
+this.version='1.1.7'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
@@ -316,7 +316,10 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
 def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
     #debug(old_timestamp==entry["timestamp"])
     if  entry["timestamp"] !=old_timestamp and old_fuel!=0:
-        fuel_cons=((old_fuel["FuelMain"]+old_fuel["FuelReservoir"])-(entry["Fuel"]["FuelMain"]+entry["Fuel"]["FuelReservoir"]))/float((datetime.strptime (entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")-old_timestamp).total_seconds())
+        try:
+            fuel_cons=((old_fuel["FuelMain"]+old_fuel["FuelReservoir"])-(entry["Fuel"]["FuelMain"]+entry["Fuel"]["FuelReservoir"]))/float((datetime.strptime (entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")-old_timestamp).total_seconds())
+        except ZeroDivisionError:
+            return old_fuel_cons
         debug("Fuel consumption is "+str(fuel_cons))
         return fuel_cons
     else:
