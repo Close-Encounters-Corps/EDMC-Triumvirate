@@ -320,10 +320,10 @@ def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
             fuel_cons=((old_fuel["FuelMain"]+old_fuel["FuelReservoir"])-(entry["Fuel"]["FuelMain"]+entry["Fuel"]["FuelReservoir"]))/float((datetime.strptime (entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")-old_timestamp).total_seconds())
         except ZeroDivisionError:
             return old_fuel_cons
-        debug("Fuel consumption is "+str(fuel_cons))
+        #debug("Fuel consumption is "+str(fuel_cons))
         return fuel_cons
     else:
-        debug("Can't calculate fuel consumption")
+        #debug("Can't calculate fuel consumption")
         return old_fuel_cons
     
 
