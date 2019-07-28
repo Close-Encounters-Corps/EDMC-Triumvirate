@@ -493,25 +493,27 @@ class CanonnPatrol(Frame):
         '''
         We will provided some sunstitute variables for the urls
         '''
-        r = url.replace('{CMDR}',self.cmdr)
-        
-        # We will need to initialise to "" if not 
+        if url:
+            r = url.replace('{CMDR}',self.cmdr)
 
-        if not self.lat:
-            self.lat = ""
-        if not self.lon:
-            self.lon = ""            
-        if not self.body:
-            self.body = ""                        
+            # We will need to initialise to "" if not
 
-        r = r.replace('{LAT}',str(self.lat))
-        r = r.replace('{LON}',str(self.lon))
-        r = r.replace('{BODY}',self.body)
+            if not self.lat:
+                self.lat = ""
+            if not self.lon:
+                self.lon = ""
+            if not self.body:
+                self.body = ""
+
+            r = r.replace('{LAT}',str(self.lat))
+            r = r.replace('{LON}',str(self.lon))
+            r = r.replace('{BODY}',self.body)
 
 
 
-
-        return r
+            return r
+        else:
+            return url
         
     
     def getCanonnPatrol(self):
