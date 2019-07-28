@@ -70,7 +70,7 @@ class fssEmitter(Emitter):
     def run(self):
         
         self.getExcluded()
-        
+        #TODO проверить работоспосность получения данных об исключениях из отправки
         # is this a code entry and do we want to record it?
         # We dont want o record any that don't begin with $ and and with ;
         if self.entry["event"] == "FSSSignalDiscovered" and not fssEmitter.excludefss.get(self.entry.get("SignalName")) and not self.entry.get("SignalName") == "$USS;" and not self.entry.get("IsStation") and '$' in self.entry.get("SignalName"):
