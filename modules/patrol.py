@@ -447,13 +447,13 @@ class CanonnPatrol(Frame):
                             except:
                                 error("patrol {},{},{},{},{},{},{},{}".format("BGSO",system,x,y,z,instructions,None,None))
                             self.bgsSystemsAndfactions.update(bgsSysAndFac)
-                        SystemsOvireden.append(system)
+                            SystemsOvireden.append(system)
                         
                 else:
-                    error("Patrol contains blank lines")
+                    error("BGS Overide contains blank lines")
         
         debug(BGSOveride)        
-        debug("bgslist is "+str(self.bgsSystemsAndfactions))
+        debug("bgslist is "+unicode(self.bgsSystemsAndfactions))
         legacy.BGS.bgsTasksSet(self.bgsSystemsAndfactions)
         return BGSOveride   , SystemsOvireden 
     
