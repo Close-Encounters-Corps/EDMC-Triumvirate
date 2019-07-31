@@ -84,39 +84,45 @@ def send(cmdr,action,params):    #
         
 
         debug("Webhook Initiated")
-        #if webhookList[SQID][action] =="None":
-        #    return
+        if webhookList[SQID][action] ==None:
+            return   "Вам недоступно данное действие"
         webhook = DiscordWebhook(url='https://discordapp.com/api/webhooks/{}'.format(webhookList[SQID][action]),                        #.format(webhookList[SQID][action]
                                 username=action,
                                 avatar_url=params["Avatar"] ,
                                 content= contentlist[SQID][action])
-        embed = DiscordEmbed(title=params["Etitle"], description=params["EDesc"], color=params["EColor"])
-        embed.set_author(name=cmdr)
-        #embed.set_footer(text=)
-        if "Foouter" in params:
-            embed.set_footer(text=params["Foouter"])
-        if "Timestamp" in params:
-            embed.set_timestamp(str(datetime.datetime.utcfromtimestamp(time.time())+params["Timestamp"]) )
-        else:embed.set_timestamp()
-        for key, entry  in params["params"].iteritems():
-            #debug("webhook"+unicode(key)+unicode(entry))
-            embed.add_embed_field(name=key, value=entry)
+        if params["Embed?"]  == True:
+            embed = DiscordEmbed(title=params["Etitle"], description=params["EDesc"], color=params["EColor"])
+            embed.set_author(name=cmdr)
+            #embed.set_footer(text=)
+            if "Foouter" in params:
+                embed.set_footer(text=params["Foouter"])
+            if "Timestamp" in params:
+                embed.set_timestamp(str(datetime.datetime.utcfromtimestamp(time.time())+params["Timestamp"]) )
+            else:embed.set_timestamp()
+            for key, entry  in params["Fields"].iteritems():
+                #debug("webhook"+unicode(key)+unicode(entry))
+                embed.add_embed_field(name=key, value=entry)
             
             
-        #debug(embed)
-        webhook.add_embed(embed)
+            #debug(embed)
+            webhook.add_embed(embed)
         debug("Webhook sended")
         webhook.execute()
 
 def Sender(cmdr,action,params):
-     send(cmdr,action,params)
-'''
-       Discord.Sender("KAZAK0V","FuelAlarm",{
-            "Etitle":"SOS",
-            "EDesc":"requesting help",
-            "EColor":"242424",
-            "params":{
-                "Location":"Jataya",
-                "Fuel left":"1.0234 tonns",
-                "Time to oxigen depleting":"25:00"}})
-''' 
+    '''
+    :param cmdr: User of plugin, which will be thrown to embeds\webhook name (depend of action name)
+    :param action: name of webhook, also depend to webhook adr
+    :param params: dist of parametrs :
+        {"Embed?":True\False, #if False, embed will not be created
+        "Etitle":unicode, #set name for Embed,
+        "EDesc":unicode, #sets description for Embed,
+        "EColor":int or str, #contains int, this will set set color for embed,
+        "Foouter":unicode, #optional
+        "Timestamp": #optional,Time till something
+        "Fields":{ #dict of pairs FieldName/FieldValues
+            "Location":"Jataya",
+            "Fuel left":"1.0234 tonns",
+            "Time to oxigen depleting":"25:00"}}
+    ''' 
+    send(cmdr,action,params)

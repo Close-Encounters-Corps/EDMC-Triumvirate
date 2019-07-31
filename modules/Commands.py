@@ -127,7 +127,8 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,is_SRV,is_F
                         "Avatar":"https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
                         "Foouter":"Расчетное время отключения:"  ,
                         "Timestamp":(time_to_go),
-                        "params":{
+                        "Embed?":True,
+                        "Fields":{
                             unicode(u"Местоположение:"):unicode(system + Distance + Body),
                             unicode(u"Топлива осталось:"):unicode(str(round(fuel["FuelMain"] + fuel["FuelReservoir"],2)) + u" тонн"),
                             unicode(u"Времени до отключения:"):unicode((time_to_go)),
@@ -138,8 +139,8 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,is_SRV,is_F
                         "EColor":color,
                         "Avatar":"https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
                         
-                        
-                        "params":{
+                        "Embed?":True,
+                        "Fields":{
                             unicode(u"Местоположение:"):unicode(system + Distance + Body),
                             unicode(u"Топлива осталось:"):unicode(str(round(fuel["FuelMain"] + fuel["FuelReservoir"],2)) + u" тонн"),
                             unicode(u"Времени до отключения:"):unicode(u"Не кончится"),
@@ -150,7 +151,8 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,is_SRV,is_F
                         "Avatar":"https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
                         "Foouter":unicode("Расчетное время смерти:"),
                         "Timestamp":(time_to_go),
-                        "params":{
+                        "Embed?":True,
+                        "Fields":{
                             unicode(u"Местоположение:"):unicode(system + Distance + Body),
                             unicode(u"Топлива осталось:"):unicode(str(round(fuel["FuelMain"] + fuel["FuelReservoir"],2)) + u" тонн"),
                             unicode(u"Кислород кончится через (прим.):"):LifeSupportList[LifeSupport],
