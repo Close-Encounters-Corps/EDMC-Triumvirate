@@ -39,7 +39,7 @@ class MaterialsCollected(Emitter):
             payload["collectedFrom"]="collected"
         payload["category"]=self.entry["Category"]
         payload["journalName"]=self.entry["Name"]
-        #payload["journalLocalised"]=self.entry.get("Name_Localised").encode('utf8')
+        #payload["journalLocalised"]=unicode(self.entry.get("Name_Localised").encode('utf-8'))
         payload["count"]=self.entry["Count"]
         payload["distanceFromMainStar"] = self.DistFromStarLS
         payload["coordX"] = self.x
@@ -48,7 +48,7 @@ class MaterialsCollected(Emitter):
         payload["isbeta"]= self.is_beta
         payload["clientVersion"]= self.client
         payload["factionState"]=self.state
-        #debug(payload["journalLocalised"])
+        #print(payload["journalLocalised"])
 
         return payload
 
@@ -87,7 +87,7 @@ class MaterialsReward(Emitter):
         payload["isbeta"]= self.is_beta
         payload["clientVersion"]= self.client
         payload["factionState"]=self.state
-        debug(payload)
+        #debug(payload)
         return payload
 
 
