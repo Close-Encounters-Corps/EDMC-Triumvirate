@@ -1,5 +1,4 @@
-﻿# -*- coding: utf-8 -*-
-import threading
+﻿import threading
 import requests
 import sys
 import json
@@ -44,7 +43,7 @@ class Emitter(threading.Thread):
         else:
             # first check to see if we are an official release
             repo,tag=client.split(".",1)
-            r=requests.get("https://api.github.com/repos/VAKazakov/{}/releases/tags/{}".format(repo,tag))
+            r=requests.get("https://api.github.com/repos/canonn-science/{}/releases/tags/{}".format(repo,tag))
             j=r.json()
             if r.status_code == 404:
                 debug("Release not in github")
@@ -90,8 +89,8 @@ class Emitter(threading.Thread):
         self.send(payload,url)
     
     def send(self,payload,url):
-        fullurl="{}/{}".format(url,self.modelreport)          #
-        r=requests.post(fullurl,data=json.dumps(payload, ensure_ascii=False).encode('utf_8'),headers={"content-type":"application/json"})  
+        fullurl="{}/{}".format(url,self.modelreport)
+        r=requests.post(fullurl,data=json.dumps(payload, ensure_ascii=False).encode('utf8'),headers={"content-type":"application/json"})  
         
         if not r.status_code == requests.codes.ok:
             error("{}/{}".format(url,self.modelreport))
@@ -100,3 +99,9 @@ class Emitter(threading.Thread):
             error(json.dumps(payload))
         else:
             debug("{}?id={}".format(fullurl,r.json().get("id")))
+
+
+            
+
+
+            
