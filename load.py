@@ -328,17 +328,26 @@ def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
     
 
 
-
+this.FuelCount=9
+this.plug_start=False
 def dashboard_entry(cmdr, is_beta, entry):
     debug(entry)
+    if this.plug_start==0:
+        this.plug_start=1
+        this.fuel=entry["Fuel"]
+        this.old_time=datetime.strptime (entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
     try:
-        #debug("Checking fuel consumption")
-        this.fuel_cons=fuel_consumption(entry,this.fuel,this.old_time,this.fuel_cons)
+        debug("Checking fuel consumption "+str(this.FuelCount))
+        if this.FuelCount==10:
+            this.fuel_cons=fuel_consumption(entry,this.fuel,this.old_time,this.fuel_cons)
+            this.old_time=datetime.strptime (entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+            this.fuel=entry["Fuel"]
+            this.FuelCount=0
+        else: this.FuelCount+=1
     except NameError :
         #debug("Can't check fuel consumption, waiting for data")
         this.fuel_cons = 0
-    this.old_time=datetime.strptime (entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
-    this.fuel=entry["Fuel"]
+    
     #debug("Dashboard update "+str(entry["Fuel"]))
     
 
