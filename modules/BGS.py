@@ -19,7 +19,7 @@ from debug import debug,error
 class BGS(object):
     def __init__(self):
         self.bgsTasks = {}
-
+    DefaultFacts={"SCEC":"Close Encounter Corps"}
     FormsAddrs={                     #https://docs.google.com/forms/     formResponse?usp=pp_url
                     "SCEC":{
                         "FactionKillBond" : {"addr":"d/e/1FAIpQLSelyvxTug3VXv8S_eRLRg85O_OOTKUHxDSkhfZnT-pLCfOl0w/","cmdr":"&entry.1208677263=","system":"&entry.479281488=","Reward":"&entry.21740167=","AwardingFaction":"&entry.828342601=","VictimFaction":"&entry.82740214=PS4"},
@@ -27,31 +27,42 @@ class BGS(object):
                         }
                     ,} 
     FactFormsAddr = {}
+    Exlude=True
     @classmethod
     def SQID_set(cls,SQ):
-    
+        if SQ== "N/A":
+            cls.Exlude=True
         if SQ != "":
-            cls.FactFormsAddr=cls.FormsAddrs[SQ]
-        
+            try:
+                cls.FactFormsAddr=cls.FormsAddrs[SQ]
+                cls.Exlude=False
+            except KeyError:
+                cls.Exlude=True
+            try:cls.DefaultFacts=str(cls.DefaultFacts[SQ])
+            except:cls.DefaultFacts=None        
         
     
     @classmethod
     def bgsTasksSet(cls,bgsTask):
         cls.bgsTasks = bgsTask
+        debug("Override is "+str(cls.bgsTasks))
 
     def EventRead(self,cmdr, is_beta, system, station, entry, client):
+        if self.Exlude == True :
+            return
         if entry["event"] == "MissionCompleted" or entry["event"] == "SellExplorationData" or entry["event"] == "MultiSellExplorationData" or entry["event"] == "RedeemVoucher" or entry["event"]=="FactionKillBond":
             if system in self.bgsTasks:
-                if entry["event"] == "FactionKillBond" and  entry["VictimFaction"]!="$faction_Thargoid;" and entry["VictimFaction"]!="$faction_Guardian;":
-                    Addr=FactFormsAddr["FactionKillBond"]
+                if entry["event"] == "FactionKillBond" :
+                    if entry["AwardingFaction"]==self.bgsTasks[system] or  entry["AwardingFaction"]==self.DefaultFacts and  ["VictimFaction"]!="$faction_Thargoid;" and entry["VictimFaction"]!="$faction_Guardian;":
+                        Addr=FactFormsAddr["FactionKillBond"]
 
-                    url = "https://docs.google.com/forms/"+Addr["addr"]+"formResponse?usp=pp_url"
-                    url+= Addr["cmdr"]+quote_plus(cmdr)
-                    url+= Addr["system"]+quote_plus(system)
-                    url+= Addr["Reward"]+quote_plus(entry["Reward"])
-                    url+= Addr["AwardingFaction"]+quote_plus(entry["AwardingFaction"])
-                    url+= Addr["VictimFaction"]+quote_plus(entry["VictimFaction"])
-                    Reporter(url).start()
+                        url = "https://docs.google.com/forms/"+Addr["addr"]+"formResponse?usp=pp_url"
+                        url+= Addr["cmdr"]+quote_plus(cmdr)
+                        url+= Addr["system"]+quote_plus(system)
+                        url+= Addr["Reward"]+quote_plus(entry["Reward"])
+                        url+= Addr["AwardingFaction"]+quote_plus(entry["AwardingFaction"])
+                        url+= Addr["VictimFaction"]+quote_plus(entry["VictimFaction"])
+                        Reporter(url).start()
 
             #if system in self.bgsTasks:
             #url = 'https://docs.google.com/forms/d/e/1FAIpQLSd1HNysgZRf4p0_I_hHxbwWz4N8EFEWtjsVaK9wR3RB66kiTQ/formResponse?usp=pp_url'
