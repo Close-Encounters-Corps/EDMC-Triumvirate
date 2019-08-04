@@ -441,13 +441,15 @@ class CanonnPatrol(Frame):
                 #sysLink= "https://elitebgs.app/system/{}".format()
                 if system != '':
                     if squadron == SQID:
-                        if Description!="Cancel":
-                            try:
-                                BGSOveride.append(newPatrol("BGSO",system,(float(x),float(y),float(z)),instructions,None,None))
-                            except:
-                                error("patrol {},{},{},{},{},{},{},{}".format("BGSO",system,x,y,z,instructions,None,None))
+                        if  Description!= "Basta":
                             self.bgsSystemsAndfactions.update(bgsSysAndFac)
                             SystemsOvireden.append(system)
+                            if Description!="Cancel":
+                                try:
+                                    BGSOveride.append(newPatrol("BGSO",system,(float(x),float(y),float(z)),instructions,None,None))
+                                except:
+                                    error("patrol {},{},{},{},{},{},{},{}".format("BGSO",system,x,y,z,instructions,None,None))
+                                
                         
                 else:
                     error("BGS Overide contains blank lines")
