@@ -68,7 +68,7 @@ this.SRVmode,this.Fightermode=False,False
 this.old_time=0  
 this.fuel=0
 this.fuel_cons = 0
-
+bgs=BGS.BGS()
 
 
 def plugin_prefs(parent, cmdr, is_beta):
