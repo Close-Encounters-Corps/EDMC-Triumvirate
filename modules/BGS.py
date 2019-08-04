@@ -39,7 +39,7 @@ class BGS():
     def bgsTasksSet(cls,bgsTask):
         cls.bgsTasks = bgsTask
 
-    def TaskCheck(self,cmdr, is_beta, system, station, entry, client):
+    def EventRead(self,cmdr, is_beta, system, station, entry, client):
         if entry["event"] == "MissionCompleted" or entry["event"] == "SellExplorationData" or entry["event"] == "MultiSellExplorationData" or entry["event"] == "RedeemVoucher" or entry["event"]=="FactionKillBond":
             if system in self.bgsTasks:
                 if entry["event"] == "FactionKillBond":
