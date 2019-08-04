@@ -323,7 +323,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     legacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
-    #legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
+
     return Return
     
     
