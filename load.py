@@ -134,9 +134,15 @@ def Alegiance_get(CMDR,SQ_old):
         else: 
             if this.Nag==0:
                 debug("SQID need to be instaled")
+                
+                this.Nag=this.Nag+1
+
                 url="https://docs.google.com/forms/d/e/1FAIpQLSeERKxF6DlrQ3bMqFdceycSlBV0kwkzziIhYD0ctDzrytm8ug/viewform?usp=pp_url"
                 url+="&entry.42820869="+quote_plus(CMDR)
-                this.Nag=this.Nag+1
+                
+                Discord.SQID_set("N/A")
+                patrol.SQID_set("N/A")
+                
                 debug("SQID "+str(url))
                 webbrowser.open(url)
     else: return      SQ_old
