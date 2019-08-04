@@ -31,8 +31,8 @@ class MaterialsCollected(Emitter):
             payload["longitude"]=  self.lon
         else:
             payload["body"]=  None
-            payload["latitude"]=  self.lat
-            payload["longitude"]=  self.lon
+            payload["latitude"]=  None
+            payload["longitude"]=  None
         if self.entry["Category"]=="Encoded":
             payload["collectedFrom"]="scanned"
         else: 
@@ -76,8 +76,8 @@ class MaterialsReward(Emitter):
             payload["longitude"]=  self.lon
         else:
             payload["body"]=  None
-            payload["latitude"]=  self.lat
-            payload["longitude"]=  self.lon
+            payload["latitude"]=  None
+            payload["longitude"]=  None
         payload["collectedFrom"]="missionReward"
         payload["category"]=Category[self.entry["MaterialsReward"][0]["Category"]]
         payload["journalName"]=self.entry["MaterialsReward"][0]["Name"]
