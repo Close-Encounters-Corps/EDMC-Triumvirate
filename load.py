@@ -32,7 +32,10 @@ import modules.Commands
 import ttk
 import Tkinter as tk
 import sys
-    
+
+from modules import BGS
+
+
 this = sys.modules[__name__]
 
 import l10n
@@ -128,6 +131,7 @@ def Alegiance_get(CMDR,SQ_old):
         if SQ != None:
             debug("SQ ID IS OK")
             this.CMDR=CMDR
+            BGS.BGS.SQID_set(SQ)
             Discord.SQID_set(SQ)
             patrol.SQID_set(SQ) #Функция для отправки данных о сквадроне в модули, использовать как шаблон 
             return SQ 
@@ -308,6 +312,9 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
 
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
+
+    BGS.BGS.EventRead(cmdr, is_beta, system, station, entry, client)
+
     legacy.shipscan(cmdr, is_beta, system, station, entry)
     Return= Return or modules.Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons,this.SRVmode,this.Fightermode)
     # legacy logging to google sheets
