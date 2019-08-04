@@ -165,7 +165,7 @@ def plugin_start(plugin_dir):
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     
-    bgs=BGS.BGS()
+    
     return 'Triumvirate-{}'.format(this.version)
     
 def plugin_stop():
@@ -323,7 +323,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     legacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
-    legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
+    #legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
     return Return
     
     
