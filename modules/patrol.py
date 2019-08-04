@@ -207,7 +207,7 @@ class CanonnPatrol(Frame):
         self.IMG_PREV = tk.PhotoImage(file = u'{}\\icons\\left_arrow.gif'.format(CanonnPatrol.plugin_dir))
         self.IMG_NEXT = tk.PhotoImage(file = u'{}\\icons\\right_arrow.gif'.format(CanonnPatrol.plugin_dir))
         
-        self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Canonn.patrol')
+        self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Triumvirate.patrol')
         
         
         self.canonnbtn=tk.IntVar(value=config.getint("HidePatrol"))
@@ -769,7 +769,7 @@ class CanonnPatrol(Frame):
     
     def load_excluded(self):
         debug("loading excluded")
-        self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Canonn.patrol')
+        self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Triumvirate.patrol')
         try:
             with open(self.patrol_config) as json_file:  
                 self.excluded = json.load(json_file)
@@ -778,7 +778,7 @@ class CanonnPatrol(Frame):
             
             
     def save_excluded(self):
-        self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Canonn.patrol')
+        self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Triumvirate.patrol')
         excluded={}
         for patrol in self.patrol_list:
             if patrol.get("excluded") and not patrol.get("type") in ('BGS','SHIPS'):
