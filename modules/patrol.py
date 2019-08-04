@@ -435,7 +435,14 @@ class CanonnPatrol(Frame):
             for row in reader:
                 
                 squadron,system,x,y,z,TINF,TFAC,Description=row
-                bgsSysAndFac={system:TFAC}
+                if "/" in TFAC:
+                    TFAC=TFAC.split("/")
+                    bgsSysAndFac={system:[]}
+                    for Key in TFAC:
+                        bgsSysAndFac[system].append(Key)
+                else:
+                    bgsSysAndFac={system:[TFAC]}
+                
                 instructions=   Description.format(TFAC,TINF)
                 
                 #sysLink= "https://elitebgs.app/system/{}".format()
