@@ -16,7 +16,7 @@ from debug import Debug
 from debug import debug,error
 
 
-class BGS():
+class BGS(object):
     def __init__(self):
         self.bgsTasks = {}
 

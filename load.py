@@ -131,7 +131,7 @@ def Alegiance_get(CMDR,SQ_old):
         if SQ != None:
             debug("SQ ID IS OK")
             this.CMDR=CMDR
-            BGS.BGS.SQID_set(SQ)
+            bgs.SQID_set(SQ)
             Discord.SQID_set(SQ)
             patrol.SQID_set(SQ) #Функция для отправки данных о сквадроне в модули, использовать как шаблон 
             return SQ 
@@ -165,7 +165,7 @@ def plugin_start(plugin_dir):
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     
-
+    bgs=BGS.BGS()
     return 'Triumvirate-{}'.format(this.version)
     
 def plugin_stop():
@@ -313,7 +313,7 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
 
-    BGS.BGS.EventRead(cmdr, is_beta, system, station, entry, client)
+    bgs.EventRead(cmdr, is_beta, system, station, entry, client)
 
     legacy.shipscan(cmdr, is_beta, system, station, entry)
     Return= Return or modules.Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons,this.SRVmode,this.Fightermode)
