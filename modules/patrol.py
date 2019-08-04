@@ -25,7 +25,7 @@ from datetime import datetime
 from release import Release
 from l10n import Locale
 import time
-import legacy
+from BGS import  BGS
 
 CYCLE=60 * 1000 * 60 # 60 minutes
 DEFAULT_URL = ""
@@ -454,7 +454,7 @@ class CanonnPatrol(Frame):
         
         debug(BGSOveride)        
         debug("bgslist is "+unicode(self.bgsSystemsAndfactions))
-        legacy.BGS.bgsTasksSet(self.bgsSystemsAndfactions)
+        BGS.bgsTasksSet(self.bgsSystemsAndfactions)
         return BGSOveride   , SystemsOvireden 
     
 
