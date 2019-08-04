@@ -42,7 +42,7 @@ class BGS(object):
     def EventRead(self,cmdr, is_beta, system, station, entry, client):
         if entry["event"] == "MissionCompleted" or entry["event"] == "SellExplorationData" or entry["event"] == "MultiSellExplorationData" or entry["event"] == "RedeemVoucher" or entry["event"]=="FactionKillBond":
             if system in self.bgsTasks:
-                if entry["event"] == "FactionKillBond":
+                if entry["event"] == "FactionKillBond" and  entry["VictimFaction"]!="$faction_Thargoid;" and entry["VictimFaction"]!="$faction_Guardian;":
                     Addr=FactFormsAddr["FactionKillBond"]
 
                     url = "https://docs.google.com/forms/"+Addr["addr"]+"formResponse?usp=pp_url"
