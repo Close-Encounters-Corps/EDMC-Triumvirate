@@ -53,7 +53,7 @@ class BGS(object):
         if entry["event"] == "MissionCompleted" or entry["event"] == "SellExplorationData" or entry["event"] == "MultiSellExplorationData" or entry["event"] == "RedeemVoucher" or entry["event"]=="FactionKillBond":
             if system in self.bgsTasks or self.DefaultFactsi in entry:
                 if entry["event"] == "FactionKillBond" :
-                    if entry["AwardingFaction"]==self.bgsTasks[system] or  entry["AwardingFaction"]==self.DefaultFacts and  ["VictimFaction"]!="$faction_Thargoid;" and entry["VictimFaction"]!="$faction_Guardian;":
+                    if entry["AwardingFaction"] in self.bgsTasks[system] or  entry["AwardingFaction"]==self.DefaultFacts and  ["VictimFaction"]!="$faction_Thargoid;" and entry["VictimFaction"]!="$faction_Guardian;":
                         Addr=FactFormsAddr["FactionKillBond"]
 
                         url = "https://docs.google.com/forms/"+Addr["addr"]+"formResponse?usp=pp_url"
