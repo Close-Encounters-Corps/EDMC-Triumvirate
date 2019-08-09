@@ -95,7 +95,7 @@ class Release(Frame):
         self.hyperlink=ReleaseLink(self)
         self.hyperlink.grid(row = 0, column = 1,sticky="NSEW")
         
-        self.button=tk.Button(self, text="Нажмите что бы обновить", command=self.click_installer)
+        self.button=tk.Button(self, text="Нажмите чтобы обновить", command=self.click_installer)
         self.button.grid(row = 1, column = 0,columnspan=2,sticky="NSEW")
         self.button.grid_remove()
         
