@@ -51,7 +51,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.1.7'
+this.version='1.1.8'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
@@ -194,19 +194,8 @@ def plugin_app(parent):
     
 def Squadronsend(CMDR,entry):
       
-        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1113444368&single=true&output=tsv"        
-        with closing(requests.get(url, stream=True)) as r:
-            reader = csv.reader(r.iter_lines(), delimiter='\t')
-            next(reader)
-            
-            
-            for row in reader:
-                
-                cmdr,squadron=row
-                
-                if CMDR in row:
-                    if entry==squadron:
-                        this.SQNag==1
+        
+  
         
         if this.SQNag==0:
             debug("SQName need to be sended")
