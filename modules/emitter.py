@@ -43,7 +43,7 @@ class Emitter(threading.Thread):
         else:
             # first check to see if we are an official release
             repo,tag=client.split(".",1)
-            r=requests.get("https://api.github.com/repos/canonn-science/{}/releases/tags/{}".format(repo,tag))
+            r=requests.get("https://api.github.com/repos/VAKazakov/{}/releases/tags/{}".format(repo,tag))
             j=r.json()
             if r.status_code == 404:
                 debug("Release not in github")
