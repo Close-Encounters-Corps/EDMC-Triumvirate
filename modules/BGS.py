@@ -64,7 +64,7 @@ class BGS(object):
                         url+= Addr["cmdr"]+quote_plus(cmdr)
                         url+= Addr["system"]+quote_plus(system)
                         url+= Addr["Reward"]+quote_plus(entry["Reward"])
-                         url+= Addr["AwardingFaction"]+quote_plus(entry["AwardingFaction"])
+                       url+= Addr["AwardingFaction"]+quote_plus(entry["AwardingFaction"])
                         url+= Addr["VictimFaction"]+quote_plus(entry["VictimFaction"])
                         Reporter(url).start()
 
