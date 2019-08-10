@@ -48,12 +48,16 @@ class BGS(object):
         debug("Override is "+str(cls.bgsTasks))
 
     def EventRead(self,cmdr, is_beta, system, station, entry, client):
+    debug("BGSSend Commence")
         if self.Exlude == True :
             return
         if entry["event"] == "MissionCompleted" or entry["event"] == "SellExplorationData" or entry["event"] == "MultiSellExplorationData" or entry["event"] == "RedeemVoucher" or entry["event"]=="FactionKillBond":
+            try:debug("BGSSend stage1 "+str(system in self.bgsTasks or self.DefaultFacts in entry))
+            except:pass
             if system in self.bgsTasks or self.DefaultFacts in entry:
+                debug("BGSSend stage 2")
                 if entry["event"] == "FactionKillBond" :
-                    if entry["AwardingFaction"] in self.bgsTasks[system] or  entry["AwardingFaction"]==self.DefaultFacts and  ["VictimFaction"]!="$faction_Thargoid;" and entry["VictimFaction"]!="$faction_Guardian;":
+                    if entry["AwardingFaction"] in self.bgsTasks[system] or  entry["AwardingFaction"]==self.DefaultFacts:
                         Addr=FactFormsAddr["FactionKillBond"]
 
                         url = "https://docs.google.com/forms/"+Addr["addr"]+"formResponse?usp=pp_url"
