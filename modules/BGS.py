@@ -56,7 +56,7 @@ class BGS(object):
             try:debug("BGSSend stage1 "+str(system in self.bgsTasks)+" " +str(self.DefaultFacts in entry))
             except:pass
             debug("bgssend debug "+ str(entry))
-            if system in self.bgsTasks or self.DefaultFacts in entry:
+            if self.bgsTasks.get(system) not None:
                 debug("BGSSend stage 2")
                 if entry["event"] == "FactionKillBond" :
                     if entry["AwardingFaction"] in self.bgsTasks[system] or  entry["AwardingFaction"]==self.DefaultFacts:
