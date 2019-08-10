@@ -19,7 +19,7 @@ from debug import debug,error
 class BGS(object):
     def __init__(self):
         self.bgsTasks = {}
-    DefaultFacts={"SCEC":"Close Encounter Corps"}
+    DefaultFacts={"SCEC":"Close Encounters Corps"}
     FormsAddrs={                     #https://docs.google.com/forms/     formResponse?usp=pp_url
                     "SCEC":{
                         "FactionKillBond" : {"addr":"d/e/1FAIpQLSelyvxTug3VXv8S_eRLRg85O_OOTKUHxDSkhfZnT-pLCfOl0w/","cmdr":"&entry.1208677263=","system":"&entry.479281488=","Reward":"&entry.21740167=","AwardingFaction":"&entry.828342601=","VictimFaction":"&entry.82740214=PS4"},
@@ -33,11 +33,11 @@ class BGS(object):
         if SQ== "N/A":
             cls.Exlude=True
         if SQ != "":
-            try:
+            #try:
                 cls.FactFormsAddr=cls.FormsAddrs[SQ]
-                cls.Exlude=False
-            except KeyError:
-                cls.Exlude=True
+                #cls.Exlude=False
+            #except KeyError:
+                #cls.Exlude=True
             try:cls.DefaultFacts=str(cls.DefaultFacts[SQ])
             except:cls.DefaultFacts=None        
         
@@ -49,8 +49,8 @@ class BGS(object):
 
     def EventRead(self,cmdr, is_beta, system, station, entry, client):
         debug("BGSSend Commence")
-        if self.Exlude == True :
-            return
+        #if self.Exlude == True :
+            #return
         debug("BGSSend not excluded")
         if entry["event"] == "MissionCompleted" or entry["event"] == "SellExplorationData" or entry["event"] == "MultiSellExplorationData" or entry["event"] == "RedeemVoucher" or entry["event"]=="FactionKillBond":
             try:debug("BGSSend stage1 "+str(system in self.bgsTasks or self.DefaultFacts in entry))
