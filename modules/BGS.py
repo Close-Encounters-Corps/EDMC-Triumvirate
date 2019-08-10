@@ -48,7 +48,7 @@ class BGS(object):
         debug("Override is "+str(cls.bgsTasks))
 
     def EventRead(self,cmdr, is_beta, system, station, entry, client):
-    debug("BGSSend Commence")
+        debug("BGSSend Commence")
         if self.Exlude == True :
             return
         if entry["event"] == "MissionCompleted" or entry["event"] == "SellExplorationData" or entry["event"] == "MultiSellExplorationData" or entry["event"] == "RedeemVoucher" or entry["event"]=="FactionKillBond":
@@ -64,7 +64,7 @@ class BGS(object):
                         url+= Addr["cmdr"]+quote_plus(cmdr)
                         url+= Addr["system"]+quote_plus(system)
                         url+= Addr["Reward"]+quote_plus(entry["Reward"])
-                        url+= Addr["AwardingFaction"]+quote_plus(entry["AwardingFaction"])
+                         url+= Addr["AwardingFaction"]+quote_plus(entry["AwardingFaction"])
                         url+= Addr["VictimFaction"]+quote_plus(entry["VictimFaction"])
                         Reporter(url).start()
 
