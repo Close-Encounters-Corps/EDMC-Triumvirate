@@ -53,7 +53,7 @@ class BGS(object):
             #return
         debug("BGSSend not excluded")
         if entry["event"] == "MissionCompleted" or entry["event"] == "SellExplorationData" or entry["event"] == "MultiSellExplorationData" or entry["event"] == "RedeemVoucher" or entry["event"]=="FactionKillBond":
-            try:debug("BGSSend stage1 "+str(system in self.bgsTasks)+" " +str(self.DefaultFacts in entry)))
+            try:debug("BGSSend stage1 "+str(system in self.bgsTasks)+" " +str(self.DefaultFacts in entry))
             except:pass
             debug("bgssend debug "+ str(entry))
             if system in self.bgsTasks or self.DefaultFacts in entry:
