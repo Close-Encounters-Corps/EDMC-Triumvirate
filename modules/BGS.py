@@ -34,7 +34,7 @@ class BGS(object):
             cls.Exlude=True
         if SQ != "":
             #try:
-                cls.FactFormsAddr=cls.FormsAddrs[SQ]
+            cls.FactFormsAddr=cls.FormsAddrs[SQ]
                 #cls.Exlude=False
             #except KeyError:
                 #cls.Exlude=True
