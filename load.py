@@ -40,11 +40,11 @@ import functools
 _ = functools.partial(l10n.Translations.translate, context=__file__)    
 
 this.nearloc = {
-   'Latitude' : None,
-   'Longitude' : None,
-   'Altitude' : None,
-   'Heading' : None,
-   'Time' : None
+   'Latitude' : None, # широта
+   'Longitude' : None, # долгота
+   'Altitude' : None, # высота
+   'Heading' : None, # курс
+   'Time' : None # время
 }
 
 
@@ -107,7 +107,7 @@ def prefs_changed(cmdr, is_beta):
 def Alegiance_get(CMDR,SQ_old):
     
     if CMDR!= this.CMDR:
-        debug("Community Check started")
+        debug("Community Check started") # Начало проверки сообществ
         url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
             reader = csv.reader(r.iter_lines(), delimiter='\t')
@@ -129,7 +129,7 @@ def Alegiance_get(CMDR,SQ_old):
             debug("SQ ID IS OK")
             this.CMDR=CMDR
             Discord.SQID_set(SQ)
-            patrol.SQID_set(SQ) #Функция для отправки данных о сквадроне в модули, использовать как шаблон 
+            patrol.SQID_set(SQ) #Функция для отправки данных об эскадрилье в модули, использовать как шаблон 
             return SQ 
         else: 
             if this.Nag==0:
@@ -162,7 +162,7 @@ def plugin_stop():
     '''
     EDMC is closing
     '''
-    debug('Stopping the plugin')
+    debug('Stopping the plugin') # Остановка плагина
     this.patrol.plugin_stop()
     
 def plugin_app(parent):
@@ -249,7 +249,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     
         
         
-    if entry.get("event") == "FSDJump":
+    if entry.get("event") == "FSDJump": # Прыжок
         Systems.storeSystem(system,entry.get("StarPos"))
         this.DistFromStarLS=None
         this.body = None
@@ -258,7 +258,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.body = entry['Body']
             debug(this.body)
     
-    if entry["event"]=="JoinedSquadron":
+    if entry["event"]=="JoinedSquadron": # Выбранная эскадрилья
         Squadronsend(cmdr,entry["SquadronName"])
 
 
@@ -320,7 +320,7 @@ def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
         debug("Fuel consumption is "+str(fuel_cons))
         return fuel_cons
     else:
-        debug("Can't calculate fuel consumption")
+        debug("Can't calculate fuel consumption") # Не получается просчитать расход топлива
         return old_fuel_cons
     
 
@@ -329,13 +329,13 @@ def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
 def dashboard_entry(cmdr, is_beta, entry):
     debug(entry)
     try:
-        #debug("Checking fuel consumption")
+        #debug("Checking fuel consumption") # Проверка расхода топлива
         this.fuel_cons=fuel_consumption(entry,this.fuel,this.old_time,this.fuel_cons)
     except NameError :
-        #debug("Can't check fuel consumption, waiting for data")
+        #debug("Can't check fuel consumption, waiting for data") # Не получается проверить расход топлива
         this.fuel_cons = 0
     this.old_time=datetime.strptime (entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
-    this.fuel=entry["Fuel"]
+    this.fuel=entry["Fuel"] # Топливо
     #debug("Dashboard update "+str(entry["Fuel"]))
     
 
