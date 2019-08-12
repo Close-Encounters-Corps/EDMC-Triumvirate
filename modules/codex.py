@@ -1,4 +1,4 @@
-﻿import threading
+import threading
 import requests
 import sys
 import json
@@ -37,13 +37,13 @@ class poiTypes(threading.Thread):
 class CodexTypes(Frame):
 
     tooltips={
-            "Geology": "Geology: Vents and fumeroles",
-            "Cloud": "Lagrange Clouds",
-            "Anomaly": "Anomalous stellar phenomena",
-            "Thargoid": "Thargoid sites or barnacles",
-            "Biology": "Biological surface signals",
-            "Guardian": "Guardian sites",
-            "None": "Unclassified codex entry",
+            "Geology": "Geology: Vents and fumeroles", # Геологическое образование: гейзеры и фумаролы
+            "Cloud": "Lagrange Clouds", # Облака: облака Лагранжа
+            "Anomaly": "Anomalous stellar phenomena", # Аномалия: аномальный космический феномен
+            "Thargoid": "Thargoid sites or barnacles", # Таргоиды: Таргоидские структуры и барнаклы
+            "Biology": "Biological surface signals", # Биологические сигналы: биологические сигналы на поверхности
+            "Guardian": "Guardian sites", # Стражи: структуры Стражей
+            "None": "Unclassified codex entry", # Неизвестно: неклассифицированная запись Кодекса
     }
 
     def __init__(self, parent,gridrow):
@@ -204,12 +204,12 @@ class CodexTypes(Frame):
     def journal_entry(self,cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client):
         debug("CodeTypes journal_entry")
     
-        if entry.get("event")in ("FSDJump") :
+        if entry.get("event")in ("FSDJump") : # Прыжок
             #To avoid having check data we will assume we have some by now
      
             self.visualise()
         
-        if entry.get("event") == "StartJump" and entry.get("JumpType") == "Hyperspace":
+        if entry.get("event") == "StartJump" and entry.get("JumpType") == "Hyperspace": # Гиперпрыжок
             # go fetch some data.It will 
             poiTypes(entry.get("StarSystem"),self.getdata).start()
             self.grid_remove()
@@ -237,8 +237,8 @@ class CodexTypes(Frame):
         frame.columnconfigure(1, weight=1)
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
         
-        nb.Label(frame,text="Настройки Кодекса").grid(row=0,column=0,sticky="NW")
-        nb.Checkbutton(frame, text="Скрыть иконки POI", variable=self.hidecodexbtn).grid(row = 1, column = 0,sticky="NW")
+        nb.Label(frame,text="Codex settings").grid(row=0,column=0,sticky="NW") # Настройки Кодекса
+        nb.Checkbutton(frame, text="Hide POI icons", variable=self.hidecodexbtn).grid(row = 1, column = 0,sticky="NW") # Скрыть иконки POI
         
         return frame        
         
@@ -435,4 +435,3 @@ class codexEmitter(Emitter):
 def submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):
     if entry["event"] == "CodexEntry" :
         codexEmitter(cmdr, is_beta, system, x,y,z,entry, body,lat,lon,client).start()   
-       
