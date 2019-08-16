@@ -51,7 +51,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.1.8'
+this.version='1.1.9'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
@@ -228,6 +228,17 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.SysFactionState=None
         debug("SysFaction's state is"+str(this.SysFactionState))
     
+    if "SystemAllegiance" in entry:
+ 
+        SystemAllegiance = entry.get("SystemAllegiance")
+        debug(SystemAllegiance)
+        try:
+            this.SysFactionAllegiance = SystemAllegiance
+        except:
+            this.SysFactionAllegiance = None
+        debug("SysFaction's allegiance is" + str(this.SysFactionAllegiance))
+
+
     if "DistFromStarLS" in entry:
         '''"DistFromStarLS":144.821411'''
         try:
@@ -259,10 +270,13 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         y=None
         z=None    
     
-    return journal_entry_wrapper(cmdr, is_beta, system,this.SysFactionState,this.DistFromStarLS, station, entry, state,x,y,z,this.body,this.nearloc['Latitude'],this.nearloc['Longitude'],this.client_version)    
-    
+    return journal_entry_wrapper(cmdr, is_beta, system, this.SysFactionState, this.SysFactionAllegiance, this.DistFromStarLS, station, entry,
+                                 state, x, y, z, this.body_name, this.nearloc['Latitude'], this.nearloc['Longitude'],
+                                 this.client_version)
+    # Now Journal_entry_wrapper take additional variable this.SysFactionState, this.SysFactionAllegiance, and this.DistFromStarLS
 
-def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client):
+def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, state, x, y, z, body,
+                          lat, lon, client):
     '''
     Detect journal events
     '''
@@ -278,8 +292,8 @@ def journal_entry_wrapper(cmdr, is_beta, system,SysFactionState,DistFromStarLS, 
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     whiteList.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
-    materialReport.submit(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, x,y,z,body,lat,lon,client)
-  
+    materialReport.submit(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, x, y, z, body, lat,
+                          lon, client)
 
 
     #legacy to canonn
