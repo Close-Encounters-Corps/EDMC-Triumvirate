@@ -13,8 +13,9 @@ from debug import debug,error
 
 class MaterialsCollected(Emitter):
     
-    def __init__(self,cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z,DistFromStarLS):
+    def __init__(self,cmdr, is_beta, system, station, entry,client,lat,lon,body,state,allegiance,x,y,z,DistFromStarLS):
         self.state=state
+        self.allegiance=allegiance
         self.DistFromStarLS=DistFromStarLS
         debug("Material rep star dist "+str(self.DistFromStarLS))
         debug("Material rep FacState "+str(self.state))
@@ -49,6 +50,7 @@ class MaterialsCollected(Emitter):
         payload["clientVersion"]= self.client
         payload["factionState"]=self.state
         #print(payload["journalLocalised"])
+        payload["factionAllegiance"]=self.allegiance
 
         return payload
 
@@ -60,6 +62,7 @@ class MaterialsReward(Emitter):
         "$MICRORESOURCE_CATEGORY_Raw;":"Raw",}
     def __init__(self,cmdr, is_beta, system, station, entry,client,lat,lon,body,state,x,y,z,DistFromStarLS):
         self.state=state
+        self.allegiance=allegiance
         self.DistFromStarLS=DistFromStarLS
         debug("MAterial rep star dist "+str(self.DistFromStarLS))
         debug("MAterial rep FacState "+str(self.state))
@@ -91,6 +94,8 @@ class MaterialsReward(Emitter):
         payload["clientVersion"]= self.client
         payload["factionState"]=self.state
         #debug(payload)
+
+        payload["factionAllegiance"]=self.allegiance
         return payload
 
 
@@ -102,8 +107,8 @@ def matches(d, field, value):
 def submit(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, x,y,z,body,lat,lon,client):
     if entry["event"] == "MaterialCollected" :
         debug(entry)
-        MaterialsCollected(cmdr, is_beta, system, station, entry,client,lat,lon,body,SysFactionState,x,y,z,DistFromStarLS).start()      
+        MaterialsCollected(cmdr, is_beta, system, station, entry,client,lat,lon,body,SysFactionState,SysFactionAllegiance,x,y,z,DistFromStarLS).start()      
     if  "MaterialsReward" in entry:
         debug(entry)
-        MaterialsReward  (cmdr, is_beta, system, station, entry,client,lat,lon,body,SysFactionState,x,y,z,DistFromStarLS).start()
+        MaterialsReward  (cmdr, is_beta, system, station, entry,client,lat,lon,body,SysFactionState,SysFactionAllegiance,x,y,z,DistFromStarLS).start()
         
