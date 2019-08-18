@@ -225,7 +225,7 @@ class CanonnPatrol(Frame):
         self.grid(row = gridrow, column = 0, sticky="NSEW",columnspan=2)
         
         ## Text Instructions for the patrol
-        self.label=tk.Label(self, text=  "Патруль:")         
+        self.label=tk.Label(self, text=  "Patrol:") #Патруль        
         self.label.grid(row = 0, column = 0, sticky=sticky)
         
         self.hyperlink=PatrolLink(self)
@@ -406,11 +406,11 @@ class CanonnPatrol(Frame):
         # else:
             # pstates=""
         if faction =="Close Encounters Corps":
-            contact = "Please contact AntonyVern [CEC] # 5904 on the CEC server for instructions" # Пожалуйста, свяжитесь с AntonyVern [СЕС]#5904 на сервере СЕС для получения инструкций
+            contact = "Please contact AntonyVern [CEC]#5904 on the CEC server for instructions" # Пожалуйста, свяжитесь с AntonyVern [СЕС]#5904 на сервере СЕС для получения инструкций
         if faction =="EG Union":
-            contact = "Please contact HEúCMuT # 1242 on the EGP server for instructions" # Пожалуйста, свяжитесь с HEúCMuT#1242 на сервере EGP для получения инструкций       
+            contact = "Please contact HEúCMuT#1242 on the EGP server for instructions" # Пожалуйста, свяжитесь с HEúCMuT#1242 на сервере EGP для получения инструкций       
         if faction =="Royal Phoenix Corporation":
-            contact = "Please contact Saswitz # 9598 on the RPSG server for instructions" # Пожалуйста, свяжитесь с Saswitz#9598 на сервере RPSG для получения инструкций
+            contact = "Please contact Saswitz#9598 on the RPSG server for instructions" # Пожалуйста, свяжитесь с Saswitz#9598 на сервере RPSG для получения инструкций
         #debug(bgs)
         if target:
             retval =  "{} Influence {}%{}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,update_text) # Влияние
@@ -641,7 +641,7 @@ class CanonnPatrol(Frame):
         frame.columnconfigure(1, weight=1)
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
         
-        nb.Label(frame,text="Настройки патруля").grid(row=0,column=0,sticky="NW")
+        nb.Label(frame,text="Patrol settings").grid(row=0,column=0,sticky="NW")   #Настройки патруля
         nb.Checkbutton(frame, text="Hide patrol information", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW") # Скрыть информацию патруля
         nb.Checkbutton(frame, text="Hide BGS information", variable=self.factionbtn).grid(row = 1, column = 1,sticky="NW") # Скрыть информацию BGS
         nb.Checkbutton(frame, text="Hide information about your ships", variable=self.hideshipsbtn).grid(row = 2, column = 1,sticky="NW") # Скрыть информацию о ваших кораблях
