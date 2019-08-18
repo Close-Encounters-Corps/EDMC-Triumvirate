@@ -435,3 +435,4 @@ class codexEmitter(Emitter):
 def submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):
     if entry["event"] == "CodexEntry" :
         codexEmitter(cmdr, is_beta, system, x,y,z,entry, body,lat,lon,client).start()   
+       

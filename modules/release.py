@@ -88,14 +88,14 @@ class Release(Frame):
         self.columnconfigure(1, weight=1)
         self.grid(row = gridrow, column = 0, sticky="NSEW",columnspan=2)
         
-        self.label=tk.Label(self, text=  "Версия:")
+        self.label=tk.Label(self, text=  "Version:") # Версия:
         self.label.grid(row = 0, column = 0, sticky=sticky)
         
         
         self.hyperlink=ReleaseLink(self)
         self.hyperlink.grid(row = 0, column = 1,sticky="NSEW")
         
-        self.button=tk.Button(self, text="Нажмите что бы обновить", command=self.click_installer)
+        self.button=tk.Button(self, text="Click to update", command=self.click_installer) # Нажмите чтобы обновить
         self.button.grid(row = 1, column = 0,columnspan=2,sticky="NSEW")
         self.button.grid_remove()
         
@@ -173,20 +173,20 @@ class Release(Frame):
                 if current==release:
                     self.grid_remove()
                 elif current > release:
-                    self.hyperlink['text'] = "Тестовая версия {}".format(self.release)
+                    self.hyperlink['text'] = "Test version {}".format(self.release) # Тестовая версия {}
                     self.grid()
                 else:
                     
                     if self.auto.get() == 1:
-                        self.hyperlink['text'] = "Версия {}  установлена. Пожалуйста, перезапустите EDMC".format(self.latest.get("tag_name"))     
+                        self.hyperlink['text'] = "Version {} is installed. Please restart EDMC".format(self.latest.get("tag_name"))  # Версия {}  установлена. Пожалуйста, перезапустите EDMC  
                         
                         if self.installer():
-                            self.hyperlink['text'] = "Версия {}  установлена. Пожалуйста, перезапустите EDMC".format(self.latest.get("tag_name"))     
+                            self.hyperlink['text'] = "Version {} is installed. Please restart EDMC".format(self.latest.get("tag_name")) # Версия {}  установлена. Пожалуйста, перезапустите EDMC    
                         else:
-                            self.hyperlink['text'] = "Обновление до версии {} не удалось".format(self.latest.get("tag_name"))     
+                            self.hyperlink['text'] = "Upgrade to version {} failed".format(self.latest.get("tag_name")) # Обновление до версии {} не удалось    
                         
                     else:
-                        self.hyperlink['text'] = "Пожалуйста поставьте версию {}".format(self.latest.get("tag_name"))
+                        self.hyperlink['text'] = "Please install version {}".format(self.latest.get("tag_name")) # Пожалуйста установите версию {}
                         self.button.grid()
                         if self.novoices.get() != 1:
                             nag_sel=random.randint(0,1)
@@ -208,9 +208,9 @@ class Release(Frame):
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
-        nb.Checkbutton(frame, text="Включить автообновление", variable=self.auto).grid(row = 0, column = 0,sticky="NW")
-        nb.Checkbutton(frame, text="Удалять бекапы версий", variable=self.rmbackup).grid(row = 0, column = 1,sticky="NW")
-        nb.Checkbutton(frame, text="Отключить голосовые сообщения", variable=self.novoices).grid(row = 0, column = 2,sticky="NW")
+        nb.Checkbutton(frame, text="Enable autoupdate", variable=self.auto).grid(row = 0, column = 0,sticky="NW") # Включить автообновление
+        nb.Checkbutton(frame, text="Delete version backups", variable=self.rmbackup).grid(row = 0, column = 1,sticky="NW") # Удалять бэкапы версий
+        nb.Checkbutton(frame, text="Mute voice messages", variable=self.novoices).grid(row = 0, column = 2,sticky="NW") # Отключить голосовые сообщения
         
         return frame
 
@@ -230,9 +230,9 @@ class Release(Frame):
         self.button.grid_remove()
                 
         if self.installer():
-            self.hyperlink['text'] = "Релиз {}  Установлен, пожалуйста перезагрузите EDMC".format(self.latest.get("tag_name"))     
+            self.hyperlink['text'] = "Release {} Installed, please restart EDMC".format(self.latest.get("tag_name"))  #  Релиз {}  Установлен, пожалуйста перезагрузите EDMC  
         else:
-            self.hyperlink['text'] = "Релиз {}  Не установлен, ошибка".format(self.latest.get("tag_name"))     
+            self.hyperlink['text'] = "Release {} is not installed, error".format(self.latest.get("tag_name")) # Релиз {} не установлен, ошибка   
         
         
     def installer(self):
@@ -250,13 +250,13 @@ class Release(Frame):
             return False
                 
         try:
-            debug("Downloading new version")
+            debug("Downloading new plugin version")
             download=requests.get("https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip".format(tag_name), stream=True)
             z = zipfile.ZipFile(StringIO.StringIO(download.content))
             z.extractall(os.path.dirname(Release.plugin_dir))
         except:
             error("Download failed: {}".format(new_plugin_dir))
-            plug.show_error("Triumvirate upgrade failed")
+            plug.show_error("Triumvirate plugin upgrade failed")
             return False
         
         #If we got this far then we have a new plugin so any failures and we will need to delete it

@@ -51,7 +51,7 @@ class NewsLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Получение новостей...",
+            text="Getting news...", # Получение новостей...
             url=DEFAULT_NEWS_URL,
             wraplength=50,  # updated in __configure_event below
             anchor=tk.NW
@@ -85,7 +85,7 @@ class CECNews(Frame):
         self.columnconfigure(1, weight=1)
         self.grid(row = gridrow, column = 0, sticky='NSEW',columnspan=2)
         
-        self.label=tk.Label(self, text=  'Новости:')
+        self.label=tk.Label(self, text=  'News:') # Новости
         self.label.grid(row = 0, column = 0, sticky=sticky)
         self.label.bind('<Button-1>',self.click_news)
         
@@ -159,7 +159,7 @@ class CECNews(Frame):
         
         #frame = nb.Frame(parent)
         #frame.columnconfigure(1, weight=1)
-        return nb.Checkbutton(parent, text='Скрыть новости СЕС', variable=self.hidden).grid(row = gridrow, column = 0,sticky='NSEW')
+        return nb.Checkbutton(parent, text='Hide CEC news', variable=self.hidden).grid(row = gridrow, column = 0,sticky='NSEW') # Скрыть новости СЕС
         
         #return frame
 

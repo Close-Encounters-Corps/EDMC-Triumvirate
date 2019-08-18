@@ -95,20 +95,20 @@ ship_types={
         'vulture': 'а Vulture'
 }
 state_list={
-    "civilliberty":"Гражданские свободы",
-    "none":"",
-    "boom":"Бум",
-    "bust" : "Спад",
-    "civilunrest":"Гражданские беспорядки",
-    "civilwar":"Гражданская война",
-    "election":"Выборы",
-    "expansion":"Экспансия",
-    "famine":"Голод",
-    "investment":"Инвестиции",
-    "lockdown":"Изоляция",
-    "outbreak":"Эпдемия",
-    "retreat":"Отступление",
-    "war":"Война"}
+    "civilliberty":"Civil liberty",  # Гражданская свобода
+    "none":"none", # нет состояния
+    "boom":"Boom",# Бум
+    "bust" : "Bust", # Спад
+    "civilunrest":"Civil unrest", # Гражданские беспорядки
+    "civilwar":"Civil war", # Гражданская война
+    "election":"Elections", # Выборы
+    "expansion":"Expansion", # Экспансия
+    "famine":"Famine", # Голод
+    "investment":"Investment", # Инвестирование
+    "lockdown":"Lockdown", # Изоляция
+    "outbreak":"Outbreak", # Эпидемия
+    "retreat":"Retreat", # Отступление
+    "war":"War"} # Война
 
 def getShipType(key):
     try:
@@ -149,7 +149,7 @@ class PatrolLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Получение патруля",
+            text="Getting patrol data", # Получение данных патруля
             url=DEFAULT_URL,
             popup_copy = True,
             #wraplength=50,  # updated in __configure_event below
@@ -169,7 +169,7 @@ class InfoLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Получение патруля",
+            text="Getting patrol data", # Получение данных патруля
             url=DEFAULT_URL,
             popup_copy = True,
             wraplength=50,  # updated in __configure_event below
@@ -272,7 +272,7 @@ class CanonnPatrol(Frame):
 
         self.started=False
         
-        self.SQID=None #Переменная для хранения информации об сквадроне пилота
+        self.SQID=None # Переменная для хранения информации об сквадроне пилота
 
         # wait 10 seconds before updatinb the ui
         self.after(1000, self.update_ui)
@@ -350,9 +350,9 @@ class CanonnPatrol(Frame):
                 
             else:
                 if self.system:
-                    self.hyperlink['text'] = "Получение патруля..."
+                    self.hyperlink['text'] = "Getting patrol data..." # Получение данных патруля...
                 else:
-                    self.hyperlink['text'] = "Ожидание данных о местоположении..."
+                    self.hyperlink['text'] = "Waiting for location data ..." # Ожидание данных о местоположении...
                 self.infolink.grid_remove()
                 self.distance.grid_remove()
                 self.prev.grid_remove()
@@ -395,29 +395,29 @@ class CanonnPatrol(Frame):
         if last_updated == 0:
             update_text=""
         elif last_updated == 1:
-            update_text=". Данные обновлены 1 день назад"
+            update_text=". Data updated 1 day ago" # Данные обновлены 1 день назад
         elif last_updated < 7:    
-            update_text=". Последнее обновление данных {} дней назад".format(last_updated)
+            update_text=". Last data update {} days ago".format(last_updated) # Последнее обновление данных {} дней назад
         elif last_updated > 6:    
-            update_text=". Последнее обновление данных {} дней назад. Пожалуйста прыгните в эту систему что бы обновить данные".format(last_updated)
+            update_text=". Last data update {} days ago. Please jump to this system to update the data.".format(last_updated) # Последнее обновление данных {} дней назад. Пожалуйста совершите прыжок в эту систему чтобы обновить данные
         
         # if  self.getStates("pending_states",bgs):       
             # pstates=" Pending: {}".format(self.getStates("pending_states",bgs))
         # else:
             # pstates=""
         if faction =="Close Encounters Corps":
-            contact = "Пожалуйста, свяжитесь с AntonyVern [СЕС]#5904 на сервере СЕС для получения инструкций"
+            contact = "Please contact AntonyVern [CEC] # 5904 on the CEC server for instructions" # Пожалуйста, свяжитесь с AntonyVern [СЕС]#5904 на сервере СЕС для получения инструкций
         if faction =="EG Union":
-            contact = "Пожалуйста, свяжитесь с HEúCMuT#1242 на сервере EGP для получения инструкций"        
+            contact = "Please contact HEúCMuT # 1242 on the EGP server for instructions" # Пожалуйста, свяжитесь с HEúCMuT#1242 на сервере EGP для получения инструкций       
         if faction =="Royal Phoenix Corporation":
-            contact = "Пожалуйста, свяжитесь с Saswitz#9598 на сервере RPSG для получения инструкций"
+            contact = "Please contact Saswitz # 9598 on the RPSG server for instructions" # Пожалуйста, свяжитесь с Saswitz#9598 на сервере RPSG для получения инструкций
         #debug(bgs)
         if target:
-            retval =  "{} Влияние {}%{}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,update_text)
+            retval =  "{} Influence {}%{}{}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,update_text) # Влияние
         if  over:
-            retval =   "{} Влияние {}%{} {}{}.".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,contact,update_text)
+            retval =   "{} Influence {}%{} {}{}.".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,contact,update_text) # Влияние
         if under:
-            retval =  "{} Влияние {}%{} Пожалуйста выполняйте миссии за {}, чтобы увеличить наше влияние {}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,faction,update_text)
+            retval =  "{} Influence {}% {} Please complete the missions for {} to increase our influence {}".format(faction,Locale.stringFromNumber(float(bgs.get("influence")*100),2),states,faction,update_text) # {} Влияние {}%{} Пожалуйста выполняйте миссии за {}, чтобы увеличить наше влияние {}
 
         debug("{}: {}".format(bgs.get("system_name"),retval))
         return retval    
@@ -560,7 +560,7 @@ class CanonnPatrol(Frame):
 
     def download(self):
         while self.SQID ==None:
-            debug("Ожидание информации об сквадроне")
+            debug("Waiting for Squadron Information") # Ожидание информации о эскадрилье
             time.sleep(5)
         debug("Download Patrol Data")
         
@@ -591,9 +591,9 @@ class CanonnPatrol(Frame):
                 elif self.SQID=="RPSG":                                                        # Секция шаблон, для применения в случае расширения списка фракций или сообществ
                     try: patrol_list.extend(self.getFactionData("Royal Phoenix Corporation",BGSOSys))                #
                     except: debug("RPSG BGS Patrol complete")
-                #elif self.SQID=="Позывной сквадрона":                                                        # Секция шаблон, для применения в случае расширения списка фракций или сообществ
+                #elif self.SQID=="Squadron tag":                                                        # Позывной эскадрильи # Секция шаблон, для применения в случае расширения списка фракций или сообществ
                 #try: patrol_list.extend(self.getFactionData("Название фракции",BGSOSys))                #
-                #except: debug("Название фракции(сокр) BGS Patrol complete")                             #
+                #except: debug("Fraction Name (abbreviation) BGS Patrol complete")                             # Название фракции (сокр) BGS Patrol complete
                 if None in patrol_list:
                     while None in patrol_list:
                         patrol_list.remove(None)
@@ -642,10 +642,10 @@ class CanonnPatrol(Frame):
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
         
         nb.Label(frame,text="Настройки патруля").grid(row=0,column=0,sticky="NW")
-        nb.Checkbutton(frame, text="Скрыть патруль", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW")
-        nb.Checkbutton(frame, text="Скрыть BGS", variable=self.factionbtn).grid(row = 1, column = 1,sticky="NW")
-        nb.Checkbutton(frame, text="Скрыть данные ваших кораблей", variable=self.hideshipsbtn).grid(row = 2, column = 1,sticky="NW")
-        nb.Checkbutton(frame, text="Автоматически копировать \nпатруль в буфер обмена", variable=self.copypatrolbtn).grid(row = 2, column = 0,sticky="NW",)
+        nb.Checkbutton(frame, text="Hide patrol information", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW") # Скрыть информацию патруля
+        nb.Checkbutton(frame, text="Hide BGS information", variable=self.factionbtn).grid(row = 1, column = 1,sticky="NW") # Скрыть информацию BGS
+        nb.Checkbutton(frame, text="Hide information about your ships", variable=self.hideshipsbtn).grid(row = 2, column = 1,sticky="NW") # Скрыть информацию о ваших кораблях
+        nb.Checkbutton(frame, text="Automatically copy patrol information to clipboard", variable=self.copypatrolbtn).grid(row = 2, column = 0,sticky="NW",) # Автоматически копировать информацию патруля в буфер обмена
         
         
         debug("canonn: {}, faction: {} HideMyShips {}".format(self.canonn,self.faction,self.HideMyShips))
@@ -838,18 +838,18 @@ class CanonnPatrol(Frame):
                 ship_type=getShipType(shipsystems.get(system)[0].get("name"))
                 ship_name=shipsystems.get(system)[0].get("shipName")
                 ship_station=shipsystems.get(system)[0].get("station").get("name")
-                ship_info="Ваш{}, {} пристыкован(а) к {}".format(ship_type,ship_name,ship_station)
+                ship_info="Your {}, {} is docked to {}".format(ship_type,ship_name,ship_station) # Ваш {}, {} пристыкован(а) к {}
             elif ship_count == 2:
                 
                 if shipsystems.get(system)[0].get("station").get("name") == shipsystems.get(system)[1].get("station").get("name"):
-                    ship_info="Ваш{} ({}) и ваш{} ({}) пристыкованы к {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name"))        
+                    ship_info="Your {} ({}) and your {} ({}) are docked to {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name"))  # Ваш {} ({}) и ваш {} ({}) пристыкованы к {}      
                     debug(ship_info)
                 else:
                 
-                    ship_info="Ваш{} ({}) Пристыкован(а) к {} и ваш{} ({}) пристыкован к {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),shipsystems.get(system)[1].get("station").get("name"),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name"))        
+                    ship_info="Your {} ({}) Docked to {} and your {} ({}) Docked to {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),shipsystems.get(system)[1].get("station").get("name"),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name")) # Ваш {} ({}) Пристыкован (а) к {} и ваш {} ({}) пристыкован к {}       
                     debug(ship_info)
             else:
-                ship_info="У вас {} Кораблей в этой системе".format(ship_count)
+                ship_info="You have {} ships in this system".format(ship_count) # У вас {} судов в этой системе
                 debug(ship_info)
 
             self.ships.append(newPatrol("SHIPS",system,ship_pos,ship_info,None))
