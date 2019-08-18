@@ -37,15 +37,15 @@ class poiTypes(threading.Thread):
         
         
 class CodexTypes(Frame):
-
+    
     tooltips={
-            "Geology": "Geology: Vents and fumeroles", # Геологическое образование: гейзеры и фумаролы
-            "Cloud": "Lagrange Clouds", # Облака: облака Лагранжа
-            "Anomaly": "Anomalous stellar phenomena", # Аномалия: аномальный космический феномен
-            "Thargoid": "Thargoid sites or barnacles", # Таргоиды: Таргоидские структуры и барнаклы
-            "Biology": "Biological surface signals", # Биологические сигналы: биологические сигналы на поверхности
-            "Guardian": "Guardian sites", # Стражи: структуры Стражей
-            "None": "Unclassified codex entry", # Неизвестно: неклассифицированная запись Кодекса
+            "Geology": _("Geology: Vents and fumeroles"), # Геологическое образование: гейзеры и фумаролы
+            "Cloud": _("Lagrange Clouds"), # Облака: облака Лагранжа
+            "Anomaly": _("Anomalous stellar phenomena"), # Аномалия: аномальный космический феномен
+            "Thargoid": _("Thargoid sites or barnacles"), # Таргоиды: Таргоидские структуры и барнаклы
+            "Biology": _("Biological surface signals"), # Биологические сигналы: биологические сигналы на поверхности
+            "Guardian": _("Guardian sites"), # Стражи: структуры Стражей
+            "None": _("Unclassified codex entry"), # Неизвестно: неклассифицированная запись Кодекса
     }
 
     def __init__(self, parent,gridrow):
@@ -239,8 +239,8 @@ class CodexTypes(Frame):
         frame.columnconfigure(1, weight=1)
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
         
-        nb.Label(frame,text="Codex settings").grid(row=0,column=0,sticky="NW") # Настройки Кодекса
-        nb.Checkbutton(frame, text="Hide POI icons", variable=self.hidecodexbtn).grid(row = 1, column = 0,sticky="NW") # Скрыть иконки POI
+        nb.Label(frame,text=_("Codex settings")).grid(row=0,column=0,sticky="NW") # Настройки Кодекса
+        nb.Checkbutton(frame, text=_("Hide POI icons"), variable=self.hidecodexbtn).grid(row = 1, column = 0,sticky="NW") # Скрыть иконки POI
         
         return frame        
         
