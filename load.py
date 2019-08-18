@@ -56,8 +56,11 @@ this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
 this.body_name=None
+
 this.SysFactionState=None 
 this.DistFromStarLS=None
+this.SysFactionAllegiance = None # variable for allegiance of controlling faction
+
 this.Nag=0
 this.cmdr_SQID=None    #variable for allegiance check
 this.CMDR=None
@@ -65,6 +68,9 @@ this.SRVmode,this.Fightermode=False,False
 this.old_time=0  
 this.fuel=0
 this.fuel_cons = 0
+
+
+
 
 
 
