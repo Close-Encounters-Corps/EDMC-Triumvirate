@@ -15,6 +15,10 @@ import glob
 import os
 import time
 
+import l10n
+import functools
+_ = functools.partial(l10n.Translations.translate, context=__file__)  
+
 '''
 We want to record the system where the user was last hyperdicted
 Ths is in the statistics event which appears evert time the user
@@ -138,7 +142,7 @@ class HDInspector(Frame):
         self.commander=cmdr
         self.is_beta=is_beta
         self.grid(row = gridrow, column = 0)
-        self.button=Button(self, text="Нажмите, что бы просканировать журнал на \nпредмет перехватов в гиперпрыжке")
+        self.button=Button(self, text=_("Click here to scan all your journals for Hyperdictions")) #Нажмите, что бы просканировать журнал на \nпредмет перехватов в гиперпрыжке
         self.button.bind('<Button-1>',self.run)
         self.button.grid(row=0,column = 0)
         Emitter.setRoute(is_beta,client)

@@ -5,6 +5,9 @@ import load
 import datetime
 from debug import debug
 
+import l10n
+import functools
+_ = functools.partial(l10n.Translations.translate, context=__file__)  
 
 def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,is_SRV,is_Fighter):
     LifeSupportList = {

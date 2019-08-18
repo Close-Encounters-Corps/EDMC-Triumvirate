@@ -14,6 +14,10 @@ from config import config
 import os
 import myNotebook as nb
 
+import l10n
+import functools
+_ = functools.partial(l10n.Translations.translate, context=__file__)  
+
 class poiTypes(threading.Thread):
     def __init__(self,system,callback):
         threading.Thread.__init__(self)

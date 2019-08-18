@@ -21,6 +21,11 @@ from debug import Debug
 from debug import debug,error
 import plug
 import random
+
+import l10n
+import functools
+_ = functools.partial(l10n.Translations.translate, context=__file__)  
+
 RELEASE_CYCLE=60 * 1000 * 60 # 1 Hour
 DEFAULT_URL = 'https://github.com/VAKazakov/EDMC-Triumvirate/releases'
 WRAP_LENGTH = 200

@@ -27,6 +27,10 @@ from l10n import Locale
 import time
 import legacy
 
+import l10n
+import functools
+_ = functools.partial(l10n.Translations.translate, context=__file__)  
+
 CYCLE=60 * 1000 * 60 # 60 minutes
 DEFAULT_URL = ""
 WRAP_LENGTH = 200

@@ -16,6 +16,9 @@ import threading
 from debug import Debug
 from debug import debug,error
 
+import l10n
+import functools
+_ = functools.partial(l10n.Translations.translate, context=__file__)  
 
 REFRESH_CYCLES = 60 ## how many cycles before we refresh
 NEWS_CYCLE=60 * 1000 # 60 seconds
