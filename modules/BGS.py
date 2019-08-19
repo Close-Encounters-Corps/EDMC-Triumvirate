@@ -42,12 +42,19 @@ class BGS(object):
             except:cls.DefaultFacts=None        
         
     
+    def systemChange  (self,cmdr,system,entry):
+        try:self.SysBgsTasks=self.bgsTasks[system]
+        except KeyError: self.SysBgsTasks==  self.DefaultFacts
+    
     @classmethod
     def bgsTasksSet(cls,bgsTask):
         cls.bgsTasks = bgsTask
         debug("Override is "+str(cls.bgsTasks))
 
     def EventRead(self,cmdr, is_beta, system, station, entry, client):
+        if entry["event"] =="FSDJump" or entry["event"] =="Location" :
+            systemChange(cmdr,system,entry)
+            return
         debug("BGSSend Commence")
         #if self.Exlude == True :
             #return
@@ -56,7 +63,7 @@ class BGS(object):
             try:debug("BGSSend stage1 "+str(system in self.bgsTasks)+" " +str(self.DefaultFacts in entry))
             except:pass
             debug("bgssend debug "+ str(entry))
-            if self.bgsTasks.get(system) is not None:
+            if self.SysBgsTasks is True:
                 debug("BGSSend stage 2")
                 if entry["event"] == "FactionKillBond" :
                     if entry["AwardingFaction"] in self.bgsTasks[system] or  entry["AwardingFaction"]==self.DefaultFacts:
