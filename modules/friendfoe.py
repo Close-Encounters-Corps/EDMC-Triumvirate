@@ -50,60 +50,29 @@ from debug import debug,error
 Заметка №3 модуль не должно быть видно, пока нет данных. так же как это реализовано в release.py
 '''
 
-REFRESH_CYCLES = 60 ## how many cycles before we refresh
-NEWS_CYCLE=60 * 1000 # 60 seconds
-DEFAULT_NEWS_URL = 'https://vk.com/close_encounters_corps'
-WRAP_LENGTH = 200
-
-
-def _callback(matches):
-    id = matches.group(1)
-    try:
-        return unichr(int(id))
-    except:
-        return id
-
-class UpdateThread(threading.Thread):
-    def __init__(self,widget):
-        threading.Thread.__init__(self)
-        self.widget=widget
-    
-    def run(self):
-        debug('News: UpdateThread')
-        # download cannot contain any tkinter changes
-        self.widget.download()
-        
-        
-
-def decode_unicode_references(data):
-    return re.sub('&#(\d+)(;|(?=\s))', _callback, data)
-
-class NewsLink(HyperlinkLabel):
+class ReleaseLink(HyperlinkLabel):
 
     def __init__(self, parent):
 
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Получение новостей...",
-            url=DEFAULT_NEWS_URL,
+            text="Fetching...",
+            url=DEFAULT_URL,
             wraplength=50,  # updated in __configure_event below
             anchor=tk.NW
         )
         self.bind('<Configure>', self.__configure_event)
 
     def __configure_event(self, event):
-        'Handle resizing.'
+        "Handle resizing."
 
         self.configure(wraplength=event.width)
 
-
-
-
 class FriendFoe(Frame):
 
-    def __init__(self, parent,gridrow):
-        'Initialise the ``News``.'
+    def __init__(self, parent,release,gridrow):
+        "Initialise the ``News``."
 
         padx, pady = 10, 5  # formatting
         sticky = tk.EW + tk.N  # full width, stuck to the top
@@ -113,103 +82,83 @@ class FriendFoe(Frame):
             self,
             parent
         )
-
-        self.hidden=tk.IntVar(value=config.getint('HideFF'))                
         
-        self.news_data=[]
-        self.columnconfigure(1, weight=1)
-        self.grid(row = gridrow, column = 0, sticky='NSEW',columnspan=2)
         
-        self.label=tk.Label(self, text=  'История целей:')
+        #получение переменных из хранилища #TODO поменять значения на нужные для ФФ
+        self.auto=tk.IntVar(value=config.getint("AutoUpdate"))                    
+        self.novoices=tk.IntVar(value=config.getint("NoVoices"))                
+        self.rmbackup=tk.IntVar(value=config.getint("RemoveBackup"))                
+        
+        #Иницилизация контейнера для интерфейса
+        self.columnconfigure(1, weight=1)                                       
+        self.grid(row = gridrow, column = 0, sticky="NSEW",columnspan=2)
+        
+        self.label=tk.Label(self, text=  "Версия:")
         self.label.grid(row = 0, column = 0, sticky=sticky)
-        self.label.bind('<Button-1>',self.click_news)
         
-        self.hyperlink=NewsLink(self)
-        self.hyperlink.grid(row = 0, column = 1,sticky='NSEW')
         
+        self.hyperlink=ReleaseLink(self)
+        self.hyperlink.grid(row = 0, column = 1,sticky="NSEW")
+        
+        self.button=tk.Button(self, text="Нажмите чтобы обновить", command=self.click_installer)
+        self.button.grid(row = 1, column = 0,columnspan=2,sticky="NSEW")
+        self.button.grid_remove()
+        
+        self.release=release
         self.news_count=0
-        self.news_pos=1
+        self.news_pos=0
         self.minutes=0
-        self.visible()
-        #self.hyperlink.bind('<Configure>', self.hyperlink.configure_event)
-        self.after(250, self.news_update)
-    
-    def news_update(self):
-    
-        if self.isvisible:
-        
-            if self.news_count == self.news_pos:           
-                self.news_pos=1
-            else:
-                self.news_pos+=1
-            
-            if self.minutes==0:
-                UpdateThread(self).start()
-            else:
-                self.minutes+=-1        
-
-        self.update()                 
-        #refesh every 60 seconds
-        self.after(NEWS_CYCLE, self.news_update)
-
-    def update(self):
-        if self.visible():
-            if self.news_data:
-                    feed = self.news_data.content.split("\r\n")
-                    lines=feed[self.news_pos]
-                    news= lines.split("\t")
-                    self.hyperlink['url'] = news[1]
-                    self.hyperlink['text'] = decode_unicode_references(news[2])
-                    debug("News debug"+str(news))
-            else:
-                #keep trying until we have some data
-                #elf.hyperlink['text'] = 'Fetching News...'
-                self.after(1000, self.update)
-
-    def click_news(self,event):
-        if self.news_count == self.news_pos:           
-            self.news_pos=1
-        else:
-            self.news_pos+=1
-            
+        self.latest={}
         self.update()
+        #self.hyperlink.bind('<Configure>', self.hyperlink.configure_event)
         
-    def download(self):
-        'Update the news.'
+        debug(config.get('Canonn:RemoveBackup'))
         
-        if self.isvisible:
+        if self.rmbackup.get() == 1  and config.get('Canonn:RemoveBackup') != "None":
+            delete_dir=config.get('Canonn:RemoveBackup')
+            debug('Canonn:RemoveBackup {}'.format(delete_dir))
+            try:
+                shutil.rmtree(delete_dir)
+                
+            except:
+                error("Cant delete {}".format(delete_dir))
+                
+            ## lets not keep trying
+            config.set('Canonn:RemoveBackup',"None")
+            
         
-            debug('Fetching FF')
-            self.news_data = requests.get('https://docs.google.com/spreadsheets/d/1UnrH5ULSycKzySonUDA79aPBqxUbvNOEOSlW85NY1a0/export?&format=tsv')
-            debug(self.news_data)
-            #self.news_count=len(self.news_data)-1
-            self.news_count=5
-            self.news_pos=1
-            self.minutes=REFRESH_CYCLES
+        
+       
+        
+        
+    
+    def plugin_prefs(self, parent, cmdr, is_beta,gridrow):          #TODO поменять на нужные для ФФ значения 
+        "Called to get a tk Frame for the settings dialog."
 
-    def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
-        'Called to get a tk Frame for the settings dialog.'
-
-        self.hidden=tk.IntVar(value=config.getint('HideFF'))
+        self.auto=tk.IntVar(value=config.getint("AutoUpdate"))
+        self.rmbackup=tk.IntVar(value=config.getint("RemoveBackup"))
+        self.novoices=tk.IntVar(value=config.getint("NoVoices"))
         
-        #frame = nb.Frame(parent)
-        #frame.columnconfigure(1, weight=1)
-        return nb.Checkbutton(parent, text='Скрыть Систему свой чужой', variable=self.hidden).grid(row = gridrow, column = 0,sticky='NSEW')
+        frame = nb.Frame(parent)
+        frame.columnconfigure(2, weight=1)
+        frame.grid(row = gridrow, column = 0,sticky="NSEW")
+        nb.Checkbutton(frame, text="Включить автообновление", variable=self.auto).grid(row = 0, column = 0,sticky="NW")
+        nb.Checkbutton(frame, text="Удалять бекапы версий", variable=self.rmbackup).grid(row = 0, column = 1,sticky="NW")
+        nb.Checkbutton(frame, text="Отключить голосовые сообщения", variable=self.novoices).grid(row = 0, column = 2,sticky="NW")
         
-        #return frame
-
-    def visible(self):
-        if self.hidden.get() == 1:
-            self.grid_remove()
-            self.isvisible=False
-            return False
-        else:
-            self.grid()
-            self.isvisible=True
-            return True
+        return frame
 
     def prefs_changed(self, cmdr, is_beta):
-        'Called when the user clicks OK on the settings dialog.'
-        config.set('HideFF', self.hidden.get())      
-        if self.visible():
-            self.news_update()
+        "Called when the user clicks OK on the settings dialog."    #TODO поменять на нужные для ФФ значения 
+        config.set('AutoUpdate', self.auto.get())      
+        config.set('RemoveBackup', self.rmbackup.get())      
+        config.set('NoVoices', self.novoices.get())   
+        
+
+
+
+        
+  
+    @classmethod    
+    def plugin_start(cls,plugin_dir):
+        cls.plugin_dir=unicode(plugin_dir)

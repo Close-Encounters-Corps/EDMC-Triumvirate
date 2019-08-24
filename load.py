@@ -190,6 +190,7 @@ def plugin_app(parent):
     this.news = news.CECNews(table,1)
     this.release = release.Release(table,this.version,2)
     this.patrol = patrol.CanonnPatrol(table,3)
+    this.FF = FF.FriendFoe(table,4)
     whitelist=whiteList(parent)
     whitelist.fetchData()
     #for plugin in plug.PLUGINS:
