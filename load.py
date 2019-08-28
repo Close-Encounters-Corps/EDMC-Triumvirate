@@ -32,7 +32,13 @@ import modules.Commands
 import ttk
 import Tkinter as tk
 import sys
-    
+from modules.player import Player 
+from config import config
+
+
+
+
+
 this = sys.modules[__name__]
 
 import l10n
@@ -78,7 +84,8 @@ def plugin_prefs(parent, cmdr, is_beta):
     '''
     Return a TK Frame for adding to the EDMC settings dialog.
     '''
-    
+    this.AllowEasterEggsButton=tk.IntVar(value=config.getint("AllowEasterEggs"))
+    this.AllowEasterEggs=this.AllowEasterEggsButton.get()
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
     
@@ -92,8 +99,10 @@ def plugin_prefs(parent, cmdr, is_beta):
     #release.versionInSettings(frame, cmdr, is_beta,8)
    # entry=nb.Entry(frame,None)
     nb.Label(frame,text="В случае возникновения проблем с плагином \nили в случае, если Вы поставили неправильное сообщество в гугл-форме, \nпишите в личку Дискорда Казаков#4700").grid(row=9,column=0,sticky="NW")
-    
-    
+                    
+        
+    nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasterEggsButton).grid(row = 10, column = 0,sticky="NW")
+        
     
     return frame
 
@@ -106,6 +115,9 @@ def prefs_changed(cmdr, is_beta):
     this.release.prefs_changed(cmdr, is_beta)
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
+    config.set('AllowEasterEggs', this.AllowEasterEggsButton.get())
+    this.AllowEasterEggs=this.AllowEasterEggsButton.get()
+    
     
     Debug.prefs_changed()
     
@@ -160,7 +172,7 @@ def plugin_start(plugin_dir):
     Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
-    
+    this.plugin_dir=plugin_dir
 
     return 'Triumvirate-{}'.format(this.version)
     
@@ -194,7 +206,7 @@ def plugin_app(parent):
     whitelist.fetchData()
     #for plugin in plug.PLUGINS:
     #    debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
-    
+    this.AllowEasterEggs=tk.IntVar(value=config.getint("AllowEasterEggs"))
     
     return frame
     
@@ -320,8 +332,16 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
     legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
+    Easter_Egs(entry)
     return Return
     
+
+def Easter_Egs(entry):
+    if this.AllowEasternEggs==True:
+        if entry['event']=="HullDamage" and entry['PlayerPilot']==True and entry["Fighter"]==False:
+            if entry['Health']<=20:Player(this.plugin_dir,["sounds\\hullAlarm.mp3"]).start()
+
+
     
 def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
     #debug(old_timestamp==entry["timestamp"])
