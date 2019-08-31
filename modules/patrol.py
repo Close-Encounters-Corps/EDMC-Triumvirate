@@ -776,7 +776,7 @@ class CanonnPatrol(Frame):
         if self.visible():
             # we should fire off an extra download
             UpdateThread(self).start()
-            self.update_ui()
+            
             
         debug("canonn: {}, faction: {} HideMyShips {}".format(self.canonn,self.faction,self.HideMyShips))
         
@@ -820,11 +820,11 @@ class CanonnPatrol(Frame):
         if self.system != system and entry.get("event") in ("Location","FSDJump","StartUp") :
             debug("Refresshing Patrol ({})".format(entry.get("event")))
             self.system=system
-            self.update_ui()
+            self.update()
             if self.nearest and self.CopyPatrolAdr == 1:
                 copyclip(self.nearest.get("system"))
         if body:
-            self.update_ui()
+            self.update()
         # else:
             # error("nope {}".format(entry.get("event")))
             # error(system)
