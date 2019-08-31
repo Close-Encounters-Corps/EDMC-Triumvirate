@@ -16,7 +16,7 @@ import threading
 from systems import Systems
 import math
 from debug import Debug
-from debug import debug,error
+from debug import debug, error
 import csv
 import os
 from contextlib import closing
@@ -28,10 +28,12 @@ import time
 import legacy
 
 CYCLE=60 * 1000 * 60 # 60 minutes
+
+
 DEFAULT_URL = ""
 WRAP_LENGTH = 200
 
-ship_types={   
+ship_types = {   
         'adder': ' Adder',
         'typex_3': ' Alliance Challenger',
         'typex': ' Alliance Chieftain',
@@ -334,19 +336,22 @@ class CanonnPatrol(Frame):
             
             if journal_update or capi_update:
                 self.sort_patrol()
-                p=Systems.edsmGetSystem(self.system)
-                self.nearest=self.getNearest(p)               
-                self.hyperlink['text']=self.nearest.get("system")
-                self.hyperlink['url']="https://www.edsm.net/en/system?systemName={}".format(quote_plus(self.nearest.get("system")))
-                self.distance['text']="{} СГ".format(Locale.stringFromNumber(getDistance(p,self.nearest.get("coords")),2))
-                self.infolink['text']=self.nearest.get("instructions")
-                self.infolink['url']=self.parseurl(self.nearest.get("url"))
+                p = Systems.edsmGetSystem(self.system)
+                self.nearest = self.getNearest(p)             
+                self.hyperlink['text'] = self.nearest.get("system")
+                self.hyperlink['url'] = "https://www.edsm.net/en/system?systemName={}".format(
+                    quote_plus(self.nearest.get("system")))
+                
+                self.distance['text'] = "{}ly".format(
+                    Locale.stringFromNumber(getDistance(p, self.nearest.get("coords")), 2))
+                self.infolink['text'] = self.nearest.get("instructions")
+                self.infolink['url'] = self.parseurl(self.nearest.get("url"))
                 
                 self.infolink.grid()
                 self.distance.grid()
                 self.prev.grid()
                 self.next.grid()
-                self.capi_update=False
+                self.capi_update = False
                 
             else:
                 if self.system:
@@ -443,9 +448,11 @@ class CanonnPatrol(Frame):
                     if squadron == SQID:
                         if Description!="Cancel":
                             try:
-                                BGSOveride.append(newPatrol("BGSO",system,(float(x),float(y),float(z)),instructions,None,None))
+                                BGSOveride.append(
+                                    newPatrol("BGSO",system,(float(x),float(y),float(z)),instructions,None,None))
                             except:
-                                error("patrol {},{},{},{},{},{},{},{}".format("BGSO",system,x,y,z,instructions,None,None))
+                                error(
+                                    "patrol {},{},{},{},{},{},{},{}".format("BGSO",system,x,y,z,instructions,None,None))
                             self.bgsSystemsAndfactions.update(bgsSysAndFac)
                             SystemsOvireden.append(system)
                         
@@ -455,7 +462,7 @@ class CanonnPatrol(Frame):
         debug(BGSOveride)        
         debug("bgslist is "+unicode(self.bgsSystemsAndfactions))
         legacy.BGS.bgsTasksSet(self.bgsSystemsAndfactions)
-        return BGSOveride   , SystemsOvireden 
+        return BGSOveride, SystemsOvireden 
     
 
 
@@ -515,7 +522,33 @@ class CanonnPatrol(Frame):
         else:
             return url
         
-    
+    def getJsonPatrol(self,url):
+        canonnpatrol = []
+
+        with closing(requests.get(url)) as r:
+            reader = r.json()
+            for row in reader:
+
+                type = row.get("type")
+                system = row.get("system")
+                x=  row.get("x")
+                y=  row.get("y")
+                z = row.get("z")
+                instructions = row.get("instructions")
+                url = row.get("url")
+                event = row.get("event")
+                if system != '':
+                    try:
+                        canonnpatrol.append(
+                            newPatrol(type, system, (float(x), float(y), float(z)), instructions, url, event))
+                    except:
+                        error("patrol {},{},{},{},{},{},{},{}".format(type, system, x, y, z, instructions, url, event))
+                else:
+                    error("Patrol contains blank lines")
+
+        return canonnpatrol
+
+
     def getCanonnPatrol(self):
         
         canonnpatrol=[]
@@ -533,7 +566,8 @@ class CanonnPatrol(Frame):
                         error("patrol {},{},{},{},{},{},{},{}".format(type,system,x,y,z,instructions,self.parseurl(url),event))
                 else:
                     error("Patrol contains blank lines")
-                
+        canonnpatrol = canonnpatrol + self.getJsonPatrol("https://us-central1-canonn-api-236217.cloudfunctions.net/codex_gap_patrol")
+        canonnpatrol = canonnpatrol + self.getJsonPatrol("https://us-central1-canonn-api-236217.cloudfunctions.net/edsm_gap_patrol")        
         return canonnpatrol
         
             
