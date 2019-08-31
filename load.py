@@ -57,7 +57,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.1.8'
+this.version='1.1.9'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
@@ -210,11 +210,7 @@ def plugin_app(parent):
     
     return frame
     
-def Squadronsend(CMDR,entry):
-      
-        
-  
-        
+def Squadronsend(CMDR,entry):                   
         if this.SQNag==0:
             debug("SQName need to be sended")
             url="https://docs.google.com/forms/d/e/1FAIpQLScZvs3MB2AK6pPwFoSCpdaarfAeu_P-ineIhtO1mOPgr09q8A/formResponse?usp=pp_url"
@@ -339,7 +335,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
 def Easter_Egs(entry):
     if this.AllowEasternEggs==True:
         if entry['event']=="HullDamage" and entry['PlayerPilot']==True and entry["Fighter"]==False:
-            if entry['Health']<=20:Player(this.plugin_dir,["sounds\\hullAlarm.mp3"]).start()
+            if entry['Health']<=20:Player(this.plugin_dir,["sounds\\hullAlarm.wav"]).start()
 
 
     
@@ -419,10 +415,10 @@ def startup_stats(cmdr):
     except:
       this.first_event = True
       addr = requests.get('https://api.ipify.org').text
-      addr6 = requests.get('https://api6.ipify.org').text
+      
       url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
       url+="&entry.1181808218="+quote_plus(cmdr)
       url+="&entry.254549730="+quote_plus(this.version)
       url+="&entry.1210213202="+str(release.get_auto())
-      
+      url+="&entry.1622540328="+quote_plus(addr)
       legacy.Reporter(url).start()
