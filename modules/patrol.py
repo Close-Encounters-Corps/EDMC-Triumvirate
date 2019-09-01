@@ -636,7 +636,7 @@ class CanonnPatrol(Frame):
 
     def download(self):
         while self.SQID ==None:
-            debug("Ожидание информации об сквадроне")
+            debug("Awaiting user Allegiance info")
             time.sleep(5)
         debug("Download Patrol Data")
         
@@ -928,7 +928,7 @@ class CanonnPatrol(Frame):
                     debug(ship_info)
             else:
                 ship_info="У вас {} Кораблей в этой системе".format(ship_count)
-                debug(ship_info)
+                #debug(ship_info)
 
             self.ships.append(newPatrol("SHIPS",system,ship_pos,ship_info,None))
             
