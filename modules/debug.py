@@ -16,7 +16,7 @@ class Debug:
             
     @classmethod
     def p(cls,value):
-        print(unicode("{} [{}] {}".format(datetime.datetime.now(),Debug.client,value)))
+        print("{} [{}] {}".format(datetime.datetime.now(),Debug.client,unicode(str(value))))
             
     @classmethod
     def debug(cls,value):
