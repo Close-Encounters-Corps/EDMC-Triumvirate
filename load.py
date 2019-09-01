@@ -74,7 +74,7 @@ this.SRVmode,this.Fightermode=False,False
 this.old_time=0  
 this.fuel=0
 this.fuel_cons = 0
-
+this.AllowEasternEggs=None
 
 
 
@@ -84,8 +84,8 @@ def plugin_prefs(parent, cmdr, is_beta):
     '''
     Return a TK Frame for adding to the EDMC settings dialog.
     '''
-    this.AllowEasterEggsButton=tk.IntVar(value=config.getint("AllowEasterEggs"))
-    this.AllowEasterEggs=this.AllowEasterEggsButton.get()
+    this.AllowEasterEggssButton=tk.IntVar(value=config.getint("AllowEasterEggs"))
+    this.AllowEasternEggs=this.AllowEasterEggsButton.get()
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
     
@@ -101,7 +101,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     nb.Label(frame,text="В случае возникновения проблем с плагином \nили в случае, если Вы поставили неправильное сообщество в гугл-форме, \nпишите в личку Дискорда Казаков#4700").grid(row=9,column=0,sticky="NW")
                     
         
-    nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasterEggsButton).grid(row = 10, column = 0,sticky="NW")
+    nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton).grid(row = 10, column = 0,sticky="NW")
         
     
     return frame
@@ -116,7 +116,7 @@ def prefs_changed(cmdr, is_beta):
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
     config.set('AllowEasterEggs', this.AllowEasterEggsButton.get())
-    this.AllowEasterEggs=this.AllowEasterEggsButton.get()
+    this.AllowEasternEggs=this.AllowEasterEggsButton.get()
     
     
     Debug.prefs_changed()
