@@ -84,8 +84,8 @@ def plugin_prefs(parent, cmdr, is_beta):
     '''
     Return a TK Frame for adding to the EDMC settings dialog.
     '''
-    this.AllowEasterEggssButton=tk.IntVar(value=config.getint("AllowEasterEggs"))
-    this.AllowEasternEggs=this.AllowEasterEggsButton.get()
+    this.AllowEasternEggsButton=tk.IntVar(value=config.getint("AllowEasterEggs"))
+    this.AllowEasternEggs=this.AllowEasternEggsButton.get()
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
     
@@ -115,8 +115,8 @@ def prefs_changed(cmdr, is_beta):
     this.release.prefs_changed(cmdr, is_beta)
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
-    config.set('AllowEasterEggs', this.AllowEasterEggsButton.get())
-    this.AllowEasternEggs=this.AllowEasterEggsButton.get()
+    config.set('AllowEasterEggs', this.AllowEasternEggsButton.get())
+    this.AllowEasternEggs=this.AllowEasternEggsButton.get()
     
     
     Debug.prefs_changed()
@@ -334,8 +334,11 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
 
 def Easter_Egs(entry):
     if this.AllowEasternEggs==True:
+        debug("Easter Check")
         if entry['event']=="HullDamage" and entry['PlayerPilot']==True and entry["Fighter"]==False:
-            if entry['Health']<=20:Player(this.plugin_dir,["sounds\\hullAlarm.wav"]).start()
+            if entry['Health']<0.3 : 
+                debug("plaing sound")
+                Player(this.plugin_dir,["sounds\\hullAlarm.wav"]).start()
 
 
     
