@@ -101,7 +101,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     nb.Label(frame,text="В случае возникновения проблем с плагином \nили в случае, если Вы поставили неправильное сообщество в гугл-форме, \nпишите в личку Дискорда Казаков#4700").grid(row=9,column=0,sticky="NW")
                     
         
-    nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton).grid(row = 10, column = 0,sticky="NW")
+    nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton).grid(row = 6, column = 0,sticky="NW")
         
     
     return frame
