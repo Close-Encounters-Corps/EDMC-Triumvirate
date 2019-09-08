@@ -94,14 +94,14 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
     Debug.plugin_prefs(frame,this.client_version,4)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
-   
+    nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton).grid(row = 6, column = 0,sticky="NW")
     hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
     #release.versionInSettings(frame, cmdr, is_beta,8)
    # entry=nb.Entry(frame,None)
     nb.Label(frame,text="В случае возникновения проблем с плагином \nили в случае, если Вы поставили неправильное сообщество в гугл-форме, \nпишите в личку Дискорда Казаков#4700").grid(row=9,column=0,sticky="NW")
                     
         
-    nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton).grid(row = 6, column = 0,sticky="NW")
+    
         
     
     return frame
