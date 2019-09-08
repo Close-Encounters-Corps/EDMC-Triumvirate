@@ -417,11 +417,11 @@ def startup_stats(cmdr):
         this.first_event
     except:
       this.first_event = True
-      addr = requests.get('https://api.ipify.org').text
+      
       
       url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
       url+="&entry.1181808218="+quote_plus(cmdr)
       url+="&entry.254549730="+quote_plus(this.version)
       url+="&entry.1210213202="+str(release.get_auto())
-      url+="&entry.1622540328="+quote_plus(addr)
+      
       legacy.Reporter(url).start()
