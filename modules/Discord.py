@@ -3,7 +3,7 @@
 
 from discord_webhook import    DiscordWebhook, DiscordEmbed
 import sys
-from debug import debug
+from modules.debug import debug
 import datetime 
 import logging
 logging.basicConfig()
