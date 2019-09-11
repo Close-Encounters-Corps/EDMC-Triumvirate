@@ -1,6 +1,6 @@
 ﻿# -*- coding: utf-8 -*-
-import Tkinter as tk
-from Tkinter import Frame
+import tkinter as tk
+from tkinter import Frame
 import myNotebook as nb
 from config import config
 import datetime 
@@ -16,7 +16,7 @@ class Debug:
             
     @classmethod
     def p(cls,value):
-        print("{} [{}] {}".format(datetime.datetime.now(),Debug.client,unicode(str(value))))
+        print("{} [{}] {}".format(datetime.datetime.now(),Debug.client,(str(value))))
             
     @classmethod
     def debug(cls,value):
