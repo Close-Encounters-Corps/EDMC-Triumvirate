@@ -12,6 +12,17 @@ import random
 import time
 
 
+class fssEmitter(Emitter):
+    types = {}
+    reporttypes = {}
+    excludefss = {}
+    fssFlag = False
+
+
+    def __init__(self, cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client):
+        Emitter.__init__(self, cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
+        self.modelreport = "xxreports"
+        self.modeltype = "xxtypes"
 
 
 class fssEmitter(Emitter):
