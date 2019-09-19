@@ -366,11 +366,25 @@ class codexEmitter(Emitter):
         return payload
 
     def split_nearest_destination(self, nearest_destination):
-        dummy, b, c = nearest_destination.split('#')
-        dummy, signal_type = b.split("=")
-        dummy, index_id = c.split("=")
-        signal_type = signal_type[:-1]
-        index_id = index_id[:-1]
+
+        if not "index" in nearest_destination:
+            return None, None
+
+        ndarray=[]
+        signal_type=None
+
+        ndarray=nearest_destination.split('#')
+        if len(ndarray) == 2:
+            dummy, c = nearest_destination.split('#')
+            dummy, index_id = c.split("=")
+            index_id = index_id[:-1]
+        else:
+            dummy, b, c = ndarray
+            dummy, signal_type = b.split("=")
+            dummy, index_id = c.split("=")
+            signal_type = signal_type[:-1]
+            index_id = index_id[:-1]
+        debug("signal {} index {}".format(signal_type, index_id))
         return signal_type, index_id
 
     def getBodyPayload(self, name):
