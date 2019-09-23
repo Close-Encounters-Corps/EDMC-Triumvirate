@@ -211,7 +211,7 @@ class CanonnPatrol(Frame):
         
         
         self.canonnbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HidePatrol"))
-        self.factionbtn=tk.IntVar(value=config.getint('Triumvirate:'+"Hidefactions"))
+        self.factionbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HideFactions"))
         self.hideshipsbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HideMyShips"))
         self.copypatrolbtn=tk.IntVar(value=config.getint('Triumvirate:'+"CopyPatrolAdr"))
         
@@ -628,7 +628,7 @@ class CanonnPatrol(Frame):
         "Called to get a tk Frame for the settings dialog."
         
         self.canonnbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HidePatrol"))
-        self.factionbtn=tk.IntVar(value=config.getint('Triumvirate:'+"Hidefactions"))
+        self.factionbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HideFactions"))
         self.hideshipsbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HideMyShips"))
         self.copypatrolbtn=tk.IntVar(value=config.getint('Triumvirate:'+"CopyPatrolAdr"))
         
@@ -690,7 +690,7 @@ class CanonnPatrol(Frame):
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
         config.set('Triumvirate:HidePatrol', self.canonnbtn.get())      
-        config.set('Triumvirate:Hidefactions', self.factionbtn.get())      
+        config.set('Triumvirate:HideFactions', self.factionbtn.get())      
         config.set('Triumvirate:HideMyShips', self.hideshipsbtn.get())      
         config.set('Triumvirate:CopyPatrolAdr', self.copypatrolbtn.get())      
         
