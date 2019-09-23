@@ -85,9 +85,10 @@ class FriendFoe(Frame):
         
         
         #получение переменных из хранилища #TODO поменять значения на нужные для ФФ
-        self.auto=tk.IntVar(value=config.getint("AutoUpdate"))                    
-        self.novoices=tk.IntVar(value=config.getint("NoVoices"))                
-        self.rmbackup=tk.IntVar(value=config.getint("RemoveBackup"))                
+        self.FFSwitch=tk.IntVar(value=config.getint("FFSwitch"))
+        self.ResponderSwitch=tk.IntVar(value=config.getint("ResponderSwitch"))
+        self.VisibilitySwitch=tk.IntVar(value=config.getint("VisibilitySwitch"))
+        
         
         #Иницилизация контейнера для интерфейса
         self.columnconfigure(1, weight=1)                                       
@@ -146,16 +147,7 @@ class FriendFoe(Frame):
         self.StateRow4.grid(row = 4, column = 2, sticky=sticky)
         self.StateRow4.grid_remove()
 
-        
-        self.news_count=0
-        self.news_pos=0
-        self.minutes=0
-        self.latest={}
-        self.update()
-        #self.hyperlink.bind('<Configure>', self.hyperlink.configure_event)
-        
-        debug(config.get('Canonn:RemoveBackup'))
-        
+                
 
             
     def listOffset(self,targetCmdr,targetSquadron,targetUrl,targetSquadronUrl,state):
@@ -167,37 +159,44 @@ class FriendFoe(Frame):
         if self.CMDRRow1["text"]!=["PlaceHolder"]:
             self.label.grid()
             self.CMDRRow1.grid()
+
         if self.CMDRRow2["text"]!=["PlaceHolder"]:
             self.CMDRRow2.grid()
+
         if self.CMDRRow3["text"]!=["PlaceHolder"]:
             self.CMDRRow3.grid()
+
         if self.CMDRRow4["text"]!=["PlaceHolder"]:
             self.CMDRRow4.grid()
        
-        
+    def analysis(self,cmdr, is_beta, system, entry, client):
+        if entry["event"]=="ShipTargeted" and entry["TargetLocked"]==True and "$cmdr_decorate" in entry["PilotName"]:
+            debug("Yay")
         
     
-    def plugin_prefs(self, parent, cmdr, is_beta,gridrow):          #TODO поменять на нужные для ФФ значения 
+
+    def plugin_prefs(self, parent, cmdr, is_beta,gridrow):          
         "Called to get a tk Frame for the settings dialog."
 
-        self.auto=tk.IntVar(value=config.getint("AutoUpdate"))
-        self.rmbackup=tk.IntVar(value=config.getint("RemoveBackup"))
-        self.novoices=tk.IntVar(value=config.getint("NoVoices"))
+        self.FFSwitch=tk.IntVar(value=config.getint("FFSwitch"))
+        self.ResponderSwitch=tk.IntVar(value=config.getint("ResponderSwitch"))
+        self.VisibilitySwitch=tk.IntVar(value=config.getint("VisibilitySwitch"))
         
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
-        nb.Checkbutton(frame, text="Включить автообновление", variable=self.auto).grid(row = 0, column = 0,sticky="NW")
-        nb.Checkbutton(frame, text="Удалять бекапы версий", variable=self.rmbackup).grid(row = 0, column = 1,sticky="NW")
-        nb.Checkbutton(frame, text="Отключить голосовые сообщения", variable=self.novoices).grid(row = 0, column = 2,sticky="NW")
+        nb.Label(frame,text="Система опознавания «свой-чужой»").grid(row=0,column=0,sticky="NW")
+        nb.Checkbutton(frame, text="Включить модуль «свой-чужой»", variable=self.FFSwitch).grid(row = 1, column = 0,sticky="NW")
+        nb.Checkbutton(frame, text="Сообщать о нападении", variable=self.ResponderSwitch).grid(row = 1, column = 1,sticky="NW")
+        nb.Checkbutton(frame, text="Показать в интерфейсе", variable=self.VisibilitySwitch).grid(row = 1, column = 2,sticky="NW")
         
         return frame
 
     def prefs_changed(self, cmdr, is_beta):
-        "Called when the user clicks OK on the settings dialog."    #TODO поменять на нужные для ФФ значения 
-        config.set('AutoUpdate', self.auto.get())      
-        config.set('RemoveBackup', self.rmbackup.get())      
-        config.set('NoVoices', self.novoices.get())   
+        "Called when the user clicks OK on the settings dialog."     
+        config.set("FFSwitch", self.FFSwitch.get())      
+        config.set('ResponderSwitch', self.ResponderSwitch.get())      
+        config.set('VisibilitySwitch', self.VisibilitySwitch.get())   
         
 
 

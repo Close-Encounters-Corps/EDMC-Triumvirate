@@ -87,6 +87,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
     Debug.plugin_prefs(frame,this.client_version,4)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
+    this.FF.plugin_prefs(frame, cmdr, is_beta,6)
    
     hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
     #release.versionInSettings(frame, cmdr, is_beta,8)
@@ -106,7 +107,7 @@ def prefs_changed(cmdr, is_beta):
     this.release.prefs_changed(cmdr, is_beta)
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
-    
+    this.FF.prefs_changed(cmdr, is_beta)
     Debug.prefs_changed()
     
 SQ=None
@@ -299,8 +300,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     whiteList.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
-    materialReport.submit(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, x, y, z, body, lat,
-                          lon, client)
+    materialReport.submit(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, x, y, z, body, lat,lon, client)
 
 
     #legacy to canonn
@@ -313,7 +313,8 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
     legacy.shipscan(cmdr, is_beta, system, station, entry)
-    Return= Return or modules.Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons,this.SRVmode,this.Fightermode)
+    Return= modules.Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons,this.SRVmode,this.Fightermode) or Return 
+    Return = FF.analysis(cmdr, is_beta, system, entry, client) or Return 
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
