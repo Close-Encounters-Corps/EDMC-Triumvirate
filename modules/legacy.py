@@ -261,7 +261,7 @@ def shipscan(cmdr, is_beta, system, station, entry):
         scanedShips=[]
     if entry["event"]=='ShipTargeted' and entry["TargetLocked"]==True:
         if  entry['ScanStage']==3 :
-            scan={'Ship':entry["Ship"],"PilotName":entry["PilotName"],"PilotRank":entry["PilotRank"],"Faction":entry["Faction"]}
+            scan={'Ship':entry["Ship"],"PilotName":entry["PilotName"],"PilotRank":entry["PilotRank"],"Faction":entry.get("Faction")}
             if scan not in scanedShips:
                 scanedShips.append(scan)
                 url='https://docs.google.com/forms/d/e/1FAIpQLScdc9kTaPUG-e7Hi-Qi1BrAvFxHUefaaHlAUTSTrsZV586Wgw/formResponse?usp=pp_url'
@@ -270,7 +270,7 @@ def shipscan(cmdr, is_beta, system, station, entry):
                 url+='&entry.577969913='+quote_plus(entry["Ship"])
                 url+='&entry.1641514781='+quote_plus((entry["PilotName"].encode('utf-8')) )
                 url+='&entry.76739667='+quote_plus((entry["PilotName_Localised"]).encode('utf-8'))
-                url+='&entry.2138128921='+quote_plus(entry["Faction"])
+                url+='&entry.2138128921='+quote_plus(entry.get("Faction","None"))
                 url+='&entry.1100547048='+quote_plus(entry["PilotRank"])
                 debug("ship scan to "+url)
                 Reporter(url).start()
