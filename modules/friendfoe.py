@@ -188,12 +188,12 @@ class FriendFoe(Frame):
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
-        nb.Label(frame,text="Система опознавания «свой-чужой»").grid(row=0,column=0,sticky="NW")
+        nb.Label(frame,text=       "Система опознавания «свой-чужой»").grid(row=0,column=0,sticky="NW")
         nb.Checkbutton(frame, text="Включить модуль «свой-чужой»", variable=self.FFSwitch).grid(row = 1, column = 0,sticky="NW")
         nb.Checkbutton(frame, text="Сообщать о нападении", variable=self.ResponderSwitch).grid(row = 1, column = 1,sticky="NW")
-        nb.Checkbutton(frame, text="Показать в интерфейсе", variable=self.VisibilitySwitch).grid(row = 1, column = 2,sticky="NW")
-        nb.Checkbutton(frame, text="Подключится к Инаре (требуется установленный ключ API на вкладке Inara)", variable=self.InaraSwitch).grid(row = 2, column = 0,sticky="NW")
-        
+        nb.Checkbutton(frame, text="Показать в интерфейсе", variable=self.VisibilitySwitch).grid(row = 2, column = 1,sticky="NW")
+        nb.Checkbutton(frame, text="Подключится к Инаре\n(требуется установленный\nключ API на вкладке Inara)", variable=self.InaraSwitch).grid(row = 2, column = 0,sticky="NW")
+                                    
         return frame
     def Inara_Prefs(self,cmdr,is_beta):
      if cmdr and not is_beta:
