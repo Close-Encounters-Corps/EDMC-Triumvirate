@@ -172,6 +172,8 @@ class FriendFoe(Frame):
     def analysis(self,cmdr, is_beta, system, entry, client):
         if entry["event"]=="ShipTargeted" and entry["TargetLocked"]==True and "$cmdr_decorate" in entry["PilotName"]:
             debug("Yay")
+            tCmdr=entry["PilotName"].split("=")[1].replace(";","")
+            debug(tCmdr)
         
     
 
@@ -181,6 +183,7 @@ class FriendFoe(Frame):
         self.FFSwitch=tk.IntVar(value=config.getint("FFSwitch"))
         self.ResponderSwitch=tk.IntVar(value=config.getint("ResponderSwitch"))
         self.VisibilitySwitch=tk.IntVar(value=config.getint("VisibilitySwitch"))
+        self.InaraSwitch=tk.IntVar(value=config.getint("InaraSwitch"))
         
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
@@ -189,15 +192,27 @@ class FriendFoe(Frame):
         nb.Checkbutton(frame, text="Включить модуль «свой-чужой»", variable=self.FFSwitch).grid(row = 1, column = 0,sticky="NW")
         nb.Checkbutton(frame, text="Сообщать о нападении", variable=self.ResponderSwitch).grid(row = 1, column = 1,sticky="NW")
         nb.Checkbutton(frame, text="Показать в интерфейсе", variable=self.VisibilitySwitch).grid(row = 1, column = 2,sticky="NW")
+        nb.Checkbutton(frame, text="Подключится к Инаре (требуется установленный ключ API на вкладке Inara)", variable=self.InaraSwitch).grid(row = 1, column = 2,sticky="NW")
         
         return frame
+    def Inara_Prefs(self,cmdr,is_beta):
+     if cmdr and not is_beta:
+        self.cmdr = cmdr
+        
+        cmdrs = config.get('inara_cmdrs') 
+        apikeys = config.get('inara_apikeys') 
+        if cmdr in cmdrs:
+            idx = cmdrs.index(cmdr)
+            apikeys.extend([''] * (1 + idx - len(apikeys)))
+            changed |= (apikeys[idx] != this.apikey.get().strip())
+            apikeys[idx] = this.apikey.get().strip()
 
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."     
         config.set("FFSwitch", self.FFSwitch.get())      
-        config.set('ResponderSwitch', self.ResponderSwitch.get())      
+        config.set('Triumvirate'+'ResponderSwitch', self.ResponderSwitch.get())      
         config.set('VisibilitySwitch', self.VisibilitySwitch.get())   
-        
+        config.set('InaraSwitch', self.InaraSwitch.get())
 
 
 
