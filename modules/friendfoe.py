@@ -192,7 +192,7 @@ class FriendFoe(Frame):
         nb.Checkbutton(frame, text="Включить модуль «свой-чужой»", variable=self.FFSwitch).grid(row = 1, column = 0,sticky="NW")
         nb.Checkbutton(frame, text="Сообщать о нападении", variable=self.ResponderSwitch).grid(row = 1, column = 1,sticky="NW")
         nb.Checkbutton(frame, text="Показать в интерфейсе", variable=self.VisibilitySwitch).grid(row = 1, column = 2,sticky="NW")
-        nb.Checkbutton(frame, text="Подключится к Инаре (требуется установленный ключ API на вкладке Inara)", variable=self.InaraSwitch).grid(row = 1, column = 2,sticky="NW")
+        nb.Checkbutton(frame, text="Подключится к Инаре (требуется установленный ключ API на вкладке Inara)", variable=self.InaraSwitch).grid(row = 2, column = 0,sticky="NW")
         
         return frame
     def Inara_Prefs(self,cmdr,is_beta):
