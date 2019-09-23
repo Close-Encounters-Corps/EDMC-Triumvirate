@@ -85,9 +85,9 @@ class FriendFoe(Frame):
         
         
         #получение переменных из хранилища #TODO поменять значения на нужные для ФФ
-        self.FFSwitch=tk.IntVar(value=config.getint('Triumvirate'+"FFSwitch"))
-        self.ResponderSwitch=tk.IntVar(value=config.getint('Triumvirate'+"ResponderSwitch"))
-        self.VisibilitySwitch=tk.IntVar(value=config.getint('Triumvirate'+"VisibilitySwitch"))
+        self.FFSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"FFSwitch"))
+        self.ResponderSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"ResponderSwitch"))
+        self.VisibilitySwitch=tk.IntVar(value=config.getint('Triumvirate:'+"VisibilitySwitch"))
         
         
         #Иницилизация контейнера для интерфейса
@@ -180,10 +180,10 @@ class FriendFoe(Frame):
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):          
         "Called to get a tk Frame for the settings dialog."
 
-        self.FFSwitch=tk.IntVar(value=config.getint('Triumvirate'+"FFSwitch"))
-        self.ResponderSwitch=tk.IntVar(value=config.getint('Triumvirate'+"ResponderSwitch"))
-        self.VisibilitySwitch=tk.IntVar(value=config.getint('Triumvirate'+"VisibilitySwitch"))
-        self.InaraSwitch=tk.IntVar(value=config.getint('Triumvirate'+"InaraSwitch"))
+        self.FFSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"FFSwitch"))
+        self.ResponderSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"ResponderSwitch"))
+        self.VisibilitySwitch=tk.IntVar(value=config.getint('Triumvirate:'+"VisibilitySwitch"))
+        self.InaraSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"InaraSwitch"))
         
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
@@ -209,10 +209,10 @@ class FriendFoe(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."     
-        config.set('Triumvirate'+"FFSwitch", self.FFSwitch.get())      
-        config.set('Triumvirate'+'ResponderSwitch', self.ResponderSwitch.get())      
-        config.set('Triumvirate'+'VisibilitySwitch', self.VisibilitySwitch.get())   
-        config.set('Triumvirate'+'InaraSwitch', self.InaraSwitch.get())
+        config.set('Triumvirate:'++"FFSwitch", self.FFSwitch.get())      
+        config.set('Triumvirate:'++'ResponderSwitch', self.ResponderSwitch.get())      
+        config.set('Triumvirate:'++'VisibilitySwitch', self.VisibilitySwitch.get())   
+        config.set('Triumvirate:'++'InaraSwitch', self.InaraSwitch.get())
 
 
 
