@@ -209,10 +209,10 @@ class FriendFoe(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."     
-        config.set('Triumvirate:'++"FFSwitch", self.FFSwitch.get())      
-        config.set('Triumvirate:'++'ResponderSwitch', self.ResponderSwitch.get())      
-        config.set('Triumvirate:'++'VisibilitySwitch', self.VisibilitySwitch.get())   
-        config.set('Triumvirate:'++'InaraSwitch', self.InaraSwitch.get())
+        config.set('Triumvirate:'+"FFSwitch", self.FFSwitch.get())      
+        config.set('Triumvirate:'+'ResponderSwitch', self.ResponderSwitch.get())      
+        config.set('Triumvirate:'+'VisibilitySwitch', self.VisibilitySwitch.get())   
+        config.set('Triumvirate:'+'InaraSwitch', self.InaraSwitch.get())
 
 
 

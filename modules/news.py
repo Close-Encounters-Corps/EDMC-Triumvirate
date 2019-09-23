@@ -175,6 +175,6 @@ class CECNews(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         'Called when the user clicks OK on the settings dialog.'
-        config.set('Triumvirate:'++'HideNews', self.hidden.get())      
+        config.set('Triumvirate:'+'HideNews', self.hidden.get())      
         if self.visible():
             self.news_update()

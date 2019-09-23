@@ -689,10 +689,10 @@ class CanonnPatrol(Frame):
             
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set('Triumvirate:'++'HidePatrol', self.canonnbtn.get())      
-        config.set('Triumvirate:'++'Hidefactions', self.factionbtn.get())      
-        config.set('Triumvirate:'++'HideMyShips', self.hideshipsbtn.get())      
-        config.set('Triumvirate:'++'CopyPatrolAdr', self.copypatrolbtn.get())      
+        config.set('Triumvirate:'+'HidePatrol', self.canonnbtn.get())      
+        config.set('Triumvirate:'+'Hidefactions', self.factionbtn.get())      
+        config.set('Triumvirate:'+'HideMyShips', self.hideshipsbtn.get())      
+        config.set('Triumvirate:'+'CopyPatrolAdr', self.copypatrolbtn.get())      
         
         self.canonn=self.canonnbtn.get()
         self.faction=self.factionbtn.get()
