@@ -57,8 +57,8 @@ class ReleaseLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Fetching...",
-            url=DEFAULT_URL,
+            text="PlaceHolder",
+            url="",
             wraplength=50,  # updated in __configure_event below
             anchor=tk.NW
         )
@@ -71,7 +71,7 @@ class ReleaseLink(HyperlinkLabel):
 
 class FriendFoe(Frame):
 
-    def __init__(self, parent,release,gridrow):
+    def __init__(self, parent,gridrow):
         "Initialise the ``News``."
 
         padx, pady = 10, 5  # formatting
@@ -93,18 +93,60 @@ class FriendFoe(Frame):
         self.columnconfigure(1, weight=1)                                       
         self.grid(row = gridrow, column = 0, sticky="NSEW",columnspan=2)
         
-        self.label=tk.Label(self, text=  "Версия:")
+        self.label=tk.Label(self, text=  "Свой чужой:")
         self.label.grid(row = 0, column = 0, sticky=sticky)
+        self.label.grid_remove()
         
+        self.CMDRRow1=ReleaseLink(self)
+        self.CMDRRow1.grid(row = 1, column = 0, sticky=sticky)
+        self.CMDRRow1.grid_remove()
+
+        self.SQIDRow1=ReleaseLink(self)
+        self.SQIDRow1.grid(row = 1, column = 1,sticky="NSEW")
+        self.SQIDRow1.grid_remove()
+
+        self.StateRow1 =tk.Label(self, text=  "state")
+        self.StateRow1.grid(row = 1, column = 2, sticky=sticky)
+        self.StateRow1.grid_remove()
+
+
+        self.CMDRRow2=ReleaseLink(self)
+        self.CMDRRow2.grid(row = 2, column = 0, sticky=sticky)
+        self.CMDRRow2.grid_remove()
         
-        self.hyperlink=ReleaseLink(self)
-        self.hyperlink.grid(row = 0, column = 1,sticky="NSEW")
+        self.SQIDRow2=ReleaseLink(self)
+        self.SQIDRow2.grid(row = 2, column = 1,sticky="NSEW")
+        self.SQIDRow2.grid_remove()
+
+        self.StateRow2 =tk.Label(self, text=  "state")
+        self.StateRow2.grid(row = 2, column = 2, sticky=sticky)
+        self.StateRow2.grid_remove()
+
+        self.CMDRRow3=ReleaseLink(self)
+        self.CMDRRow3.grid(row = 3, column = 0, sticky=sticky)
+        self.CMDRRow3.grid_remove()
         
-        self.button=tk.Button(self, text="Нажмите чтобы обновить", command=self.click_installer)
-        self.button.grid(row = 1, column = 0,columnspan=2,sticky="NSEW")
-        self.button.grid_remove()
+        self.SQIDRow3=ReleaseLink(self)
+        self.SQIDRow3.grid(row = 3, column = 1,sticky="NSEW")
+        self.SQIDRow3.grid_remove()
+
+        self.StateRow3 =tk.Label(self, text=  "state")
+        self.StateRow3.grid(row = 3, column = 2, sticky=sticky)
+        self.StateRow3.grid_remove()
         
-        self.release=release
+        self.CMDRRow4=ReleaseLink(self)
+        self.CMDRRow4.grid(row = 4, column = 0, sticky=sticky)
+        self.CMDRRow4.grid_remove()
+        
+        self.SQIDRow4=ReleaseLink(self)
+        self.SQIDRow4.grid(row = 4, column = 1,sticky="NSEW")
+        self.SQIDRow4.grid_remove()
+
+        self.StateRow4 =tk.Label(self, text=  "state")
+        self.StateRow4.grid(row = 4, column = 2, sticky=sticky)
+        self.StateRow4.grid_remove()
+
+        
         self.news_count=0
         self.news_pos=0
         self.minutes=0
@@ -114,20 +156,23 @@ class FriendFoe(Frame):
         
         debug(config.get('Canonn:RemoveBackup'))
         
-        if self.rmbackup.get() == 1  and config.get('Canonn:RemoveBackup') != "None":
-            delete_dir=config.get('Canonn:RemoveBackup')
-            debug('Canonn:RemoveBackup {}'.format(delete_dir))
-            try:
-                shutil.rmtree(delete_dir)
-                
-            except:
-                error("Cant delete {}".format(delete_dir))
-                
-            ## lets not keep trying
-            config.set('Canonn:RemoveBackup',"None")
+
             
-        
-        
+    def listOffset(self,targetCmdr,targetSquadron,targetUrl,targetSquadronUrl,state):
+        self.CMDRRow4["text"],self.CMDRRow4['url'],self.SQIDRow4["text"],self.SQIDRow4["url"],self.StateRow4["text"]= self.CMDRRow3["text"],self.CMDRRow3['url'],self.SQIDRow3["text"],self.SQIDRow3["url"],self.StateRow3["text"]
+        self.CMDRRow3["text"],self.CMDRRow3['url'],self.SQIDRow3["text"],self.SQIDRow3["url"],self.StateRow3["text"]= self.CMDRRow2["text"],self.CMDRRow2['url'],self.SQIDRow2["text"],self.SQIDRow2["url"],self.StateRow2["text"]
+        self.CMDRRow2["text"],self.CMDRRow2['url'],self.SQIDRow2["text"],self.SQIDRow2["url"],self.StateRow2["text"]= self.CMDRRow1["text"],self.CMDRRow1['url'],self.SQIDRow1["text"],self.SQIDRow1["url"],self.StateRow1["text"]
+        self.CMDRRow1["text"],self.CMDRRow1['url'],self.SQIDRow1["text"],self.SQIDRow1["url"],self.StateRow1["text"]= targetCmdr,targetSquadron,targetUrl,targetSquadronUrl,state
+
+        if self.CMDRRow1["text"]!=["PlaceHolder"]:
+            self.label.grid()
+            self.CMDRRow1.grid()
+        if self.CMDRRow2["text"]!=["PlaceHolder"]:
+            self.CMDRRow2.grid()
+        if self.CMDRRow3["text"]!=["PlaceHolder"]:
+            self.CMDRRow3.grid()
+        if self.CMDRRow4["text"]!=["PlaceHolder"]:
+            self.CMDRRow4.grid()
        
         
         
