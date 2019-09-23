@@ -57,7 +57,7 @@ Elite Dangerous Market Connector (EDMC) с плагином Triumvirate явля
 
 Анализ окружающего пространства на факт наличия кораблей, выдача информации о том, союзные ли это суда, либо суда противников выбранной фракции.
 
-## Элемент SCTC (Space Traffic Control System)
+## Элемент STCS (Space Traffic Control System)
 
 ### Работа с союзным трафиком
 
