@@ -7,7 +7,7 @@ import datetime
 
 class Debug:
         
-    debugvar=tk.IntVar(value=config.getint("CanonnDebug"))
+    debugvar=tk.IntVar(value=config.getint('Triumvirate'+"CanonnDebug"))
     client="Canonn"
     
     @classmethod
@@ -29,7 +29,7 @@ class Debug:
     def plugin_prefs(cls, parent,client,gridrow):
         "Called to get a tk Frame for the settings dialog."
 
-        cls.debugvar=tk.IntVar(value=config.getint("CanonnDebug"))
+        cls.debugvar=tk.IntVar(value=config.getint('Triumvirate'+"CanonnDebug"))
         Debug.client=client
         
         frame = nb.Frame(parent)
@@ -43,7 +43,7 @@ class Debug:
     @classmethod    
     def prefs_changed(cls):
         "Called when the user clicks OK on the settings dialog."
-        config.set('CanonnDebug', cls.debugvar.get())      
+        config.set('Triumvirate'+'CanonnDebug', cls.debugvar.get())      
         
 def debug(value):
     Debug.debug(value)
