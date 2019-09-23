@@ -104,7 +104,7 @@ def matches(d, field, value):
     
 
 
-def submit(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, x,y,z,body,lat,lon,client):
+def submit(cmdr, is_beta, system,SysFactionState,SysFactionAllegiance,DistFromStarLS, station, entry, x,y,z,body,lat,lon,client):
     if entry["event"] == "MaterialCollected" :
         debug(entry)
         MaterialsCollected(cmdr, is_beta, system, station, entry,client,lat,lon,body,SysFactionState,SysFactionAllegiance,x,y,z,DistFromStarLS).start()      
