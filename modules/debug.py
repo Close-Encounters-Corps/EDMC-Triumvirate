@@ -43,7 +43,7 @@ class Debug:
     @classmethod    
     def prefs_changed(cls):
         "Called when the user clicks OK on the settings dialog."
-        config.set('Triumvirate:'+'Debug', cls.debugvar.get())      
+        config.set('Triumvirate:Debug', cls.debugvar.get())      
         
 def debug(value):
     Debug.debug(value)

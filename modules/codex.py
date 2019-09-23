@@ -244,7 +244,7 @@ class CodexTypes(Frame):
         
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set('Triumvirate:'+'HideCodex', self.hidecodexbtn.get())      
+        config.set('Triumvirate:HideCodex', self.hidecodexbtn.get())      
         
         self.hidecodex=self.hidecodexbtn.get()
                 

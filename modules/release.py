@@ -119,7 +119,7 @@ class Release(Frame):
                 error("Cant delete {}".format(delete_dir))
                 
             ## lets not keep trying
-            config.set('Triumvirate:'+'Canonn:RemoveBackup',"None")
+            config.set('Triumvirate:RemoveBackup',"None")
             
         
     def update(self):    
@@ -216,9 +216,9 @@ class Release(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set('Triumvirate:'+'AutoUpdate', self.auto.get())      
-        config.set('Triumvirate:'+'RemoveBackup', self.rmbackup.get())      
-        config.set('Triumvirate:'+'NoVoices', self.novoices.get())   
+        config.set('Triumvirate:AutoUpdate', self.auto.get())      
+        config.set('Triumvirate:RemoveBackup', self.rmbackup.get())      
+        config.set('Triumvirate:NoVoices', self.novoices.get())   
         
 
 
@@ -273,7 +273,7 @@ class Release(Frame):
         
         
         if self.rmbackup.get() == 1:
-            config.set('Triumvirate:'+'RemoveBackup',"{}.disabled".format(Release.plugin_dir))
+            config.set('Triumvirate:RemoveBackup',"{}.disabled".format(Release.plugin_dir))
             
         debug("Upgrade complete")    
             
