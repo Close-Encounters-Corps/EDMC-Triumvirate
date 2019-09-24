@@ -22,7 +22,7 @@ from modules import patrol
 from modules import friendfoe as FF
 from modules.systems import Systems
 from modules.debug import Debug
-from modules.debug import debug
+from modules.debug import debug,error
 from modules import materialReport
 from contextlib import closing
 from modules.whitelist import whiteList
@@ -214,7 +214,7 @@ def plugin_app(parent):
         config.delete('ResponderSwitch')
         config.delete('VisibilitySwitch')
         plug.show_error("Triumvirate config Migration Complete")
-        Debug.error("Config Mirgration Complete")
+        error("Config Mirgration Complete")
     this.parent = parent
     #create a new frame as a containier for the status
     padx, pady = 10, 5  # formatting
