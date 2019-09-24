@@ -7,6 +7,20 @@ Elite Dangerous Market Connector (EDMC) с плагином Triumvirate явля
 
 Плагин Triumvirate для EDMC категорически НЕСОВМЕСТИМ с плагинами EDMC-Canonn, EDMC-USS-Survey и с устаревшим EDMC-USS-Survey-Triumvirate-edition. EDMC-Canonn был изначально интегрирован в Triumvirate. Просьба устанавливать плагин Triumvirate "вчистую", на EDMC в котором ранее не присутствовали EDMC-Canonn, EDMC-USS-Survey, EDMC-USS-Survey-Triumvirate-edition.
 
+## Инструкция по установке:
+
+1) Скачать и установить последнюю версию [EDMarketConnector](https://github.com/Marginal/EDMarketConnector/blob/rel-342/README.md#installation) (если уже не установлен, обязательно проверьте EDMC на наличие обновлений)
+
+2) Скачать последний релиз плагина [EDMC-Triumvirate](https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest), нажав на кнопку Source code(zip)
+
+3) Распаковать папку с плагином в %USERPROFILE%\AppData\Local\EDMarketConnector\plugins (это можно вставить в адресную строку проводника)
+
+4) Запустить EDMC, если появилось окно [такого](https://cdn.discordapp.com/attachments/518418556615000074/590004329692397579/unknown.png) вида, то перейти к шагу 5, иначе вам будет необходимо проверить правильность установки  
+ 
+5) Включить в настройках плагина Triumvirate (вкладка Triumvirate находится в настройках EDMC) автообновление
+
+6) ***Вы Великолепны***
+ 
 # Функции плагина:
   
 ## Элемент системы ориентирования
@@ -80,18 +94,3 @@ Elite Dangerous Market Connector (EDMC) с плагином Triumvirate явля
 ### Элемент вывода информации о пройденном SRV расстоянии
 
 Добавляет возможность отображения счетчика пройденного расстояния за время нахождения в SRV.
-
-## Инструкция по установке:
-
-1) Скачать и установить последнюю версию [EDMarketConnector](https://github.com/Marginal/EDMarketConnector/blob/rel-342/README.md#installation) (если уже не установлен, обязательно проверьте EDMC на наличие обновлений)
-
-2) Скачать последний релиз плагина [EDMC-Triumvirate](https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest), нажав на кнопку Source code(zip)
-
-3) Распаковать папку с плагином в %USERPROFILE%\AppData\Local\EDMarketConnector\plugins (это можно вставить в адресную строку проводника)
-
-4) Запустить EDMC, если появилось окно [такого](https://cdn.discordapp.com/attachments/518418556615000074/590004329692397579/unknown.png) вида, то перейти к шагу 5, иначе вам будет необходимо проверить правильность установки  
- 
-5) Включить в настройках плагина Triumvirate (вкладка Triumvirate находится в настройках EDMC) автообновление
-
-6) ***Вы Великолепны***
- 
