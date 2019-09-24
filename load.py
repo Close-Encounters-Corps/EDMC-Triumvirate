@@ -173,7 +173,37 @@ def plugin_stop():
     this.patrol.plugin_stop()
     
 def plugin_app(parent):
-
+    if config.getint("Debug") is not None:
+        config.set('Triumvirate:AllowEasterEggs', config.getint("AllowEasterEggs"))
+        config.set('Triumvirate:AutoUpdate',config.getint('AutoUpdate'))
+        config.set('Triumvirate:CopyPatrolAdr',config.getint('CopyPatrolAdr'))
+        config.set('Triumvirate:Debug',config.getint('Debug'))
+        config.set('Triumvirate:HideCodex',config.getint('HideCodex'))
+        config.set('Triumvirate:HideFactions',config.getint('Hidefactions'))
+        config.set('Triumvirate:HideMyShips',config.getint('HideMyShips'))
+        config.set('Triumvirate:HideNews',config.getint('HideNews'))
+        config.set('Triumvirate:HidePatrol',config.getint('HidePatrol'))
+        config.set('Triumvirate:InaraSwitch',config.getint('InaraSwitch'))
+        config.set('Triumvirate:NoVoices',config.getint('NoVoices'))
+        config.set('Triumvirate:RemoveBackup',config.getint('RemoveBackup'))
+        config.set('Triumvirate:ResponderSwitch',config.getint('ResponderSwitch'))
+        config.set('Triumvirate:VisibilitySwitch',config.getint('VisibilitySwitch'))
+        config.delete('AllowEasterEggs')
+        config.delete('AutoUpdate')
+        config.delete('CopyPatrolAdr')
+        config.delete('Debug')
+        config.delete('HideCodex')
+        config.delete('Hidefactions')
+        config.delete('HideMyShips')
+        config.delete('HideNews')
+        config.delete('HidePatrol')
+        config.delete('InaraSwitch')
+        config.delete('NoVoices')
+        config.delete('RemoveBackup')
+        config.delete('ResponderSwitch')
+        config.delete('VisibilitySwitch')
+        plug.show_error("Triumvirate config Migration Complete")
+        error("Config Mirgration Complete")
     this.parent = parent
     #create a new frame as a containier for the status
     padx, pady = 10, 5  # formatting
