@@ -22,7 +22,7 @@ from modules import patrol
 from modules import friendfoe as FF
 from modules.systems import Systems
 from modules.debug import Debug
-from modules.debug import debug
+from modules.debug import debug,error
 from modules import materialReport
 from contextlib import closing
 from modules.whitelist import whiteList
