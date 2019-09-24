@@ -84,7 +84,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     '''
     Return a TK Frame for adding to the EDMC settings dialog.
     '''
-    this.AllowEasternEggsButton=tk.IntVar(value=config.getint("AllowEasterEggs"))
+    this.AllowEasternEggsButton=tk.IntVar(value=config.getint("Triumvirate:AllowEasterEggs"))
     this.AllowEasternEggs=this.AllowEasternEggsButton.get()
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
@@ -115,7 +115,7 @@ def prefs_changed(cmdr, is_beta):
     this.release.prefs_changed(cmdr, is_beta)
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
-    config.set('AllowEasterEggs', this.AllowEasternEggsButton.get())
+    config.set('Triumvirate:AllowEasterEggs', this.AllowEasternEggsButton.get())
     this.AllowEasternEggs=this.AllowEasternEggsButton.get()
     
     
@@ -184,7 +184,37 @@ def plugin_stop():
     this.patrol.plugin_stop()
     
 def plugin_app(parent):
-
+    if config.getint("Debug") is not None:
+        config.set('Triumvirate:AllowEasterEggs', config.getint("AllowEasterEggs"))
+        config.set('Triumvirate:AutoUpdate',config.getint('AutoUpdate'))
+        config.set('Triumvirate:CopyPatrolAdr',config.getint('CopyPatrolAdr'))
+        config.set('Triumvirate:Debug',config.getint('Debug'))
+        config.set('Triumvirate:HideCodex',config.getint('HideCodex'))
+        config.set('Triumvirate:HideFactions',config.getint('Hidefactions'))
+        config.set('Triumvirate:HideMyShips',config.getint('HideMyShips'))
+        config.set('Triumvirate:HideNews',config.getint('HideNews'))
+        config.set('Triumvirate:HidePatrol',config.getint('HidePatrol'))
+        config.set('Triumvirate:InaraSwitch',config.getint('InaraSwitch'))
+        config.set('Triumvirate:NoVoices',config.getint('NoVoices'))
+        config.set('Triumvirate:RemoveBackup',config.getint('RemoveBackup'))
+        config.set('Triumvirate:ResponderSwitch',config.getint('ResponderSwitch'))
+        config.set('Triumvirate:VisibilitySwitch',config.getint('VisibilitySwitch'))
+        config.delete('AllowEasterEggs')
+        config.delete('AutoUpdate')
+        config.delete('CopyPatrolAdr')
+        config.delete('Debug')
+        config.delete('HideCodex')
+        config.delete('Hidefactions')
+        config.delete('HideMyShips')
+        config.delete('HideNews')
+        config.delete('HidePatrol')
+        config.delete('InaraSwitch')
+        config.delete('NoVoices')
+        config.delete('RemoveBackup')
+        config.delete('ResponderSwitch')
+        config.delete('VisibilitySwitch')
+        plug.show_error("Triumvirate config Migration Complete")
+        Debug.error("Config Mirgration Complete")
     this.parent = parent
     #create a new frame as a containier for the status
     padx, pady = 10, 5  # formatting
@@ -206,7 +236,7 @@ def plugin_app(parent):
     whitelist.fetchData()
     #for plugin in plug.PLUGINS:
     #    debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
-    this.AllowEasterEggs=tk.IntVar(value=config.getint("AllowEasterEggs"))
+    this.AllowEasterEggs=tk.IntVar(value=config.getint("Triumvirate:AllowEasterEggs"))
     
     return frame
     
