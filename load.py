@@ -32,7 +32,13 @@ import modules.Commands
 import ttk
 import Tkinter as tk
 import sys
-    
+from modules.player import Player 
+from config import config
+
+
+
+
+
 this = sys.modules[__name__]
 
 import l10n
@@ -69,7 +75,7 @@ this.SRVmode,this.Fightermode=False,False
 this.old_time=0  
 this.fuel=0
 this.fuel_cons = 0
-
+this.AllowEasternEggs=None
 
 
 
@@ -79,7 +85,8 @@ def plugin_prefs(parent, cmdr, is_beta):
     '''
     Return a TK Frame for adding to the EDMC settings dialog.
     '''
-    
+    this.AllowEasternEggsButton=tk.IntVar(value=config.getint("Triumvirate:AllowEasterEggs"))
+    this.AllowEasternEggs=this.AllowEasternEggsButton.get()
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
     
@@ -89,13 +96,15 @@ def plugin_prefs(parent, cmdr, is_beta):
     Debug.plugin_prefs(frame,this.client_version,4)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
     this.FF.plugin_prefs(frame, cmdr, is_beta,6)
-   
-    hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
-    #release.versionInSettings(frame, cmdr, is_beta,8)
+    nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton).grid(row = 7, column = 0,sticky="NW")
+    hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,8)
+    #release.versionInSettings(frame, cmdr, is_beta,9)
    # entry=nb.Entry(frame,None)
-    nb.Label(frame,text="В случае возникновения проблем с плагином \nили в случае, если Вы поставили неправильное сообщество в гугл-форме, \nпишите в личку Дискорда Казаков#4700").grid(row=9,column=0,sticky="NW")
+    nb.Label(frame,text="В случае возникновения проблем с плагином \nили в случае, если Вы поставили неправильное сообщество в гугл-форме, \nпишите в личку Дискорда Казаков#4700").grid(row=10,column=0,sticky="NW")
+                    
+        
     
-    
+        
     
     return frame
 
@@ -109,9 +118,11 @@ def prefs_changed(cmdr, is_beta):
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
     this.FF.prefs_changed(cmdr, is_beta)
+    config.set('Triumvirate:AllowEasterEggs', this.AllowEasternEggsButton.get())
+    this.AllowEasternEggs=this.AllowEasternEggsButton.get()
     Debug.prefs_changed()
     
-SQ=None
+this.SQ=None
 def Alegiance_get(CMDR,SQ_old):
     global SQ    
     if CMDR!= this.CMDR:
@@ -162,7 +173,7 @@ def plugin_start(plugin_dir):
     Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
-    
+    this.plugin_dir=plugin_dir
 
     return 'Triumvirate-{}'.format(this.version)
     
@@ -226,15 +237,11 @@ def plugin_app(parent):
     whitelist.fetchData()
     #for plugin in plug.PLUGINS:
     #    debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
-    
+    this.AllowEasterEggs=tk.IntVar(value=config.getint("Triumvirate:AllowEasterEggs"))
     
     return frame
     
-def Squadronsend(CMDR,entry):
-      
-        
-  
-        
+def Squadronsend(CMDR,entry):                   
         if this.SQNag==0:
             debug("SQName need to be sended")
             url="https://docs.google.com/forms/d/e/1FAIpQLScZvs3MB2AK6pPwFoSCpdaarfAeu_P-ineIhtO1mOPgr09q8A/formResponse?usp=pp_url"
@@ -352,8 +359,19 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
     legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
+    Easter_Egs(entry)
     return Return
     
+
+def Easter_Egs(entry):
+    if this.AllowEasternEggs==True:
+        debug("Easter Check")
+        if entry['event']=="HullDamage" and entry['PlayerPilot']==True and entry["Fighter"]==False:
+            if entry['Health']<0.3 : 
+                debug("plaing sound")
+                Player(this.plugin_dir,["sounds\\hullAlarm.wav"]).start()
+
+
     
 def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
     #debug(old_timestamp==entry["timestamp"])
@@ -436,16 +454,11 @@ def startup_stats(cmdr):
         this.first_event
     except:
       this.first_event = True
-      addr = requests.get('https://api.ipify.org').text
-      addr6 = requests.get('https://api6.ipify.org').text
+      
+      
       url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
       url+="&entry.1181808218="+quote_plus(cmdr)
       url+="&entry.254549730="+quote_plus(this.version)
-      url+="&entry.1622540328="+quote_plus(addr)
-      if addr6 != addr:
-          url+="&entry.488844173="+quote_plus(addr6)
-      else:
-          url+="&entry.488844173="+quote_plus("0")
       url+="&entry.1210213202="+str(release.get_auto())
       
       legacy.Reporter(url).start()

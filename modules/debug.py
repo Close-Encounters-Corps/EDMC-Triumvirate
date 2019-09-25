@@ -7,7 +7,9 @@ import datetime
 
 class Debug:
         
-    debugvar=tk.IntVar(value=config.getint('Triumvirate:'+"Debug"))
+
+    debugvar=tk.IntVar(value=config.getint("Triumvirate:Debug"))
+
     client="Triumvirate"
     
     @classmethod
@@ -16,7 +18,7 @@ class Debug:
             
     @classmethod
     def p(cls,value):
-        print("{} [{}] {}".format(datetime.datetime.now(),Debug.client,str(value)))
+        print("{} [{}] {}".format(datetime.datetime.now(),Debug.client,unicode(str(value))))
             
     @classmethod
     def debug(cls,value):
