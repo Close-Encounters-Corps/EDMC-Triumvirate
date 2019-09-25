@@ -91,7 +91,7 @@ class FriendFoe(Frame):
             parent
         )
         
-        
+        self.inaraKey=None
         #получение переменных из хранилища #TODO поменять значения на нужные для ФФ
         self.FFSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"FFSwitch"))
         self.ResponderSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"ResponderSwitch"))
@@ -167,18 +167,27 @@ class FriendFoe(Frame):
         if self.CMDRRow1["text"]!=["PlaceHolder"]:
             self.label.grid()
             self.CMDRRow1.grid()
+            self.SQIDRow1.grid()
+            self.StateRow1.grid()
 
         if self.CMDRRow2["text"]!=["PlaceHolder"]:
             self.CMDRRow2.grid()
+            self.SQIDRow2.grid()
+            self.StateRow2.grid()
 
         if self.CMDRRow3["text"]!=["PlaceHolder"]:
             self.CMDRRow3.grid()
+            self.SQIDRow3.grid()
+            self.StateRow3.grid()
 
         if self.CMDRRow4["text"]!=["PlaceHolder"]:
             self.CMDRRow4.grid()
-       
+            self.SQIDRow4.grid()
+            self.StateRow4.grid()
+            
+            
     def analysis(self,cmdr, is_beta, system, entry, client):
-        if entry["event"]=="ShipTargeted" and entry["TargetLocked"]==True and "$cmdr_decorate" in entry["PilotName"]:
+        if entry["event"]=="ShipTargeted" and entry["TargetLocked"]==True and entry["ScanStage"]>=1 and "$cmdr_decorate" in entry["PilotName"]:
             debug("Yay")
             tCmdr=entry["PilotName"].split("=")[1].replace(";","")
             debug(tCmdr)
@@ -188,7 +197,7 @@ class FriendFoe(Frame):
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):          
         "Called to get a tk Frame for the settings dialog."
 
-        self.FFSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"FFSwitch"))
+        self.FFSwitch=tk.IntVar(value=config.getint('Triumvirate:FFSwitch'))    #TODO прорефакторить вызов настроек
         self.ResponderSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"ResponderSwitch"))
         self.VisibilitySwitch=tk.IntVar(value=config.getint('Triumvirate:'+"VisibilitySwitch"))
         self.InaraSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"InaraSwitch"))
@@ -208,23 +217,22 @@ class FriendFoe(Frame):
 
 
     def Inara_Prefs(self,cmdr,is_beta):
-     if cmdr and not is_beta:
+     if self.InaraSwitch==1 and cmdr and not is_beta:
         self.cmdr = cmdr
         
         cmdrs = config.get('inara_cmdrs') 
         apikeys = config.get('inara_apikeys') 
         if cmdr in cmdrs:
             idx = cmdrs.index(cmdr)
-            apikeys.extend([''] * (1 + idx - len(apikeys)))
-            changed |= (apikeys[idx] != this.apikey.get().strip())
-            apikeys[idx] = this.apikey.get().strip()
+            self.inaraKey=apikeys[idx]
+
 
 
 
 
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."     
-        config.set('Triumvirate:'+"FFSwitch", self.FFSwitch.get())      
+        config.set('Triumvirate:FFSwitch", self.FFSwitch.get())      
         config.set('Triumvirate:ResponderSwitch', self.ResponderSwitch.get())      
         config.set('Triumvirate:VisibilitySwitch', self.VisibilitySwitch.get())   
         config.set('Triumvirate:InaraSwitch', self.InaraSwitch.get())
