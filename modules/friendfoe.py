@@ -15,6 +15,11 @@ from config import config
 import threading
 from debug import Debug
 from debug import debug,error
+from Queue import Queue
+import sys
+
+
+
 '''
 { "timestamp":"2019-04-29T19:27:30Z", 
 "event":"ShipTargeted", 
@@ -49,6 +54,9 @@ from debug import debug,error
 Заметка №2.1 имеет смысл убирать #name= через строчные функции (TargetName=entry["PilotName"].split("=")[1])
 Заметка №3 модуль не должно быть видно, пока нет данных. так же как это реализовано в release.py
 '''
+this = sys.modules[__name__]	# For holding module globals
+this.queue = Queue()
+
 
 class ReleaseLink(HyperlinkLabel):
 
@@ -195,6 +203,10 @@ class FriendFoe(Frame):
         nb.Checkbutton(frame, text="Подключится к Инаре\n(требуется установленный\nключ API на вкладке Inara)", variable=self.InaraSwitch).grid(row = 2, column = 0,sticky="NW")
                                     
         return frame
+
+
+
+
     def Inara_Prefs(self,cmdr,is_beta):
      if cmdr and not is_beta:
         self.cmdr = cmdr
@@ -206,6 +218,9 @@ class FriendFoe(Frame):
             apikeys.extend([''] * (1 + idx - len(apikeys)))
             changed |= (apikeys[idx] != this.apikey.get().strip())
             apikeys[idx] = this.apikey.get().strip()
+
+
+
 
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."     
@@ -220,4 +235,143 @@ class FriendFoe(Frame):
   
     @classmethod    
     def plugin_start(cls,plugin_dir):
+        cls.thread = threading.Thread(target = worker, name = 'Inara worker')
+        cls.thread.daemon = True
+        cls.thread.start()
         cls.plugin_dir=unicode(plugin_dir)
+
+
+
+
+
+class InaraConnect(threading.Thread):
+    '''
+        Should probably make this a heritable class as this is a repeating pattern
+    '''
+    url="https://inara.cz/inapi/v1/"
+        
+        
+        
+    def __init__(self,cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):
+        threading.Thread.__init__(self)
+        self.cmdr=cmdr
+        self.system=system
+        self.x=x
+        self.y=y
+        self.z=z
+        self.body = body
+        self.lat = lat
+        self.lon = lon
+        self.is_beta = is_beta
+        if entry:
+            self.entry = entry.copy()
+        self.client = client
+        Emitter.setRoute(is_beta,client)
+        self.modelreport="clientreports"
+
+    @classmethod
+    def setRoute(cls,is_beta,client):
+        if Emitter.route:
+            return Emitter.route
+        else:
+            # first check to see if we are an official release
+            repo,tag=client.split(".",1)
+            r=requests.get("https://api.github.com/repos/VAKazakov/{}/releases/tags/{}".format(repo,tag))
+            j=r.json()
+            if r.status_code == 404:
+                debug("Release not in github")
+                Emitter.route=Emitter.urls.get("development")
+            elif j.get("prerelease"):
+                debug("Prerelease in github")
+                Emitter.route=Emitter.urls.get("staging")
+            else:
+                debug("Release in github")
+                Emitter.route=Emitter.urls.get("live")
+            
+
+                
+        return Emitter.route
+
+        
+    def getUrl(self):
+        if self.is_beta:
+            url=Emitter.urls.get("staging")
+        else:
+            url=Emitter.route
+        return url
+        
+    def setPayload(self):
+        payload={}
+        payload["cmdrName"]=self.cmdr  
+        payload["systemName"]=self.system
+        payload["isBeta"]=self.is_beta
+        payload["clientVersion"]=self.client
+        return payload   
+    
+    def run(self):
+    
+        #configure the payload       
+        payload=self.setPayload()
+        url=self.getUrl()
+        self.send(payload,url)
+    
+    def send(self,payload,url):
+        fullurl="{}/{}".format(url,self.modelreport)
+        r=requests.post(fullurl,data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),headers={"content-type":"application/json"})  
+        
+        if not r.status_code == requests.codes.ok:
+            error("{}/{}".format(url,self.modelreport))
+            error(r.status_code)
+            error(r.json())
+            error(json.dumps(payload))
+        else:
+            debug("{}?id={}".format(fullurl,r.json().get("id")))
+
+
+# Worker thread
+def worker():
+    while True:
+        item = queue.get()
+        if not item:
+            return	# Closing
+        else:
+            (url, data, callback) = item
+
+        retrying = 0
+        while retrying < 3:
+            try:
+                r = this.session.post(url, data=json.dumps(data, separators = (',', ':')), timeout=_TIMEOUT)
+                r.raise_for_status()
+                reply = r.json()
+                status = reply['header']['eventStatus']
+                if callback:
+                    callback(reply)
+                elif status // 100 != 2:	# 2xx == OK (maybe with warnings)
+                    # Log fatal errors
+                    print 'Inara\t%s %s' % (reply['header']['eventStatus'], reply['header'].get('eventStatusText', ''))
+                    print json.dumps(data, indent=2, separators = (',', ': '))
+                    plug.show_error(_('Error: Inara {MSG}').format(MSG = reply['header'].get('eventStatusText', status)))
+                else:
+                    # Log individual errors and warnings
+                    for data_event, reply_event in zip(data['events'], reply['events']):
+                        if reply_event['eventStatus'] != 200:
+                            print 'Inara\t%s %s\t%s' % (reply_event['eventStatus'], reply_event.get('eventStatusText', ''), json.dumps(data_event))
+                            if reply_event['eventStatus'] // 100 != 2:
+                                plug.show_error(_('Error: Inara {MSG}').format(MSG = '%s, %s' % (data_event['eventName'], reply_event.get('eventStatusText', reply_event['eventStatus']))))
+                        if data_event['eventName'] in ['addCommanderTravelDock', 'addCommanderTravelFSDJump', 'setCommanderTravelLocation']:
+                            eventData = reply_event.get('eventData', {})
+                            this.system  = eventData.get('starsystemInaraURL')
+                            if config.get('system_provider') == 'Inara':
+                                this.system_link['url'] = this.system	# Override standard URL function
+                            this.station = eventData.get('stationInaraURL')
+                            if config.get('station_provider') == 'Inara':
+                                this.station_link['url'] = this.station or this.system	# Override standard URL function
+                break
+            except:
+                if __debug__: print_exc()
+                retrying += 1
+        else:
+            if callback:
+                callback(None)
+            else:
+                plug.show_error(_("Error: Can't connect to Inara"))
