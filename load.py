@@ -64,6 +64,7 @@ this.SysFactionAllegiance = None # variable for allegiance of controlling factio
 this.Nag=0
 this.cmdr_SQID=None    #variable for allegiance check
 this.CMDR=None
+this.CMDRFID=None
 this.SRVmode,this.Fightermode=False,False
 this.old_time=0  
 this.fuel=0
@@ -249,7 +250,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     '''
     # capture some stats when we launch not read for that yet
     startup_stats(cmdr)
-    
+    debug("CMDR Appear JE")
 
 
     
@@ -372,6 +373,7 @@ def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
 this.FuelCount=9
 this.plug_start=False
 def dashboard_entry(cmdr, is_beta, entry):
+    debug("CMDR Appear JE")
     debug(entry)
     if this.plug_start==0:
         this.plug_start=1
@@ -420,8 +422,13 @@ def cmdr_data(data, is_beta):
     '''
     We have new data on our commander
     '''
-    #debug(json.dumps(data,indent=4))
+    debug(json.dumps(data,indent=4))
+
     this.patrol.cmdr_data(data, is_beta)
+
+
+def cmdrCapture(cmdr,is_beta=None):
+    pass
 
 
 def startup_stats(cmdr):
