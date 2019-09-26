@@ -34,6 +34,7 @@ import Tkinter as tk
 import sys
 from modules.player import Player 
 from config import config
+import modules
 
 
 
@@ -185,17 +186,17 @@ def plugin_stop():
     this.patrol.plugin_stop()
     
 def configMigrateFromPre120to120():
-    config.set('Triumvirate:AllowEasterEggs',config.getint('AllowEasterEggs'))
-    config.set('Triumvirate:AutoUpdate',config.getint('AutoUpdate'))
-    config.set('Triumvirate:CopyPatrolAdr',config.getint('CopyPatrolAdr'))
-    config.set('Triumvirate:Debug',config.getint('CanonnDebug'))
-    config.set('Triumvirate:HideCodex',config.getint('Canonn:HideCodex'))
-    config.set('Triumvirate:HideFactions',config.getint('Hidefactions'))
-    config.set('Triumvirate:HideMyShips',config.getint('HideMyShips'))
-    config.set('Triumvirate:HideNews',config.getint('HideNews'))
-    config.set('Triumvirate:HidePatrol',config.getint('HidePatrol'))
-    config.set('Triumvirate:NoVoices',config.getint('NoVoices'))
-    config.set('Triumvirate:RemoveBackup',config.getint('Canonn:RemoveBackup'))
+    config.set('Triumvirate:AllowEasterEggs',   config.getint('AllowEasterEggs'))
+    config.set('Triumvirate:AutoUpdate',        config.getint('AutoUpdate'))
+    config.set('Triumvirate:CopyPatrolAdr',     config.getint('CopyPatrolAdr'))
+    config.set('Triumvirate:Debug',             config.getint('CanonnDebug'))
+    config.set('Triumvirate:HideCodex',         config.getint('Canonn:HideCodex'))
+    config.set('Triumvirate:HideFactions',      config.getint('Hidefactions'))
+    config.set('Triumvirate:HideMyShips',       config.getint('HideMyShips'))
+    config.set('Triumvirate:HideNews',          config.getint('HideNews'))
+    config.set('Triumvirate:HidePatrol',        config.getint('HidePatrol'))
+    config.set('Triumvirate:NoVoices',          config.getint('NoVoices'))
+    config.set('Triumvirate:RemoveBackup',      config.getint('Canonn:RemoveBackup'))
     config.delete('AllowEasterEggs')
     config.delete('AutoUpdate')
     config.delete('CopyPatrolAdr')

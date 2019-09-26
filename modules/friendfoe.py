@@ -17,6 +17,7 @@ from debug import Debug
 from debug import debug,error
 from Queue import Queue
 import sys
+import importlib
 
 
 
@@ -232,7 +233,7 @@ class FriendFoe(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."     
-        config.set('Triumvirate:FFSwitch", self.FFSwitch.get())      
+        config.set('Triumvirate:FFSwitch', self.FFSwitch.get())      
         config.set('Triumvirate:ResponderSwitch', self.ResponderSwitch.get())      
         config.set('Triumvirate:VisibilitySwitch', self.VisibilitySwitch.get())   
         config.set('Triumvirate:InaraSwitch', self.InaraSwitch.get())
@@ -366,14 +367,8 @@ def worker():
                             print 'Inara\t%s %s\t%s' % (reply_event['eventStatus'], reply_event.get('eventStatusText', ''), json.dumps(data_event))
                             if reply_event['eventStatus'] // 100 != 2:
                                 plug.show_error(_('Error: Inara {MSG}').format(MSG = '%s, %s' % (data_event['eventName'], reply_event.get('eventStatusText', reply_event['eventStatus']))))
-                        if data_event['eventName'] in ['addCommanderTravelDock', 'addCommanderTravelFSDJump', 'setCommanderTravelLocation']:
-                            eventData = reply_event.get('eventData', {})
-                            this.system  = eventData.get('starsystemInaraURL')
-                            if config.get('system_provider') == 'Inara':
-                                this.system_link['url'] = this.system	# Override standard URL function
-                            this.station = eventData.get('stationInaraURL')
-                            if config.get('station_provider') == 'Inara':
-                                this.station_link['url'] = this.station or this.system	# Override standard URL function
+ 
+
                 break
             except:
                 if __debug__: print_exc()
