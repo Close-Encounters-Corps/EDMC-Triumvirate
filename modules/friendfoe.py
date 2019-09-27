@@ -158,42 +158,69 @@ class FriendFoe(Frame):
 
                 
 
-            
-    def listOffset(self,targetCmdr,targetSquadron,targetUrl,targetSquadronUrl,state):
+    
+    def listOffset(self,targetCmdr,targetUrl=None,targetSquadron="N/A",targetSquadronUrl=None,state="N/A"):
+        self.CMDRsInSight=[self.CMDRRow1["text"],self.CMDRRow2["text"],self.CMDRRow3["text"],self.CMDRRow4["text"]]
+        
+        if targetCmdr in self.CMDRsInSight:      #Если запись об пилоте уже есть на интерфейсе, обновить поля, если нет, то добавить ее наверх списка
+            index=self.CMDCMDRsInSight.index(targetCmdr)
+            if getattr(self,"CMDRRow"+index+"['url']")=="": setattr(self,"CMDRRow"+index+"['url']",targetUrl)
+            if getattr(self,"SQIDRow"+index+"['text']")=="PlaceHolder": setattr(self,"SQIDRow"+index+"['text']",targetUrl)
+            if getattr(self,"SQIDRow"+index+"['url']")=="": setattr(self,"SQIDRow"+index+"['url']",targetUrl)
+            if getattr(self,"StateRow"+index+"['text']")=="PlaceHolder": setattr(self,"StateRow"+index+"['text']",targetUrl)
+            return
+
+
         self.CMDRRow4["text"],self.CMDRRow4['url'],self.SQIDRow4["text"],self.SQIDRow4["url"],self.StateRow4["text"]= self.CMDRRow3["text"],self.CMDRRow3['url'],self.SQIDRow3["text"],self.SQIDRow3["url"],self.StateRow3["text"]
         self.CMDRRow3["text"],self.CMDRRow3['url'],self.SQIDRow3["text"],self.SQIDRow3["url"],self.StateRow3["text"]= self.CMDRRow2["text"],self.CMDRRow2['url'],self.SQIDRow2["text"],self.SQIDRow2["url"],self.StateRow2["text"]
         self.CMDRRow2["text"],self.CMDRRow2['url'],self.SQIDRow2["text"],self.SQIDRow2["url"],self.StateRow2["text"]= self.CMDRRow1["text"],self.CMDRRow1['url'],self.SQIDRow1["text"],self.SQIDRow1["url"],self.StateRow1["text"]
         self.CMDRRow1["text"],self.CMDRRow1['url'],self.SQIDRow1["text"],self.SQIDRow1["url"],self.StateRow1["text"]= targetCmdr,targetSquadron,targetUrl,targetSquadronUrl,state
 
-        if self.CMDRRow1["text"]!=["PlaceHolder"]:
-            self.label.grid()
-            self.CMDRRow1.grid()
-            self.SQIDRow1.grid()
-            self.StateRow1.grid()
+        if self.CMDRRow4["text"]!=["PlaceHolder"]:
+            self.CMDRRow4.grid()
+            self.SQIDRow4.grid()
+            self.StateRow4.grid()
+            return
+        
+        if self.CMDRRow3["text"]!=["PlaceHolder"]:
+            self.CMDRRow3.grid()
+            self.SQIDRow3.grid()
+            self.StateRow3.grid()
+            return
 
         if self.CMDRRow2["text"]!=["PlaceHolder"]:
             self.CMDRRow2.grid()
             self.SQIDRow2.grid()
             self.StateRow2.grid()
-
-        if self.CMDRRow3["text"]!=["PlaceHolder"]:
-            self.CMDRRow3.grid()
-            self.SQIDRow3.grid()
-            self.StateRow3.grid()
-
-        if self.CMDRRow4["text"]!=["PlaceHolder"]:
-            self.CMDRRow4.grid()
-            self.SQIDRow4.grid()
-            self.StateRow4.grid()
+            return
+        
+        if self.CMDRRow1["text"]!=["PlaceHolder"]:
+            self.label.grid()
+            self.CMDRRow1.grid()
+            self.SQIDRow1.grid()
+            self.StateRow1.grid()
+            return
             
-            
+    DetectedCommanders={}            
     def analysis(self,cmdr, is_beta, system, entry, client):
         if entry["event"]=="ShipTargeted" and entry["TargetLocked"]==True and entry["ScanStage"]>=1 and "$cmdr_decorate" in entry["PilotName"]:
             debug("Yay")
+            tCMDRData=[None,None,None,None] #DetectedCommanders={cmdr1:[tUrl,tSQID,tSQIDUrl,state],}
+            
             tCmdr=entry["PilotName"].split("=")[1].replace(";","")
+            if tCmdr in self.DetectedCommanders:
+                tCMDRData=self.DetectedCommanders[tCmdr]
+                tCMDRData[1]=entry.get("SquadronID","N/A")
+            else:
+                tCMDRData[1]=entry.get("SquadronID","N/A")
+                
+
+
+
             debug(tCmdr)
         
-    
+    def connectToFFBase(tCmdr):
+        pass
 
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):          
         "Called to get a tk Frame for the settings dialog."
@@ -221,11 +248,13 @@ class FriendFoe(Frame):
      if self.InaraSwitch==1 and cmdr and not is_beta:
         self.cmdr = cmdr
         
-        cmdrs = config.get('inara_cmdrs') 
-        apikeys = config.get('inara_apikeys') 
-        if cmdr in cmdrs:
-            idx = cmdrs.index(cmdr)
-            self.inaraKey=apikeys[idx]
+        if not cmdr:
+            return None
+
+        cmdrs = config.get('inara_cmdrs') or []
+        if cmdr in cmdrs and config.get('inara_apikeys'):
+            self.inaraKey= config.get('inara_apikeys')[cmdrs.index(cmdr)]
+        
 
 
 
@@ -244,9 +273,7 @@ class FriendFoe(Frame):
   
     @classmethod    
     def plugin_start(cls,plugin_dir):
-        cls.thread = threading.Thread(target = worker, name = 'Inara worker')
-        cls.thread.daemon = True
-        cls.thread.start()
+
         cls.plugin_dir=unicode(plugin_dir)
 
 
