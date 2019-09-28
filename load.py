@@ -57,7 +57,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.1.10'
+this.version='1.2.0'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
@@ -84,7 +84,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     '''
     Return a TK Frame for adding to the EDMC settings dialog.
     '''
-    this.AllowEasternEggsButton=tk.IntVar(value=config.getint("AllowEasterEggs"))
+    this.AllowEasternEggsButton=tk.IntVar(value=config.getint("Triumvirate:AllowEasterEggs"))
     this.AllowEasternEggs=this.AllowEasternEggsButton.get()
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
@@ -115,7 +115,7 @@ def prefs_changed(cmdr, is_beta):
     this.release.prefs_changed(cmdr, is_beta)
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
-    config.set('AllowEasterEggs', this.AllowEasternEggsButton.get())
+    config.set('Triumvirate:AllowEasterEggs', this.AllowEasternEggsButton.get())
     this.AllowEasternEggs=this.AllowEasternEggsButton.get()
     
     
@@ -205,7 +205,7 @@ def plugin_app(parent):
     whitelist.fetchData()
     #for plugin in plug.PLUGINS:
     #    debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
-    this.AllowEasterEggs=tk.IntVar(value=config.getint("AllowEasterEggs"))
+    this.AllowEasterEggs=tk.IntVar(value=config.getint("Triumvirate:AllowEasterEggs"))
     
     return frame
     
