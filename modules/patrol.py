@@ -633,7 +633,7 @@ class CanonnPatrol(Frame):
 
     def download(self):
         while self.SQID is None:
-            
+            debug("Waiting CMDR's squadron")
             time.sleep(5)
         debug("Download Patrol Data")
         
