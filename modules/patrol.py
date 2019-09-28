@@ -629,14 +629,11 @@ class CanonnPatrol(Frame):
         self.patrol_list=patrol_list
     
         
-    def SQID_set(self,SQID):
-        if SQID != "":
-            self.SQID=SQID
-        else: self.SQID="None"
+
 
     def download(self):
-        while self.SQID ==None:
-            debug("Awaiting user Allegiance info")
+        while self.SQID is None:
+            
             time.sleep(5)
         debug("Download Patrol Data")
         
