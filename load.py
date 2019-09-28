@@ -224,6 +224,7 @@ def Squadronsend(CMDR,entry,Rank):
 def CMDR_Catch(cmdr):
     if this.CMDR==cmdr:
         return
+    debug("CMDR_Catched")
     this.CMDR=cmdr
     Alegiance_get(cmdr)
    
@@ -419,9 +420,10 @@ def cmdr_data(data, is_beta):
     '''
     We have new data on our commander
     '''
-    debug(json.dumps(data,indent=4))
-
-    #CMDR_Catch(cmdr)
+    #debug(json.dumps(data,indent=4))
+    cAPI=data
+    debug(cAPI["commander"]["name"])#["commander"]["name"]
+    CMDR_Catch(cAPI["commander"]["name"])
     this.patrol.cmdr_data(data, is_beta)
 
 
