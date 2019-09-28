@@ -344,7 +344,7 @@ def Easter_Egs(entry):
         debug("Easter Check")
         if entry['event']=="HullDamage" and entry['PlayerPilot']==True and entry["Fighter"]==False:
             if entry['Health']<0.3 : 
-                debug("plaing sound")
+                debug("playing Broiler 747 sound")
                 Player(this.plugin_dir,["sounds\\hullAlarm.wav"]).start()
 
 
