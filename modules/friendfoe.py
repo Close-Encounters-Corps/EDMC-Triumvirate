@@ -93,6 +93,7 @@ class FriendFoe(Frame):
         )
         
         self.inaraKey=None
+        self.CMDR   = None
         #получение переменных из хранилища #TODO поменять значения на нужные для ФФ
         self.FFSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"FFSwitch"))
         self.ResponderSwitch=tk.IntVar(value=config.getint('Triumvirate:'+"ResponderSwitch"))
@@ -105,56 +106,27 @@ class FriendFoe(Frame):
         
         self.label=tk.Label(self, text=  "Свой чужой:")
         self.label.grid(row = 0, column = 0, sticky=sticky)
-        self.label.grid_remove()
+        #self.label.grid_remove()
         
-        self.CMDRRow1=ReleaseLink(self)
-        self.CMDRRow1.grid(row = 1, column = 0, sticky=sticky)
-        self.CMDRRow1.grid_remove()
+        CurrentRow=0
+        Rows= 3#tk.IntVar(value=config.getint('Triumvirate:'+"FFRows"))
+        while CurrentRow<=Rows:
+            CurrentRow=CurrentRow+1
 
-        self.SQIDRow1=ReleaseLink(self)
-        self.SQIDRow1.grid(row = 1, column = 1,sticky="NSEW")
-        self.SQIDRow1.grid_remove()
+            setattr(self,"CMDRRow"+str(CurrentRow),ReleaseLink(self))
+            getattr(self,"CMDRRow"+str(CurrentRow)).grid(row = CurrentRow, column = 0, sticky=sticky)
+            #getattr(self,"CMDRRow"+Rows[iteration]).grid_remove
 
-        self.StateRow1 =tk.Label(self, text=  "state")
-        self.StateRow1.grid(row = 1, column = 2, sticky=sticky)
-        self.StateRow1.grid_remove()
+            setattr(self,"SQIDRow"+str(CurrentRow), ReleaseLink(self))
+            getattr(self,"SQIDRow"+str(CurrentRow)).grid(row = CurrentRow, column = 1, sticky=sticky)
+            #getattr(self,"SQIDRow"+Rows[iteration]).grid_remove
+
+            setattr(self,"CMDRRow"+str(CurrentRow),  tk.Label(self, text=  "state"))
+            getattr(self,"CMDRRow"+str(CurrentRow)).grid(row = CurrentRow, column = 2, sticky=sticky)
+            #getattr(self,"CMDRRow"+Rows[iteration]).grid_remove
 
 
-        self.CMDRRow2=ReleaseLink(self)
-        self.CMDRRow2.grid(row = 2, column = 0, sticky=sticky)
-        self.CMDRRow2.grid_remove()
-        
-        self.SQIDRow2=ReleaseLink(self)
-        self.SQIDRow2.grid(row = 2, column = 1,sticky="NSEW")
-        self.SQIDRow2.grid_remove()
-
-        self.StateRow2 =tk.Label(self, text=  "state")
-        self.StateRow2.grid(row = 2, column = 2, sticky=sticky)
-        self.StateRow2.grid_remove()
-
-        self.CMDRRow3=ReleaseLink(self)
-        self.CMDRRow3.grid(row = 3, column = 0, sticky=sticky)
-        self.CMDRRow3.grid_remove()
-        
-        self.SQIDRow3=ReleaseLink(self)
-        self.SQIDRow3.grid(row = 3, column = 1,sticky="NSEW")
-        self.SQIDRow3.grid_remove()
-
-        self.StateRow3 =tk.Label(self, text=  "state")
-        self.StateRow3.grid(row = 3, column = 2, sticky=sticky)
-        self.StateRow3.grid_remove()
-        
-        self.CMDRRow4=ReleaseLink(self)
-        self.CMDRRow4.grid(row = 4, column = 0, sticky=sticky)
-        self.CMDRRow4.grid_remove()
-        
-        self.SQIDRow4=ReleaseLink(self)
-        self.SQIDRow4.grid(row = 4, column = 1,sticky="NSEW")
-        self.SQIDRow4.grid_remove()
-
-        self.StateRow4 =tk.Label(self, text=  "state")
-        self.StateRow4.grid(row = 4, column = 2, sticky=sticky)
-        self.StateRow4.grid_remove()
+       
 
                 
 
@@ -246,7 +218,7 @@ class FriendFoe(Frame):
 
     def Inara_Prefs(self,cmdr,is_beta):
      if self.InaraSwitch==1 and cmdr and not is_beta:
-        self.cmdr = cmdr
+        self.CMDR = cmdr
         
         if not cmdr:
             return None
@@ -266,6 +238,7 @@ class FriendFoe(Frame):
         config.set('Triumvirate:ResponderSwitch', self.ResponderSwitch.get())      
         config.set('Triumvirate:VisibilitySwitch', self.VisibilitySwitch.get())   
         config.set('Triumvirate:InaraSwitch', self.InaraSwitch.get())
+        Inara_Prefs(cmdr,is_beta)
 
 
 
