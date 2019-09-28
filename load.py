@@ -146,7 +146,7 @@ def Alegiance_get(CMDR):
     if this.cmdr_SQID != None:
         debug("SQ ID IS OK")
         Discord.SQID_set(this.cmdr_SQID) #TODO Переписать модули так, что бы модули грузили скид при необходимости
-        patrol.SQID_set(this.cmdr_SQID) #Функция для отправки данных о сквадроне в модули, использовать как шаблон 
+        patrol.SQID=this.cmdr_SQID   #имя для отправки данных о сквадроне в модули, использовать как шаблон 
         
     else: 
         if this.Nag==0:
