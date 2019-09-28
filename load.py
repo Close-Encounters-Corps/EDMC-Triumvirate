@@ -209,13 +209,13 @@ def plugin_app(parent):
     
     return frame
     
-def Squadronsend(CMDR,entry,SQname):                   
+def Squadronsend(CMDR,entry,Rank):                   
         
             debug("SQName need to be sended")
             url="https://docs.google.com/forms/d/e/1FAIpQLScZvs3MB2AK6pPwFoSCpdaarfAeu_P-ineIhtO1mOPgr09q8A/formResponse?usp=pp_url"
             url+="&entry.558317192="+quote_plus(CMDR)
             url+="&entry.1042067605="+quote_plus(entry)
-            url+="&entry.784267155="+quote_plus(SQname)
+            url+="&entry.784267155="+str(Rank)
         
             
             legacy.Reporter(url).start()
