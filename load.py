@@ -22,7 +22,7 @@ from modules import patrol
 from modules import friendfoe as FF
 from modules.systems import Systems
 from modules.debug import Debug
-from modules.debug import debug
+from modules.debug import debug, error
 from modules import materialReport
 from contextlib import closing
 from modules.whitelist import whiteList
@@ -121,43 +121,42 @@ def prefs_changed(cmdr, is_beta):
     
     Debug.prefs_changed()
     
-SQ=None
-def Alegiance_get(CMDR,SQ_old):
-    global SQ    
-    if CMDR!= this.CMDR:
-        debug("Community Check started")
-        url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"        
-        with closing(requests.get(url, stream=True)) as r:
-            reader = csv.reader(r.iter_lines(), delimiter='\t')
-            next(reader)
+
+def Alegiance_get(CMDR):
+        
+    
+    debug("Community Check started")
+    url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"        
+    with closing(requests.get(url, stream=True)) as r:
+        reader = csv.reader(r.iter_lines(), delimiter='\t')
+        next(reader)
             
             
-            for row in reader:
+        for row in reader:
                 
-                cmdr,squadron,SQID=row
+            cmdr,squadron,SQID=row
                 
-                if cmdr == CMDR:
-                    try:
-                        SQ=SQID
-                        debug("your SQID is "+str(SQ))
-                    except:
-                        error("Set SQID Failed")
+            if cmdr == CMDR:
+                try:
+                    this.cmdr_SQID=SQID
+                    debug("your squadron is "+str(squadron)+", SQID is "+str(this.cmdr_SQID))
+                except:
+                    error("Set SQID Failed")
                 
-        if SQ != None:
-            debug("SQ ID IS OK")
-            this.CMDR=CMDR
-            Discord.SQID_set(SQ)
-            patrol.SQID_set(SQ) #Функция для отправки данных о сквадроне в модули, использовать как шаблон 
-            return SQ 
-        else: 
-            if this.Nag==0:
-                debug("SQID need to be instaled")
-                url="https://docs.google.com/forms/d/e/1FAIpQLSeERKxF6DlrQ3bMqFdceycSlBV0kwkzziIhYD0ctDzrytm8ug/viewform?usp=pp_url"
-                url+="&entry.42820869="+quote_plus(CMDR)
-                this.Nag=this.Nag+1
-                debug("SQID "+str(url))
-                webbrowser.open(url)
-    else: return      SQ_old
+    if this.cmdr_SQID != None:
+        debug("SQ ID IS OK")
+        Discord.SQID_set(this.cmdr_SQID) #TODO Переписать модули так, что бы модули грузили скид при необходимости
+        patrol.SQID=this.cmdr_SQID   #имя для отправки данных о сквадроне в модули, использовать как шаблон 
+        
+    else: 
+        if this.Nag==0:
+            debug("SQID need to be instaled")
+            url="https://docs.google.com/forms/d/e/1FAIpQLSeERKxF6DlrQ3bMqFdceycSlBV0kwkzziIhYD0ctDzrytm8ug/viewform?usp=pp_url"
+            url+="&entry.42820869="+quote_plus(CMDR)
+            this.Nag=this.Nag+1
+            debug("SQID "+str(url))
+            webbrowser.open(url)
+    
 
 
    
@@ -210,15 +209,24 @@ def plugin_app(parent):
     
     return frame
     
-def Squadronsend(CMDR,entry):                   
-        if this.SQNag==0:
+def Squadronsend(CMDR,entry,Rank):                   
+        
             debug("SQName need to be sended")
             url="https://docs.google.com/forms/d/e/1FAIpQLScZvs3MB2AK6pPwFoSCpdaarfAeu_P-ineIhtO1mOPgr09q8A/formResponse?usp=pp_url"
             url+="&entry.558317192="+quote_plus(CMDR)
             url+="&entry.1042067605="+quote_plus(entry)
-            this.SQNag=this.Nag+1
+            url+="&entry.784267155="+str(Rank)
+        
             
             legacy.Reporter(url).start()
+
+
+def CMDR_Catch(cmdr):
+    if this.CMDR==cmdr:
+        return
+    debug("CMDR_Catched")
+    this.CMDR=cmdr
+    Alegiance_get(cmdr)
    
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     '''
@@ -226,7 +234,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     '''
     # capture some stats when we launch not read for that yet
     startup_stats(cmdr)
-    
+    CMDR_Catch(cmdr)
 
 
     
@@ -272,8 +280,8 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.body = entry['Body']
             debug(this.body)
     
-    if entry["event"]=="JoinedSquadron":
-        Squadronsend(cmdr,entry["SquadronName"])
+    if entry["event"]=="JoinedSquadron" or entry["event"]=="SquadronStartup":
+        Squadronsend(cmdr,entry["SquadronName"],entry.get("CurrentRank",""))
 
 
 
@@ -301,7 +309,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     hdreport.submit(cmdr, is_beta, system, station, entry,client)
     codex.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
     fssreports.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
-    journaldata.submit(cmdr, is_beta, system, station, entry,client)
+    journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
     clientreport.submit(cmdr,is_beta,client,entry)
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
@@ -337,7 +345,7 @@ def Easter_Egs(entry):
         debug("Easter Check")
         if entry['event']=="HullDamage" and entry['PlayerPilot']==True and entry["Fighter"]==False:
             if entry['Health']<0.3 : 
-                debug("plaing sound")
+                debug("playing Broiler 747 sound")
                 Player(this.plugin_dir,["sounds\\hullAlarm.wav"]).start()
 
 
@@ -359,8 +367,12 @@ def fuel_consumption(entry,old_fuel,old_timestamp,old_fuel_cons):
 
 this.FuelCount=9
 this.plug_start=False
+
+
+
 def dashboard_entry(cmdr, is_beta, entry):
     debug(entry)
+    CMDR_Catch(cmdr)
     if this.plug_start==0:
         this.plug_start=1
         this.fuel=entry["Fuel"]
@@ -400,7 +412,7 @@ def dashboard_entry(cmdr, is_beta, entry):
     else:
         this.body_name = None   
     debug(this.body_name)    
-    this.cmdr_SQID=Alegiance_get(cmdr,this.cmdr_SQID)
+    
     #debug(this.cmdr_SQID)
     
     
@@ -409,6 +421,9 @@ def cmdr_data(data, is_beta):
     We have new data on our commander
     '''
     #debug(json.dumps(data,indent=4))
+    cAPI=data
+    debug(cAPI["commander"]["name"])#["commander"]["name"]
+    CMDR_Catch(cAPI["commander"]["name"])
     this.patrol.cmdr_data(data, is_beta)
 
 
