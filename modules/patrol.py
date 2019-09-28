@@ -629,14 +629,11 @@ class CanonnPatrol(Frame):
         self.patrol_list=patrol_list
     
         
-    def SQID_set(self,SQID):
-        if SQID != "":
-            self.SQID=SQID
-        else: self.SQID="None"
+
 
     def download(self):
-        while self.SQID ==None:
-            debug("Awaiting user Allegiance info")
+        while self.SQID is None:
+            debug("Waiting CMDR's squadron")
             time.sleep(5)
         debug("Download Patrol Data")
         
@@ -921,11 +918,11 @@ class CanonnPatrol(Frame):
                 
                 if shipsystems.get(system)[0].get("station").get("name") == shipsystems.get(system)[1].get("station").get("name"):
                     ship_info="Ваш{} ({}) и ваш{} ({}) пристыкованы к {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name"))        
-                    debug(ship_info)
+                    #debug(ship_info)
                 else:
                 
                     ship_info="Ваш{} ({}) Пристыкован(а) к {} и ваш{} ({}) пристыкован к {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),shipsystems.get(system)[1].get("station").get("name"),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name"))        
-                    debug(ship_info)
+                    #debug(ship_info)
             else:
                 ship_info="У вас {} Кораблей в этой системе".format(ship_count)
                 #debug(ship_info)
