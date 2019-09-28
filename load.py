@@ -301,7 +301,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     hdreport.submit(cmdr, is_beta, system, station, entry,client)
     codex.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
     fssreports.submit(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
-    journaldata.submit(cmdr, is_beta, system, station, entry,client)
+    journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
     clientreport.submit(cmdr,is_beta,client,entry)
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
@@ -408,7 +408,7 @@ def cmdr_data(data, is_beta):
     '''
     We have new data on our commander
     '''
-    #debug(json.dumps(data,indent=4))
+    debug(json.dumps(data,indent=4))
     this.patrol.cmdr_data(data, is_beta)
 
 
