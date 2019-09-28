@@ -209,13 +209,14 @@ def plugin_app(parent):
     
     return frame
     
-def Squadronsend(CMDR,entry):                   
-        if this.SQNag==0:
+def Squadronsend(CMDR,entry,SQname):                   
+        
             debug("SQName need to be sended")
             url="https://docs.google.com/forms/d/e/1FAIpQLScZvs3MB2AK6pPwFoSCpdaarfAeu_P-ineIhtO1mOPgr09q8A/formResponse?usp=pp_url"
             url+="&entry.558317192="+quote_plus(CMDR)
             url+="&entry.1042067605="+quote_plus(entry)
-            this.SQNag=this.Nag+1
+            url+="&entry.784267155="+quote_plus(SQname)
+        
             
             legacy.Reporter(url).start()
 
@@ -278,8 +279,8 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.body = entry['Body']
             debug(this.body)
     
-    if entry["event"]=="JoinedSquadron":
-        Squadronsend(cmdr,entry["SquadronName"])
+    if entry["event"]=="JoinedSquadron" or entry["event"]=="SquadronStartup":
+        Squadronsend(cmdr,entry["SquadronName"],entry.get("CurrentRank",""))
 
 
 
