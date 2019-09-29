@@ -225,6 +225,8 @@ class FriendFoe ( Frame ):
             tCMDRUrl = i ["eventData"] ["inaraURL"]
             tSQID = i ["eventData"] ["commanderWing"] ["wingName"]
             tSQIDUrl = i ["eventData"] ["commanderWing"] ["inaraURL"]
+            self.DetectedCommanders[tCMDR][0]=tCMDRUrl
+            self.DetectedCommanders[tCMDR][2]=tSQIDUrl
             self.listOffset ( tCMDR,tCMDRUrl,tSQID,tSQIDUrl )
 
 
