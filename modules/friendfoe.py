@@ -108,8 +108,9 @@ class FriendFoe(Frame):
         self.label.grid(row = 0, column = 0, sticky=sticky)
         #self.label.grid_remove()
         
-        CurrentRow=0
-        Rows= 3#tk.IntVar(value=config.getint('Triumvirate:'+"FFRows"))
+        CurrentRow=1
+        Rows= 4#tk.IntVar(value=config.getint('Triumvirate:'+"FFRows"))
+        RowsList=[i for i in range(1,Rows)]
         while CurrentRow<=Rows:
             CurrentRow=CurrentRow+1
 
@@ -142,36 +143,23 @@ class FriendFoe(Frame):
             if getattr(self,"StateRow"+index+"['text']")=="PlaceHolder": setattr(self,"StateRow"+index+"['text']",targetUrl)
             return
 
+        for index in reversed(RowsList):
+            if index != 1:
+                setattr(self,"CMDRRow"+str(index)+"['text']",getattr(self,"CMDRRow"+index-1))
+                setattr(self,"CMDRRow"+str(index)+"['url']",getattr(self,"CMDRRow"+index-1))
+                setattr(self,"SQIDRow"+str(index)+"['text']",getattr(self,"SQIDRow"+index-1))
+                setattr(self,"SQIDRow"+str(index)+"['url']",getattr(self,"SQIDRow"+index-1))
+                setattr(self,"StateRow"+str(index)+"['text']",getattr(self,"StateRow"+index-1))
+            else:  self.CMDRRow1["text"],self.CMDRRow1['url'],self.SQIDRow1["text"],self.SQIDRow1["url"],self.StateRow1["text"]= targetCmdr,targetSquadron,targetUrl,targetSquadronUrl,state
 
-        self.CMDRRow4["text"],self.CMDRRow4['url'],self.SQIDRow4["text"],self.SQIDRow4["url"],self.StateRow4["text"]= self.CMDRRow3["text"],self.CMDRRow3['url'],self.SQIDRow3["text"],self.SQIDRow3["url"],self.StateRow3["text"]
-        self.CMDRRow3["text"],self.CMDRRow3['url'],self.SQIDRow3["text"],self.SQIDRow3["url"],self.StateRow3["text"]= self.CMDRRow2["text"],self.CMDRRow2['url'],self.SQIDRow2["text"],self.SQIDRow2["url"],self.StateRow2["text"]
-        self.CMDRRow2["text"],self.CMDRRow2['url'],self.SQIDRow2["text"],self.SQIDRow2["url"],self.StateRow2["text"]= self.CMDRRow1["text"],self.CMDRRow1['url'],self.SQIDRow1["text"],self.SQIDRow1["url"],self.StateRow1["text"]
-        self.CMDRRow1["text"],self.CMDRRow1['url'],self.SQIDRow1["text"],self.SQIDRow1["url"],self.StateRow1["text"]= targetCmdr,targetSquadron,targetUrl,targetSquadronUrl,state
+        for index in reversed(RowsList):
+            if getattr(self,"CMDRRow"+str(index)+"['text']")!="PlaceHolder":
+                getattr(self,"CMDRRow"+str(index)).grid() 
+                getattr(self,"SQIDRow"+str(index)).grid()
+                getattr(self,"StateRow"+str(index)).grid()
+                return
 
-        if self.CMDRRow4["text"]!=["PlaceHolder"]:
-            self.CMDRRow4.grid()
-            self.SQIDRow4.grid()
-            self.StateRow4.grid()
-            return
         
-        if self.CMDRRow3["text"]!=["PlaceHolder"]:
-            self.CMDRRow3.grid()
-            self.SQIDRow3.grid()
-            self.StateRow3.grid()
-            return
-
-        if self.CMDRRow2["text"]!=["PlaceHolder"]:
-            self.CMDRRow2.grid()
-            self.SQIDRow2.grid()
-            self.StateRow2.grid()
-            return
-        
-        if self.CMDRRow1["text"]!=["PlaceHolder"]:
-            self.label.grid()
-            self.CMDRRow1.grid()
-            self.SQIDRow1.grid()
-            self.StateRow1.grid()
-            return
             
     DetectedCommanders={}            
     def analysis(self,cmdr, is_beta, system, entry, client):
