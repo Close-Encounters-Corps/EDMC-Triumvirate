@@ -34,6 +34,7 @@ import Tkinter as tk
 import sys
 from modules.player import Player 
 from config import config
+import modules
 
 
 
@@ -70,6 +71,7 @@ this.SysFactionAllegiance = None # variable for allegiance of controlling factio
 this.Nag=0
 this.cmdr_SQID=None    #variable for allegiance check
 this.CMDR=None
+this.CMDRFID=None
 this.SRVmode,this.Fightermode=False,False
 this.old_time=0  
 this.fuel=0
@@ -94,11 +96,12 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
     Debug.plugin_prefs(frame,this.client_version,4)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
-    nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton).grid(row = 6, column = 0,sticky="NW")
-    hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
-    #release.versionInSettings(frame, cmdr, is_beta,8)
+    this.FF.plugin_prefs(frame, cmdr, is_beta,6)
+    nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton).grid(row = 7, column = 0,sticky="NW")
+    hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,8)
+    #release.versionInSettings(frame, cmdr, is_beta,9)
    # entry=nb.Entry(frame,None)
-    nb.Label(frame,text="В случае возникновения проблем с плагином \nили в случае, если Вы поставили неправильное сообщество в гугл-форме, \nпишите в личку Дискорда Казаков#4700").grid(row=9,column=0,sticky="NW")
+    nb.Label(frame,text="В случае возникновения проблем с плагином \nили в случае, если Вы поставили неправильное сообщество в гугл-форме, \nпишите в личку Дискорда Казаков#4700").grid(row=10,column=0,sticky="NW")
                     
         
     
@@ -115,21 +118,18 @@ def prefs_changed(cmdr, is_beta):
     this.release.prefs_changed(cmdr, is_beta)
     this.patrol.prefs_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
+    this.FF.prefs_changed(cmdr, is_beta)
     config.set('Triumvirate:AllowEasterEggs', this.AllowEasternEggsButton.get())
     this.AllowEasternEggs=this.AllowEasternEggsButton.get()
-    
-    
     Debug.prefs_changed()
     
-
-def Alegiance_get(CMDR):
-        
-    
+def Alegiance_get(CMDR):    
     debug("Community Check started")
     url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"        
     with closing(requests.get(url, stream=True)) as r:
         reader = csv.reader(r.iter_lines(), delimiter='\t')
         next(reader)
+
             
             
         for row in reader:
@@ -172,6 +172,7 @@ def plugin_start(plugin_dir):
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     this.plugin_dir=plugin_dir
+    FF.FriendFoe.plugin_start(plugin_dir,this.version)
 
     return 'Triumvirate-{}'.format(this.version)
     
@@ -182,8 +183,37 @@ def plugin_stop():
     debug('Stopping the plugin')
     this.patrol.plugin_stop()
     
-def plugin_app(parent):
+def configMigrateFromPre120to120():
+    config.set('Triumvirate:AllowEasterEggs',   config.getint('AllowEasterEggs'))
+    config.set('Triumvirate:AutoUpdate',        config.getint('AutoUpdate'))
+    config.set('Triumvirate:CopyPatrolAdr',     config.getint('CopyPatrolAdr'))
+    config.set('Triumvirate:Debug',             config.getint('CanonnDebug'))
+    config.set('Triumvirate:HideCodex',         config.getint('Canonn:HideCodex'))
+    config.set('Triumvirate:HideFactions',      config.getint('Hidefactions'))
+    config.set('Triumvirate:HideMyShips',       config.getint('HideMyShips'))
+    config.set('Triumvirate:HideNews',          config.getint('HideNews'))
+    config.set('Triumvirate:HidePatrol',        config.getint('HidePatrol'))
+    config.set('Triumvirate:NoVoices',          config.getint('NoVoices'))
+    config.set('Triumvirate:RemoveBackup',      config.getint('Canonn:RemoveBackup'))
+    config.delete('AllowEasterEggs')
+    config.delete('AutoUpdate')
+    config.delete('CopyPatrolAdr')
+    config.delete('CanonnDebug')
+    config.delete('Canonn:HideCodex')
+    config.delete('Hidefactions')
+    config.delete('HideMyShips')
+    config.delete('HideNews')
+    config.delete('HidePatrol')
+    config.delete('NoVoices')
+    config.delete('Canonn:RemoveBackup')
+    config.set("Triumvirate:NewOptionFormat",1)
+    plug.show_error("Triumvirate config Migration Complete")
+    error("Config Mirgration Complete")
 
+def plugin_app(parent):
+    
+    if config.getint("Triumvirate:NewOptionFormat")==0:configMigrateFromPre120to120()
+        
     this.parent = parent
     #create a new frame as a containier for the status
     padx, pady = 10, 5  # formatting
@@ -201,6 +231,9 @@ def plugin_app(parent):
     this.news = news.CECNews(table,1)
     this.release = release.Release(table,this.version,2)
     this.patrol = patrol.CanonnPatrol(table,3)
+    this.FF = FF.FriendFoe(table,4)
+    debug("Before Throwing var")
+    FF.FF=this.FF
     whitelist=whiteList(parent)
     whitelist.fetchData()
     #for plugin in plug.PLUGINS:
@@ -226,6 +259,7 @@ def CMDR_Catch(cmdr):
         return
     debug("CMDR_Catched")
     this.CMDR=cmdr
+    FF.CMDR_Fetch(cmdr)
     Alegiance_get(cmdr)
    
 def journal_entry(cmdr, is_beta, system, station, entry, state):
@@ -235,6 +269,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     # capture some stats when we launch not read for that yet
     startup_stats(cmdr)
     CMDR_Catch(cmdr)
+
 
 
     
@@ -314,8 +349,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     this.patrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     this.codexcontrol.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     whiteList.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
-    materialReport.submit(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, x, y, z, body, lat,
-                          lon, client)
+    materialReport.submit(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, x, y, z, body, lat,lon, client)
 
 
     #legacy to canonn
@@ -328,7 +362,8 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
     legacy.shipscan(cmdr, is_beta, system, station, entry)
-    Return= Return or modules.Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons,this.SRVmode,this.Fightermode)
+    Return= modules.Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons,this.SRVmode,this.Fightermode) or Return 
+    Return = FF.analysis(cmdr, is_beta, system, entry, client) or Return 
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
@@ -371,6 +406,7 @@ this.plug_start=False
 
 
 def dashboard_entry(cmdr, is_beta, entry):
+    debug("CMDR Appear JE")
     debug(entry)
     CMDR_Catch(cmdr)
     if this.plug_start==0:
@@ -420,11 +456,16 @@ def cmdr_data(data, is_beta):
     '''
     We have new data on our commander
     '''
+
     #debug(json.dumps(data,indent=4))
     cAPI=data
     debug(cAPI["commander"]["name"])#["commander"]["name"]
     CMDR_Catch(cAPI["commander"]["name"])
     this.patrol.cmdr_data(data, is_beta)
+
+
+def cmdrCapture(cmdr,is_beta=None):
+    pass
 
 
 def startup_stats(cmdr):

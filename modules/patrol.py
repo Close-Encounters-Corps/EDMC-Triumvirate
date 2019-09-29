@@ -219,10 +219,10 @@ class CanonnPatrol(Frame):
         self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Triumvirate.patrol')
         
         
-        self.canonnbtn=tk.IntVar(value=config.getint("HidePatrol"))
-        self.factionbtn=tk.IntVar(value=config.getint("Hidefactions"))
-        self.hideshipsbtn=tk.IntVar(value=config.getint("HideMyShips"))
-        self.copypatrolbtn=tk.IntVar(value=config.getint("CopyPatrolAdr"))
+        self.canonnbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HidePatrol"))
+        self.factionbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HideFactions"))
+        self.hideshipsbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HideMyShips"))
+        self.copypatrolbtn=tk.IntVar(value=config.getint('Triumvirate:'+"CopyPatrolAdr"))
         
         self.canonn=self.canonnbtn.get()
         self.faction=self.factionbtn.get()
@@ -632,6 +632,7 @@ class CanonnPatrol(Frame):
 
 
     def download(self):
+
         while self.SQID is None:
             debug("Waiting CMDR's squadron")
             time.sleep(5)
@@ -698,10 +699,10 @@ class CanonnPatrol(Frame):
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
         "Called to get a tk Frame for the settings dialog."
         
-        self.canonnbtn=tk.IntVar(value=config.getint("HidePatrol"))
-        self.factionbtn=tk.IntVar(value=config.getint("Hidefactions"))
-        self.hideshipsbtn=tk.IntVar(value=config.getint("HideMyShips"))
-        self.copypatrolbtn=tk.IntVar(value=config.getint("CopyPatrolAdr"))
+        self.canonnbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HidePatrol"))
+        self.factionbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HideFactions"))
+        self.hideshipsbtn=tk.IntVar(value=config.getint('Triumvirate:'+"HideMyShips"))
+        self.copypatrolbtn=tk.IntVar(value=config.getint('Triumvirate:'+"CopyPatrolAdr"))
         
         self.canonn=self.canonnbtn.get()
         self.faction=self.factionbtn.get()
@@ -760,10 +761,10 @@ class CanonnPatrol(Frame):
             
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set('HidePatrol', self.canonnbtn.get())      
-        config.set('Hidefactions', self.factionbtn.get())      
-        config.set('HideMyShips', self.hideshipsbtn.get())      
-        config.set('CopyPatrolAdr', self.copypatrolbtn.get())      
+        config.set('Triumvirate:HidePatrol', self.canonnbtn.get())      
+        config.set('Triumvirate:HideFactions', self.factionbtn.get())      
+        config.set('Triumvirate:HideMyShips', self.hideshipsbtn.get())      
+        config.set('Triumvirate:CopyPatrolAdr', self.copypatrolbtn.get())      
         
         self.canonn=self.canonnbtn.get()
         self.faction=self.factionbtn.get()

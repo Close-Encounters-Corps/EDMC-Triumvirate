@@ -81,9 +81,9 @@ class Release(Frame):
         
         self.installed=False
         
-        self.auto=tk.IntVar(value=config.getint("AutoUpdate"))                
-        self.novoices=tk.IntVar(value=config.getint("NoVoices"))                
-        self.rmbackup=tk.IntVar(value=config.getint("RemoveBackup"))                
+        self.auto=tk.IntVar(value=config.getint('Triumvirate:'+"AutoUpdate"))                
+        self.novoices=tk.IntVar(value=config.getint('Triumvirate:'+"NoVoices"))                
+        self.rmbackup=tk.IntVar(value=config.getint('Triumvirate:'+"RemoveBackup"))                
         
         self.columnconfigure(1, weight=1)
         self.grid(row = gridrow, column = 0, sticky="NSEW",columnspan=2)
@@ -107,11 +107,11 @@ class Release(Frame):
         self.update()
         #self.hyperlink.bind('<Configure>', self.hyperlink.configure_event)
         
-        debug(config.get('Canonn:RemoveBackup'))
+        debug(config.get('Triumvirate:RemoveBackup'))
         
-        if self.rmbackup.get() == 1  and config.get('Canonn:RemoveBackup') != "None":
-            delete_dir=config.get('Canonn:RemoveBackup')
-            debug('Canonn:RemoveBackup {}'.format(delete_dir))
+        if self.rmbackup.get() == 1  and config.get('Triumvirate:RemoveBackup') != "None":
+            delete_dir=config.get('Triumvirate:RemoveBackup')
+            debug('Triumvirate:RemoveBackup {}'.format(delete_dir))
             try:
                 shutil.rmtree(delete_dir)
                 
@@ -119,7 +119,7 @@ class Release(Frame):
                 error("Cant delete {}".format(delete_dir))
                 
             ## lets not keep trying
-            config.set('Canonn:RemoveBackup',"None")
+            config.set('Triumvirate:RemoveBackup',"None")
             
         
     def update(self):    
@@ -201,9 +201,9 @@ class Release(Frame):
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
         "Called to get a tk Frame for the settings dialog."
 
-        self.auto=tk.IntVar(value=config.getint("AutoUpdate"))
-        self.rmbackup=tk.IntVar(value=config.getint("RemoveBackup"))
-        self.novoices=tk.IntVar(value=config.getint("NoVoices"))
+        self.auto=tk.IntVar(value=config.getint('Triumvirate:'+"AutoUpdate"))
+        self.rmbackup=tk.IntVar(value=config.getint('Triumvirate:'+"RemoveBackup"))
+        self.novoices=tk.IntVar(value=config.getint('Triumvirate:'+"NoVoices"))
         
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
@@ -216,9 +216,9 @@ class Release(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set('AutoUpdate', self.auto.get())      
-        config.set('RemoveBackup', self.rmbackup.get())      
-        config.set('NoVoices', self.novoices.get())   
+        config.set('Triumvirate:AutoUpdate', self.auto.get())      
+        config.set('Triumvirate:RemoveBackup', self.rmbackup.get())      
+        config.set('Triumvirate:NoVoices', self.novoices.get())   
         
 
 
@@ -273,7 +273,7 @@ class Release(Frame):
         
         
         if self.rmbackup.get() == 1:
-            config.set('Canonn:RemoveBackup',"{}.disabled".format(Release.plugin_dir))
+            config.set('Triumvirate:RemoveBackup',"{}.disabled".format(Release.plugin_dir))
             
         debug("Upgrade complete")    
             
@@ -284,7 +284,7 @@ class Release(Frame):
         
     @classmethod            
     def get_auto(cls):
-        return tk.IntVar(value=config.getint("AutoUpdate")).get()
+        return tk.IntVar(value=config.getint('Triumvirate:'+"AutoUpdate")).get()
         
     @classmethod    
     def plugin_start(cls,plugin_dir):

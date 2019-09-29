@@ -77,12 +77,14 @@ class CodexTypes(Frame):
             parent
         )
 
+
         self.waiting = True
 
-        self.hidecodexbtn = tk.IntVar(value=config.getint("Canonn:HideCodex"))
+        self.hidecodexbtn = tk.IntVar(value=config.getint("Triumvirate:HideCodex"))
         self.hidecodex = self.hidecodexbtn.get()
 
         self.container = Frame(self)
+
         self.container.columnconfigure(1, weight=1)
         # self.tooltip=Frame(self)
         # self.tooltip.columnconfigure(1, weight=1)
@@ -240,8 +242,7 @@ class CodexTypes(Frame):
     def plugin_prefs(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
-        self.hidecodexbtn = tk.IntVar(value=config.getint("Canonn:HideCodex"))
-
+        self.hidecodexbtn = tk.IntVar(value=config.getint("Triumvirate:HideCodex"))
         self.hidecodex = self.hidecodexbtn.get()
 
         frame = nb.Frame(parent)
@@ -255,12 +256,14 @@ class CodexTypes(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set('Canonn:HideCodex', self.hidecodexbtn.get())
+
+        config.set('Triumvirate:HideCodex', self.hidecodexbtn.get())
 
         self.hidecodex = self.hidecodexbtn.get()
 
         # dont check the retval
         # self.visible()
+
 
     def visible(self):
 

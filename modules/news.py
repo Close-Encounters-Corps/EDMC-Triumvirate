@@ -79,7 +79,7 @@ class CECNews(Frame):
             parent
         )
 
-        self.hidden=tk.IntVar(value=config.getint('HideNews'))                
+        self.hidden=tk.IntVar(value=config.getint('Triumvirate:HideNews'))                
         
         self.news_data=[]
         self.columnconfigure(1, weight=1)
@@ -155,7 +155,7 @@ class CECNews(Frame):
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
         'Called to get a tk Frame for the settings dialog.'
 
-        self.hidden=tk.IntVar(value=config.getint('HideNews'))
+        self.hidden=tk.IntVar(value=config.getint('Triumvirate:HideNews'))
         
         #frame = nb.Frame(parent)
         #frame.columnconfigure(1, weight=1)
@@ -175,6 +175,6 @@ class CECNews(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         'Called when the user clicks OK on the settings dialog.'
-        config.set('HideNews', self.hidden.get())      
+        config.set('Triumvirate:HideNews', self.hidden.get())      
         if self.visible():
             self.news_update()
