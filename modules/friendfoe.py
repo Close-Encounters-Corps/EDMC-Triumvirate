@@ -211,6 +211,7 @@ class FriendFoe ( Frame ):
             InaraConnect ( eventName="getCommanderProfile",eventData={"searchName":tCmdr},callback=self.InaraParse ).start ()
             self.listOffset ( tCmdr,tCMDRData [0],tCMDRData [1],tCMDRData [2],tCMDRData [3] )
             self.DetectedCommanders [tCmdr] = tCMDRData
+            connectToFFBase(tCmdr)
             debug ( tCmdr )
         
     def connectToFFBase ( tCmdr ):
@@ -340,7 +341,7 @@ class InaraConnect ( threading.Thread ):
             isDeveloped = True
         else:
             debug ( "Release in github" )
-            isDeveloped = True
+            isDeveloped = False
 
         return isDeveloped
             
