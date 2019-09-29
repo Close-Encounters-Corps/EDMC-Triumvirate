@@ -172,6 +172,7 @@ def plugin_start(plugin_dir):
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     this.plugin_dir=plugin_dir
+    FF.FriendFoe.plugin_start(plugin_dir,this.version)
 
     return 'Triumvirate-{}'.format(this.version)
     
@@ -231,6 +232,8 @@ def plugin_app(parent):
     this.release = release.Release(table,this.version,2)
     this.patrol = patrol.CanonnPatrol(table,3)
     this.FF = FF.FriendFoe(table,4)
+    debug("Before Throwing var")
+    FF.FF=this.FF
     whitelist=whiteList(parent)
     whitelist.fetchData()
     #for plugin in plug.PLUGINS:
@@ -256,6 +259,7 @@ def CMDR_Catch(cmdr):
         return
     debug("CMDR_Catched")
     this.CMDR=cmdr
+    FF.CMDR_Fetch(cmdr)
     Alegiance_get(cmdr)
    
 def journal_entry(cmdr, is_beta, system, station, entry, state):
