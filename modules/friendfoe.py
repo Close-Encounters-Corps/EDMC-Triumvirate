@@ -110,7 +110,7 @@ class FriendFoe ( Frame ):
         
         self.label = tk.Label ( self, text=  "Свой чужой:" )
         self.label.grid ( row = 0, column = 0, sticky=sticky )
-        self.label.grid_remove()
+        self.label.grid_remove ()
         
         CurrentRow = 1
         Rows = 4#tk.IntVar(value=config.getint('Triumvirate:'+"FFRows"))
@@ -120,17 +120,17 @@ class FriendFoe ( Frame ):
             debug ( index )
             setattr ( self,"CMDRRow" + str ( index ),ReleaseLink ( self ) )
             getattr ( self,"CMDRRow" + str ( index ) ).grid ( row = index, column = 0, sticky=sticky )
-            getattr(self,"CMDRRow"+str(index)).grid_remove()
+            getattr ( self,"CMDRRow" + str ( index ) ).grid_remove ()
             debug ( getattr ( self,"CMDRRow" + str ( index ) ) )
 
 
             setattr ( self,"SQIDRow" + str ( index ), ReleaseLink ( self ) )
             getattr ( self,"SQIDRow" + str ( index ) ).grid ( row = index, column = 1, sticky=sticky )
-            getattr(self,"SQIDRow"+str(index)).grid_remove()
+            getattr ( self,"SQIDRow" + str ( index ) ).grid_remove ()
 
             setattr ( self,"StateRow" + str ( index ),  tk.Label ( self, text=  "state" ) )
             getattr ( self,"StateRow" + str ( index ) ).grid ( row = index, column = 2, sticky=sticky )
-            getattr(self,"StateRow"+str(index)).grid_remove()
+            getattr ( self,"StateRow" + str ( index ) ).grid_remove ()
 
             CurrentRow = CurrentRow + 1
 
@@ -151,15 +151,19 @@ class FriendFoe ( Frame ):
         for index in self.RowsList:
             self.CMDRsInSight.append ( getattr ( self,"CMDRRow" + str ( index ) ) ['text'] )
         #self.CMDRsInSight=[self.CMDRRow1["text"],self.CMDRRow2["text"],self.CMDRRow3["text"],self.CMDRRow4["text"]]
-        debug ( dir(getattr ( self,"CMDRRow" + str ( 1 )) ))
+        debug ( dir ( getattr ( self,"CMDRRow" + str ( 1 ) ) ) )
         if targetCmdr in self.CMDRsInSight:      #Если запись об пилоте уже есть
-                                                 #на интерфейсе, обновить поля,
-                                                 #если нет,
-                                                 #то
+                                                 #на
+                                                                                            #интерфейсе,
+                                                                                            #обновить
+                                                                                            #поля,
+                                                                                            #если
+                                                                                            #нет,
+                                                                                            #то
                                                 #добавить
-                                                #ее
-                                                #наверх
-                                                #списка
+                                                                                           #ее
+                                                                                           #наверх
+                                                                                           #списка
             index = self.CMDRsInSight.index ( targetCmdr )
             if targetUrl is not None: 
                 getattr ( self,"CMDRRow" + str ( index + 1 ) ) ['url'] = targetUrl
@@ -174,10 +178,10 @@ class FriendFoe ( Frame ):
 
                 getattr ( self,"CMDRRow" + str ( index ) ) ['text'] = getattr ( self,"CMDRRow" + str ( index - 1 ) ) ['text']
                 try:getattr ( self,"CMDRRow" + str ( index ) ) ['url'] = getattr ( self,"CMDRRow" + str ( index - 1 ) ) ['url'] 
-                except: debug("nothing to move")
+                except: debug ( "nothing to move" )
                 getattr ( self,"SQIDRow" + str ( index ) ) ['text'] = getattr ( self,"SQIDRow" + str ( index - 1 ) ) ['text']
                 try:getattr ( self,"SQIDRow" + str ( index ) ) ['url'] = getattr ( self,"SQIDRow" + str ( index - 1 ) ) ['url']
-                except: debug("nothing to move")
+                except: debug ( "nothing to move" )
                 getattr ( self,"StateRow" + str ( index ) ) ['text'] = getattr ( self,"StateRow" + str ( index - 1 ) ) ['text']
             else: 
                 getattr ( self,"CMDRRow" + str ( index ) ) ['text'] = targetCmdr
@@ -186,7 +190,7 @@ class FriendFoe ( Frame ):
                 getattr ( self,"SQIDRow" + str ( index ) ) ['url'] = targetSquadronUrl
                 getattr ( self,"StateRow" + str ( index ) ) ['text'] = state
 
-        self.label.grid()
+        self.label.grid ()
         for index in  ( self.RowsList ):
             if getattr ( self,"CMDRRow" + str ( index ) ) ['text'] != "PlaceHolder":
                 getattr ( self,"CMDRRow" + str ( index ) ).grid () 
@@ -208,10 +212,11 @@ class FriendFoe ( Frame ):
                 tCMDRData [1] = entry.get ( "SquadronID","N/A" )
             elif entry ["ScanStage"] == 3:
                 tCMDRData [1] = entry.get ( "SquadronID","N/A" )
-            InaraConnect ( eventName="getCommanderProfile",eventData={"searchName":tCmdr},callback=self.InaraParse ).start ()
+            elif tCmdr not in self.DetectedCommanders:
+                InaraConnect ( eventName="getCommanderProfile",eventData={"searchName":tCmdr},callback=self.InaraParse ).start ()
             self.listOffset ( tCmdr,tCMDRData [0],tCMDRData [1],tCMDRData [2],tCMDRData [3] )
             self.DetectedCommanders [tCmdr] = tCMDRData
-            connectToFFBase(tCmdr)
+            self.connectToFFBase ( tCmdr )
             debug ( tCmdr )
         
     def connectToFFBase ( tCmdr ):
@@ -220,15 +225,17 @@ class FriendFoe ( Frame ):
     def InaraParse ( self,entry ):
         debug ( "Starting analysys of Inara Response" )
         entry = entry ["events"]
-        for i in entry: 
-            debug ( i )
-            tCMDR = i ["eventData"] ["userName"]
-            tCMDRUrl = i ["eventData"] ["inaraURL"]
-            tSQID = i ["eventData"] ["commanderWing"] ["wingName"]
-            tSQIDUrl = i ["eventData"] ["commanderWing"] ["inaraURL"]
-            self.DetectedCommanders[tCMDR][0]=tCMDRUrl
-            self.DetectedCommanders[tCMDR][2]=tSQIDUrl
-            self.listOffset ( tCMDR,tCMDRUrl,tSQID,tSQIDUrl )
+        
+        for i in entry:
+            if i ["eventStatus"]==200:
+                debug ( i )
+                tCMDR = i ["eventData"] ["userName"]
+                tCMDRUrl = i ["eventData"] ["inaraURL"]
+                tSQID = i ["eventData"] ["commanderWing"] ["wingName"]
+                tSQIDUrl = i ["eventData"] ["commanderWing"] ["inaraURL"]
+                self.DetectedCommanders [tCMDR] [0] = tCMDRUrl
+                self.DetectedCommanders [tCMDR] [2] = tSQIDUrl
+                self.listOffset ( tCMDR,tCMDRUrl,tSQID,tSQIDUrl )
 
 
     def plugin_prefs ( self, parent, cmdr, is_beta,gridrow ):          
