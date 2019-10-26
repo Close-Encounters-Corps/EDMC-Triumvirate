@@ -121,7 +121,7 @@ class FriendFoe ( Frame ):
             setattr ( self,"CMDRRow" + str ( index ),ReleaseLink ( self ) )
             getattr ( self,"CMDRRow" + str ( index ) ).grid ( row = index, column = 0, sticky=sticky )
             getattr ( self,"CMDRRow" + str ( index ) ).grid_remove ()
-            debug ( getattr ( self,"CMDRRow" + str ( index ) ) )
+            #debug ( getattr ( self,"CMDRRow" + str ( index ) ) )
 
 
             setattr ( self,"SQIDRow" + str ( index ), ReleaseLink ( self ) )
@@ -147,11 +147,10 @@ class FriendFoe ( Frame ):
 
     
     def listOffset ( self,targetCmdr,targetUrl = None,targetSquadron = "N/A",targetSquadronUrl = None,state = "N/A" ):
-        self.CMDRsInSight = []
+        debug(targetCmdr,targetUrl,targetSquadron ,targetSquadronUrl ,state )
+        self.CMDRsInSight = []    
         for index in self.RowsList:
             self.CMDRsInSight.append ( getattr ( self,"CMDRRow" + str ( index ) ) ['text'] )
-        #self.CMDRsInSight=[self.CMDRRow1["text"],self.CMDRRow2["text"],self.CMDRRow3["text"],self.CMDRRow4["text"]]
-        debug ( dir ( getattr ( self,"CMDRRow" + str ( 1 ) ) ) )
         if targetCmdr in self.CMDRsInSight:      #Если запись об пилоте уже есть
                                                  #на
                                                                                             #интерфейсе,
@@ -164,18 +163,17 @@ class FriendFoe ( Frame ):
                                                                                            #ее
                                                                                            #наверх
                                                                                            #списка
+            debug("updating info for CMDR={} with data TURL={}, TSQID={}, SQIDURL={}, State={}".format(targetCmdr,targetUrl,targetSquadron,targetSquadronUrl,state))
             index = self.CMDRsInSight.index ( targetCmdr )
-            if targetUrl is not None: 
-                getattr ( self,"CMDRRow" + str ( index + 1 ) ) ['url'] = targetUrl
-            if getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text'] == "PlaceHolder": getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text'] = targetSquadron
-            if targetSquadronUrl is not None:
-               getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['url'] = targetSquadronUrl
-            if getattr ( self,"StateRow" + str ( index + 1 ) ) ['text'] == "PlaceHolder": getattr ( self,"StateRow" + str ( index + 1 ) ) ['text'] = state
+            if targetUrl !=None: getattr ( self,"CMDRRow" + str ( index + 1 ) ) ['url'] = targetUrl
+            if targetSquadron !="N/A":getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text']  = targetSquadron
+            if targetSquadronUrl !=None:getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['url'] = targetSquadronUrl
+            if state !="N/A":getattr ( self,"StateRow" + str ( index + 1 ) ) ['text'] = state
             return
 
         for index in reversed ( self.RowsList ):
             if index != 1:
-
+                debug("moving data from {}".format(index))
                 getattr ( self,"CMDRRow" + str ( index ) ) ['text'] = getattr ( self,"CMDRRow" + str ( index - 1 ) ) ['text']
                 try:getattr ( self,"CMDRRow" + str ( index ) ) ['url'] = getattr ( self,"CMDRRow" + str ( index - 1 ) ) ['url'] 
                 except: debug ( "nothing to move" )
@@ -183,7 +181,8 @@ class FriendFoe ( Frame ):
                 try:getattr ( self,"SQIDRow" + str ( index ) ) ['url'] = getattr ( self,"SQIDRow" + str ( index - 1 ) ) ['url']
                 except: debug ( "nothing to move" )
                 getattr ( self,"StateRow" + str ( index ) ) ['text'] = getattr ( self,"StateRow" + str ( index - 1 ) ) ['text']
-            else: 
+            else:
+                debug("Adding info to table: CMDR={}, TURL={}, TSQID={}, SQIDURL={}, State={}".format(targetCmdr,targetUrl,targetSquadron,targetSquadronUrl,state))
                 getattr ( self,"CMDRRow" + str ( index ) ) ['text'] = targetCmdr
                 getattr ( self,"CMDRRow" + str ( index ) ) ['url'] = targetUrl
                 getattr ( self,"SQIDRow" + str ( index ) ) ['text'] = targetSquadron
@@ -193,6 +192,7 @@ class FriendFoe ( Frame ):
         self.label.grid ()
         for index in  ( self.RowsList ):
             if getattr ( self,"CMDRRow" + str ( index ) ) ['text'] != "PlaceHolder":
+                debug("Showing up data from row "+index)
                 getattr ( self,"CMDRRow" + str ( index ) ).grid () 
                 getattr ( self,"SQIDRow" + str ( index ) ).grid ()
                 getattr ( self,"StateRow" + str ( index ) ).grid ()
@@ -219,7 +219,7 @@ class FriendFoe ( Frame ):
             self.connectToFFBase ( tCmdr )
             debug ( tCmdr )
         
-    def connectToFFBase ( tCmdr ):
+    def connectToFFBase (self, tCmdr ):
         pass
 
     def InaraParse ( self,entry ):
@@ -310,26 +310,28 @@ class InaraConnect ( threading.Thread ):
         
     def __init__ ( self,eventName = None,eventData = None,EventsJSON = None,callback = None ):
         threading.Thread.__init__ ( self )
-        self.payload = {"header":{},"events":[]}
-        self.payload ["header"] ["appName"] = "Triumvirate"  
-        self.payload ["header"] ["appVersion"] = FriendFoe.version
-        if FriendFoe.inaraKey is not None:
-            self.payload ["header"] ["APIkey"] = FriendFoe.inaraKey 
-        else:Inara_Prefs ( cmdr ) 
-        self.payload ["header"] ["commanderName"] = FriendFoe.CMDR 
-        #self.payload["header"]["commanderFrontierID"]=this.load.CMDR
-        if eventName is not None:
-            EventsJSON = {"eventName":eventName,"eventTimestamp":time.strftime ( "%Y-%m-%dT%H:%M:%SZ" ,time.gmtime () ),"eventData":eventData}
-            #self.payload["events"][0]["eventName"]=eventName
-            #self.payload["events"][0]["eventTimestamp"]=time.strftime("%Y-%m-%dT%H:%M:%SZ"
-            #,time.gmtime())
-            #self.payload["events"][0]["eventData"]=eventData
-            self.payload ["events"].append ( EventsJSON )
-        elif EventsJSON is not None:
-            self.payload ["events"].append ( EventsJSON )
+        if config.getint ( 'Triumvirate:' + "InaraSwitch" ) == 1  :
+            if FriendFoe.inaraKey is not None:
+                self.payload ["header"] ["APIkey"] = FriendFoe.inaraKey 
+            else:Inara_Prefs ( cmdr ) 
+            self.payload = {"header":{},"events":[]}
+            self.payload ["header"] ["appName"] = "Triumvirate"  
+            self.payload ["header"] ["appVersion"] = FriendFoe.version
 
-        #self.returner=returner
-        self.callback = callback
+            self.payload ["header"] ["commanderName"] = FriendFoe.CMDR 
+            #self.payload["header"]["commanderFrontierID"]=this.load.CMDR
+            if eventName is not None:
+                EventsJSON = {"eventName":eventName,"eventTimestamp":time.strftime ( "%Y-%m-%dT%H:%M:%SZ" ,time.gmtime () ),"eventData":eventData}
+                #self.payload["events"][0]["eventName"]=eventName
+                #self.payload["events"][0]["eventTimestamp"]=time.strftime("%Y-%m-%dT%H:%M:%SZ"
+                #,time.gmtime())
+                #self.payload["events"][0]["eventData"]=eventData
+                self.payload ["events"].append ( EventsJSON )
+            elif EventsJSON is not None:
+                self.payload ["events"].append ( EventsJSON )
+
+            #self.returner=returner
+            self.callback = callback
 
 
     @classmethod
