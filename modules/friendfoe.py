@@ -202,22 +202,23 @@ class FriendFoe ( Frame ):
             
     DetectedCommanders = {}            
     def analysis ( self,cmdr, is_beta, system, entry, client ):
-        if entry ["event"] == "ShipTargeted" and entry ["TargetLocked"] == True and entry ["ScanStage"] >= 1 and "$cmdr_decorate" in entry ["PilotName"]:
-            debug ( "Yay" )
-            tCMDRData = [ None,None,None,None ] #DetectedCommanders={cmdr1:[tUrl,tSQID,tSQIDUrl,state],}
+        if self.FFSwitch==1:
+            if entry ["event"] == "ShipTargeted" and entry ["TargetLocked"] == True and entry ["ScanStage"] >= 1 and "$cmdr_decorate" in entry ["PilotName"]:
+                debug ( "Yay" )
+                tCMDRData = [ None,None,None,None ] #DetectedCommanders={cmdr1:[tUrl,tSQID,tSQIDUrl,state],}
             
-            tCmdr = entry ["PilotName"].split ( "=" ) [1].replace ( ";","" )
-            if tCmdr in self.DetectedCommanders:
-                tCMDRData = self.DetectedCommanders [tCmdr]
-                tCMDRData [1] = entry.get ( "SquadronID","N/A" )
-            elif entry ["ScanStage"] == 3:
-                tCMDRData [1] = entry.get ( "SquadronID","N/A" )
-            elif tCmdr not in self.DetectedCommanders:
-                InaraConnect ( eventName="getCommanderProfile",eventData={"searchName":tCmdr},callback=self.InaraParse ).start ()
-            self.listOffset ( tCmdr,tCMDRData [0],tCMDRData [1],tCMDRData [2],tCMDRData [3] )
-            self.DetectedCommanders [tCmdr] = tCMDRData
-            self.connectToFFBase ( tCmdr )
-            debug ( tCmdr )
+                tCmdr = entry ["PilotName"].split ( "=" ) [1].replace ( ";","" )
+                if tCmdr in self.DetectedCommanders:
+                    tCMDRData = self.DetectedCommanders [tCmdr]
+                    tCMDRData [1] = entry.get ( "SquadronID","N/A" )
+                elif entry ["ScanStage"] == 3:
+                    tCMDRData [1] = entry.get ( "SquadronID","N/A" )
+                elif tCmdr not in self.DetectedCommanders:
+                    InaraConnect ( eventName="getCommanderProfile",eventData={"searchName":tCmdr},callback=self.InaraParse ).start ()
+                self.listOffset ( tCmdr,tCMDRData [0],tCMDRData [1],tCMDRData [2],tCMDRData [3] )
+                self.DetectedCommanders [tCmdr] = tCMDRData
+                self.connectToFFBase ( tCmdr )
+                debug ( tCmdr )
         
     def connectToFFBase (self, tCmdr ):
         pass
@@ -310,28 +311,28 @@ class InaraConnect ( threading.Thread ):
         
     def __init__ ( self,eventName = None,eventData = None,EventsJSON = None,callback = None ):
         threading.Thread.__init__ ( self )
-        if config.getint ( 'Triumvirate:' + "InaraSwitch" ) == 1  :
-            if FriendFoe.inaraKey is not None:
-                self.payload ["header"] ["APIkey"] = FriendFoe.inaraKey 
-            else:Inara_Prefs ( cmdr ) 
-            self.payload = {"header":{},"events":[]}
-            self.payload ["header"] ["appName"] = "Triumvirate"  
-            self.payload ["header"] ["appVersion"] = FriendFoe.version
+        
+        if FriendFoe.inaraKey is not None:
+            self.payload ["header"] ["APIkey"] = FriendFoe.inaraKey 
+        else:Inara_Prefs ( cmdr ) 
+        self.payload = {"header":{},"events":[]}
+        self.payload ["header"] ["appName"] = "Triumvirate"  
+        self.payload ["header"] ["appVersion"] = FriendFoe.version
 
-            self.payload ["header"] ["commanderName"] = FriendFoe.CMDR 
-            #self.payload["header"]["commanderFrontierID"]=this.load.CMDR
-            if eventName is not None:
-                EventsJSON = {"eventName":eventName,"eventTimestamp":time.strftime ( "%Y-%m-%dT%H:%M:%SZ" ,time.gmtime () ),"eventData":eventData}
-                #self.payload["events"][0]["eventName"]=eventName
-                #self.payload["events"][0]["eventTimestamp"]=time.strftime("%Y-%m-%dT%H:%M:%SZ"
-                #,time.gmtime())
-                #self.payload["events"][0]["eventData"]=eventData
-                self.payload ["events"].append ( EventsJSON )
-            elif EventsJSON is not None:
-                self.payload ["events"].append ( EventsJSON )
+        self.payload ["header"] ["commanderName"] = FriendFoe.CMDR 
+        #self.payload["header"]["commanderFrontierID"]=this.load.CMDR
+        if eventName is not None:
+            EventsJSON = {"eventName":eventName,"eventTimestamp":time.strftime ( "%Y-%m-%dT%H:%M:%SZ" ,time.gmtime () ),"eventData":eventData}
+            #self.payload["events"][0]["eventName"]=eventName
+            #self.payload["events"][0]["eventTimestamp"]=time.strftime("%Y-%m-%dT%H:%M:%SZ"
+            #,time.gmtime())
+            #self.payload["events"][0]["eventData"]=eventData
+            self.payload ["events"].append ( EventsJSON )
+        elif EventsJSON is not None:
+            self.payload ["events"].append ( EventsJSON )
 
-            #self.returner=returner
-            self.callback = callback
+        #self.returner=returner
+        self.callback = callback
 
 
     @classmethod
