@@ -45,8 +45,8 @@ class Debug:
         "Called when the user clicks OK on the settings dialog."
         config.set('CanonnDebug', cls.debugvar.get())      
         
-def debug(value):
+def debug(*value):
     Debug.debug(value)
     
-def error(value):
+def error(*value):
     Debug.p(value)    
