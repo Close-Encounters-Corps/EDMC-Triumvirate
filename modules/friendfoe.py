@@ -147,7 +147,7 @@ class FriendFoe ( Frame ):
 
     
     def listOffset ( self,targetCmdr,targetUrl = None,targetSquadron = "N/A",targetSquadronUrl = None,state = "N/A" ):
-        debug(targetCmdr,targetUrl,targetSquadron ,targetSquadronUrl ,state )
+        debug(str(targetCmdr)+str(targetUrl)+str(targetSquadron) +str(targetSquadronUrl) +str(state) )
         self.CMDRsInSight = []    
         for index in self.RowsList:
             self.CMDRsInSight.append ( getattr ( self,"CMDRRow" + str ( index ) ) ['text'] )
