@@ -913,7 +913,7 @@ class CanonnPatrol(Frame):
                 ship_type=getShipType(shipsystems.get(system)[0].get("name"))
                 ship_name=shipsystems.get(system)[0].get("shipName")
                 ship_station=shipsystems.get(system)[0].get("station").get("name")
-                ship_info="Ваш{}, {} пристыкован(а) к {}".format(ship_type,ship_name,ship_station)
+                ship_info="Ваш{}, {} пристыкован(а) к {}".format(unicode(ship_type),unicode(ship_name),unicode(ship_station))
             elif ship_count == 2:
                 
                 if shipsystems.get(system)[0].get("station").get("name") == shipsystems.get(system)[1].get("station").get("name"):
