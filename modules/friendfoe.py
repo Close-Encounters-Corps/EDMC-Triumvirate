@@ -151,6 +151,7 @@ class FriendFoe ( Frame ):
         self.CMDRsInSight = []    
         for index in self.RowsList:
             self.CMDRsInSight.append ( getattr ( self,"CMDRRow" + str ( index ) ) ['text'] )
+        debug("CMDRs on screen"+str(self.CMDRsInSight))
         if targetCmdr in self.CMDRsInSight:      #Если запись об пилоте уже есть
                                                  #на
                                                                                             #интерфейсе,
@@ -192,7 +193,7 @@ class FriendFoe ( Frame ):
         self.label.grid ()
         for index in  ( self.RowsList ):
             if getattr ( self,"CMDRRow" + str ( index ) ) ['text'] != "PlaceHolder":
-                debug("Showing up data from row "+index)
+                debug("Showing up data from row "+str(index))
                 getattr ( self,"CMDRRow" + str ( index ) ).grid () 
                 getattr ( self,"SQIDRow" + str ( index ) ).grid ()
                 getattr ( self,"StateRow" + str ( index ) ).grid ()
@@ -202,20 +203,19 @@ class FriendFoe ( Frame ):
             
     DetectedCommanders = {}            
     def analysis ( self,cmdr, is_beta, system, entry, client ):
-        debug("FFAnalysis stage 1 "+self.FFSwitch)
-        if self.FFSwitch==1:
-            debug("FFAnalysis stage 2 "+entry)
+        #debug("FFAnalysis stage 1 "+str(self.FFSwitch.get()))
+        if self.FFSwitch.get()==1:
+            #debug("FFAnalysis stage 2 "+str(entry))
             if entry ["event"] == "ShipTargeted" and entry ["TargetLocked"] == True and entry ["ScanStage"] >= 1 and "$cmdr_decorate:#name=" in entry ["PilotName"]:
                 debug ( "Yay" )
                 tCMDRData = [ None,None,None,None ] #DetectedCommanders={cmdr1:[tUrl,tSQID,tSQIDUrl,state],}
-            
+                debug("CMDRs in memory"+str(self.DetectedCommanders))
                 tCmdr = entry ["PilotName"].split ( "=" ) [1].replace ( ";","" )
                 if tCmdr in self.DetectedCommanders:
                     tCMDRData = self.DetectedCommanders [tCmdr]
+                if entry ["ScanStage"] == 3:
                     tCMDRData [1] = entry.get ( "SquadronID","N/A" )
-                elif entry ["ScanStage"] == 3:
-                    tCMDRData [1] = entry.get ( "SquadronID","N/A" )
-                elif tCmdr not in self.DetectedCommanders:
+                if tCmdr not in self.DetectedCommanders:
                     InaraConnect ( eventName="getCommanderProfile",eventData={"searchName":tCmdr},callback=self.InaraParse ).start ()
                 self.listOffset ( tCmdr,tCMDRData [0],tCMDRData [1],tCMDRData [2],tCMDRData [3] )
                 self.DetectedCommanders [tCmdr] = tCMDRData
@@ -277,6 +277,7 @@ class FriendFoe ( Frame ):
         cmdrs = config.get ( 'inara_cmdrs' ) or []
         if cmdr in cmdrs and config.get ( 'inara_apikeys' ):
             cls.inaraKey = config.get ( 'inara_apikeys' ) [cmdrs.index ( cmdr )]
+        return cls.inaraKey
         
 
 
@@ -310,14 +311,15 @@ class InaraConnect ( threading.Thread ):
     url = "https://inara.cz/inapi/v1/"
         
         
-        
+    #payload={}    
     def __init__ ( self,eventName = None,eventData = None,EventsJSON = None,callback = None ):
         threading.Thread.__init__ ( self )
-        
+        debug("INARA: Requesting data")
+        self.payload = {"header":{},"events":[]}
         if FriendFoe.inaraKey is not None:
             self.payload ["header"] ["APIkey"] = FriendFoe.inaraKey 
-        else:Inara_Prefs ( cmdr ) 
-        self.payload = {"header":{},"events":[]}
+        else:self.payload ["header"] ["APIkey"] = Inara_Prefs ( cmdr ) 
+        
         self.payload ["header"] ["appName"] = "Triumvirate"  
         self.payload ["header"] ["appVersion"] = FriendFoe.version
 
