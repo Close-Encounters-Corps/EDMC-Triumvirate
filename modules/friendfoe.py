@@ -175,13 +175,13 @@ class FriendFoe ( Frame ):
         for index in reversed ( self.RowsList ):
             if index != 1:
                 debug("moving data from {}".format(index))
-                getattr ( self,"CMDRRow" + str ( index ) ) ['text'] = getattr ( self,"CMDRRow" + str ( index - 1 ) ) ['text']
-                try:getattr ( self,"CMDRRow" + str ( index ) ) ['url'] = getattr ( self,"CMDRRow" + str ( index - 1 ) ) ['url'] 
+                getattr ( self,"CMDRRow" + str ( index ) ) ['text'] = debug(getattr ( self,"CMDRRow" + str ( index - 1 ) ) ['text'])
+                try:getattr ( self,"CMDRRow" + str ( index ) ) ['url'] = debug(getattr ( self,"CMDRRow" + str ( index - 1 ) ) ['url'] )
                 except: debug ( "nothing to move" )
-                getattr ( self,"SQIDRow" + str ( index ) ) ['text'] = getattr ( self,"SQIDRow" + str ( index - 1 ) ) ['text']
-                try:getattr ( self,"SQIDRow" + str ( index ) ) ['url'] = getattr ( self,"SQIDRow" + str ( index - 1 ) ) ['url']
+                getattr ( self,"SQIDRow" + str ( index ) ) ['text'] = debug(getattr ( self,"SQIDRow" + str ( index - 1 ) ) ['text'])
+                try:getattr ( self,"SQIDRow" + str ( index ) ) ['url'] = debug(etattr ( self,"SQIDRow" + str ( index - 1 ) ) ['url'])
                 except: debug ( "nothing to move" )
-                getattr ( self,"StateRow" + str ( index ) ) ['text'] = getattr ( self,"StateRow" + str ( index - 1 ) ) ['text']
+                getattr ( self,"StateRow" + str ( index ) ) ['text'] = debug(getattr ( self,"StateRow" + str ( index - 1 ) ) ['text'])
             else:
                 debug("Adding info to table: CMDR={}, TURL={}, TSQID={}, SQIDURL={}, State={}".format(targetCmdr,targetUrl,targetSquadron,targetSquadronUrl,state))
                 getattr ( self,"CMDRRow" + str ( index ) ) ['text'] = targetCmdr
@@ -197,7 +197,7 @@ class FriendFoe ( Frame ):
                 getattr ( self,"CMDRRow" + str ( index ) ).grid () 
                 getattr ( self,"SQIDRow" + str ( index ) ).grid ()
                 getattr ( self,"StateRow" + str ( index ) ).grid ()
-                return
+        return
 
         
             
@@ -234,8 +234,10 @@ class FriendFoe ( Frame ):
                 debug ( i )
                 tCMDR = i ["eventData"] ["userName"]
                 tCMDRUrl = i ["eventData"] ["inaraURL"]
-                tSQID = i ["eventData"] ["commanderWing"] ["wingName"]
-                tSQIDUrl = i ["eventData"] ["commanderWing"] ["inaraURL"]
+                try:tSQID = i ["eventData"] ["commanderWing"] ["wingName"]
+                except:tSQID = "N/A"
+                try:tSQIDUrl = i ["eventData"] ["commanderWing"] ["inaraURL"]
+                except:tSQIDUrl=None
                 self.DetectedCommanders [tCMDR] [0] = tCMDRUrl
                 self.DetectedCommanders [tCMDR] [2] = tSQIDUrl
                 self.listOffset ( tCMDR,tCMDRUrl,tSQID,tSQIDUrl )

@@ -49,6 +49,8 @@ class Debug:
         
 def debug(value):
     Debug.debug(value)
+    return(value)
     
 def error(value):
     Debug.p(value)    
+    return(value)
