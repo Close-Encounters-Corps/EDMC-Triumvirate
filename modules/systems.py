@@ -102,7 +102,7 @@ class Systems():
         "Tz'utumu":[-86.21875,-99.5,-75],
         'Kutnal':[-87.4375,-63.9375,-89.78125],
         }
-
+    @classmethod
     def storeSystem(cls,system,pos):
         if cls.systemCache.has_key(system):
             debug("system {} already in cache".format(system))

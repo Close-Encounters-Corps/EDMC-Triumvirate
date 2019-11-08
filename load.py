@@ -273,9 +273,8 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         
         
     if entry.get("event") == "FSDJump":
-        Systems.storeSystem(system,entry.get("StarPos"))
-        this.DistFromStarLS=None
-        this.body = None
+        Systems.storeSystem(system, entry.get("StarPos"))
+        this.DistFromStarLS = None
         
     if ('Body' in entry):
             this.body = entry['Body']
