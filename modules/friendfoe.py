@@ -203,7 +203,7 @@ class FriendFoe ( Frame ):
     DetectedCommanders = {}            
     def analysis ( self,cmdr, is_beta, system, entry, client ):
         if self.FFSwitch==1:
-            if entry ["event"] == "ShipTargeted" and entry ["TargetLocked"] == True and entry ["ScanStage"] >= 1 and "$cmdr_decorate" in entry ["PilotName"]:
+            if entry ["event"] == "ShipTargeted" and entry ["TargetLocked"] == True and entry ["ScanStage"] >= 1 and "$cmdr_decorate:#name=" in entry ["PilotName"]:
                 debug ( "Yay" )
                 tCMDRData = [ None,None,None,None ] #DetectedCommanders={cmdr1:[tUrl,tSQID,tSQIDUrl,state],}
             
