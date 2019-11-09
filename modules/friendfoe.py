@@ -167,7 +167,10 @@ class FriendFoe ( Frame ):
             debug("updating info for CMDR={} with data TURL={}, TSQID={}, SQIDURL={}, State={}".format(targetCmdr,targetUrl,targetSquadron,targetSquadronUrl,state))
             index = self.CMDRsInSight.index ( targetCmdr )
             if targetUrl !=None: getattr ( self,"CMDRRow" + str ( index + 1 ) ) ['url'] = targetUrl
-            if targetSquadron !="N/A":getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text']  = targetSquadron
+            if targetSquadron !="N/A":
+                if getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text'] == "N/A":
+                    getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text']  = targetSquadron
+                else:getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text']  ="{}|{}".format(getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text'], targetSquadron)
             if targetSquadronUrl !=None:getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['url'] = targetSquadronUrl
             if state !="N/A":getattr ( self,"StateRow" + str ( index + 1 ) ) ['text'] = state
             return
@@ -197,7 +200,7 @@ class FriendFoe ( Frame ):
                 getattr ( self,"CMDRRow" + str ( index ) ).grid () 
                 getattr ( self,"SQIDRow" + str ( index ) ).grid ()
                 getattr ( self,"StateRow" + str ( index ) ).grid ()
-        return
+        #return
 
         
             
@@ -266,10 +269,6 @@ class FriendFoe ( Frame ):
 
     @classmethod
     def Inara_Prefs ( cls,cmdr = None ):
-     #if cmdr is None:
-         #try: cmdr=CMDR
-         #except: debug("Ebaniy Rot
-         #Etogo Casino")
      if config.getint ( 'Triumvirate:' + "InaraSwitch" ) == 1 and cmdr :
         cls.CMDR = cmdr
         
@@ -394,46 +393,46 @@ class InaraConnect ( threading.Thread ):
             
 
 
-# Worker thread
-def worker ():
-    while True:
-        item = queue.get ()
-        if not item:
-            return	# Closing
-        else:
-            ( url, data, callback ) = item
+## Worker thread
+#def worker ():
+#    while True:
+#        item = queue.get ()
+#        if not item:
+#            return	# Closing
+#        else:
+#            ( url, data, callback ) = item
 
-        retrying = 0
-        while retrying < 3:
-            try:
-                r = this.session.post ( url, data=json.dumps ( data, separators = ( ',', ':' ) ), timeout=_TIMEOUT )
-                r.raise_for_status ()
-                reply = r.json ()
-                status = reply ['header'] ['eventStatus']
-                if callback:
-                    callback ( reply )
-                elif status // 100 != 2:	# 2xx == OK (maybe with warnings)
-                    # Log fatal errors
-                    print 'Inara\t%s %s' % ( reply ['header'] ['eventStatus'], reply ['header'].get ( 'eventStatusText', '' ) )
-                    print json.dumps ( data, indent = 2, separators = ( ',', ': ' ) )
-                    plug.show_error ( _ ( 'Error: Inara {MSG}' ).format ( MSG = reply ['header'].get ( 'eventStatusText', status ) ) )
-                else:
-                    # Log individual
-                    # errors and
-                    # warnings
-                    for data_event, reply_event in zip ( data ['events'], reply ['events'] ):
-                        if reply_event ['eventStatus'] != 200:
-                            print 'Inara\t%s %s\t%s' % ( reply_event ['eventStatus'], reply_event.get ( 'eventStatusText', '' ), json.dumps ( data_event ) )
-                            if reply_event ['eventStatus'] // 100 != 2:
-                                plug.show_error ( _ ( 'Error: Inara {MSG}' ).format ( MSG = '%s, %s' % ( data_event ['eventName'], reply_event.get ( 'eventStatusText', reply_event ['eventStatus'] ) ) ) )
+#        retrying = 0
+#        while retrying < 3:
+#            try:
+#                r = this.session.post ( url, data=json.dumps ( data, separators = ( ',', ':' ) ), timeout=_TIMEOUT )
+#                r.raise_for_status ()
+#                reply = r.json ()
+#                status = reply ['header'] ['eventStatus']
+#                if callback:
+#                    callback ( reply )
+#                elif status // 100 != 2:	# 2xx == OK (maybe with warnings)
+#                    # Log fatal errors
+#                    print 'Inara\t%s %s' % ( reply ['header'] ['eventStatus'], reply ['header'].get ( 'eventStatusText', '' ) )
+#                    print json.dumps ( data, indent = 2, separators = ( ',', ': ' ) )
+#                    plug.show_error ( _ ( 'Error: Inara {MSG}' ).format ( MSG = reply ['header'].get ( 'eventStatusText', status ) ) )
+#                else:
+#                    # Log individual
+#                    # errors and
+#                    # warnings
+#                    for data_event, reply_event in zip ( data ['events'], reply ['events'] ):
+#                        if reply_event ['eventStatus'] != 200:
+#                            print 'Inara\t%s %s\t%s' % ( reply_event ['eventStatus'], reply_event.get ( 'eventStatusText', '' ), json.dumps ( data_event ) )
+#                            if reply_event ['eventStatus'] // 100 != 2:
+#                                plug.show_error ( _ ( 'Error: Inara {MSG}' ).format ( MSG = '%s, %s' % ( data_event ['eventName'], reply_event.get ( 'eventStatusText', reply_event ['eventStatus'] ) ) ) )
  
 
-                break
-            except:
-                if __debug__: print_exc ()
-                retrying += 1
-        else:
-            if callback:
-                callback ( None )
-            else:
-                plug.show_error ( _ ( "Error: Can't connect to Inara" ) )
+#                break
+#            except:
+#                if __debug__: print_exc ()
+#                retrying += 1
+#        else:
+#            if callback:
+#                callback ( None )
+#            else:
+#                plug.show_error ( _ ( "Error: Can't connect to Inara" ) )
