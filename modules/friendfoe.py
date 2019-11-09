@@ -124,7 +124,7 @@ class FriendFoe ( Frame ):
             #debug ( getattr ( self,"CMDRRow" + str ( index ) ) )
 
 
-            setattr ( self,"SQIDRow" + str ( index ), ReleaseLink ( self ) )
+            setattr ( self,"SQIDRow" + str ( index ), ReleaseLink ( self ,url=  "None") )
             getattr ( self,"SQIDRow" + str ( index ) ).grid ( row = index, column = 1, sticky=sticky )
             getattr ( self,"SQIDRow" + str ( index ) ).grid_remove ()
 
