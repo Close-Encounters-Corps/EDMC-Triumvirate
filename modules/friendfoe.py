@@ -167,10 +167,8 @@ class FriendFoe ( Frame ):
             debug("updating info for CMDR={} with data TURL={}, TSQID={}, SQIDURL={}, State={}".format(targetCmdr,targetUrl,targetSquadron,targetSquadronUrl,state))
             index = self.CMDRsInSight.index ( targetCmdr )
             if targetUrl !=None: getattr ( self,"CMDRRow" + str ( index + 1 ) ) ['url'] = targetUrl
-            if targetSquadron !="N/A":
-                if getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text'] == "N/A":
-                    getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text']  = targetSquadron
-                else:getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text']  ="{}|{}".format(getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text'], targetSquadron)
+            if targetSquadron !="N/A": getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text']  = targetSquadron
+                
             if targetSquadronUrl !=None:getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['url'] = targetSquadronUrl
             if state !="N/A":getattr ( self,"StateRow" + str ( index + 1 ) ) ['text'] = state
             return
@@ -211,7 +209,7 @@ class FriendFoe ( Frame ):
             #debug("FFAnalysis stage 2 "+str(entry))
             if entry ["event"] == "ShipTargeted" and entry ["TargetLocked"] == True and entry ["ScanStage"] >= 1 and "$cmdr_decorate:#name=" in entry ["PilotName"]:
                 debug ( "Yay" )
-                tCMDRData = [ None,None,None,None ] #DetectedCommanders={cmdr1:[tUrl,tSQID,tSQIDUrl,state],}
+                tCMDRData = [ "N/A",None,None,None ] #DetectedCommanders={cmdr1:[tUrl,tSQID,tSQIDUrl,state],}
                 debug("CMDRs in memory"+str(self.DetectedCommanders))
                 tCmdr = entry ["PilotName"].split ( "=" ) [1].replace ( ";","" )
                 if tCmdr in self.DetectedCommanders:
@@ -232,6 +230,12 @@ class FriendFoe ( Frame ):
         debug ( "Starting analysys of Inara Response" )
         entry = entry ["events"]
         
+        #if getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text'] == "N/A":
+        #            getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text']  = targetSquadron
+        #        else:getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text']  ="{}|{}".format(getattr ( self,"SQIDRow" + str ( index + 1 ) ) ['text'], targetSquadron)
+
+
+
         for i in entry:
             if i ["eventStatus"]==200:
                 debug ( i )
@@ -241,9 +245,14 @@ class FriendFoe ( Frame ):
                 except:tSQID = "N/A"
                 try:tSQIDUrl = i ["eventData"] ["commanderWing"] ["inaraURL"]
                 except:tSQIDUrl=None
-                self.DetectedCommanders [tCMDR] [0] = tCMDRUrl
+                
+                self.DetectedCommanders [tCMDR]  = tCMDRUrl
+                if self.DetectedCommanders [tCMDR] [1] == "N/A" or self.DetectedCommanders [tCMDR] [1] == "PlaceHolder":
+                    self.DetectedCommanders [tCMDR] [1] = tSQID
+                else: self.DetectedCommanders [tCMDR] [1] ="{}|{}".format(self.DetectedCommanders [tCMDR] [1], tSQID)
                 self.DetectedCommanders [tCMDR] [2] = tSQIDUrl
-                self.listOffset ( tCMDR,tCMDRUrl,tSQID,tSQIDUrl )
+                #self.DetectedCommanders [tCMDR] [3]
+                self.listOffset ( tCMDR,tCMDRUrl,self.DetectedCommanders [tCMDR] [1],tSQIDUrl )
 
 
     def plugin_prefs ( self, parent, cmdr, is_beta,gridrow ):          
