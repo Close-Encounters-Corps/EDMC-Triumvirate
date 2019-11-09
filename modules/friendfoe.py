@@ -180,7 +180,7 @@ class FriendFoe ( Frame ):
                 try:getattr ( self,"CMDRRow" + str ( index ) ) ['url'] = debug(getattr ( self,"CMDRRow" + str ( index - 1 ) ) ['url'] )
                 except: debug ( "nothing to move" )
                 getattr ( self,"SQIDRow" + str ( index ) ) ['text'] = debug(getattr ( self,"SQIDRow" + str ( index - 1 ) ) ['text'])
-                try:getattr ( self,"SQIDRow" + str ( index ) ) ['url'] = debug(etattr ( self,"SQIDRow" + str ( index - 1 ) ) ['url'])
+                try:getattr ( self,"SQIDRow" + str ( index ) ) ['url'] = debug(getattr ( self,"SQIDRow" + str ( index - 1 ) ) ['url'])
                 except: debug ( "nothing to move" )
                 getattr ( self,"StateRow" + str ( index ) ) ['text'] = debug(getattr ( self,"StateRow" + str ( index - 1 ) ) ['text'])
             else:
