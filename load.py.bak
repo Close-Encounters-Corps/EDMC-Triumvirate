@@ -29,8 +29,8 @@ from modules.whitelist import whiteList
 import csv
 import plug
 import modules.Commands     
-import tkinter.ttk
-import tkinter as tk
+import ttk
+import Tkinter as tk
 import sys
 from modules.player import Player 
 from config import config
@@ -167,7 +167,7 @@ def plugin_start(plugin_dir):
     '''
     
     #print this.patrol
-    plugin_dir=str(plugin_dir)
+    plugin_dir=unicode(plugin_dir)
     release.Release.plugin_start(plugin_dir)
     debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)

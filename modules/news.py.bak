@@ -3,8 +3,8 @@
 Module to provide the news.
 '''
 
-import tkinter as tk
-from tkinter import Frame
+import Tkinter as tk
+from Tkinter import Frame
 import uuid
 from ttkHyperlinkLabel import HyperlinkLabel
 import requests
@@ -25,7 +25,7 @@ WRAP_LENGTH = 200
 def _callback(matches):
     id = matches.group(1)
     try:
-        return chr(int(id))
+        return unichr(int(id))
     except:
         return id
 

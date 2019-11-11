@@ -2,12 +2,12 @@
 import requests
 import sys
 import json
-from .emitter import Emitter
+from emitter import Emitter
 from urllib.parse import quote_plus
 from .debug import debug
 from .debug import debug,error
-from tkinter import Frame
-import tkinter as tk
+from Tkinter import Frame
+import Tkinter as tk
 from config import config
 import os
 import myNotebook as nb
@@ -24,7 +24,7 @@ class poiTypes(threading.Thread):
 
             
     def recycle(self):
-        print("Recycling Labels")
+        print "Recycling Labels"
         
         for label in self.lt:
             label.grid_remove()

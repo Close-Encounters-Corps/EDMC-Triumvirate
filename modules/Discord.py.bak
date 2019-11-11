@@ -99,7 +99,7 @@ def send(cmdr,action,params):    #
             if "Timestamp" in params:
                 embed.set_timestamp(str(datetime.datetime.utcfromtimestamp(time.time())+params["Timestamp"]) )
             else:embed.set_timestamp()
-            for key, entry  in params["Fields"].items():
+            for key, entry  in params["Fields"].iteritems():
                 #debug("webhook"+unicode(key)+unicode(entry))
                 embed.add_embed_field(name=key, value=entry)
             

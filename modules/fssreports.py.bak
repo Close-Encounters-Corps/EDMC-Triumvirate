@@ -2,12 +2,12 @@
 import requests
 import sys
 import json
-from .emitter import Emitter
+from emitter import Emitter
 from urllib.parse import quote_plus
-import urllib.request, urllib.parse, urllib.error
+import urllib
 from .debug import debug
 from .debug import debug,error
-from .systems import Systems
+from systems import Systems
 import random
 import time
 
@@ -78,7 +78,7 @@ class fssEmitter(Emitter):
         url="https://us-central1-canonn-api-236217.cloudfunctions.net/submitAXCZ"
         debug("gSubmitAXCZ {}".format(p.get("systemName")))
         
-        getstr="{}?{}".format(url,urllib.parse.urlencode(p))
+        getstr="{}?{}".format(url,urllib.urlencode(p))
         
         debug("gsubmit {}".format(getstr))
         r=requests.get(getstr)

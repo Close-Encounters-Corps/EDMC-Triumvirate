@@ -2,8 +2,8 @@
 Module to provide the news.
 """
 
-import tkinter as tk
-from tkinter import Frame
+import Tkinter as tk
+from Tkinter import Frame
 import uuid
 from ttkHyperlinkLabel import HyperlinkLabel
 import requests
@@ -12,11 +12,11 @@ import re
 import myNotebook as nb
 from config import config
 import zipfile
-import io
+import StringIO
 import os
 import shutil
 import threading
-from  .player import Player
+from  player import Player
 from .debug import debug
 from .debug import debug,error
 import plug
@@ -28,7 +28,7 @@ WRAP_LENGTH = 200
 def _callback(matches):
     id = matches.group(1)
     try:
-        return chr(int(id))
+        return unichr(int(id))
     except:
         return id
 
@@ -252,7 +252,7 @@ class Release(Frame):
         try:
             debug("Downloading new version")
             download=requests.get("https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip".format(tag_name), stream=True)
-            z = zipfile.ZipFile(io.StringIO(download.content))
+            z = zipfile.ZipFile(StringIO.StringIO(download.content))
             z.extractall(os.path.dirname(Release.plugin_dir))
         except:
             error("Download failed: {}".format(new_plugin_dir))
@@ -263,7 +263,7 @@ class Release(Frame):
         
         debug("disable the current plugin")
         try:
-            os.rename(Release.plugin_dir,str("{}.disabled".format(Release.plugin_dir)))
+            os.rename(Release.plugin_dir,unicode("{}.disabled".format(Release.plugin_dir)))
             debug("Renamed {} to {}".format(Release.plugin_dir,"{}.disabled".format(Release.plugin_dir)))
         except:
             error("Upgrade failed reverting: {}".format(new_plugin_dir))
@@ -288,7 +288,7 @@ class Release(Frame):
         
     @classmethod    
     def plugin_start(cls,plugin_dir):
-        cls.plugin_dir=str(plugin_dir)
+        cls.plugin_dir=unicode(plugin_dir)
 
 
 

@@ -3,8 +3,8 @@
 '''
     Модуль, осуществляющий поиск сквадронов и пилотов в базах данных ЕГУ, а в случае не обнаружения отправляющий новые данные 
 '''
-import Tkinter as tk
-from Tkinter import Frame
+import tkinter as tk
+from tkinter import Frame
 import uuid
 from ttkHyperlinkLabel import HyperlinkLabel
 import requests
@@ -13,8 +13,8 @@ import re
 import myNotebook as nb
 from config import config
 import threading
-from debug import Debug
-from debug import debug,error
+from .debug import debug
+from .debug import debug,error
 '''
 { "timestamp":"2019-04-29T19:27:30Z", 
 "event":"ShipTargeted", 
@@ -59,7 +59,7 @@ WRAP_LENGTH = 200
 def _callback(matches):
     id = matches.group(1)
     try:
-        return unichr(int(id))
+        return chr(int(id))
     except:
         return id
 

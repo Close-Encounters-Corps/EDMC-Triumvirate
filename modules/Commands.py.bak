@@ -1,6 +1,6 @@
 
 # -*- coding: utf-8 -*-
-from . import Discord
+import Discord
 import load
 import datetime
 from .debug import debug
@@ -94,11 +94,11 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,is_SRV,is_F
     if state['Role'] != None: return "Вы находитесь в экипаже, SOS отключено" # Эта команда прервет выполнение, если игрок находится в мульткрю    
     if  is_SRV == True: return ("SOS отключен, пока вы в СРВ") #эта команда прервет выполнение, если игрок находится в СРВ (Если ЕДМС передаст эту инфу)
     if is_Fighter == True: return ("SOS отключен, пока вы в Истребителе")
-    if DistFromStarLS is not None: Distance = str(",\n" + str(DistFromStarLS) + " Св.Сек.")
-    else:   Distance = str("")
+    if DistFromStarLS is not None: Distance = unicode(u",\n" + unicode(DistFromStarLS) + u" Св.Сек.")
+    else:   Distance = unicode("")
     
     debug(body)
-    if body is not None:Body = str(",\nу " + body)
+    if body is not None:Body = unicode(u",\nу " + body)
     else: Body = ""
 
     LifeSupport = state["Modules"]['LifeSupport']['Item']
@@ -122,40 +122,40 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,is_SRV,is_F
             time_to_go = datetime.timedelta(seconds=sec_to_go)
 
             params.update({"Etitle":"SOS",
-                        "EDesc":str("Требуется заправка"),
+                        "EDesc":unicode(u"Требуется заправка"),
                         "EColor":color,
                         "Avatar":"https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
                         "Foouter":"Расчетное время отключения:"  ,
                         "Timestamp":(time_to_go),
                         "Embed?":True,
                         "Fields":{
-                            str("Местоположение:"):str(system + Distance + Body),
-                            str("Топлива осталось:"):str(str(round(fuel["FuelMain"] + fuel["FuelReservoir"],2)) + " тонн"),
-                            str("Времени до отключения:"):str((time_to_go)),
+                            unicode(u"Местоположение:"):unicode(system + Distance + Body),
+                            unicode(u"Топлива осталось:"):unicode(str(round(fuel["FuelMain"] + fuel["FuelReservoir"],2)) + u" тонн"),
+                            unicode(u"Времени до отключения:"):unicode((time_to_go)),
                             }})
         else:
             params.update({"Etitle":"SOS",
-                        "EDesc":str("Требуется заправка"),
+                        "EDesc":unicode(u"Требуется заправка"),
                         "EColor":color,
                         "Avatar":"https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
                         
                         "Embed?":True,
                         "Fields":{
-                            str("Местоположение:"):str(system + Distance + Body),
-                            str("Топлива осталось:"):str(str(round(fuel["FuelMain"] + fuel["FuelReservoir"],2)) + " тонн"),
-                            str("Времени до отключения:"):str("Не кончится"),
+                            unicode(u"Местоположение:"):unicode(system + Distance + Body),
+                            unicode(u"Топлива осталось:"):unicode(str(round(fuel["FuelMain"] + fuel["FuelReservoir"],2)) + u" тонн"),
+                            unicode(u"Времени до отключения:"):unicode(u"Не кончится"),
                             }})
     else: params.update({"Etitle":"SOS",
-                        "EDesc":str("Срочно требуется топливо, произведено отключение всех систем!!!"),
+                        "EDesc":unicode(u"Срочно требуется топливо, произведено отключение всех систем!!!"),
                         "EColor":"16711680",
                         "Avatar":"https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
-                        "Foouter":str("Расчетное время смерти:"),
+                        "Foouter":unicode("Расчетное время смерти:"),
                         "Timestamp":(time_to_go),
                         "Embed?":True,
                         "Fields":{
-                            str("Местоположение:"):str(system + Distance + Body),
-                            str("Топлива осталось:"):str(str(round(fuel["FuelMain"] + fuel["FuelReservoir"],2)) + " тонн"),
-                            str("Кислород кончится через (прим.):"):LifeSupportList[LifeSupport],
+                            unicode(u"Местоположение:"):unicode(system + Distance + Body),
+                            unicode(u"Топлива осталось:"):unicode(str(round(fuel["FuelMain"] + fuel["FuelReservoir"],2)) + u" тонн"),
+                            unicode(u"Кислород кончится через (прим.):"):LifeSupportList[LifeSupport],
                             }})
     Discord.Sender(cmdr,"FuelAlarm",params)
     return "Сигнал о помощи послан, ожидайте помощь"

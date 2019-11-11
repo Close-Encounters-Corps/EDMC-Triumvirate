@@ -1,12 +1,12 @@
 ﻿# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import threading
 import requests
-from urllib import quote_plus
+from urllib.parse import quote_plus
 import sys
 from  math import sqrt,pow,trunc
-from debug import Debug
-from debug import debug,error
+from .debug import debug
+from .debug import debug,error
 
 
 class Reporter(threading.Thread):
@@ -18,7 +18,7 @@ class Reporter(threading.Thread):
         try:
             requests.get(self.payload)
         except:
-            print('Issue posting message ' + str(sys.exc_info()[0]))
+            print(('Issue posting message ' + str(sys.exc_info()[0])))
             
 
 

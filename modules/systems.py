@@ -1,8 +1,8 @@
-﻿from urllib import quote_plus
+﻿from urllib.parse import quote_plus
 import requests
 import json
-from debug import Debug
-from debug import debug,error
+from .debug import debug
+from .debug import debug,error
 
 class Systems():
 
@@ -12,7 +12,7 @@ class Systems():
     '''
     systemCache={
         'Euryale':[35.375,-68.96875,24.8125],
-        'Othel':[13.59375 , -93.59375 , 2.46875]
+        'Othel':[13.59375 , -93.59375 , 2.46875],
         'LTT 305':[27.6875,-75.28125,21.8125],
         'LFT 78':[33,-58.875,21.71875],
         'Algreit':[-8.3125,-11.78125,53.28125],
