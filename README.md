@@ -67,3 +67,7 @@ Elite Dangerous Market Connector (EDMC) с плагином Triumvirate явля
  
 ## Disclaimer
 EDMC-Triumvirate was created using assets and imagery from Elite Dangerous, with the permission of Frontier Developments plc, for non-commercial purposes. It is not endorsed by nor reflects the views or opinions of Frontier Developments and no employee of Frontier Developments was involved in the making of it.
+
+EDMC-Triumvirate use data from [Canonn API V2](https://api.canonn.tech/), [ED Star Map (EDSM)](https://www.edsm.net/), [Elite BGS](https://elitebgs.app/), with permision of their owners
+
+EDMC-Triumvirate based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), with permision of initial developers
