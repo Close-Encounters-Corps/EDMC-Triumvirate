@@ -123,17 +123,17 @@ class FriendFoe ( Frame ):
             getattr ( self,"CMDRRow" + str ( index ) ).grid_remove ()
             #debug ( getattr ( self,"CMDRRow" + str ( index ) ) )
 
-
-            setattr ( self,"SQIDRow" + str ( index ), ReleaseLink ( self ,url=  "None") )
+            setattr ( self,"SQIDRow" + str ( index ), ReleaseLink ( self ) )
+            getattr ( self,"SQIDRow" + str ( index ) )["url"]=None
             getattr ( self,"SQIDRow" + str ( index ) ).grid ( row = index, column = 1, sticky=sticky )
             getattr ( self,"SQIDRow" + str ( index ) ).grid_remove ()
-
+            #TODO Здесь и на R203 отключен показ столбца состояния, так как имеется вероятность, что необходимо будет оперативно выкатывать систему
             setattr ( self,"StateRow" + str ( index ),  tk.Label ( self, text=  "state" ) )
-            getattr ( self,"StateRow" + str ( index ) ).grid ( row = index, column = 2, sticky=sticky )
-            getattr ( self,"StateRow" + str ( index ) ).grid_remove ()
+            #getattr ( self,"StateRow" + str ( index ) ).grid ( row = index, column = 2, sticky=sticky )
+            #getattr ( self,"StateRow" + str ( index ) ).grid_remove ()
 
             CurrentRow = CurrentRow + 1
-
+            
     @classmethod    
     def plugin_start ( cls,plugin_dir,version ):
         #plugin_dir_name=plugin_dir.split("\\")[-1]
@@ -190,14 +190,16 @@ class FriendFoe ( Frame ):
                 getattr ( self,"SQIDRow" + str ( index ) ) ['text'] = targetSquadron
                 getattr ( self,"SQIDRow" + str ( index ) ) ['url'] = targetSquadronUrl
                 getattr ( self,"StateRow" + str ( index ) ) ['text'] = state
-
-        self.label.grid ()
-        for index in  ( self.RowsList ):
-            if getattr ( self,"CMDRRow" + str ( index ) ) ['text'] != "PlaceHolder":
-                debug("Showing up data from row "+str(index))
-                getattr ( self,"CMDRRow" + str ( index ) ).grid () 
-                getattr ( self,"SQIDRow" + str ( index ) ).grid ()
-                getattr ( self,"StateRow" + str ( index ) ).grid ()
+        
+        
+        if self.VisibilitySwitch.get()==1:
+            self.label.grid ()
+            for index in  ( self.RowsList ):
+                if getattr ( self,"CMDRRow" + str ( index ) ) ['text'] != "PlaceHolder":
+                    debug("Showing up data from row "+str(index))
+                    getattr ( self,"CMDRRow" + str ( index ) ).grid () 
+                    getattr ( self,"SQIDRow" + str ( index ) ).grid ()
+                    #getattr ( self,"StateRow" + str ( index ) ).grid ()
         #return
 
         
@@ -302,6 +304,11 @@ class FriendFoe ( Frame ):
         config.set ( 'Triumvirate:ResponderSwitch', self.ResponderSwitch.get () )      
         config.set ( 'Triumvirate:VisibilitySwitch', self.VisibilitySwitch.get () )   
         config.set ( 'Triumvirate:InaraSwitch', self.InaraSwitch.get () )
+        if self.VisibilitySwitch.get ()==0:
+            for index in self.RowsList:
+                getattr ( self,"StateRow" + str ( index ) ).grid_remove ()
+                getattr ( self,"CMDRRow" + str ( index ) ).grid_remove ()
+                getattr ( self,"SQIDRow" + str ( index ) ).grid_remove ()
         self.Inara_Prefs ( cmdr )
 
 
