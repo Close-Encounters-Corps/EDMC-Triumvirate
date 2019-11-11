@@ -5,7 +5,7 @@ import myNotebook as nb
 from config import config
 import datetime 
 
-class debug:
+class Debug:
         
     debugvar=tk.IntVar(value=config.getint("CanonnDebug"))
     client="Triumvirate"
@@ -46,7 +46,7 @@ class debug:
         config.set('CanonnDebug', cls.debugvar.get())      
         
 def debug(value):
-    debug.debug(value)
+    Debug.debug(value)
     
 def error(value):
-    debug.p(value)    
+    Debug.p(value)    

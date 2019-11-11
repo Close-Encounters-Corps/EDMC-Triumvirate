@@ -21,8 +21,9 @@ from modules import fssreports
 from modules import patrol
 from modules import friendfoe as FF
 from modules.systems import Systems
+from modules.debug import Debug
 from modules.debug import debug
-from modules.debug import debug
+
 from modules import materialReport
 from contextlib import closing
 from modules.whitelist import whiteList
@@ -57,7 +58,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.1.9'
+this.version='1.3.0'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
@@ -161,7 +162,7 @@ def Alegiance_get(CMDR,SQ_old):
 
 
    
-def plugin_start(plugin_dir):
+def plugin_start3(plugin_dir):
     '''
     Load Template plugin into EDMC
     '''
@@ -169,7 +170,7 @@ def plugin_start(plugin_dir):
     #print this.patrol
     plugin_dir=str(plugin_dir)
     release.Release.plugin_start(plugin_dir)
-    debug.setClient(this.client_version)
+    Debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     this.plugin_dir=plugin_dir
