@@ -93,7 +93,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.news.plugin_prefs(frame, cmdr, is_beta,1)
     this.release.plugin_prefs(frame, cmdr, is_beta,2)
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
-    debug.plugin_prefs(frame,this.client_version,4)
+    Debug.plugin_prefs(frame,this.client_version,4)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
     nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton).grid(row = 6, column = 0,sticky="NW")
     hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
@@ -120,7 +120,7 @@ def prefs_changed(cmdr, is_beta):
     this.AllowEasternEggs=this.AllowEasternEggsButton.get()
     
     
-    debug.prefs_changed()
+    Debug.prefs_changed()
     
 SQ=None
 def Alegiance_get(CMDR,SQ_old):

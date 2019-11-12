@@ -12,7 +12,7 @@ class Debug:
     
     @classmethod
     def setClient(cls,client):
-        debug.client=client
+        cls.client=client
             
     @classmethod
     def p(cls,value):
