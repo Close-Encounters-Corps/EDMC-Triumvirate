@@ -1,7 +1,7 @@
 
 # -*- coding: utf-8 -*-
 from . import Discord
-import load
+
 import datetime
 from .debug import debug
 
