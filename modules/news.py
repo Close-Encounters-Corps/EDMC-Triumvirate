@@ -120,7 +120,7 @@ class CECNews(Frame):
     def update(self):
         if self.visible():
             if self.news_data:
-                    feed = self.news_data.content.split("\r\n")
+                    feed = self.news_data.content.decode().split("\r\n")
                     lines=feed[self.news_pos]
                     news= lines.split("\t")
                     self.hyperlink['url'] = news[1]
