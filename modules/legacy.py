@@ -261,7 +261,7 @@ def shipscan(cmdr, is_beta, system, station, entry):
         scanedShips=[]
     if entry["event"]=='ShipTargeted' and entry["TargetLocked"]==True:
         if  entry['ScanStage']==3 :
-            scan={'Ship':entry["Ship"],"PilotName":entry["PilotName"],"PilotRank":entry["PilotRank"],"Faction":entry["Faction"]}
+            scan={'Ship':entry["Ship"],"PilotName":entry["PilotName"],"PilotRank":entry["PilotRank"],"Faction":entry.get("Faction")}
             if scan not in scanedShips:
                 scanedShips.append(scan)
                 url='https://docs.google.com/forms/d/e/1FAIpQLScdc9kTaPUG-e7Hi-Qi1BrAvFxHUefaaHlAUTSTrsZV586Wgw/formResponse?usp=pp_url'
