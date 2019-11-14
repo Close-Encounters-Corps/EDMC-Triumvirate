@@ -445,7 +445,7 @@ class CanonnPatrol(Frame):
         SystemsOvireden=[]
         url="https://docs.google.com/spreadsheets/d/e/2PACX-1vQQZFJ4O0nb3L1WJk5oMEPJrr1w5quBSnPRwSbz66XCYx0Lq6aAexm9s1t8N8iRxpdbUOtrhKqQMayY/pub?gid=0&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
-            reader = csv.reader(r.iter_lines(), delimiter='\t')
+            reader = csv.reader(r.iter_lines(decode_unicode=True), delimiter='\t')
             next(reader)
             for row in reader:
                 
@@ -564,7 +564,7 @@ class CanonnPatrol(Frame):
         canonnpatrol=[]
                
         with closing(requests.get(url, stream=True)) as r:
-            reader = csv.reader(r.iter_lines(), delimiter='\t')
+            reader = csv.reader(r.iter_lines(decode_unicode=True), delimiter='\t')
             next(reader)
             for row in reader:
                 
@@ -590,7 +590,7 @@ class CanonnPatrol(Frame):
         canonnpatrol = []
         url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMFJL2u0TbLMAQQ5zYixzgjjsNtGunZ9-PPZFheB4xzrjwR0JPPMcdMwqLm8ioVMp3MP4-k-JsIVzO/pub?gid=282559555&single=true&output=tsv"  
         with closing(requests.get(url, stream=True)) as r:
-            reader = csv.reader(r.iter_lines(), delimiter='\t')
+            reader = csv.reader(r.iter_lines(decode_unicode=True), delimiter='\t')
             next(reader)
             for row in reader:
 
