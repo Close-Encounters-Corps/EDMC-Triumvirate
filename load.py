@@ -311,12 +311,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
                           lon, client)
 
 
-    #legacy to canonn
-    Clegacy.statistics(cmdr, is_beta, system, station, entry, state)
-    Clegacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
-    Clegacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
-    Clegacy.faction_kill(cmdr, is_beta, system, station, entry, state)
-    Clegacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
+
 
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
