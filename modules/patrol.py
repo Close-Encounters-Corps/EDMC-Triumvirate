@@ -448,7 +448,7 @@ class CanonnPatrol(Frame):
             reader = csv.reader(r.iter_lines(decode_unicode=True), delimiter='\t')
             next(reader)
             for row in reader:
-                debug(row)
+                
                 squadron,system,x,y,z,TINF,TFAC,Description=row
                 bgsSysAndFac={system:TFAC}
                 instructions=   Description.format(TFAC,TINF)
