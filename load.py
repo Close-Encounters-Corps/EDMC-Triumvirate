@@ -15,7 +15,7 @@ from modules import hdreport
 from modules import news
 from modules import release
 from modules import legacy
-from modules import legacyCanonn as Clegacy
+
 from modules import clientreport
 from modules import fssreports
 from modules import patrol
@@ -58,7 +58,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.3.0'
+this.version='1.1.0'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
