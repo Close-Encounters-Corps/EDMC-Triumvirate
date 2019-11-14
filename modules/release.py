@@ -43,7 +43,7 @@ class ReleaseLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Fetching...",
+            text="Поиск",
             url=DEFAULT_URL,
             wraplength=50,  # updated in __configure_event below
             anchor=tk.NW
@@ -252,7 +252,7 @@ class Release(Frame):
         try:
             debug("Downloading new version")
             download=requests.get("https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip".format(tag_name), stream=True)
-            z = zipfile.ZipFile(io.StringIO(download.content))
+            z = zipfile.ZipFile(io.BytesIO(download.content))
             z.extractall(os.path.dirname(Release.plugin_dir))
         except:
             error("Download failed: {}".format(new_plugin_dir))
