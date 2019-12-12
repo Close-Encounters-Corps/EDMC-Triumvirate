@@ -2,14 +2,14 @@
 import requests
 import sys
 import json
-from .emitter import Emitter
+from emitter import Emitter
 from .debug import debug
 from .debug import debug,error
 from config import config
-import tkinter as tk
-from tkinter import Button
-from tkinter import Frame
-from .systems import Systems
+import Tkinter as tk
+from Tkinter import Button
+from Tkinter import Frame
+from systems import Systems
 from urllib.parse import quote_plus
 import glob
 import os

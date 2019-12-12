@@ -5,8 +5,8 @@ import threading
 import requests
 import sys
 import json
-from tkinter import Frame
-import tkinter as tk
+from Tkinter import Frame
+import Tkinter as tk
 from urllib.parse import quote_plus
 
 
@@ -97,7 +97,7 @@ class whiteList(Frame):
     def matchkeys(cls,event,entry):
         
         ev=json.loads(event)
-        for key in list(ev.keys()):
+        for key in ev.keys():
             if not entry.get(key) == ev.get(key):
                 return False
          

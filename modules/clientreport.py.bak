@@ -3,11 +3,11 @@ import threading
 import requests
 import sys
 import json
-from .emitter import Emitter
+from emitter import Emitter
 from urllib.parse import quote_plus
 from .debug import debug
 from .debug import debug,error
-from .release import Release
+from release import Release
 
 class clientReport(Emitter):
     

@@ -1,10 +1,10 @@
-﻿
-#coding=utf-8
+﻿# -*- coding: utf-8 -*-
 '''
-    Модуль, осуществляющий поиск сквадронов и пилотов в базах данных ЕГУ, а в случае не обнаружения отправляющий новые данные 
+Module to provide the news.
 '''
-import tkinter as tk
-from tkinter import Frame
+
+import Tkinter as tk
+from Tkinter import Frame
 import uuid
 from ttkHyperlinkLabel import HyperlinkLabel
 import requests
@@ -15,51 +15,17 @@ from config import config
 import threading
 from .debug import debug
 from .debug import debug,error
-'''
-{ "timestamp":"2019-04-29T19:27:30Z", 
-"event":"ShipTargeted", 
-"TargetLocked":true, 
-"Ship":"krait_mkii", 
-"Ship_Localised":"Krait Mk II", 
-"ScanStage":3, 
-"PilotName":"$cmdr_decorate:#name=GromoZekka;", 
-"PilotName_Localised":"КМДР GromoZekka", 
-"PilotRank":"Elite", 
-"SquadronID":"EGPU", 
-"ShieldHealth":78.094543, 
-"HullHealth":36.569859, 
-"LegalStatus":"Clean" }
 
-{ "timestamp":"2019-04-28T20:48:48Z", 
-"event":"ShipTargeted", 
-"TargetLocked":true, 
-"Ship":"orca", 
-"ScanStage":3, 
-"PilotName":"$npc_name_decorate:#name=Pit Thomsen;",
-"PilotName_Localised":"Pit Thomsen", 
-"PilotRank":"Dangerous", 
-"ShieldHealth":100.000000, 
-"HullHealth":100.000000, 
-"Faction":"Clayakarma Electronics Limited", 
-"LegalStatus":"Clean" }
-
-Заметка №1 отсеивать неписей стоит по конструкции "PilotName":"$npc_name_decorate:#name=Pit Thomsen;", где параметром, прямо указывающим на НПСишность является $npc_name_decorate
-Заметка №1.2 стоит посмотреть, как определяются нпс пилоты истребителей
-Заметка №2 скорее всего, проще всего определять имя пилота по той же строке, что и неписей
-Заметка №2.1 имеет смысл убирать #name= через строчные функции
-Заметка №3 модуль не должно быть видно, пока нет данных. так же как это реализовано в release.py
-'''
 
 REFRESH_CYCLES = 60 ## how many cycles before we refresh
 NEWS_CYCLE=60 * 1000 # 60 seconds
 DEFAULT_NEWS_URL = 'https://vk.com/close_encounters_corps'
 WRAP_LENGTH = 200
 
-
 def _callback(matches):
     id = matches.group(1)
     try:
-        return chr(int(id))
+        return unichr(int(id))
     except:
         return id
 
@@ -99,8 +65,7 @@ class NewsLink(HyperlinkLabel):
 
 
 
-
-class FriendFoe(Frame):
+class CECNews(Frame):
 
     def __init__(self, parent,gridrow):
         'Initialise the ``News``.'
@@ -114,13 +79,13 @@ class FriendFoe(Frame):
             parent
         )
 
-        self.hidden=tk.IntVar(value=config.getint('HideFF'))                
+        self.hidden=tk.IntVar(value=config.getint('HideNews'))                
         
         self.news_data=[]
         self.columnconfigure(1, weight=1)
         self.grid(row = gridrow, column = 0, sticky='NSEW',columnspan=2)
         
-        self.label=tk.Label(self, text=  'История целей:')
+        self.label=tk.Label(self, text=  'Новости:')
         self.label.grid(row = 0, column = 0, sticky=sticky)
         self.label.bind('<Button-1>',self.click_news)
         
@@ -179,7 +144,7 @@ class FriendFoe(Frame):
         
         if self.isvisible:
         
-            debug('Fetching FF')
+            debug('Fetching News')
             self.news_data = requests.get('https://docs.google.com/spreadsheets/d/1UnrH5ULSycKzySonUDA79aPBqxUbvNOEOSlW85NY1a0/export?&format=tsv')
             debug(self.news_data)
             #self.news_count=len(self.news_data)-1
@@ -190,11 +155,11 @@ class FriendFoe(Frame):
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
         'Called to get a tk Frame for the settings dialog.'
 
-        self.hidden=tk.IntVar(value=config.getint('HideFF'))
+        self.hidden=tk.IntVar(value=config.getint('HideNews'))
         
         #frame = nb.Frame(parent)
         #frame.columnconfigure(1, weight=1)
-        return nb.Checkbutton(parent, text='Скрыть Систему свой чужой', variable=self.hidden).grid(row = gridrow, column = 0,sticky='NSEW')
+        return nb.Checkbutton(parent, text='Скрыть новости СЕС', variable=self.hidden).grid(row = gridrow, column = 0,sticky='NSEW')
         
         #return frame
 
@@ -210,6 +175,6 @@ class FriendFoe(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         'Called when the user clicks OK on the settings dialog.'
-        config.set('HideFF', self.hidden.get())      
+        config.set('HideNews', self.hidden.get())      
         if self.visible():
             self.news_update()

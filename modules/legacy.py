@@ -1,12 +1,12 @@
 ﻿# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 import threading
 import requests
-from urllib import quote_plus
+from urllib.parse import quote_plus
 import sys
 from  math import sqrt,pow,trunc
-from debug import Debug
-from debug import debug,error
+from .debug import debug
+from .debug import debug,error
 
 
 class Reporter(threading.Thread):
@@ -18,7 +18,7 @@ class Reporter(threading.Thread):
         try:
             requests.get(self.payload)
         except:
-            print('Issue posting message ' + str(sys.exc_info()[0]))
+            print(('Issue posting message ' + str(sys.exc_info()[0])))
             
 
 
@@ -261,7 +261,7 @@ def shipscan(cmdr, is_beta, system, station, entry):
         scanedShips=[]
     if entry["event"]=='ShipTargeted' and entry["TargetLocked"]==True:
         if  entry['ScanStage']==3 :
-            scan={'Ship':entry["Ship"],"PilotName":entry["PilotName"],"PilotRank":entry["PilotRank"],"Faction":entry["Faction"]}
+            scan={'Ship':entry["Ship"],"PilotName":entry["PilotName"],"PilotRank":entry["PilotRank"],"Faction":entry.get("Faction")}
             if scan not in scanedShips:
                 scanedShips.append(scan)
                 url='https://docs.google.com/forms/d/e/1FAIpQLScdc9kTaPUG-e7Hi-Qi1BrAvFxHUefaaHlAUTSTrsZV586Wgw/formResponse?usp=pp_url'

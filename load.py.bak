@@ -15,23 +15,22 @@ from modules import hdreport
 from modules import news
 from modules import release
 from modules import legacy
-
+from modules import legacyCanonn as Clegacy
 from modules import clientreport
 from modules import fssreports
 from modules import patrol
 from modules import friendfoe as FF
 from modules.systems import Systems
-from modules.debug import Debug
 from modules.debug import debug
-
+from modules.debug import debug
 from modules import materialReport
 from contextlib import closing
 from modules.whitelist import whiteList
 import csv
 import plug
 import modules.Commands     
-import tkinter.ttk
-import tkinter as tk
+import ttk
+import Tkinter as tk
 import sys
 from modules.player import Player 
 from config import config
@@ -58,7 +57,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.3.0'
+this.version='1.1.9'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
@@ -93,7 +92,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.news.plugin_prefs(frame, cmdr, is_beta,1)
     this.release.plugin_prefs(frame, cmdr, is_beta,2)
     this.patrol.plugin_prefs(frame, cmdr, is_beta,3)
-    Debug.plugin_prefs(frame,this.client_version,4)
+    debug.plugin_prefs(frame,this.client_version,4)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta,5)
     nb.Checkbutton(frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton).grid(row = 6, column = 0,sticky="NW")
     hdreport.HDInspector(frame,cmdr, is_beta,this.client_version,7)
@@ -120,7 +119,7 @@ def prefs_changed(cmdr, is_beta):
     this.AllowEasternEggs=this.AllowEasternEggsButton.get()
     
     
-    Debug.prefs_changed()
+    debug.prefs_changed()
     
 SQ=None
 def Alegiance_get(CMDR,SQ_old):
@@ -129,7 +128,7 @@ def Alegiance_get(CMDR,SQ_old):
         debug("Community Check started")
         url="https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
-            reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t')
+            reader = csv.reader(r.iter_lines(), delimiter='\t')
             next(reader)
             
             
@@ -162,15 +161,15 @@ def Alegiance_get(CMDR,SQ_old):
 
 
    
-def plugin_start3(plugin_dir):
+def plugin_start(plugin_dir):
     '''
     Load Template plugin into EDMC
     '''
     
     #print this.patrol
-    plugin_dir=str(plugin_dir)
+    plugin_dir=unicode(plugin_dir)
     release.Release.plugin_start(plugin_dir)
-    Debug.setClient(this.client_version)
+    debug.setClient(this.client_version)
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     this.plugin_dir=plugin_dir
@@ -311,7 +310,12 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
                           lon, client)
 
 
-
+    #legacy to canonn
+    Clegacy.statistics(cmdr, is_beta, system, station, entry, state)
+    Clegacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
+    Clegacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
+    Clegacy.faction_kill(cmdr, is_beta, system, station, entry, state)
+    Clegacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
 
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)

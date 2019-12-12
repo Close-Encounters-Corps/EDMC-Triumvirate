@@ -4,9 +4,9 @@ import requests
 import sys
 import json
 import time
-from emitter import Emitter
-from debug import Debug
-from debug import debug,error
+from .emitter import Emitter
+from .debug import debug
+from .debug import debug,error
 
 
 '''

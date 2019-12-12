@@ -14,4 +14,4 @@ class Player(threading.Thread):
         
                 PlaySound("{}\\{}".format(self.plugin_dir,soundfile),SND_FILENAME)
         except:
-            print(("Issue playing sound " + str(sys.exc_info()[0])))    
+            print("Issue playing sound " + str(sys.exc_info()[0]))    

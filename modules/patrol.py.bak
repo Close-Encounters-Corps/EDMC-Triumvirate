@@ -3,8 +3,8 @@
 Patrols
 """
 
-import tkinter as tk
-from tkinter import Frame
+import Tkinter as tk
+from Tkinter import Frame
 import uuid
 from ttkHyperlinkLabel import HyperlinkLabel
 import requests
@@ -13,7 +13,7 @@ import re
 import myNotebook as nb
 from config import config
 import threading
-from .systems import Systems
+from systems import Systems
 import math
 from .debug import debug
 from .debug import debug, error
@@ -22,10 +22,10 @@ import os
 from contextlib import closing
 from urllib.parse import quote_plus
 from datetime import datetime
-from .release import Release
+from release import Release
 from l10n import Locale
 import time
-from . import legacy
+import legacy
 
 CYCLE=60 * 1000 * 60 # 60 minutes
 
@@ -125,7 +125,7 @@ def getShipType(key):
 def _callback(matches):
     id = matches.group(1)
     try:
-        return chr(int(id))
+        return unichr(int(id))
     except:
         return id
 
@@ -213,8 +213,8 @@ class CanonnPatrol(Frame):
         )
         self.ships=[]
         
-        self.IMG_PREV = tk.PhotoImage(file = '{}\\icons\\left_arrow.gif'.format(CanonnPatrol.plugin_dir))
-        self.IMG_NEXT = tk.PhotoImage(file = '{}\\icons\\right_arrow.gif'.format(CanonnPatrol.plugin_dir))
+        self.IMG_PREV = tk.PhotoImage(file = u'{}\\icons\\left_arrow.gif'.format(CanonnPatrol.plugin_dir))
+        self.IMG_NEXT = tk.PhotoImage(file = u'{}\\icons\\right_arrow.gif'.format(CanonnPatrol.plugin_dir))
         
         self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Triumvirate.patrol')
         
@@ -377,7 +377,7 @@ class CanonnPatrol(Frame):
         sa=[]
         active_states=bgs.get(state_name)
         if active_states:
-            sa=list(active_states[0].values())
+            sa=active_states[0].values()
         
         if sa:
             states=","
@@ -445,7 +445,7 @@ class CanonnPatrol(Frame):
         SystemsOvireden=[]
         url="https://docs.google.com/spreadsheets/d/e/2PACX-1vQQZFJ4O0nb3L1WJk5oMEPJrr1w5quBSnPRwSbz66XCYx0Lq6aAexm9s1t8N8iRxpdbUOtrhKqQMayY/pub?gid=0&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
-            reader = csv.reader(r.iter_lines(decode_unicode=True), delimiter='\t')
+            reader = csv.reader(r.iter_lines(), delimiter='\t')
             next(reader)
             for row in reader:
                 
@@ -470,7 +470,7 @@ class CanonnPatrol(Frame):
                     error("BGS Overide contains blank lines")
         
         debug(BGSOveride)        
-        debug("bgslist is "+str(self.bgsSystemsAndfactions))
+        debug("bgslist is "+unicode(self.bgsSystemsAndfactions))
         legacy.BGS.bgsTasksSet(self.bgsSystemsAndfactions)
         return BGSOveride, SystemsOvireden 
     
@@ -564,7 +564,7 @@ class CanonnPatrol(Frame):
         canonnpatrol=[]
                
         with closing(requests.get(url, stream=True)) as r:
-            reader = csv.reader(r.iter_lines(decode_unicode=True), delimiter='\t')
+            reader = csv.reader(r.iter_lines(), delimiter='\t')
             next(reader)
             for row in reader:
                 
@@ -590,7 +590,7 @@ class CanonnPatrol(Frame):
         canonnpatrol = []
         url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMFJL2u0TbLMAQQ5zYixzgjjsNtGunZ9-PPZFheB4xzrjwR0JPPMcdMwqLm8ioVMp3MP4-k-JsIVzO/pub?gid=282559555&single=true&output=tsv"  
         with closing(requests.get(url, stream=True)) as r:
-            reader = csv.reader(r.iter_lines(decode_unicode=True), delimiter='\t')
+            reader = csv.reader(r.iter_lines(), delimiter='\t')
             next(reader)
             for row in reader:
 
@@ -629,11 +629,14 @@ class CanonnPatrol(Frame):
         self.patrol_list=patrol_list
     
         
-
+    def SQID_set(self,SQID):
+        if SQID != "":
+            self.SQID=SQID
+        else: self.SQID="None"
 
     def download(self):
-        while self.SQID is None:
-            debug("Waiting CMDR's squadron")
+        while self.SQID ==None:
+            debug("Awaiting user Allegiance info")
             time.sleep(5)
         debug("Download Patrol Data")
         
@@ -782,7 +785,7 @@ class CanonnPatrol(Frame):
         
         event=json.loads(self.nearest.get("event"))
         debug("event {}".format(event))
-        for key in list(event.keys()):
+        for key in event.keys():
             if event.get(key):
                 debug("event key {} value {}".format(key,event.get(key)))
                 if not str(entry.get(key)).upper() == str(event.get(key)).upper():
@@ -887,7 +890,7 @@ class CanonnPatrol(Frame):
         
         #debug(json.dumps(data.get("ships"),indent=4))
         
-        for ship in list(data.get("ships").keys()):
+        for ship in data.get("ships").keys():
             
             if int(ship) != int(current_ship):
                 ship_system=data.get("ships").get(ship).get("starsystem").get("name")
@@ -903,7 +906,7 @@ class CanonnPatrol(Frame):
             #else:
                 #debug("skipping {}".format(ship))
         
-        for system in list(shipsystems.keys()):
+        for system in shipsystems.keys():
             ship_pos=Systems.edsmGetSystem(system)
             ship_count=len(shipsystems.get(system))
             #if system == "Celaeno":
@@ -918,11 +921,11 @@ class CanonnPatrol(Frame):
                 
                 if shipsystems.get(system)[0].get("station").get("name") == shipsystems.get(system)[1].get("station").get("name"):
                     ship_info="Ваш{} ({}) и ваш{} ({}) пристыкованы к {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name"))        
-                    #debug(ship_info)
+                    debug(ship_info)
                 else:
                 
                     ship_info="Ваш{} ({}) Пристыкован(а) к {} и ваш{} ({}) пристыкован к {}".format(getShipType(shipsystems.get(system)[0].get("name")),getShipType(shipsystems.get(system)[0].get("shipName")),shipsystems.get(system)[1].get("station").get("name"),getShipType(shipsystems.get(system)[1].get("name")),getShipType(shipsystems.get(system)[1].get("shipName")),shipsystems.get(system)[0].get("station").get("name"))        
-                    #debug(ship_info)
+                    debug(ship_info)
             else:
                 ship_info="У вас {} Кораблей в этой системе".format(ship_count)
                 #debug(ship_info)

@@ -3,8 +3,8 @@
 '''
     Модуль, осуществляющий поиск сквадронов и пилотов в базах данных ЕГУ, а в случае не обнаружения отправляющий новые данные 
 '''
-import tkinter as tk
-from tkinter import Frame
+import Tkinter as tk
+from Tkinter import Frame
 import uuid
 from ttkHyperlinkLabel import HyperlinkLabel
 import requests
@@ -59,7 +59,7 @@ WRAP_LENGTH = 200
 def _callback(matches):
     id = matches.group(1)
     try:
-        return chr(int(id))
+        return unichr(int(id))
     except:
         return id
 

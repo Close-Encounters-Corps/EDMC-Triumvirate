@@ -3,8 +3,8 @@
 Module to provide the news.
 '''
 
-import Tkinter as tk
-from Tkinter import Frame
+import tkinter as tk
+from tkinter import Frame
 import uuid
 from ttkHyperlinkLabel import HyperlinkLabel
 import requests
@@ -13,8 +13,8 @@ import re
 import myNotebook as nb
 from config import config
 import threading
-from debug import Debug
-from debug import debug,error
+from .debug import debug
+from .debug import debug,error
 
 
 REFRESH_CYCLES = 60 ## how many cycles before we refresh
@@ -25,7 +25,7 @@ WRAP_LENGTH = 200
 def _callback(matches):
     id = matches.group(1)
     try:
-        return unichr(int(id))
+        return chr(int(id))
     except:
         return id
 
@@ -120,7 +120,7 @@ class CECNews(Frame):
     def update(self):
         if self.visible():
             if self.news_data:
-                    feed = self.news_data.content.split("\r\n")
+                    feed = self.news_data.content.decode().split("\r\n")
                     lines=feed[self.news_pos]
                     news= lines.split("\t")
                     self.hyperlink['url'] = news[1]
