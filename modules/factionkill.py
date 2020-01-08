@@ -57,7 +57,7 @@ class FactionKill(Emitter):
         
     def setPayload(self):
         payload={}
-        payload["systemname"]=self.system
+        payload["systemName"]=self.system
         payload["cmdrName"]=self.cmdr  
         payload["rawEvent"]=self.entry
         payload["reward"]=self.entry["Reward"]
