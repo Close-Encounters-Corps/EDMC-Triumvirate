@@ -57,7 +57,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.1.11'
+this.version='1.1.12'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
@@ -318,16 +318,11 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
                           lon, client)
 
 
-    #legacy to canonn
-    Clegacy.statistics(cmdr, is_beta, system, station, entry, state)
-    Clegacy.CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client)
-    Clegacy.AXZone(cmdr, is_beta, system,x,y,z, station, entry, state)
-    Clegacy.faction_kill(cmdr, is_beta, system, station, entry, state)
-    Clegacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
+    
 
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr, system, station, entry, state)
-    legacy.shipscan(cmdr, is_beta, system, station, entry)
+    #legacy.shipscan(cmdr, is_beta, system, station, entry)
     Return= Return or modules.Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons,this.SRVmode,this.Fightermode)
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
