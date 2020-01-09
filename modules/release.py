@@ -107,7 +107,7 @@ class Release(Frame):
         self.update()
         #self.hyperlink.bind('<Configure>', self.hyperlink.configure_event)
         
-        #debug(config.get('Canonn:RemoveBackup'))
+        debug(config.get('Canonn:RemoveBackup'))
         
         if self.rmbackup.get() == 1  and config.get('Canonn:RemoveBackup') != "None":
             delete_dir=config.get('Canonn:RemoveBackup')
