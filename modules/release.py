@@ -111,7 +111,7 @@ class Release(Frame):
         
         if self.rmbackup.get() == 1  and config.get('Canonn:RemoveBackup') != "None":
             delete_dir=config.get('Canonn:RemoveBackup')
-            debug('Canonn:RemoveBackup {}'.format(delete_dir))
+            #debug('Canonn:RemoveBackup {}'.format(delete_dir))
             try:
                 shutil.rmtree(delete_dir)
                 
