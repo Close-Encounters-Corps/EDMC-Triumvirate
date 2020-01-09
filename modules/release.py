@@ -116,7 +116,8 @@ class Release(Frame):
                 shutil.rmtree(delete_dir)
                 
             except:
-                error("Cant delete {}".format(delete_dir))
+                pass
+                #error("Cant delete {}".format(delete_dir))
                 
             ## lets not keep trying
             config.set('Canonn:RemoveBackup',"None")
