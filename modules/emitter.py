@@ -72,7 +72,8 @@ class Emitter(threading.Thread):
                 Emitter.route=Emitter.urls.get("development")
             elif j.get("prerelease"):
                 debug("Prerelease in github")
-                Emitter.route=Emitter.urls.get("staging")
+                #Emitter.route=Emitter.urls.get("staging") Убрано что бы не блокировать отправку данных в период деплоя 3.5 едсм
+                Emitter.route=Emitter.urls.get("live")
             else:
                 debug("Release in github")
                 Emitter.route=Emitter.urls.get("live")
