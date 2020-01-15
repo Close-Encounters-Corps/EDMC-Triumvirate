@@ -135,6 +135,8 @@ def prefs_changed(cmdr, is_beta):
     
 SQ=None
 def Alegiance_get(CMDR,SQ_old):
+    if this.py3==False:
+        return "None"
     global SQ    
     if CMDR!= this.CMDR:
         debug("Community Check started")
@@ -192,7 +194,10 @@ def plugin_start(plugin_dir):
     '''
     Load Template plugin into EDMC
     '''
-    return plugin_start3(plugin_dir)
+    plugin_dir=str(plugin_dir)
+    Debug.setClient(this.client_version)
+    release.Release.plugin_start(plugin_dir)
+    return 'Triumvirate-{}-Py2-mode'.format(this.version)
     
 def plugin_stop():
     '''
@@ -222,7 +227,13 @@ class EDMCLink(HyperlinkLabel):
         "Handle resizing."
 
         self.configure(wraplength=event.width)
-        
+
+
+def kill_notification():
+    this.wrongEDMCBanner.destroy()
+    this.wrongEDMCBannerInstructions.destroy()
+    this.hyperlink.destroy()
+    this.button.destroy()
 
 def plugin_app(parent):
 
@@ -239,14 +250,17 @@ def plugin_app(parent):
     table.columnconfigure(1, weight=1)
     table.grid(sticky='NSEW')
     if this.py3==False:
-        wrongEDMCBanner=tk.Label(table,text=u"Устаревшая версия EDMC!",fg="red")
-        wrongEDMCBanner.grid(row=0, column=0, columnspan=1, sticky="NSEW")
-        wrongEDMCBanner.config(font=("Arial Black", 22))
-        wrongEDMCBannerInstructions=tk.Label(table,text="Плагин работает на несовместимой версии EDMC, \nработа всех функций не гарантируется",fg="red")
-        wrongEDMCBannerInstructions.grid(row=1, column=0, columnspan=1, sticky="NSEW")
-        wrongEDMCBannerInstructions.config(font=("Arial Black", 8))
-        hyperlink=EDMCLink(table)
-        hyperlink.grid(row = 2, column = 0)
+        tk.Label(table)
+        this.wrongEDMCBanner=tk.Label(table,text=u"Устаревшая версия EDMC!",fg="red")
+        this.wrongEDMCBanner.grid(row=0, column=0, columnspan=1, sticky="NSEW")
+        this.wrongEDMCBanner.config(font=("Arial Black", 22))
+        this.wrongEDMCBannerInstructions=tk.Label(table,text="Плагин работает на несовместимой версии EDMC, \nработа всех функций не гарантируется",fg="red")
+        this.wrongEDMCBannerInstructions.grid(row=1, column=0, columnspan=1, sticky="NSEW")
+        this.wrongEDMCBannerInstructions.config(font=("Arial Black", 8))
+        this.hyperlink=EDMCLink(table)
+        this.hyperlink.grid(row = 2, column = 0)
+        this.button=tk.Button(table, text="Нажмите, что бы скрыть предупреждение",command=kill_notification)
+        this.button.grid(row=3,column = 0)
     else:
         this.codexcontrol = codex.CodexTypes(table,0)
         this.news = news.CECNews(table,1)
