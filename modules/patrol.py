@@ -450,10 +450,11 @@ class CanonnPatrol(Frame):
         SystemsOvireden=[]
         url="https://docs.google.com/spreadsheets/d/e/2PACX-1vQQZFJ4O0nb3L1WJk5oMEPJrr1w5quBSnPRwSbz66XCYx0Lq6aAexm9s1t8N8iRxpdbUOtrhKqQMayY/pub?gid=0&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
-            reader = csv.reader(r.iter_lines(decode_unicode=True), delimiter='\t')
+            r.encoding = 'utf-8'
+            reader = csv.reader(r.iter_lines(decode_unicode=True), delimiter='\t')#
             next(reader)
             for row in reader:
-                
+                debug(row)
                 squadron,system,x,y,z,TINF,TFAC,Description=row
                 bgsSysAndFac={system:TFAC}
                 instructions=   Description.format(TFAC,TINF)
@@ -634,7 +635,12 @@ class CanonnPatrol(Frame):
         self.patrol_list=patrol_list
     
         
-
+    def SQID_set(self,SQ):
+        self.SQID
+        if SQ != "":
+            self.SQID=SQ
+        else: self.SQID="None"
+        debug("SQID In Patrol IS "+self.SQID)
 
     def download(self):
         while self.SQID is None:

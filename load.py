@@ -69,7 +69,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.2.0'
+this.version='1.1.12'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
@@ -161,7 +161,7 @@ def Alegiance_get(CMDR,SQ_old):
             debug("SQ ID IS OK")
             this.CMDR=CMDR
             Discord.SQID_set(SQ)
-            patrol.SQID_set(SQ) #Функция для отправки данных о сквадроне в модули, использовать как шаблон 
+            this.patrol.SQID_set(SQ) #Функция для отправки данных о сквадроне в модули, использовать как шаблон 
             return SQ 
         else: 
             if this.Nag==0:
