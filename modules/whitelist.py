@@ -1,13 +1,20 @@
-from urllib.parse import quote_plus
 from .debug import debug
 from .debug import debug,error
 import threading
 import requests
 import sys
 import json
-from tkinter import Frame
-import tkinter as tk
-from urllib.parse import quote_plus
+
+try: #py3
+    import tkinter as tk
+    from tkinter import Frame
+    from urllib.parse import quote_plus
+except: #py2
+    import Tkinter as tk
+    from Tkinter import Frame
+    from urllib import quote_plus
+
+
 
 
 class whiteListGetter(threading.Thread):

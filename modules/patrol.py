@@ -3,8 +3,14 @@
 Patrols
 """
 
-import tkinter as tk
-from tkinter import Frame
+try: #py3
+    import tkinter as tk
+    from tkinter import Frame
+    from urllib.parse import quote_plus
+except: #py2
+    import Tkinter as tk
+    from Tkinter import Frame
+    from urllib import quote_plus
 import uuid
 from ttkHyperlinkLabel import HyperlinkLabel
 import requests
@@ -20,7 +26,6 @@ from .debug import debug, error
 import csv
 import os
 from contextlib import closing
-from urllib.parse import quote_plus
 from datetime import datetime
 from .release import Release
 from l10n import Locale
@@ -213,8 +218,8 @@ class CanonnPatrol(Frame):
         )
         self.ships=[]
         
-        self.IMG_PREV = tk.PhotoImage(file = '{}\\icons\\left_arrow.gif'.format(CanonnPatrol.plugin_dir))
-        self.IMG_NEXT = tk.PhotoImage(file = '{}\\icons\\right_arrow.gif'.format(CanonnPatrol.plugin_dir))
+        self.IMG_PREV = tk.PhotoImage(file = os.path.join(CanonnPatrol.plugin_dir,"icons","left_arrow.gif"))
+        self.IMG_NEXT = tk.PhotoImage(file = os.path.join(CanonnPatrol.plugin_dir,"icons","right_arrow.gif"))
         
         self.patrol_config=os.path.join(Release.plugin_dir,'data','EDMC-Triumvirate.patrol')
         

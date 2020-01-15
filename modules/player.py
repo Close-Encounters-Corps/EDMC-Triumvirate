@@ -1,5 +1,5 @@
 ﻿import threading
-from winsound import *
+from .playsound import playsound
 
 class Player(threading.Thread):
     def __init__(self, plugin_dir,sounds):
@@ -12,6 +12,6 @@ class Player(threading.Thread):
         try:
             for soundfile in self.sounds:
         
-                PlaySound("{}\\{}".format(self.plugin_dir,soundfile),SND_FILENAME)
+                playsound(os.path.join(self.plugin_dir,soundfile))
         except:
-            print(("Issue playing sound " + str(sys.exc_info()[0])))    
+            print("Issue playing sound " + str(sys.exc_info()[0]))    

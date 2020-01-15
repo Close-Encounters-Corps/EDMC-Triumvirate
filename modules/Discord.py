@@ -1,7 +1,10 @@
 
 # -*- coding: utf-8 -*- 
 
-from .discord_webhook import    DiscordWebhook, DiscordEmbed
+try:
+    from .discord_webhook import    DiscordWebhook, DiscordEmbed
+except:
+    from discord_webhook import    DiscordWebhook, DiscordEmbed
 import sys
 from .debug import debug
 import datetime 

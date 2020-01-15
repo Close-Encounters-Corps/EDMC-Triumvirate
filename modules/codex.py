@@ -3,11 +3,17 @@ import requests
 import sys
 import json
 from .emitter import Emitter
-from urllib.parse import quote_plus
+try:#py3
+    from urllib.parse import quote_plus
+    from tkinter import Frame
+    import tkinter as tk
+except:#py2
+    from urllib import quote_plus
+    from Tkinter import Frame
+    import Tkinter as tk
 from .debug import debug
 from .debug import debug,error
-from tkinter import Frame
-import tkinter as tk
+
 from config import config
 import os
 import myNotebook as nb

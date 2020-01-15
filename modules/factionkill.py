@@ -1,7 +1,10 @@
 ﻿# -*- coding: utf-8 -*-
 import threading
 import requests
-from urllib.parse import quote_plus
+try: #py3
+    from urllib.parse import quote_plus
+except: #py2
+    from urllib import quote_plus
 import sys
 import json
 from .emitter import Emitter

@@ -6,11 +6,17 @@ from .emitter import Emitter
 from .debug import debug
 from .debug import debug,error
 from config import config
-import tkinter as tk
-from tkinter import Button
-from tkinter import Frame
+try: #py3
+    import tkinter as tk
+    from tkinter import Button
+    from tkinter import Frame
+    from urllib.parse import quote_plus
+except: #py2
+    import Tkinter as tk
+    from Tkinter import Button
+    from Tkinter import Frame
+    from urllib import quote_plus
 from .systems import Systems
-from urllib.parse import quote_plus
 import glob
 import os
 import time

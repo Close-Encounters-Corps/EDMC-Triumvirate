@@ -6,7 +6,10 @@ from .emitter import Emitter
 from .debug import debug
 from .debug import debug,error
 from .systems import Systems
-from urllib.parse import quote_plus
+try:#py3
+    from urllib.parse import quote_plus
+except:#py2
+    from urllib import quote_plus
 
 class gSubmitNHSS(threading.Thread):
     def __init__(self,cmdr,system,x,y,z,threat_level):

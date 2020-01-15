@@ -1,6 +1,10 @@
 ﻿# -*- coding: utf-8 -*-
-import tkinter as tk
-from tkinter import Frame
+try: #Py3
+    import tkinter as tk
+    from tkinter import Frame
+except: #py2
+    import Tkinter as tk
+    from Tkinter import Frame
 import myNotebook as nb
 from config import config
 import datetime 

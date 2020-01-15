@@ -2,8 +2,13 @@
 Module to provide the news.
 """
 
-import tkinter as tk
-from tkinter import Frame
+
+try: #py3
+    import tkinter as tk
+    from tkinter import Frame
+except: #py2
+    import Tkinter as tk
+    from Tkinter import Frame
 import uuid
 from ttkHyperlinkLabel import HyperlinkLabel
 import requests

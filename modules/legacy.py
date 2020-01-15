@@ -2,7 +2,11 @@
 
 import threading
 import requests
-from urllib.parse import quote_plus
+try:#py3
+    from urllib.parse import quote_plus
+except:#py2
+    from urllib import quote_plus
+    
 import sys
 from  math import sqrt,pow,trunc
 from .debug import debug

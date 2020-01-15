@@ -4,7 +4,10 @@ import requests
 import sys
 import json
 from .emitter import Emitter
-from urllib.parse import quote_plus
+try: #py3
+    from urllib.parse import quote_plus
+except:#py2
+    from urllib import quote_plus
 from .debug import debug
 from .debug import debug,error
 from .release import Release

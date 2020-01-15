@@ -3,7 +3,6 @@ from datetime import datetime
 import modules.Discord   as Discord
 from config import config
 import myNotebook as nb
-from urllib.parse import quote_plus
 import requests
 import json
 import webbrowser
@@ -29,10 +28,22 @@ from contextlib import closing
 from modules.whitelist import whiteList
 import csv
 import plug
-import modules.Commands     
-import tkinter.ttk
-import tkinter as tk
+import modules.Commands 
 import sys
+this = sys.modules[__name__]
+try: #Py3
+    import tkinter.ttk
+    import tkinter as tk
+    from tkinter import Frame
+    from urllib.parse import quote_plus
+    this.py3=True
+except: #py2
+    import ttk
+    import Tkinter as tk
+    from Tkinter import Frame
+    from urllib import quote_plus
+    this.py3=False
+
 from modules.player import Player 
 from config import config
 
@@ -40,7 +51,7 @@ from config import config
 
 
 
-this = sys.modules[__name__]
+
 
 import l10n
 import functools
@@ -58,7 +69,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version='1.3.0'
+this.version='1.2.0'
 this.SQNag=0
 this.client_version='{}.{}'.format(myPlugin,this.version)
 this.body=None
@@ -176,6 +187,12 @@ def plugin_start3(plugin_dir):
     this.plugin_dir=plugin_dir
 
     return 'Triumvirate-{}'.format(this.version)
+
+def plugin_start(plugin_dir):
+    '''
+    Load Template plugin into EDMC
+    '''
+    return plugin_start3(plugin_dir)
     
 def plugin_stop():
     '''
@@ -183,7 +200,30 @@ def plugin_stop():
     '''
     debug('Stopping the plugin')
     this.patrol.plugin_stop()
-    
+
+
+from ttkHyperlinkLabel import HyperlinkLabel
+class EDMCLink(HyperlinkLabel):
+
+    def __init__(self, parent):
+        
+        HyperlinkLabel.__init__(
+            self,
+            parent,
+            text="Пожалуйста, поставьте EDMC версии 3.5 или выше по этой ссылке",
+            url="https://github.com/Marginal/EDMarketConnector/releases",
+            popup_copy = True,
+            #wraplength=50,  # updated in __configure_event below
+            anchor=tk.NW
+        )
+        #self.bind('<Configure>', self.__configure_event)
+
+    def __configure_event(self, event):
+        "Handle resizing."
+
+        self.configure(wraplength=event.width)
+        
+
 def plugin_app(parent):
 
     this.parent = parent
@@ -198,16 +238,25 @@ def plugin_app(parent):
     table = tk.Frame(frame)
     table.columnconfigure(1, weight=1)
     table.grid(sticky='NSEW')
-    
-    this.codexcontrol = codex.CodexTypes(table,0)
-    this.news = news.CECNews(table,1)
-    this.release = release.Release(table,this.version,2)
-    this.patrol = patrol.CanonnPatrol(table,3)
-    whitelist=whiteList(parent)
-    whitelist.fetchData()
-    #for plugin in plug.PLUGINS:
-    #    debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
-    this.AllowEasterEggs=tk.IntVar(value=config.getint("AllowEasterEggs"))
+    if this.py3==False:
+        wrongEDMCBanner=tk.Label(table,text=u"Устаревшая версия EDMC!",fg="red")
+        wrongEDMCBanner.grid(row=0, column=0, columnspan=1, sticky="NSEW")
+        wrongEDMCBanner.config(font=("Arial Black", 22))
+        wrongEDMCBannerInstructions=tk.Label(table,text="Плагин работает на несовместимой версии EDMC, \nработа всех функций не гарантируется",fg="red")
+        wrongEDMCBannerInstructions.grid(row=1, column=0, columnspan=1, sticky="NSEW")
+        wrongEDMCBannerInstructions.config(font=("Arial Black", 8))
+        hyperlink=EDMCLink(table)
+        hyperlink.grid(row = 2, column = 0)
+    else:
+        this.codexcontrol = codex.CodexTypes(table,0)
+        this.news = news.CECNews(table,1)
+        this.release = release.Release(table,this.version,2)
+        this.patrol = patrol.CanonnPatrol(table,3)
+        whitelist=whiteList(parent)
+        whitelist.fetchData()
+        #for plugin in plug.PLUGINS:
+        #    debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
+        this.AllowEasterEggs=tk.IntVar(value=config.getint("AllowEasterEggs"))
     
     return frame
     
