@@ -173,13 +173,14 @@ class Release(Frame):
                 release=self.version2number(self.latest.get("tag_name"))
                 
                 self.hyperlink['url'] = self.latest.get("html_url")
-                self.hyperlink['text'] = "EDMC-Canonn: {}".format(self.latest.get("tag_name"))
+                self.hyperlink['text'] = "EDMC-Triumvirate: {}".format(self.latest.get("tag_name"))
 
                 if current==release:
                     self.grid_remove()
                 elif current > release:
-                    self.hyperlink['text'] = "Тестовая версия {}".format(self.release)
-                    self.grid()
+                    #self.hyperlink['text'] = "Тестовая версия {}".format(self.release)
+                    #self.grid()
+                    self.grid_remove()
                 else:
                     
                     if self.auto.get() == 1:
