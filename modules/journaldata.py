@@ -5,7 +5,7 @@ import sys
 import json
 import time
 from .emitter import Emitter
-from .debug import debug
+from .debug import Debug
 from .debug import debug,error
 
 
@@ -19,7 +19,7 @@ class CanonnJournal(Emitter):
         Should probably make this a heritable class as this is a repeating pattern
     '''
     
-    exclusions={}
+    exclusions = {}
     
     def __init__(self, cmdr, is_beta, system, station, entry, client, body, lat, lon):
         Emitter.__init__(self, cmdr, is_beta, system, None, None, None, entry, None, None, None, client)
@@ -63,14 +63,20 @@ class CanonnJournal(Emitter):
 
     def run(self):
         url = self.getUrl()
-        # Plan to migrate this over to use eventAltName in the future, no ETA yet pending CAPIv2 changes
+        # Plan to migrate this over to
+        # use eventAltName in the
+        # future, no ETA yet pending
+        # CAPIv2 changes
         if not CanonnJournal.exclusions:
             debug("getting journal excludes")
             tempexcludes = {}
             r = requests.get("{}/excludeevents?_limit=1000".format(url))
 
             if r.status_code == requests.codes.ok:
-                # populate a local variable so other threads dont see incomplete results
+                # populate a local
+                # variable so other
+                # threads dont see
+                # incomplete results
                 for exc in r.json():
                     tempexcludes[exc["eventName"]] = True
                 CanonnJournal.exclusions = tempexcludes
@@ -106,4 +112,13 @@ class CanonnJournal(Emitter):
 
 
 def submit(cmdr, is_beta, system, station, entry, client, body, lat, lon):
-    CanonnJournal(cmdr, is_beta, system, station, entry, client, body, lat, lon).start()
+
+
+    if CanonnJournal.exclusions:
+        included_event = not CanonnJournal.exclusions.get(entry.get("event"))
+
+    if not CanonnJournal.exclusions:
+        debug("getting journal includes")
+        CanonnJournal(cmdr, is_beta, system, station, entry, client, body, lat, lon).start()
+    elif included_event:
+        CanonnJournal(cmdr, is_beta, system, station, entry, client, body, lat, lon).start()

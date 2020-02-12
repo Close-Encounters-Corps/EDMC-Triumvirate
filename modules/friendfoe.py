@@ -55,7 +55,7 @@ from .debug import debug,error
 '''
 
 REFRESH_CYCLES = 60 ## how many cycles before we refresh
-NEWS_CYCLE=60 * 1000 # 60 seconds
+NEWS_CYCLE = 60 * 1000 # 60 seconds
 DEFAULT_NEWS_URL = 'https://vk.com/close_encounters_corps'
 WRAP_LENGTH = 200
 
@@ -70,11 +70,12 @@ def _callback(matches):
 class UpdateThread(threading.Thread):
     def __init__(self,widget):
         threading.Thread.__init__(self)
-        self.widget=widget
+        self.widget = widget
     
     def run(self):
         debug('News: UpdateThread')
-        # download cannot contain any tkinter changes
+        # download cannot contain any
+        # tkinter changes
         self.widget.download()
         
         
@@ -86,14 +87,12 @@ class NewsLink(HyperlinkLabel):
 
     def __init__(self, parent):
 
-        HyperlinkLabel.__init__(
-            self,
+        HyperlinkLabel.__init__(self,
             parent,
             text="Получение новостей...",
             url=DEFAULT_NEWS_URL,
             wraplength=50,  # updated in __configure_event below
-            anchor=tk.NW
-        )
+            anchor=tk.NW)
         self.bind('<Configure>', self.__configure_event)
 
     def __configure_event(self, event):
@@ -113,29 +112,28 @@ class FriendFoe(Frame):
         sticky = tk.EW + tk.N  # full width, stuck to the top
         anchor = tk.NW        
         
-        Frame.__init__(
-            self,
-            parent
-        )
+        Frame.__init__(self,
+            parent)
 
-        self.hidden=tk.IntVar(value=config.getint('HideFF'))                
+        self.hidden = tk.IntVar(value=config.getint('HideFF'))                
         
-        self.news_data=[]
+        self.news_data = []
         self.columnconfigure(1, weight=1)
         self.grid(row = gridrow, column = 0, sticky='NSEW',columnspan=2)
         
-        self.label=tk.Label(self, text=  'История целей:')
+        self.label = tk.Label(self, text=  'История целей:')
         self.label.grid(row = 0, column = 0, sticky=sticky)
         self.label.bind('<Button-1>',self.click_news)
         
-        self.hyperlink=NewsLink(self)
+        self.hyperlink = NewsLink(self)
         self.hyperlink.grid(row = 0, column = 1,sticky='NSEW')
         
-        self.news_count=0
-        self.news_pos=1
-        self.minutes=0
+        self.news_count = 0
+        self.news_pos = 1
+        self.minutes = 0
         self.visible()
-        #self.hyperlink.bind('<Configure>', self.hyperlink.configure_event)
+        #self.hyperlink.bind('<Configure>',
+        #self.hyperlink.configure_event)
         self.after(250, self.news_update)
     
     def news_update(self):
@@ -143,11 +141,11 @@ class FriendFoe(Frame):
         if self.isvisible:
         
             if self.news_count == self.news_pos:           
-                self.news_pos=1
+                self.news_pos = 1
             else:
                 self.news_pos+=1
             
-            if self.minutes==0:
+            if self.minutes == 0:
                 UpdateThread(self).start()
             else:
                 self.minutes+=-1        
@@ -160,19 +158,21 @@ class FriendFoe(Frame):
         if self.visible():
             if self.news_data:
                     feed = self.news_data.content.split("\r\n")
-                    lines=feed[self.news_pos]
-                    news= lines.split("\t")
+                    lines = feed[self.news_pos]
+                    news = lines.split("\t")
                     self.hyperlink['url'] = news[1]
                     self.hyperlink['text'] = decode_unicode_references(news[2])
-                    debug("News debug"+str(news))
+                    debug("News debug" + str(news))
             else:
-                #keep trying until we have some data
-                #elf.hyperlink['text'] = 'Fetching News...'
+                #keep trying until we
+                #have some data
+                #elf.hyperlink['text']
+                #= 'Fetching News...'
                 self.after(1000, self.update)
 
     def click_news(self,event):
         if self.news_count == self.news_pos:           
-            self.news_pos=1
+            self.news_pos = 1
         else:
             self.news_pos+=1
             
@@ -187,17 +187,18 @@ class FriendFoe(Frame):
             self.news_data = requests.get('https://docs.google.com/spreadsheets/d/1UnrH5ULSycKzySonUDA79aPBqxUbvNOEOSlW85NY1a0/export?&format=tsv')
             debug(self.news_data)
             #self.news_count=len(self.news_data)-1
-            self.news_count=5
-            self.news_pos=1
-            self.minutes=REFRESH_CYCLES
+            self.news_count = 5
+            self.news_pos = 1
+            self.minutes = REFRESH_CYCLES
 
     def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
         'Called to get a tk Frame for the settings dialog.'
 
-        self.hidden=tk.IntVar(value=config.getint('HideFF'))
+        self.hidden = tk.IntVar(value=config.getint('HideFF'))
         
         #frame = nb.Frame(parent)
-        #frame.columnconfigure(1, weight=1)
+        #frame.columnconfigure(1,
+        #weight=1)
         return nb.Checkbutton(parent, text='Скрыть Систему свой чужой', variable=self.hidden).grid(row = gridrow, column = 0,sticky='NSEW')
         
         #return frame
@@ -205,11 +206,11 @@ class FriendFoe(Frame):
     def visible(self):
         if self.hidden.get() == 1:
             self.grid_remove()
-            self.isvisible=False
+            self.isvisible = False
             return False
         else:
             self.grid()
-            self.isvisible=True
+            self.isvisible = True
             return True
 
     def prefs_changed(self, cmdr, is_beta):

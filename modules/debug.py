@@ -11,12 +11,12 @@ import datetime
 
 class Debug:
         
-    debugvar=tk.IntVar(value=config.getint("CanonnDebug"))
-    client="Triumvirate"
+    debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
+    client = "Triumvirate"
     
     @classmethod
     def setClient(cls,client):
-        cls.client=client
+        cls.client = client
             
     @classmethod
     def p(cls,value):
@@ -33,8 +33,8 @@ class Debug:
     def plugin_prefs(cls, parent,client,gridrow):
         "Called to get a tk Frame for the settings dialog."
 
-        cls.debugvar=tk.IntVar(value=config.getint("CanonnDebug"))
-        debug.client=client
+        cls.debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
+        debug.client = client
         
         frame = nb.Frame(parent)
         frame.columnconfigure(1, weight=1)

@@ -4,7 +4,7 @@ except:#py2
     from urllib import quote_plus
 import requests
 import json
-from .debug import debug
+from .debug import Debug
 from .debug import debug,error
 
 class Systems():
@@ -13,7 +13,7 @@ class Systems():
         Caching all the Canonn Systems because we don't want to hit them up every time 
         we start the plugin
     '''
-    systemCache={
+    systemCache = {
         'Euryale':[35.375,-68.96875,24.8125],
         'Othel':[13.59375 , -93.59375 , 2.46875],
         'LTT 305':[27.6875,-75.28125,21.8125],
@@ -97,31 +97,31 @@ class Systems():
         'Kara':[-29.75,-58.8125,-163.15625],
         }
 
+    @classmethod
     def storeSystem(cls,system,pos):
         if system in cls.systemCache:
             debug("system {} already in cache".format(system))
         else: 
-            cls.systemCache[system]=pos
+            cls.systemCache[system] = pos
             
     @classmethod
     def edsmGetSystem(cls,system):
         
         if system in cls.systemCache:
-            #debug(system + str(cls.systemCache[system]))
+            #debug(cls.systemCache[system])
             return cls.systemCache[system]
             
         else:
-            debug("edsm Get Sys debug:"+str(system))
-            url = 'https://www.edsm.net/api-v1/system?systemName='+quote_plus(system)+'&showCoordinates=1'      
+            url = 'https://www.edsm.net/api-v1/system?systemName=' + quote_plus(system) + '&showCoordinates=1'      
             r = requests.get(url)
-            s =  r.json()
+            s = r.json()
         
-            cls.systemCache[system]=(s["coords"]["x"],s["coords"]["y"],s["coords"]["z"])
+            cls.systemCache[system] = (s["coords"]["x"], s["coords"]["y"], s["coords"]["z"])
             return s["coords"]["x"],s["coords"]["y"],s["coords"]["z"]    
             
     @classmethod      
     def dump(cls):
-        for x in list(cls.systemCache.keys()):
+        for x in cls.systemCache.keys():
             debug('"{}":[{},{},{}],'.format(x, cls.systemCache.get(x)[0],cls.systemCache.get(x)[1],cls.systemCache.get(x)[2]))
 
 def edsmGetSystem(system):

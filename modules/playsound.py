@@ -26,8 +26,7 @@ def _playsoundWin(sound, block = True):
             errorBuffer = c_buffer(255)
             windll.winmm.mciGetErrorStringA(errorCode, errorBuffer, 254)
             exceptionMessage = ('\n    Error ' + str(errorCode) + ' for command:'
-                                '\n        ' + command.decode() +
-                                '\n    ' + errorBuffer.value.decode())
+                                '\n        ' + command.decode() + '\n    ' + errorBuffer.value.decode())
             raise PlaysoundException(exceptionMessage)
         return buf.value
 
@@ -61,7 +60,7 @@ def _playsoundOSX(sound, block = True):
             from os import getcwd
             sound = getcwd() + '/' + sound
         sound = 'file://' + sound
-    url   = NSURL.URLWithString_(sound)
+    url = NSURL.URLWithString_(sound)
     nssound = NSSound.alloc().initWithContentsOfURL_byReference_(url, True)
     if not nssound:
         raise IOError('Unable to load sound named: ' + sound)
@@ -70,17 +69,17 @@ def _playsoundOSX(sound, block = True):
     if block:
         sleep(nssound.duration())
 
-def _playsoundNix(sound, block=True):
+def _playsoundNix(sound, block = True):
     """Play a sound using GStreamer.
 
     Inspired by this:
     https://gstreamer.freedesktop.org/documentation/tutorials/playback/playbin-usage.html
     """
     if not block:
-        raise NotImplementedError(
-            "block=False cannot be used on this platform yet")
+        raise NotImplementedError("block=False cannot be used on this platform yet")
 
-    # pathname2url escapes non-URL-safe characters
+    # pathname2url escapes non-URL-safe
+    # characters
     import os
     try:
         from urllib.request import pathname2url
@@ -102,10 +101,10 @@ def _playsoundNix(sound, block=True):
 
     set_result = playbin.set_state(Gst.State.PLAYING)
     if set_result != Gst.StateChangeReturn.ASYNC:
-        raise PlaysoundException(
-            "playbin.set_state returned " + repr(set_result))
+        raise PlaysoundException("playbin.set_state returned " + repr(set_result))
 
-    # FIXME: use some other bus method than poll() with block=False
+    # FIXME: use some other bus method
+    # than poll() with block=False
     # https://lazka.github.io/pgi-docs/#Gst-1.0/classes/Bus.html
     bus = playbin.get_bus()
     bus.poll(Gst.MessageType.EOS, Gst.CLOCK_TIME_NONE)

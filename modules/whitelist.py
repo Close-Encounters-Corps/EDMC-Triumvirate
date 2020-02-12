@@ -20,20 +20,20 @@ except: #py2
 class whiteListGetter(threading.Thread):
     def __init__(self,callback):
         threading.Thread.__init__(self)
-        self.callback=callback
+        self.callback = callback
 
     def run(self):
         debug("getting whiteList")
-        url="https://us-central1-canonn-api-236217.cloudfunctions.net/whitelist"
-        r=requests.get(url)   
+        url = "https://us-central1-canonn-api-236217.cloudfunctions.net/whitelist"
+        r = requests.get(url)   
             
         if not r.status_code == requests.codes.ok:
             error("whiteListGetter {} ".format(url))
             error(r.status_code)
             error(r.json())
-            results=[]
+            results = []
         else:
-           results=r.json()
+           results = r.json()
            
         self.callback(results)
         
@@ -41,46 +41,46 @@ class whiteListSetter(threading.Thread):
 
     def __init__(self,cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client):
         threading.Thread.__init__(self)
-        self.cmdr=quote_plus(cmdr.encode('utf8'))
-        self.system=quote_plus(system.encode('utf8'))
-        self.is_beta=is_beta
-        self.station=station
-        self.body=body
-        self.entry=entry
-        self.state=state
-        self.x=x
-        self.y=y
-        self.z=z
-        self.lat=lat
-        self.lon=lon
-        self.client=client
+        self.cmdr = quote_plus(cmdr.encode('utf8'))
+        self.system = quote_plus(system.encode('utf8'))
+        self.is_beta = is_beta
+        self.station = station
+        self.body = body
+        self.entry = entry
+        self.state = state
+        self.x = x
+        self.y = y
+        self.z = z
+        self.lat = lat
+        self.lon = lon
+        self.client = client
         
     def run(self):
         
-        url="https://us-central1-canonn-api-236217.cloudfunctions.net/submitRaw?"
-        url=url+"&cmdrName={}".format(self.cmdr)
-        url=url+"&systemName={}".format(self.system)
-        url=url+"&bodyName={}".format(self.body)
-        url=url+"&station={}".format(self.station)
-        url=url+"&event={}".format(self.entry.get("event"))
-        url=url+"&x={}".format(self.x)
-        url=url+"&y={}".format(self.y)        
-        url=url+"&z={}".format(self.z)        
-        url=url+"&lat={}".format(self.lat)        
-        url=url+"&lon={}".format(self.lon)        
-        url=url+"&is_beta={}".format(self.is_beta)        
-        url=url+"&raw_event={}".format(quote_plus(json.dumps(self.entry, ensure_ascii=False).encode('utf8')))
-        url=url+"&clientVersion={}".format(self.client)
+        url = "https://us-central1-canonn-api-236217.cloudfunctions.net/submitRaw?"
+        url = url + "&cmdrName={}".format(self.cmdr)
+        url = url + "&systemName={}".format(self.system)
+        url = url + "&bodyName={}".format(self.body)
+        url = url + "&station={}".format(self.station)
+        url = url + "&event={}".format(self.entry.get("event"))
+        url = url + "&x={}".format(self.x)
+        url = url + "&y={}".format(self.y)        
+        url = url + "&z={}".format(self.z)        
+        url = url + "&lat={}".format(self.lat)        
+        url = url + "&lon={}".format(self.lon)        
+        url = url + "&is_beta={}".format(self.is_beta)        
+        url = url + "&raw_event={}".format(quote_plus(json.dumps(self.entry, ensure_ascii=False).encode('utf8')))
+        url = url + "&clientVersion={}".format(self.client)
         
-        r=requests.get(url)
+        r = requests.get(url)
             
         if not r.status_code == requests.codes.ok:
             error("whiteListSetter {} ".format(url))
             error(r.status_code)
             error(r.json())
-            results=[]
+            results = []
         else:
-           results=r.json()
+           results = r.json()
            
         
         
@@ -103,8 +103,8 @@ class whiteList(Frame):
     @classmethod
     def matchkeys(cls,event,entry):
         
-        ev=json.loads(event)
-        for key in list(ev.keys()):
+        ev = json.loads(event)
+        for key in ev.keys():
             if not entry.get(key) == ev.get(key):
                 return False
          
@@ -126,9 +126,9 @@ class whiteList(Frame):
     
     def fetchData(self):
         whiteListGetter(self.whiteListCallback).start()
-        self.after(1000*60*60,self.fetchData)
+        self.after(1000 * 60 * 60,self.fetchData)
         
  
     def whiteListCallback(self,data):
-        whiteList.whitelist=data
+        whiteList.whitelist = data
         

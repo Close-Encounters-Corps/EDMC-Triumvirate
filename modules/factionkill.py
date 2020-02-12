@@ -8,7 +8,7 @@ except: #py2
 import sys
 import json
 from .emitter import Emitter
-from .debug import debug
+from .debug import Debug
 from .debug import debug,error
 
 '''
@@ -28,22 +28,22 @@ from .debug import debug,error
 class gSubmitKill(threading.Thread):
     def __init__(self,cmdr, is_beta, system, reward,victimFaction):
         threading.Thread.__init__(self)
-        self.cmdr=quote_plus(cmdr.encode('utf8'))
-        self.system=quote_plus(system.encode('utf8'))
+        self.cmdr = quote_plus(cmdr.encode('utf8'))
+        self.system = quote_plus(system.encode('utf8'))
         if is_beta:
             self.is_beta = 'Y'
         else:
             self.is_beta = 'N'    
-        self.reward=str(reward)
-        self.victimFaction=quote_plus(victimFaction.encode('utf8'))
+        self.reward = str(reward)
+        self.victimFaction = quote_plus(victimFaction.encode('utf8'))
 
     def run(self):
         # don't bother sending beta
         if self.is_beta == 'N':
             debug("sending gSubmitKill")
-            url="https://us-central1-canonn-api-236217.cloudfunctions.net/submitKills?cmdrName={}&systemName={}&isBeta={}&reward={}&victimFaction={}".format(self.cmdr,self.system,self.is_beta,self.reward,self.victimFaction)    
+            url = "https://us-central1-canonn-api-236217.cloudfunctions.net/submitKills?cmdrName={}&systemName={}&isBeta={}&reward={}&victimFaction={}".format(self.cmdr,self.system,self.is_beta,self.reward,self.victimFaction)    
             
-            r=requests.get(url)
+            r = requests.get(url)
         
             if not r.status_code == requests.codes.ok:
                 error("gSubmitKills {} ".format(url))
@@ -56,18 +56,18 @@ class FactionKill(Emitter):
     
     def __init__(self,cmdr, is_beta, system,entry,client):
         Emitter.__init__(self,cmdr, is_beta, system, None,None,None, entry, None,None,None,client)
-        self.modelreport="killreports"
+        self.modelreport = "killreports"
         
     def setPayload(self):
-        payload={}
-        payload["systemName"]=self.system
-        payload["cmdrName"]=self.cmdr  
-        payload["rawEvent"]=self.entry
-        payload["reward"]=self.entry["Reward"]
-        payload["rewardingFaction"]=self.entry["AwardingFaction"]
-        payload["victimFaction"]=self.entry["VictimFaction"]
-        payload["isbeta"]= self.is_beta
-        payload["clientVersion"]= self.client
+        payload = {}
+        payload["systemName"] = self.system
+        payload["cmdrName"] = self.cmdr  
+        payload["rawEvent"] = self.entry
+        payload["reward"] = self.entry["Reward"]
+        payload["rewardingFaction"] = self.entry["AwardingFaction"]
+        payload["victimFaction"] = self.entry["VictimFaction"]
+        payload["isbeta"] = self.is_beta
+        payload["clientVersion"] = self.client
             
         return payload
 
@@ -82,7 +82,7 @@ def submit(cmdr, is_beta, system, station, entry,client):
     if entry["event"] == "FactionKillBond" and (
         matches(entry, 'VictimFaction', '$faction_Thargoid;') or 
         matches(entry, 'VictimFaction', '$faction_Guardian;')
-    ):
+        ):
         FactionKill(cmdr, is_beta, system,  entry, client).start()   
         gSubmitKill(cmdr, is_beta, system, entry.get("Reward"),entry.get("VictimFaction")).start();
 

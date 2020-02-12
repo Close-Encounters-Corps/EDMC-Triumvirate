@@ -1,6 +1,5 @@
 
-# -*- coding: utf-8 -*- 
-
+# -*- coding: utf-8 -*-
 try:
     from .discord_webhook import    DiscordWebhook, DiscordEmbed
 except:
@@ -13,8 +12,7 @@ logging.basicConfig()
 import time
 
 #this = sys.modules[__name__]
-
-contentlist={
+contentlist = {
         "EGPU":
             {
                 "FuelAlarm":"<@&597996086959013900>",
@@ -22,7 +20,9 @@ contentlist={
             },
        "SCEC":
             {
-                "FuelAlarm":"Штатный пилот Close Encounters Corps запрашивает дозаправку!\n ",      #<@&589109509843320852> <@&589110175668109317> <@&301455749874188289> 
+                "FuelAlarm":"Штатный пилот Close Encounters Corps запрашивает дозаправку!\n ",      #<@&589109509843320852>
+                                                                                                    #<@&589110175668109317>
+                                                                                                    #<@&301455749874188289>
                 "Dev":"",
             } ,
        "RPSG":
@@ -39,7 +39,7 @@ contentlist={
             }
        }
 
-webhookList={
+webhookList = {
         "EGPU":
             {
                 "FuelAlarm":"600027420392685599/OKcfg9XfGPDQb4WKVWkhQ9kqpzPXtQlcMLc7W-lTP0OOVxuLyrtHGO1bzjPdIgjjgqtN",
@@ -63,17 +63,13 @@ webhookList={
                 "FuelAlarm": "600260403414695936/o9iz7Ow-TfInwOKvCH5ipwzRXlbr7B5QXlV_AjR74LXJ8QnOY4UV8qV3371clTp20wb1"   
             }
        }
-#class Send:
-    
-   #def __init__(SQ):
-        
-SQID=""       
+      
 def SQID_set(SQ):
         global SQID
         if SQ != "":
-            SQID=SQ
-        else: SQID="None"
-        debug("SQID DIS"+SQID)
+            SQID = SQ
+        else: SQID = "None"
+        debug("SQID DIS" + SQID)
 
 
 
@@ -87,20 +83,20 @@ def send(cmdr,action,params):    #
         
 
         debug("Webhook Initiated")
-        if webhookList[SQID][action] ==None:
+        if webhookList[SQID][action] == None:
             return   "Вам недоступно данное действие"
         webhook = DiscordWebhook(url='https://discordapp.com/api/webhooks/{}'.format(webhookList[SQID][action]),                        #.format(webhookList[SQID][action]
                                 username=action,
                                 avatar_url=params["Avatar"] ,
                                 content= contentlist[SQID][action])
-        if params["Embed?"]  == True:
+        if params["Embed?"] == True:
             embed = DiscordEmbed(title=params["Etitle"], description=params["EDesc"], color=params["EColor"])
             embed.set_author(name=cmdr)
             #embed.set_footer(text=)
             if "Foouter" in params:
                 embed.set_footer(text=params["Foouter"])
             if "Timestamp" in params:
-                embed.set_timestamp(str(datetime.datetime.utcfromtimestamp(time.time())+params["Timestamp"]) )
+                embed.set_timestamp(str(datetime.datetime.utcfromtimestamp(time.time()) + params["Timestamp"]))
             else:embed.set_timestamp()
             for key, entry  in params["Fields"].items():
                 #debug("webhook"+unicode(key)+unicode(entry))
