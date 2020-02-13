@@ -11,20 +11,20 @@ import datetime
 
 class Debug:
         
-    debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
-    client = "Triumvirate"
+    debugvar=tk.IntVar(value=config.getint("CanonnDebug"))
+    client="Triumvirate"
     
     @classmethod
     def setClient(cls,client):
-        cls.client = client
+        Debug.client=client
             
     @classmethod
     def p(cls,value):
-        print(("{} [{}] {}".format(datetime.datetime.now(),Debug.client,(str(value)))))
+        print("{} [{}] {}".format(datetime.datetime.now(),Debug.client,str(value)))
             
     @classmethod
     def debug(cls,value):
-        
+        print("EMERGENCY DEBUG!!!! DATA IS "+str(cls.debugvar)+"& "+str(cls.debugvar.get()))
         if cls.debugvar.get() == 1:
             cls.p(value)
 
@@ -33,8 +33,8 @@ class Debug:
     def plugin_prefs(cls, parent,client,gridrow):
         "Called to get a tk Frame for the settings dialog."
 
-        cls.debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
-        debug.client = client
+        cls.debugvar=tk.IntVar(value=config.getint("CanonnDebug"))
+        Debug.client=client
         
         frame = nb.Frame(parent)
         frame.columnconfigure(1, weight=1)
@@ -54,3 +54,4 @@ def debug(value):
     
 def error(value):
     Debug.p(value)    
+

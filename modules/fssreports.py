@@ -2,7 +2,7 @@
 import requests
 import sys
 import json
-from .emitter import Emitter
+from modules.emitter import Emitter
 try: #py3
     from urllib.parse import quote_plus
     import  urllib.parse as urlparse
@@ -111,7 +111,7 @@ class fssEmitter(Emitter):
 
         # don't bother sending USS
         if self.entry["event"] == "FSSSignalDiscovered" and not "$USS" in self.entry.get("SignalName"):
-            canonn.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postFSSSignal",
+            modules.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postFSSSignal",
                         {
                             "signalname": self.entry.get("SignalName"),
                             "signalNameLocalised": self.entry.get("SignalName_Localised"),
