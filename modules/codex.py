@@ -11,11 +11,11 @@ from modules.emitter import Emitter
 from config import config
 from math import sqrt, pow
 try:#py3
-    from urllib.parse import quote_plus
+    from urllib.parse import quote_plus, unquote
     from tkinter import Frame
     import tkinter as tk
 except:#py2
-    from urllib import quote_plus
+    from urllib import quote_plus, unquote
     from Tkinter import Frame
     import Tkinter as tk
 
@@ -245,8 +245,7 @@ class CodexTypes(Frame):
                         # orbiting close to the star we need the solar radius for this...
                         if b.get('type') == 'Planet' and self.surface_distance(b.get("distanceToArrival"),
                                                                                CodexTypes.parentRadius,
-                                                                               self.light_seconds('radius', b.get(
-                                                                                   "radius"))) < 10:
+                                                                               self.light_seconds('radius', b.get("radius"))) < 10:
                             self.merge_poi("Tourist", 'Surface Close to parent star', body_code)
 
                         #    Orbiting close to parent body less than 5ls

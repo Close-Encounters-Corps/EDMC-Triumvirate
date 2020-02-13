@@ -2,6 +2,7 @@
 import requests
 import sys
 import json
+import modules.emitter
 from modules.emitter import Emitter
 try: #py3
     from urllib.parse import quote_plus

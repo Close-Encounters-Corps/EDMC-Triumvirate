@@ -41,7 +41,7 @@ class clientReport(modules.emitter.Emitter):
             url = self.getUrl()
             self.send(payload, url)
             debug("Google Client Report")
-            emitter.post("https://us-central1-canonn-api-236217.cloudfunctions.net/submitCient",
+            modules.emitter.post("https://us-central1-canonn-api-236217.cloudfunctions.net/submitCient",
                          {
                              "cmdr": payload.get("cmdrName"),
                              "beta": payload.get("isBeta"),
