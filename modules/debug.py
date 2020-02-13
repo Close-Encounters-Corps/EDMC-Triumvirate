@@ -25,7 +25,6 @@ class Debug:
             
     @classmethod
     def debug(cls,value):
-        print("EMERGENCY DEBUG!!!! DATA IS "+str(cls.debugswitch))
         if cls.debugswitch == 1:
             cls.p(value)
 
