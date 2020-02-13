@@ -33,14 +33,21 @@ class clientReport(modules.emitter.Emitter):
         return payload  
 
     def run(self):
-        if not clientReport.done: 
+        if not clientReport.done:
             clientReport.done = True
-            debug("Sending client report")    
-            # configure the payload       
+            debug("sending client report")
+            # configure the payload
             payload = self.setPayload()
             url = self.getUrl()
-            self.send(payload, url)        
-            
+            self.send(payload, url)
+            debug("Google Client Report")
+            emitter.post("https://us-central1-canonn-api-236217.cloudfunctions.net/submitCient",
+                         {
+                             "cmdr": payload.get("cmdrName"),
+                             "beta": payload.get("isBeta"),
+                             "client": payload.get("clientVersion"),
+                             "autoupdate": payload.get("AutoUpdateDisabled")
+                         })
 
 
 def submit(cmdr, is_beta, client, entry):  

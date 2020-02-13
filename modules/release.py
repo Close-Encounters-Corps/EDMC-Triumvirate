@@ -114,7 +114,7 @@ class Release(Frame):
         
         debug(config.get('Canonn:RemoveBackup'))
         
-        if self.rmbackup.get() == 1 and config.get('Canonn:RemoveBackup') != "None":
+        if self.rmbackup.get() == 0 and config.get('Canonn:RemoveBackup') != "None":
             delete_dir = config.get('Canonn:RemoveBackup')
             debug('Canonn:RemoveBackup {}'.format(delete_dir))
             try:
@@ -220,7 +220,7 @@ class Release(Frame):
         frame.columnconfigure(2, weight=1)
         frame.grid(row = gridrow, column = 0,sticky="NSEW")
         nb.Checkbutton(frame, text="Включить автообновление", variable=self.auto).grid(row = 0, column = 0,sticky="NW")
-        nb.Checkbutton(frame, text="Удалять бекапы версий", variable=self.rmbackup).grid(row = 0, column = 1,sticky="NW")
+        nb.Checkbutton(frame, text="Хранить бекапы версий", variable=self.rmbackup).grid(row = 0, column = 1,sticky="NW")
         nb.Checkbutton(frame, text="Отключить голосовые сообщения", variable=self.novoices).grid(row = 0, column = 2,sticky="NW")
         
         return frame
@@ -290,7 +290,7 @@ class Release(Frame):
             return False
         
         
-        if self.rmbackup.get() == 1:
+        if self.rmbackup.get() == 0:
             config.set('Canonn:RemoveBackup',"{}.disabled".format(Release.plugin_dir))
             
         debug("Upgrade complete")    
