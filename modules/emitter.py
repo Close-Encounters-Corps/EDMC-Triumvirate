@@ -126,14 +126,15 @@ class Emitter(threading.Thread):
             error(r.status_code)
             headers = r.headers
             contentType = str(headers['content-type'])
+            content=(r.content.decode("utf-8"))
             error(contentType)
             if 'json' in contentType:
-                error(json.dumps(r.content))
+                error(json.dumps(content))
             else:
                 if "Offline for Maintenance" in str(r.content):
                     error("Canonn API Offline")
                 else:
-                    error(r.content)
+                    error(content)
             error(json.dumps(payload))
         else:
             debug("{}?id={}".format(fullurl,r.json().get("id")))
