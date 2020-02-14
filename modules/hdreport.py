@@ -8,7 +8,8 @@ import time
 
 from .debug import Debug
 from .debug import debug, error
-from .emitter import Emitter
+import modules.emitter
+from modules.emitter import Emitter
 from .systems import Systems
 from config import config
 try: #py3
@@ -180,13 +181,14 @@ class HDInspector(Frame):
 
     def detect_hyperdiction(self, entry):
         if entry.get("event") == "Statistics":
-            debug("detected")
+            debug("Detected Statistick evevnt")
             submit(self.commander, self.is_beta, None, None, entry, self.client)
             time.sleep(0.1)
         # else:
         # debug(entry.get("event"))
 
     def scan_file(self, filename):
+        debug("Scaning file {} for HDs".format(filename))
         with open(filename) as f:
             for line in f:
                 entry = json.loads(line)
@@ -205,9 +207,7 @@ class hyperdictionDetector():
     state = 0
     target_system = ""
 
-    @classmethod
-    def hide(cls):
-        cls.frame.grid_remove()
+
 
     @classmethod
     def show(cls):
@@ -236,6 +236,10 @@ class hyperdictionDetector():
         cls.hide()
         cls.state = 1
         cls.target_system = target_system
+    
+    @classmethod
+    def hide(cls):
+        cls.frame.grid_remove()
 
     @classmethod
     def FSDJump(cls, system):
@@ -252,7 +256,7 @@ class hyperdictionDetector():
             debug("Hyperdiction Detected")
             cls.show()
             x, y, z = Systems.edsmGetSystem(system)
-            canonn.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postHDDetected",
+            modules.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postHDDetected",
                                 {"cmdr": cmdr, "system": system, "timestamp": timestamp, "x": x, "y": y, "z": z})
             plug.show_error("Hyperdiction: Exit to main menu")
         else:
@@ -283,7 +287,7 @@ class hyperdictionDetector():
 def post_traffic(system, entry):
     debug("posting traffic {} ".format(system))
     try:
-        canonn.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postTraffic",
+        modules.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postTraffic",
                             {"system": system, "timestamp": entry.get("timestamp")})
     except:
         plug.show_error("Failed to post traffic")
@@ -334,7 +338,7 @@ def submit(cmdr, is_beta, system, station, entry, client):
             debug({"cmdr": cmdr, "system": lastsystem, "timestamp": tgtime})
             x, y, z = Systems.edsmGetSystem(lastsystem)
             # we are going to submit the hyperdiction here.
-            canonn.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postHD",
+            modules.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postHD",
                                 {"cmdr": cmdr, "system": lastsystem, "timestamp": tgtime, "x": x, "y": y, "z": z})
 
             if lastsystem:

@@ -266,6 +266,7 @@ def plugin_app(parent):
         this.hyperlink.grid(row = 2, column = 0)
         this.button = tk.Button(table, text="Нажмите, что бы скрыть предупреждение",command=kill_notification)
         this.button.grid(row=3,column = 0)
+        this.hyperdiction = hdreport.hyperdictionDetector.setup(table,4)
     else:
         this.codexcontrol = codex.CodexTypes(table,0)
         this.news = news.CECNews(table,1)
@@ -401,8 +402,13 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system,x,y,z, station, entry,client)
     legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
+    test(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, state, x, y, z, body, lat, lon, client)
     Easter_Egs(entry)
     return Return
+
+
+def test(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, state, x, y, z, body, lat, lon, client):
+    pass
     
 
 def Easter_Egs(entry):
