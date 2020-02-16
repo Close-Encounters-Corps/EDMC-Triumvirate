@@ -254,29 +254,30 @@ def plugin_app(parent):
     table = tk.Frame(frame)
     table.columnconfigure(1, weight=1)
     table.grid(sticky='NSEW')
-    if this.py3 == False:
-        tk.Label(table)
-        this.wrongEDMCBanner = tk.Label(table,text=u"Устаревшая версия EDMC!",fg="red")
-        this.wrongEDMCBanner.grid(row=0, column=0, columnspan=1, sticky="NSEW")
-        this.wrongEDMCBanner.config(font=("Arial Black", 22))
-        this.wrongEDMCBannerInstructions = tk.Label(table,text="Плагин работает на несовместимой версии EDMC, \nработа всех функций не гарантируется",fg="red")
-        this.wrongEDMCBannerInstructions.grid(row=1, column=0, columnspan=1, sticky="NSEW")
-        this.wrongEDMCBannerInstructions.config(font=("Arial Black", 8))
-        this.hyperlink = EDMCLink(table)
-        this.hyperlink.grid(row = 2, column = 0)
-        this.button = tk.Button(table, text="Нажмите, что бы скрыть предупреждение",command=kill_notification)
-        this.button.grid(row=3,column = 0)
-        this.hyperdiction = hdreport.hyperdictionDetector.setup(table,4)
-    else:
-        this.codexcontrol = codex.CodexTypes(table,0)
-        this.news = news.CECNews(table,1)
-        this.release = release.Release(table,this.version,2)
-        this.patrol = patrol.CanonnPatrol(table,3)
-        whitelist = whiteList(parent)
-        whitelist.fetchData()
-        #for plugin in plug.PLUGINS:
-        #    debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
-        this.AllowEasterEggs = tk.IntVar(value=config.getint("AllowEasterEggs"))
+    #if this.py3 == False:
+    #    tk.Label(table)
+    #    this.wrongEDMCBanner = tk.Label(table,text=u"Устаревшая версия EDMC!",fg="red")
+    #    this.wrongEDMCBanner.grid(row=0, column=0, columnspan=1, sticky="NSEW")
+    #    this.wrongEDMCBanner.config(font=("Arial Black", 22))
+    #    this.wrongEDMCBannerInstructions = tk.Label(table,text="Плагин работает на несовместимой версии EDMC, \nработа всех функций не гарантируется",fg="red")
+    #    this.wrongEDMCBannerInstructions.grid(row=1, column=0, columnspan=1, sticky="NSEW")
+    #    this.wrongEDMCBannerInstructions.config(font=("Arial Black", 8))
+    #    this.hyperlink = EDMCLink(table)
+    #    this.hyperlink.grid(row = 2, column = 0)
+    #    this.button = tk.Button(table, text="Нажмите, что бы скрыть предупреждение",command=kill_notification)
+    #    this.button.grid(row=3,column = 0)
+    #    this.hyperdiction = hdreport.hyperdictionDetector.setup(table,4)
+    #else:
+    this.codexcontrol = codex.CodexTypes(table,0)
+    this.news = news.CECNews(table,1)
+    this.release = release.Release(table,this.version,2)
+    this.patrol = patrol.CanonnPatrol(table,3)
+    this.hyperdiction = hdreport.hyperdictionDetector.setup(table,4)
+    whitelist = whiteList(parent)
+    whitelist.fetchData()
+    #for plugin in plug.PLUGINS:
+    #    debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
+    this.AllowEasterEggs = tk.IntVar(value=config.getint("AllowEasterEggs"))
     
     return frame
     
@@ -386,7 +387,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     whiteList.journal_entry(cmdr, is_beta, system, station, entry, state,x,y,z,body,lat,lon,client)
     materialReport.submit(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, x, y, z, body, lat,
                           lon, client)
-
+    codex.saaScan.journal_entry(cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client)
 
 
 
