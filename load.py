@@ -199,8 +199,12 @@ def plugin_start(plugin_dir):
     Load Template plugin into EDMC
     '''
     plugin_dir = str(plugin_dir)
-    Debug.setClient(this.client_version)
     release.Release.plugin_start(plugin_dir)
+    Debug.setClient(this.client_version)
+    patrol.CanonnPatrol.plugin_start(plugin_dir)
+    codex.CodexTypes.plugin_start(plugin_dir)
+    this.plugin_dir = plugin_dir
+
     return 'Triumvirate-{}-Py2-mode'.format(this.version)
     
 def plugin_stop():
