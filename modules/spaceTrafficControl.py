@@ -23,7 +23,6 @@ def plugin_prefs:
     return frame
 '''
     Перенос переменных через journal_entry
-    Так же нужна переменная ShipNamе, вдальнейшем она будет задействована. В модуле ее нет.
 '''
 class STCS_FINAL:
     def journal_entry(self, cmdr, system, station, entry, event, body):
@@ -49,7 +48,6 @@ class STCS_FINAL:
     Проверка участия пилотов и диспетчера
     parSTCfn - Parameter Space Traffic Controller finish это конечная проверка на диспетчера
     parPilot - Parameter Pilot это проверка на пилота под контролем диспетчера
-    Операции print указывают, что пилоты должны быть уведомлены, кем они являются в ивенте, а как это селать в плагине я не знаю.
 '''
                 if (parSTC == 1 and this.AllowSTCSbutton == 'True' and station == "Crown Prospect" and event == "Docked"):
                     parSTCfn = 1
