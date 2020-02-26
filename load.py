@@ -137,15 +137,18 @@ def prefs_changed(cmdr, is_beta):
     
 SQ = None
 def Alegiance_get(CMDR,SQ_old):
-    if this.py3 == False:
-        return "None"
+    
     global SQ    
     if CMDR != this.CMDR:
         debug("Community Check started")
         url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
-            reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t')
-            next(reader)
+            try:
+                reader = csv.reader(r.content.splitlines(), delimiter='\t') # .decode('utf-8')
+                next(reader)
+            except :
+                reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t') # 
+                next(reader)
             
             
             for row in reader:
@@ -188,7 +191,7 @@ def plugin_start3(plugin_dir):
     plugin_dir = str(plugin_dir)
     release.Release.plugin_start(plugin_dir)
     Debug.setClient(this.client_version)
-    patrol.CanonnPatrol.plugin_start(plugin_dir)
+    this.patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     this.plugin_dir = plugin_dir
 
@@ -201,7 +204,7 @@ def plugin_start(plugin_dir):
     plugin_dir = str(plugin_dir)
     release.Release.plugin_start(plugin_dir)
     Debug.setClient(this.client_version)
-    patrol.CanonnPatrol.plugin_start(plugin_dir)
+    this.patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     this.plugin_dir = plugin_dir
 
@@ -419,7 +422,7 @@ def test(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromS
 def Easter_Egs(entry):
     if this.AllowEasternEggs == True:
         debug("Easter Check")
-        if entry['event'] == "HullDamage" and entry['PlayerPilot'] == True and entry["Fighter"] == False:
+        if entry['event'] == "HullDamage" : # and entry['PlayerPilot'] == True and entry["Fighter"] == False
             if entry['Health'] < 0.3 : 
                 debug("plaing sound")
                 Player(this.plugin_dir,["sounds\\hullAlarm.wav"]).start()
