@@ -143,12 +143,14 @@ def Alegiance_get(CMDR,SQ_old):
         debug("Community Check started")
         url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"        
         with closing(requests.get(url, stream=True)) as r:
-            try:
-                reader = csv.reader(r.content.splitlines(), delimiter='\t') # .decode('utf-8')
-                next(reader)
-            except :
-                reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t') # 
-                next(reader)
+            reader = csv.reader(r.iter_lines(decode_unicode=True), delimiter='\t')
+            next(reader)
+            #try: #Закоментировано для теста другого метода получения данных
+            #    reader = csv.reader(r.content.splitlines(), delimiter='\t') # .decode('utf-8')
+            #    next(reader)
+            #except :
+            #    reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t') # 
+            #    next(reader)
             
             
             for row in reader:
