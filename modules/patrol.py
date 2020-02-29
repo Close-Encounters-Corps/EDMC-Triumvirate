@@ -666,7 +666,7 @@ class CanonnPatrol(Frame):
     def download(self):
         #import traceback
         while self.SQID is None:
-            debug("Waiting CMDR's squadron {}:\n{}".format(self,""))traceback.print_stack(Limit=None)
+            debug("Waiting CMDR's squadron {}:\n{}".format(self,""))#traceback.print_stack(Limit=None)
             time.sleep(5)
         debug("Download Patrol Data")
         
