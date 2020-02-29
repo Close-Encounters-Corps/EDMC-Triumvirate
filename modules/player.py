@@ -1,5 +1,6 @@
 ﻿import threading
 from .playsound import playsound
+import os, sys
 
 class Player(threading.Thread):
     def __init__(self, plugin_dir,sounds):
