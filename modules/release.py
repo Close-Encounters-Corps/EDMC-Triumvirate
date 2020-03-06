@@ -181,10 +181,8 @@ class Release(Frame):
                 if current == release:
                     self.grid_remove()
                 elif current > release:
-                    #self.hyperlink['text'] #Отключено, что бы не мозолить глаза при выкатке промежуточного апдейта
-                    #= "Тестовая версия
-                    #{}".format(self.release)
-                    #self.grid()
+                    self.hyperlink['text']= "Тестовая версия {}".format(self.release)                     
+                    self.grid()
                     self.grid_remove()
                 else:
                     
