@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import modules.emitter
 import json
 import myNotebook as nb
@@ -643,8 +644,8 @@ class CodexTypes(Frame):
         frame.columnconfigure(1, weight=1)
         frame.grid(row=gridrow, column=0, sticky="NSEW")
 
-        nb.Label(frame, text="Codex Settings").grid(row=0, column=0, sticky="NW")
-        nb.Checkbutton(frame, text="Hide Codex Icons", variable=self.hidecodexbtn).grid(row=1, column=0, sticky="NW")
+        nb.Label(frame, text="Настройки Кодекса").grid(row=0, column=0, sticky="NW")
+        nb.Checkbutton(frame, text="Скрыть иконки кодекса", variable=self.hidecodexbtn).grid(row=1, column=0, sticky="NW")
 
         return frame
 
