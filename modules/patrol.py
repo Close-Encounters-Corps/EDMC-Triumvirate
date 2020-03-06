@@ -466,7 +466,8 @@ class CanonnPatrol(Frame):
                 next(reader)
             for row in reader:
                 debug(row)
-                squadron,system,x,y,z,TINF,TFAC,Description = row
+                try:squadron,system,x,y,z,TINF,TFAC,Description = row
+                except: error("Detected empty BGS String, please contact VAKazakov/KAZAK0V/Казаков#4700 ASAP")
                 bgsSysAndFac = {system:TFAC}
                 instructions = Description.format(TFAC,TINF)
                 
