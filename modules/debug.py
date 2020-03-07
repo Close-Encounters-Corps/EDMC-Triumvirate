@@ -12,6 +12,7 @@ import sys
 
 class Debug:
     debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
+    debugswitch = debugvar.get()
     client = "Triumvirate"
 
     @classmethod
@@ -25,7 +26,7 @@ class Debug:
 
     @classmethod
     def debug(cls, value):
-        if cls.debugvar.get() == 1:
+        if cls.debugswitch == 1:
             cls.p(value)
 
     @classmethod
