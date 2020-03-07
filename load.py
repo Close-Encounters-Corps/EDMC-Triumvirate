@@ -201,7 +201,8 @@ def plugin_start(plugin_dir):
     '''
     Load Template plugin into EDMC
     '''
-    plugin_dir = str(plugin_dir)
+    plugin_dir = unicode(plugin_dir)
+    #except: pass
     release.Release.plugin_start(plugin_dir)
     Debug.setClient(this.client_version)
     this.patrol.CanonnPatrol.plugin_start(plugin_dir)
