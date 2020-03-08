@@ -919,7 +919,7 @@ class CanonnPatrol(Frame):
             with open(self.patrol_config) as json_file:  
                 self.excluded = json.load(json_file)
         except:
-            debug("no config file {}".format(self.patrol_config))
+            pass #debug("no config file {}".format(self.patrol_config))
             
             
     def save_excluded(self):
