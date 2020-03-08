@@ -58,7 +58,7 @@ class saaScan():
     @classmethod
     def journal_entry(cls, cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client):
         if entry.get("event") == "SAASignalsFound":
-            canonn.emitter.post("https://us-central1-canonn-api-236217.cloudfunctions.net/postSAA",
+            modules.emitter.post("https://us-central1-canonn-api-236217.cloudfunctions.net/postSAA",
                                 {
                                     "cmdr": cmdr,
                                     "beta": is_beta,
@@ -947,7 +947,7 @@ class codexEmitter(Emitter):
             self.getReportTypes(self.entry.get("EntryID"))
             url = self.getUrl()
 
-            canonn.emitter.post("https://us-central1-canonn-api-236217.cloudfunctions.net/postCodex",
+            modules.emitter.post("https://us-central1-canonn-api-236217.cloudfunctions.net/postCodex",
                                 {
                                     "cmdr": self.cmdr,
                                     "beta": self.is_beta,
