@@ -34,6 +34,7 @@ class Debug:
         "Called to get a tk Frame for the settings dialog."
 
         cls.debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
+        cls.debugswitch = cls.debugvar.get()
         Debug.client = client
 
         frame = nb.Frame(parent)
@@ -48,6 +49,7 @@ class Debug:
     def prefs_changed(cls):
         "Called when the user clicks OK on the settings dialog."
         config.set('CanonnDebug', cls.debugvar.get())
+        cls.debugswitch = cls.debugvar.get()
 
 
 def debug(value):
