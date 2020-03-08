@@ -423,7 +423,7 @@ def test(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromS
 def Easter_Egs(entry):
     if this.AllowEasternEggs == True:
         debug("Easter Check")
-        if entry['event'] == "HullDamage" : # and entry['PlayerPilot'] == True and entry["Fighter"] == False
+        if entry['event'] == "HullDamage" and entry['PlayerPilot'] == True and entry["Fighter"] == False: # and entry['PlayerPilot'] == True and entry["Fighter"] == False
             if entry['Health'] < 0.3 : 
                 debug("plaing sound")
                 Player(this.plugin_dir,["sounds\\hullAlarm.wav"]).start()
