@@ -3,12 +3,16 @@ Module to provide the news.
 """
 
 
-try: #py3
-    import tkinter as tk
+try:
+    import tkinter as tk    
     from tkinter import Frame
-except: #py2
-    import Tkinter as tk
+    from io import BytesIO
+    from io import StringIO
+except:
+    import Tkinter as tk    
     from Tkinter import Frame
+    import StringIO
+    import StringIO as BytesIO
 import uuid
 from ttkHyperlinkLabel import HyperlinkLabel
 import requests
@@ -265,8 +269,12 @@ class Release(Frame):
         try:
             debug("Downloading new version")
             download = requests.get("https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip".format(tag_name), stream=True)
-            z = zipfile.ZipFile(io.BytesIO(download.content))
-            z.extractall(os.path.dirname(Release.plugin_dir))
+            try:
+                z = zipfile.ZipFile(io.BytesIO(download.content))
+                z.extractall(os.path.dirname(Release.plugin_dir))
+            except:
+                z = zipfile.ZipFile(io.StringIO.StringIO(download.content))
+                z.extractall(os.path.dirname(Release.plugin_dir))
         except:
             error("Download failed: {}".format(new_plugin_dir))
             plug.show_error("Triumvirate upgrade failed")

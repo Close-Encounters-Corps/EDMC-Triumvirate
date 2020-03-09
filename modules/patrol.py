@@ -225,12 +225,15 @@ class CanonnPatrol(Frame):
         self.canonnbtn = tk.IntVar(value=config.getint("HidePatrol"))
         self.factionbtn = tk.IntVar(value=config.getint("Hidefactions"))
         self.hideshipsbtn = tk.IntVar(value=config.getint("HideMyShips"))
+        self.edsmbtn = tk.IntVar(value=config.getint("HideEDSM"))
         self.copypatrolbtn = tk.IntVar(value=config.getint("CopyPatrolAdr"))
+
         
         self.canonn = self.canonnbtn.get()
         self.faction = self.factionbtn.get()
         self.HideMyShips = self.hideshipsbtn.get()
         self.CopyPatrolAdr = self.copypatrolbtn.get()
+        self.edsm = self.edsmbtn.get()
         
         self.columnconfigure(1, weight=1)
         self.columnconfigure(4, weight=4)
@@ -290,12 +293,15 @@ class CanonnPatrol(Frame):
         self.SQID = None #Переменная для хранения информации об
                          #сквадроне пилота
 
-        # wait 10 seconds before
-        # updatinb the ui
-        debug('self.after(1000, self.update_ui)')
-        self.after(1000, self.update_ui)
-        
+        self.patrol_update()
+        self.bind('<<PatrolDisplay>>', self.update_desc)
 
+
+    def update_desc(self, event):
+        self.hyperlink['text'] = "Fetching {}".format(self.patrol_name)
+        self.hyperlink['url'] = None
+
+        
     @classmethod    
     def plugin_start(cls,plugin_dir):
         cls.plugin_dir = plugin_dir
@@ -612,6 +618,7 @@ class CanonnPatrol(Frame):
 
     def getCanonnPatrol(self):
         canonnpatrol = []
+        c = 0
         url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMFJL2u0TbLMAQQ5zYixzgjjsNtGunZ9-PPZFheB4xzrjwR0JPPMcdMwqLm8ioVMp3MP4-k-JsIVzO/pub?gid=282559555&single=true&output=tsv"  
         with closing(requests.get(url, stream=True)) as r:
             try:
@@ -621,7 +628,7 @@ class CanonnPatrol(Frame):
                 reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t') # 
                 next(reader)
             for row in reader:
-
+                c = c + 1
                 id,	enabled, description, type, link = row
                 if enabled == 'Y':
                     if type == 'json':
@@ -740,6 +747,9 @@ class CanonnPatrol(Frame):
             if self.canonn != 1:
                 self.canonnpatrol = self.getCanonnPatrol()
                 patrol_list.extend(self.canonnpatrol)
+
+            if self.edsm != 1:
+                patrol_list.extend(self.getEDSMPatrol())
             
             # add exclusions from configuration
             for num,val in enumerate(patrol_list):
@@ -755,6 +765,71 @@ class CanonnPatrol(Frame):
             self.sort_patrol()
             
             debug("download done")
+            self.started = True
+            # poke an evennt safely
+            self.event_generate('<<PatrolDone>>', when='tail')
+
+
+    def getEDSMPatrol(self):
+        url = "https://www.edsm.net/en/galactic-mapping/json"
+
+        types = {
+            'minorPOI': 'Minor Point of Interest',
+            'planetaryNebula': 'Planetary Nebula',
+            'nebula': 'Nebula',
+            'blackHole': 'Black Hole',
+            'historicalLocation': 'Historical Location',
+            'stellarRemnant': 'Stellar Remnant',
+            'planetFeatures': 'Planet Features',
+            'regional': 'Regional',
+            'pulsar': 'Pulsar',
+            'starCluster': 'Star Cluster',
+            'jumponiumRichSystem': 'Jumponium Rich System',
+            'surfacePOI': 'Surface Point of Interest',
+            'deepSpaceOutpost': 'Deep Space Outpost',
+            'mysteryPOI': 'Mystery Point of Interest',
+            'organicPOI': 'Organic Point of Interest',
+            'restrictedSectors': 'Restricted Sector',
+            'geyserPOI': 'Geyser Point of Interest',
+            'region': 'Region',
+            'travelRoute': 'Travel Route',
+            'historicalRoute': 'Historical Route',
+            'minorRoute': 'Minor Route',
+            'neutronRoute': 'Neutron Route'
+        }
+
+        validtypes = ['minorPOI', 'planetaryNebula', 'nebula', 'blackHole', 'historicalLocation', 'stellarRemnant',
+                      'planetFeatures', 'regional', 'pulsar', 'starCluster', 'jumponiumRichSystem', 'surfacePOI',
+                      'deepSpaceOutpost', 'mysteryPOI', 'organicPOI', 'restrictedSectors', 'geyserPOI']
+
+        r = requests.get(url)
+        r.encoding = 'utf-8'
+        debug(r.encoding)
+        entries = r.json()
+        categories = {}
+
+        edsm_patrol=[]
+
+        self.patrol_name = "Galactic Mapping"
+
+        for entry in entries:
+
+            if entry.get("type") in validtypes and "Archived: " not in entry.get("name"):
+
+                edsm_patrol.append(
+                    newPatrol("Galactic Mapping",
+                            entry.get("galMapSearch"), (
+                                float(entry.get("coordinates")[0]),
+                                float(entry.get("coordinates")[1]),
+                                float(entry.get("coordinates")[2])
+                            ),
+                              "Galactic Mapping Project: {} : {}".format(types.get(entry.get("type")),entry.get("name").encode('utf-8')),
+                              entry.get("galMapUrl"),
+                              None)
+                )
+
+        self.event_generate('<<PatrolDone>>', when='tail')
+        return edsm_patrol
 
     def plugin_prefs(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
@@ -762,11 +837,13 @@ class CanonnPatrol(Frame):
         self.canonnbtn = tk.IntVar(value=config.getint("HidePatrol"))
         self.factionbtn = tk.IntVar(value=config.getint("Hidefactions"))
         self.hideshipsbtn = tk.IntVar(value=config.getint("HideMyShips"))
+        self.edsmbtn = tk.IntVar(value=config.getint("HideEDSM"))
         self.copypatrolbtn = tk.IntVar(value=config.getint("CopyPatrolAdr"))
         
         self.canonn = self.canonnbtn.get()
         self.faction = self.factionbtn.get()
         self.HideMyShips = self.hideshipsbtn.get()
+        self.edsm = self.edsmbtn.get()
         self.CopyPatrolAdr = self.copypatrolbtn.get()
         
         
@@ -779,16 +856,17 @@ class CanonnPatrol(Frame):
         nb.Checkbutton(frame, text="Скрыть патруль", variable=self.canonnbtn).grid(row = 1, column = 0,sticky="NW")
         nb.Checkbutton(frame, text="Скрыть BGS", variable=self.factionbtn).grid(row = 1, column = 1,sticky="NW")
         nb.Checkbutton(frame, text="Скрыть данные ваших кораблей", variable=self.hideshipsbtn).grid(row = 2, column = 1,sticky="NW")
-        nb.Checkbutton(frame, text="Автоматически копировать \nпатруль в буфер обмена", variable=self.copypatrolbtn).grid(row = 2, column = 0,sticky="NW",)
+        nb.Checkbutton(frame, text="Скрыть Galactic Mapping POI", variable=self.edsmbtn).grid(row=2, column=0, sticky="NW")
+        nb.Checkbutton(frame, text="Автоматически копировать \nпатруль в буфер обмена", variable=self.copypatrolbtn).grid(row = 3, column = 0,sticky="NW",)
         
         
-        debug("canonn: {}, faction: {} HideMyShips {}".format(self.canonn,self.faction,self.HideMyShips))
+        debug("canonn: {}, faction: {} hideships {}, EDSM {}".format(self.canonn, self.faction, self.HideMyShips, self.edsm))
         
         return frame
 
     def visible(self):
         
-        nopatrols = self.canonn == 1 and self.faction == 1 and self.HideMyShips == 1
+        nopatrols = self.canonn == 1 and self.faction == 1 and self.HideMyShips == 1 and self.edsm == 1      
         
         if nopatrols:
             self.grid_remove()
@@ -824,12 +902,14 @@ class CanonnPatrol(Frame):
         "Called when the user clicks OK on the settings dialog."
         config.set('HidePatrol', self.canonnbtn.get())      
         config.set('Hidefactions', self.factionbtn.get())      
-        config.set('HideMyShips', self.hideshipsbtn.get())      
+        config.set('HideMyShips', self.hideshipsbtn.get())
+        config.set('HideEDSM', self.edsmbtn.get())
         config.set('CopyPatrolAdr', self.copypatrolbtn.get())      
         
         self.canonn = self.canonnbtn.get()
         self.faction = self.factionbtn.get()
         self.HideMyShips = self.hideshipsbtn.get()
+        self.edsm = self.edsmbtn.get()
         self.CopyPatrolAdr = self.copypatrolbtn.get()
         
         if self.visible():
@@ -838,7 +918,7 @@ class CanonnPatrol(Frame):
             UpdateThread(self).start()
             
             
-        debug("canonn: {}, faction: {} HideMyShips {}".format(self.canonn,self.faction,self.HideMyShips))
+        debug("canonn: {}, faction: {} hideships {} hideEDSM {}".format(self.canonn, self.faction, self.hideships, self.edsm))
         
     def trigger(self,system,entry):
         # exit if the events dont match
