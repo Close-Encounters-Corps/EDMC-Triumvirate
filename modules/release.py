@@ -187,7 +187,7 @@ class Release(Frame):
                 elif current > release:
                     self.hyperlink['text']= "Тестовая версия {}".format(self.release)                     
                     self.grid()
-                    self.grid_remove()
+                    
                 else:
                     
                     if self.auto.get() == 1:
