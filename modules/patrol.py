@@ -215,7 +215,7 @@ class CanonnPatrol(Frame):
             parent
             )
         self.ships = []
-        
+        self.bind('<<PatrolDone>>', self.update_ui)
         self.IMG_PREV = tk.PhotoImage(file = os.path.join(CanonnPatrol.plugin_dir,"icons","left_arrow.gif"))
         self.IMG_NEXT = tk.PhotoImage(file = os.path.join(CanonnPatrol.plugin_dir,"icons","right_arrow.gif"))
         
@@ -348,7 +348,7 @@ class CanonnPatrol(Frame):
                 copyclip(self.nearest.get("system"))
         
         
-    def update_ui(self):        
+    def update_ui(self,event):        
         # rerun every 5 seconds
         debug('in update_ui self.after(5000, self.update_ui)')
         self.after(5000, self.update_ui)
