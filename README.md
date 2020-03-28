@@ -75,4 +75,4 @@ EDMC-Triumvirate was created using assets and imagery from Elite Dangerous, with
 
 EDMC-Triumvirate use data from [Canonn API V2](https://docs.canonn.tech), [ED Star Map (EDSM)](https://www.edsm.net/), [Elite BGS](https://elitebgs.app/), with permision of their owners
 
-EDMC-Triumvirate based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), with permision of initial developers
+EDMC-Triumvirate based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), with permission of initial developers
