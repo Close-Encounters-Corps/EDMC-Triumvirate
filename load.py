@@ -70,7 +70,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version = '1.2.4'
+this.version = '1.2.5'
 this.SQNag = 0
 this.client_version = '{}.{}'.format(myPlugin,this.version)
 this.body = None
@@ -502,7 +502,9 @@ def dashboard_entry(cmdr, is_beta, entry):
         '''
         We have new data on our commander
         '''
-        #debug(json.dumps(data,indent=4))
+        #debug("def cmdr_data")
+        #CAPIDebug=json.dumps(data,indent=4)
+        #debug(CAPIDebug)
         this.patrol.cmdr_data(data, is_beta)
 
 
