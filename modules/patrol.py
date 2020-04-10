@@ -918,7 +918,7 @@ class CanonnPatrol(Frame):
             UpdateThread(self).start()
             
             
-        debug("canonn: {}, faction: {} hideships {} hideEDSM {}".format(self.canonn, self.faction, self.hideships, self.edsm))
+        debug("canonn: {}, faction: {} hideships {} hideEDSM {}".format(self.canonn, self.faction, self.HideMyShips, self.edsm))
         
     def trigger(self,system,entry):
         # exit if the events dont match
@@ -1082,7 +1082,7 @@ class CanonnPatrol(Frame):
                     #debug(ship_info)
                 else:
                 
-                    ship_info = "Ваш{} ({}) Пристыкован(а) к {} и ваш{} ({}) пристыкован к {}".format(
+                    ship_info = "Ваш{} ({}) пристыкован(а) к {} и ваш{} ({}) пристыкован к {}".format(
                         getShipType(shipsystems.get(system)[0].get("name")),
                         getShipType(shipsystems.get(system)[0].get("shipName")),
                         shipsystems.get(system)[1].get("station").get("name"),
@@ -1091,7 +1091,7 @@ class CanonnPatrol(Frame):
                         shipsystems.get(system)[0].get("station").get("name"))        
                     #debug(ship_info)
             else:
-                ship_info = "У вас {} Кораблей в этой системе".format(ship_count)
+                ship_info = "У вас {} кораблей в этой системе".format(ship_count)
                 #debug(ship_info)
 
             self.ships.append(newPatrol("SHIPS",system,ship_pos,ship_info,None))
