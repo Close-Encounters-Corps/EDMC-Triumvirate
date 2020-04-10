@@ -44,6 +44,8 @@ class Systems():
         "Arietis Sector IR-V b2-0":[-33.78125,-52.71875,-163.875],
         "Cocassetsa":[-53.96875,-84.3125,-134.625],
         "BD+20 518":[-46.28125,-88.59375,-142.84375],
+        "HIP 15278":[-51.84375,-83.625,-152.90625],
+        "Tujila":[-64.375,-62.875,-153.875],
         "LHS 1020":[20.78125,-77.125,25.625],
         "Sanna":[35.96875,-83.3125,23.125],
         "HDS 3215":[31.53125,-54.21875,40.78125],
@@ -116,10 +118,10 @@ class Systems():
         "HIP 3428":[-98.6875,-92.65625,-60.34375],
         "Wayano":[-94.03125,-81.28125,-59.46875],
         "Arietis Sector VZ-P b5-5":[-100.125,-95.5625,-94.96875],
-        "Thaditic":[-112.3125,-71.09375,-91.65625],
         "79 Psi-2 Piscium":[-89.71875,-102.53125,-72.46875],
         "Luchunza":[-89.46875,-103.65625,-64.46875],
         "Wandrama":[-90.25,-103.3125,-94.96875],
+        "Gunab":[-100.1875,-104.4375,-83.875],
     }
 
     # start with scanned = false
@@ -137,9 +139,9 @@ class Systems():
             error("system is null")
             return
 
-        if not system in cls.systemCache and not cls.scanned:
-            journalGetSystem()
-            cls.scanned=True
+        #if not system in cls.systemCache and not cls.scanned:
+            #journalGetSystem()
+            #cls.scanned=True
 
 
         if system in cls.systemCache:
