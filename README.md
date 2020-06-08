@@ -19,7 +19,7 @@
 
 \*Если вы независимый пилот (по данным плагина) то ваш запрос о помощи будет передан в Close Encounters Corps
 
-## Элемент системы ориентирования (AKA Патруль)
+## Элемент системы ориентирования (aka Патруль)
 
 Система ориентирования используется для навигации при полетах до точек интереса и включает в себя:
  
@@ -40,6 +40,10 @@
 
 Собирает и анализирует информацию об обнаруженных инопланетных (чит. Таргоидских) сигналах.
 
+## Элемент по анализу отчетов FSS
+
+Собирает и анализирует полную информацию о текущей системе.
+
 ## Элемент Кодекса
 
 Собирает информацию записей журнала и синхронизирует ее с внешними службами, такимим как [база данных Canonn](https://api.canonn.tech/documentation).
@@ -52,9 +56,6 @@
 
 Собирает и обрабатывает информацию из бортового журнала. Обеспечивает обновление информации о рынках, товарах, ценах. Помогает всем пилотам получать актуальные данные. Передаёт полученную информацию на профильные сайты INARA, EDSM, EDDB и тому подобные. 
 
-## Элемент по анализу отчетов FSS
-
-Собирает и анализирует полную информацию о текущей системе.
 
 ## Инструкция по установке:
 
@@ -76,5 +77,7 @@ EDMC-Triumvirate was created using assets and imagery from Elite Dangerous, with
 EDMC-Triumvirate use data from [Canonn API V2](https://docs.canonn.tech), [ED Star Map (EDSM)](https://www.edsm.net/), [Elite BGS](https://elitebgs.app/), with permision of their owners.
 
 EDMC-Triumvirate based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), with permission of initial developers.
+
+All Contents Copyright ©️ 2016-2020 Close Encounters Corps, Triumvirate. All Rights Reserved.
 
 Logo - Антон Верницкий aka AntonyVern/Automatic system. 
