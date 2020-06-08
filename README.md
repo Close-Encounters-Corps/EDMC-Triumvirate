@@ -77,6 +77,4 @@ EDMC-Triumvirate use data from [Canonn API V2](https://docs.canonn.tech), [ED St
 
 EDMC-Triumvirate based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), with permission of initial developers.
 
-All Contents Copyright :copyright: 2016-2020 Close Encounters Corps, Triumvirate. All Rights Reserved.
-
 Logo - Антон Верницкий aka AntonyVern/Automatic system. 
