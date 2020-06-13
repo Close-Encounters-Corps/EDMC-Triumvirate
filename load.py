@@ -33,30 +33,32 @@ from modules import (
     patrol,
     release,
 )
-from modules.debug import Debug, debug
+from modules.debug import Debug, debug, error
 from modules.player import Player
 from modules.release import Release
 from modules.systems import Systems
 from modules.whitelist import whiteList
+from modules.lib import cmdr as cmdrlib
+from modules.lib import context as contextlib
+import settings
 
-this = sys.modules[__name__]
 try:  # Py3
     import tkinter.ttk
     import tkinter as tk
     from tkinter import Frame
     from urllib.parse import quote_plus
-
-    this.py3 = True
 except:  # py2
     import ttk
     import Tkinter as tk
     from Tkinter import Frame
     from urllib import quote_plus
 
-    this.py3 = False
-
-
 _ = functools.partial(l10n.Translations.translate, context=__file__)
+
+# хранилище данных плагина
+context = contextlib.global_context
+# алиас для совместимости с легаси кодом
+this = context
 
 this.nearloc = {
     "Latitude": None,
@@ -69,7 +71,7 @@ this.nearloc = {
 
 myPlugin = "EDMC-Triumvirate"
 
-
+this.py3 = settings.PY3
 this.version = "1.2.5"
 this.SQNag = 0
 this.client_version = "{}.{}".format(myPlugin, this.version)
@@ -83,6 +85,7 @@ this.SysFactionAllegiance = None  # variable for allegiance of
 this.Nag = 0
 this.cmdr_SQID = None  # variable for allegiance check
 this.CMDR = None
+this.SQ = None
 this.SRVmode, this.Fightermode = False, False
 this.old_time = 0
 this.fuel = 0
@@ -113,7 +116,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     # entry=nb.Entry(frame,None)
     nb.Label(
         frame,
-        text="В случае возникновения проблем с плагином \nили в случае, если Вы поставили неправильное сообщество в гугл-форме, \nпишите в личку Дискорда Казаков#4700",
+        text=settings.support_message,
     ).grid(row=9, column=0, sticky="NW")
 
     return frame
@@ -133,46 +136,24 @@ def prefs_changed(cmdr, is_beta):
     Debug.prefs_changed()
 
 
-SQ = None
 
 
 def Alegiance_get(CMDR, SQ_old):
 
-    global SQ
     if CMDR != this.CMDR:
         debug("Community Check started")
-        url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"
-        with closing(requests.get(url, stream=True)) as r:
-            try:
-                reader = csv.reader(
-                    r.content.splitlines(), delimiter="\t"
-                )  # .decode('utf-8')
-                next(reader)
-            except:
-                reader = csv.reader(
-                    r.content.decode("utf-8").splitlines(), delimiter="\t"
-                )  #
-                next(reader)
-
-            for row in reader:
-
-                cmdr, squadron, SQID = row
-
-                if cmdr == CMDR:
-                    try:
-                        SQ = SQID
-                        debug("your SQID is " + str(SQ))
-                    except:
-                        error("Set SQID Failed")
-
-        if SQ != None:
+        commander = cmdrlib.find_cmdr(CMDR)
+        if commander is not None:
+            this.SQ = commander.sqid
+            debug("your SQID is: " + str(commander.sqid))
+        if this.SQ != None:
             debug("SQ ID IS OK")
             this.CMDR = CMDR
-            Discord.SQID_set(SQ)
-            this.patrol.SQID_set(SQ)  # Функция для отправки данных о
+            Discord.SQID_set(this.SQ)
+            this.patrol.SQID_set(this.SQ)  # Функция для отправки данных о
             # сквадроне в модули, использовать как
             # шаблон
-            return SQ
+            return this.SQ
         else:
             if this.Nag == 0:
                 debug("SQID need to be instaled")
