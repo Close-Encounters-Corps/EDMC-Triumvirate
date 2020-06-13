@@ -402,7 +402,6 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     #Triumvirate reporting
     #FF.FriendFoe.friendFoe(cmdr,
     #system, station, entry, state)
-    legacy.shipscan(cmdr, is_beta, system, station, entry)
     Return = Return or modules.Commands.commands(cmdr, is_beta, system,SysFactionState,DistFromStarLS, station, entry, state,x,y,z,body,lat,lon,client,this.fuel,this.fuel_cons,this.SRVmode,this.Fightermode)
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
