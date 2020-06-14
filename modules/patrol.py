@@ -31,6 +31,7 @@ from .release import Release
 from l10n import Locale
 import time
 from . import legacy
+from .lib.thread import Thread
 
 CYCLE = 60 * 1000 * 60 # 60 minutes
 
@@ -133,9 +134,9 @@ def _callback(matches):
     except:
         return id
 
-class UpdateThread(threading.Thread):
-    def __init__(self,widget):
-        threading.Thread.__init__(self)
+class UpdateThread(Thread):
+    def __init__(self, widget):
+        Thread.__init__(self)
         self.widget = widget
     
     def run(self):
@@ -676,6 +677,8 @@ class CanonnPatrol(Frame):
         while self.SQID is None:
             debug("Waiting CMDR's squadron {}:\n{}".format(self,""))#traceback.print_stack(Limit=None)
             time.sleep(5)
+            if Thread.STOP_ALL:
+                return
         debug("Download Patrol Data")
         
         # if patrol list is populated

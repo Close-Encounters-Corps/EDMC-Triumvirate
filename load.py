@@ -40,6 +40,7 @@ from modules.systems import Systems
 from modules.whitelist import whiteList
 from modules.lib import cmdr as cmdrlib
 from modules.lib import context as contextlib
+from modules.lib import thread
 import settings
 
 try:  # Py3
@@ -168,13 +169,11 @@ def Alegiance_get(CMDR, SQ_old):
 
 def plugin_start3(plugin_dir):
     """
-    Load Template plugin into EDMC
+    EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
-
-    # print this.patrol
     plugin_dir = str(plugin_dir)
     release.Release.plugin_start(plugin_dir)
-    Debug.setClient(this.client_version)
+    Debug.set_client(this.client_version)
     this.patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     this.plugin_dir = plugin_dir
@@ -184,16 +183,15 @@ def plugin_start3(plugin_dir):
 
 def plugin_start(plugin_dir):
     """
-    Load Template plugin into EDMC
+    EDMC вызывает эту функцию при первом запуске плагина.
     """
     plugin_dir = unicode(plugin_dir)
-    # except: pass
     release.Release.plugin_start(plugin_dir)
-    Debug.setClient(this.client_version)
-    this.patrol.CanonnPatrol.plugin_start(plugin_dir)
+    Debug.set_client(this.client_version)
+    patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     this.plugin_dir = plugin_dir
-
+    Debug.p("Plugin loaded successfully.")
     return "Triumvirate-{}-Py2-mode".format(this.version)
 
 
@@ -203,6 +201,7 @@ def plugin_stop():
     """
     debug("Stopping the plugin")
     this.patrol.plugin_stop()
+    thread.Thread.stop_all()
 
 
 class EDMCLink(HyperlinkLabel):
@@ -235,7 +234,6 @@ def kill_notification():
 
 
 def plugin_app(parent):
-
     this.parent = parent
     # create a new frame as a containier
     # for the status

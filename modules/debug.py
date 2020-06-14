@@ -5,10 +5,12 @@ try: #Py3
 except: #py2
     import Tkinter as tk
     from Tkinter import Frame
+import datetime
+import sys
+
 import myNotebook as nb
 from config import config
-import datetime 
-import sys
+
 
 class Debug:
     debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
@@ -16,7 +18,7 @@ class Debug:
     client = "Triumvirate"
 
     @classmethod
-    def setClient(cls, client):
+    def set_client(cls, client):
         Debug.client = client
 
     @classmethod
@@ -58,4 +60,3 @@ def debug(value):
 
 def error(value):
     Debug.p(value) 
-
