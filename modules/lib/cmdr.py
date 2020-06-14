@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import csv
-from contextlib import closing
 
 import requests
 
@@ -8,34 +7,39 @@ import settings
 
 from modules.debug import debug
 
-class IteratorLogger(object):
+
+class IterWrapper(object):
     def __init__(self, obj):
         self.obj = obj
 
     def __iter__(self):
         for line in self.obj:
-            debug("Processing line ({}) {}", type(line), line)
+            # debug("Processing line '{}'", line)
             yield line
-        
+
 
 def find_cmdr(name):
-    debug("Looking for commander {}".format(name))
-    with closing(requests.get(settings.users_base_url, stream=True)) as r:
-        if settings.PY3:
-            from modules.lib.py3utils import BytesDecoder
-            stream = BytesDecoder(r.raw) # pylint:disable=no-member
-        else:
-            stream = r.raw # pylint:disable=no-member
-        stream = IteratorLogger(stream)
-        reader = csv.reader(stream, delimiter="\t")
+    name = str(name)
+    debug("Looking for commander {} ({})", name, type(name))
+    # TODO после перехода на py3 попробовать переписать
+    # запрос на requests.get(..., stream=True)
+    resp = requests.get(settings.users_base_url)
+    stream = IterWrapper(resp.content.splitlines())
+    reader = csv.reader(stream, delimiter="\t")
+    try:
         # пропускаем заголовок
         next(reader)
-
         for row in reader:
             cmdr, squadron, SQID = row
+            # debug("Comparing: {} ({})", cmdr, type(cmdr))
             if cmdr == name:
-                debug("Found commander: {}".format(cmdr))
-                return Commander(name, squadron, SQID)
+                cmdrobj = Commander(name, squadron, SQID)
+                debug("Commander found! ({})", cmdrobj)
+                return cmdrobj
+    except csv.Error:
+        debug("Error at reading CSV (line {}):", reader.line_num)
+        raise
+
 
 class Commander(object):
     def __init__(self, name, squadron, sqid):
