@@ -59,4 +59,4 @@ def debug(value):
 
 
 def error(value):
-    Debug.p(value) 
+    Debug.p(value)
