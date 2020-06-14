@@ -140,14 +140,13 @@ def prefs_changed(cmdr, is_beta):
 
 
 def Alegiance_get(CMDR, SQ_old):
-
     if CMDR != this.CMDR:
         debug("Community Check started")
         commander = cmdrlib.find_cmdr(CMDR)
         if commander is not None:
             this.SQ = commander.sqid
             debug("your SQID is: " + str(commander.sqid))
-        if this.SQ != None:
+        if this.SQ is not None:
             debug("SQ ID IS OK")
             this.CMDR = CMDR
             Discord.SQID_set(this.SQ)
@@ -546,7 +545,7 @@ this.plug_start = False
 
 
 def dashboard_entry(cmdr, is_beta, entry):
-    debug(entry)
+    debug("Dashboard entry: {}", entry)
     if this.plug_start == 0:
         this.plug_start = 1
         this.fuel = entry["Fuel"]

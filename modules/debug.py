@@ -7,6 +7,7 @@ except: #py2
     from Tkinter import Frame
 import datetime
 import sys
+import threading
 
 import myNotebook as nb
 from config import config
@@ -16,6 +17,7 @@ class Debug:
     debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
     debugswitch = debugvar.get()
     client = "Triumvirate"
+    lock = threading.Lock()
 
     @classmethod
     def set_client(cls, client):
@@ -23,12 +25,18 @@ class Debug:
 
     @classmethod
     def p(cls, value):
-        print("{} [{}] {}".format(datetime.datetime.now(), Debug.client, str(value)))
-        sys.stdout.flush()
+        cls.lock.acquire()
+        try:
+            print("{} [{}] {}".format(datetime.datetime.now(), Debug.client, str(value)))
+            sys.stdout.flush()
+        finally:
+            cls.lock.release()
 
     @classmethod
-    def debug(cls, value):
+    def debug(cls, value, *args):
         if cls.debugswitch == 1:
+            if args:
+                value = value.format(*args)
             cls.p(value)
 
     @classmethod
@@ -54,8 +62,8 @@ class Debug:
         cls.debugswitch = cls.debugvar.get()
 
 
-def debug(value):
-    Debug.debug(value)
+def debug(value, *args):
+    Debug.debug(value, *args)
 
 
 def error(value):
