@@ -19,7 +19,6 @@ import requests
 
 ### модули плагина ###
 import modules.Commands
-import modules.Discord as Discord
 from modules import clientreport, codex, factionkill
 from modules import friendfoe as FF
 from modules import (
@@ -149,7 +148,6 @@ def Alegiance_get(CMDR, SQ_old):
         if this.SQ is not None:
             debug("SQ ID IS OK")
             this.CMDR = CMDR
-            Discord.SQID_set(this.SQ)
             this.patrol.SQID_set(this.SQ)  # Функция для отправки данных о
             # сквадроне в модули, использовать как
             # шаблон
