@@ -12,7 +12,7 @@ class Range(object):
     def __init__(self, start, end):
         self.start = start
         self.end = end
-    
+
     def __contains__(self, obj):
         return self.start <= obj < self.end
 
@@ -22,7 +22,7 @@ class Range(object):
     def __repr__(self):
         return "{}({}, {})".format(
             self.__class__.__name__,
-            self.start, 
+            self.start,
             self.end
         )
 
@@ -39,6 +39,7 @@ def sos(
     fuel_cons,
     is_SRV,
     is_Fighter,
+    args
 ):
     # TODO переместить в настройки
     LifeSupportList = {
@@ -127,12 +128,14 @@ def sos(
     params = {}
 
     if state["Role"]:
-        return "Вы находитесь в экипаже, SOS отключено"  # Эта команда прервет выполнение, если
-    # игрок находится в мульткрю
+        # Эта команда прервет выполнение, если
+        # игрок находится в мульткрю
+        return "Вы находитесь в экипаже, SOS отключено"
     if is_SRV:
-        return "SOS отключен, пока вы в СРВ"  # эта команда прервет выполнение, если
-    # игрок находится в СРВ (Если ЕДМС
-    # передаст эту инфу)
+        # эта команда прервет выполнение, если
+        # игрок находится в СРВ (Если ЕДМС
+        # передаст эту инфу)
+        return "SOS отключен, пока вы в СРВ"
     if is_Fighter:
         return "SOS отключен, пока вы в Истребителе"
     if DistFromStarLS is not None:
@@ -156,20 +159,21 @@ def sos(
 
     # TODO переписать на алгоритм генерации цвета вместо словаря
     share_colors = {
-        Range(1.0, 1.0): 0xffff00,
         Range(0.9, 1.0): 0xffe600,
         Range(0.8, 0.9): 0xffcd00,
         Range(0.7, 0.8): 0xffb400,
-        Range(0.6, 0.7): 16751360,
-        Range(0.5, 0.6): 16744960,
-        Range(0.4, 0.5): 16738560,
-        Range(0.3, 0.4): 16732672,
-        Range(0.2, 0.3): 16725760,
-        Range(0.1, 0.2): 16719360,
-        Range(0.0, 0.1): 16712960,
+        Range(0.6, 0.7): 0xff9b00,
+        Range(0.5, 0.6): 0xff8200,
+        Range(0.4, 0.5): 0xff6900,
+        Range(0.3, 0.4): 0xff5200,
+        Range(0.2, 0.3): 0xff5200,
+        Range(0.1, 0.2): 0xff1e00,
+        Range(0.0, 0.1): 0xff0500,
     }
-    
-    color = 0xffffff # 16777215
+
+    # чисто жёлтый цвет в случае если в баке
+    # есть какое-то количество топлива
+    color = 0xffff00
     for range_, val in share_colors.iteritems():
         if current_fuel_share in range_:
             color = val
@@ -177,6 +181,7 @@ def sos(
 
     debug("Color: {}", hex(color))
 
+    avatar_url = "https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png" # noqa E501
     if current_fuel != 0:
         debug("Fuel consumption: {}", fuel_cons)
         location = system + Distance + Body
@@ -193,14 +198,14 @@ def sos(
                     "Etitle": "SOS",
                     "EDesc": str("Требуется заправка"),
                     "EColor": color,
-                    "Avatar": "https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
+                    "Avatar": avatar_url,
                     "Foouter": "Расчетное время отключения:",
                     "Timestamp": (time_to_go),
                     "Embed?": True,
                     "Fields": {
                         str("Местоположение:"): str(system + Distance + Body),
                         str("Топлива осталось:"): str(
-                            str(round(fuel["FuelMain"] + fuel["FuelReservoir"], 2))
+                            str(round(current_fuel, 2))
                             + " тонн"
                         ),
                         str("Времени до отключения:"): str((time_to_go)),
@@ -213,12 +218,12 @@ def sos(
                     "Etitle": "SOS",
                     "EDesc": str("Требуется заправка"),
                     "EColor": color,
-                    "Avatar": "https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
+                    "Avatar": avatar_url,
                     "Embed?": True,
                     "Fields": {
                         str("Местоположение:"): str(system + Distance + Body),
                         str("Топлива осталось:"): str(
-                            str(round(fuel["FuelMain"] + fuel["FuelReservoir"], 2))
+                            str(round(current_fuel, 2))
                             + " тонн"
                         ),
                         str("Времени до отключения:"): str("Не кончится"),
@@ -230,17 +235,17 @@ def sos(
             {
                 "Etitle": "SOS",
                 "EDesc": str(
-                    "Срочно требуется топливо, произведено отключение всех систем!!!"
+                    "Срочно требуется топливо, произведено отключение всех систем!!!" # noqa E501
                 ),
                 "EColor": "16711680",
-                "Avatar": "https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png",
+                "Avatar": avatar_url,
                 "Foouter": str("Расчетное время смерти:"),
                 "Timestamp": (time_to_go),
                 "Embed?": True,
                 "Fields": {
                     str("Местоположение:"): str(system + Distance + Body),
                     str("Топлива осталось:"): str(
-                        str(round(fuel["FuelMain"] + fuel["FuelReservoir"], 2))
+                        str(round(current_fuel, 2))
                         + " тонн"
                     ),
                     str("Кислород кончится через (прим.):"): LifeSupportList[
@@ -250,7 +255,8 @@ def sos(
             }
         )
     debug("Параметры SOS-запроса: {}", params)
-    Discord.Sender(cmdr, "FuelAlarm", params)
+    if "test" not in args:
+        Discord.Sender(cmdr, "FuelAlarm", params)
     return "Сигнал о помощи послан, ожидайте помощь"
 
 
@@ -276,7 +282,11 @@ def commands(
     is_Fighter,
 ):
     if entry["event"] == "SendText":
-        if entry["Message"].lower() == "/sos":
+        args = entry["Message"].lower().split()
+        command = args[0]
+        args = args[1:]
+        if command == "/sos":
+            debug("SOS args: {}", args)
             return sos(
                 cmdr,
                 system,
@@ -289,4 +299,5 @@ def commands(
                 fuel_cons,
                 is_SRV,
                 is_Fighter,
+                args=args
             )
