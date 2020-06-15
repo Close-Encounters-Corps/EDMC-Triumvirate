@@ -349,9 +349,8 @@ class CanonnPatrol(Frame):
                 copyclip(self.nearest.get("system"))
 
 
-    def update_ui(self,event):
+    def update_ui(self, event=None):
         # rerun every 5 seconds
-        debug('in update_ui self.after(5000, self.update_ui)')
         self.after(5000, self.update_ui)
         self.update()
 

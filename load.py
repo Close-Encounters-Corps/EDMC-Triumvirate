@@ -169,11 +169,11 @@ def plugin_start3(plugin_dir):
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
     release.Release.plugin_start(plugin_dir)
-    Debug.set_client(this.client_version)
+    Debug.set_client("Triumvirate")
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     this.plugin_dir = plugin_dir
-    Debug.p("Plugin loaded successfully.")
+    Debug.p("Plugin (v{}) loaded successfully.".format(this.version))
     return "Triumvirate-{}".format(this.version)
 
 
@@ -243,20 +243,6 @@ def plugin_app(parent):
     table = tk.Frame(frame)
     table.columnconfigure(1, weight=1)
     table.grid(sticky="NSEW")
-    # if this.py3 == False:
-    #    tk.Label(table)
-    #    this.wrongEDMCBanner = tk.Label(table,text=u"Устаревшая версия EDMC!",fg="red")
-    #    this.wrongEDMCBanner.grid(row=0, column=0, columnspan=1, sticky="NSEW")
-    #    this.wrongEDMCBanner.config(font=("Arial Black", 22))
-    #    this.wrongEDMCBannerInstructions = tk.Label(table,text="Плагин работает на несовместимой версии EDMC, \nработа всех функций не гарантируется",fg="red")
-    #    this.wrongEDMCBannerInstructions.grid(row=1, column=0, columnspan=1, sticky="NSEW")
-    #    this.wrongEDMCBannerInstructions.config(font=("Arial Black", 8))
-    #    this.hyperlink = EDMCLink(table)
-    #    this.hyperlink.grid(row = 2, column = 0)
-    #    this.button = tk.Button(table, text="Нажмите, что бы скрыть предупреждение",command=kill_notification)
-    #    this.button.grid(row=3,column = 0)
-    #    this.hyperdiction = hdreport.hyperdictionDetector.setup(table,4)
-    # else:
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.news = news.CECNews(table, 1)
     this.release = release.Release(table, this.version, 2)
