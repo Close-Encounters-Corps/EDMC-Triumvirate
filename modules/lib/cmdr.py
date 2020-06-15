@@ -15,12 +15,12 @@ class IterWrapper(object):
     def __iter__(self):
         for line in self.obj:
             # debug("Processing line '{}'", line)
-            yield line
+            yield line.decode()
 
 
 def find_cmdr(name):
     name = str(name)
-    debug("Looking for commander {} ({})", name, type(name))
+    debug("Looking for commander {}", name)
     # TODO после перехода на py3 попробовать переписать
     # запрос на requests.get(..., stream=True)
     resp = requests.get(settings.users_base_url)

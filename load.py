@@ -168,13 +168,12 @@ def plugin_start3(plugin_dir):
     """
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
-    plugin_dir = str(plugin_dir)
     release.Release.plugin_start(plugin_dir)
     Debug.set_client(this.client_version)
-    this.patrol.CanonnPatrol.plugin_start(plugin_dir)
+    patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     this.plugin_dir = plugin_dir
-
+    Debug.p("Plugin loaded successfully.")
     return "Triumvirate-{}".format(this.version)
 
 

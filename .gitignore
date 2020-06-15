@@ -4,6 +4,8 @@
 /*.bat
 /data/EDMC-Canonn.patrol
 /EDMC.log
+/.venv
+/venv
 *.pyc
 /.vs/slnx.sqlite
 /.vs
