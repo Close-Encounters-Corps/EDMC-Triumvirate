@@ -17,23 +17,20 @@
 """
 import tkinter as tk
 from tkinter import Frame
-import json
-import re
 import threading
-import uuid
-
-import requests
 
 import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 import settings
 
-from .debug import debug, error
+from .debug import debug
 from .lib.spreadsheet import Spreadsheet
 from .lib.conf import config
 
-REFRESH_CYCLES = 60  ## how many cycles before we refresh
-NEWS_CYCLE = 60 * 1000  # 60 секунд
+# число циклов (NEWS_CYCLE) перед обновлением новостей из базы
+REFRESH_CYCLES = 60
+# 60 секунд
+NEWS_CYCLE = 60 * 1000
 DEFAULT_NEWS_URL = "https://vk.com/close_encounters_corps"
 WRAP_LENGTH = 200
 
@@ -52,6 +49,7 @@ class Downloader(threading.Thread):
 
 class LimitedSpreadsheet(Spreadsheet):
     limit = 5
+
     def process(self):
         self.data = []
         for i, row in enumerate(self, start=1):
@@ -162,7 +160,6 @@ class CECNews(Frame):
         else:
             self.grid()
             self.isvisible = True
-
 
     def prefs_changed(self, cmdr, is_beta):
         """Обновляет параметры модуля новостей."""
