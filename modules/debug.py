@@ -40,12 +40,11 @@ class Debug:
             cls.p(value)
 
     @classmethod
-    def plugin_prefs(cls, parent, client, gridrow):
+    def plugin_prefs(cls, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
         cls.debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
         cls.debugswitch = cls.debugvar.get()
-        Debug.client = client
 
         frame = nb.Frame(parent)
         frame.columnconfigure(1, weight=1)

@@ -23,11 +23,12 @@ import uuid
 import requests
 
 import myNotebook as nb
-from config import config
 from ttkHyperlinkLabel import HyperlinkLabel
 import settings
 
 from .debug import debug, error
+from .lib.spreadsheet import Spreadsheet
+from .lib.conf import config
 
 REFRESH_CYCLES = 60  ## how many cycles before we refresh
 NEWS_CYCLE = 60 * 1000  # 60 секунд
@@ -45,6 +46,16 @@ class UpdateThread(threading.Thread):
         # download cannot contain any
         # tkinter changes
         self.widget.download()
+
+
+class LimitedSpreadsheet(Spreadsheet):
+    limit = 5
+    def process(self):
+        self.data = []
+        for i, row in enumerate(self, start=1):
+            self.data.append(row)
+            if i == self.limit:
+                break
 
 
 class NewsLink(HyperlinkLabel):
@@ -83,7 +94,7 @@ class CECNews(Frame):
 
         self.hidden = tk.IntVar(value=config.getint("HideNews"))
 
-        self.news_data = []
+        self.news_data = None
         self.columnconfigure(1, weight=1)
         self.grid(row=gridrow, column=0, sticky="NSEW", columnspan=2)
 
@@ -120,9 +131,7 @@ class CECNews(Frame):
     def update(self):
         if self.isvisible:
             if self.news_data:
-                feed = self.news_data.content.decode("utf-8").split("\r\n")
-                lines = feed[self.news_pos]
-                news = lines.split("\t")
+                news = self.news_data[self.news_pos-1]
                 self.hyperlink["url"] = news[1]
                 self.hyperlink["text"] = news[2]
                 debug("News debug: {}", news)
@@ -147,13 +156,8 @@ class CECNews(Frame):
         if self.isvisible:
 
             debug("Fetching News")
-            resp = requests.get(settings.news_url)
-            debug("Response: {}", resp)
-            if not resp.ok:
-                raise AssertionError(
-                    "Response from Google Spreadsheets is not OK"
-                )
-            self.news_data = resp
+            table = LimitedSpreadsheet(settings.news_url)
+            self.news_data = table
             self.news_count = 5
             self.news_pos = 1
             self.minutes = REFRESH_CYCLES
@@ -162,7 +166,6 @@ class CECNews(Frame):
         "Called to get a tk Frame for the settings dialog."
 
         self.hidden.set(config.getint("HideNews"))
-        # self.hidden = tk.IntVar(value=config.getint("HideNews"))
         return nb.Checkbutton(
             parent, text="Скрыть новости СЕС", variable=self.hidden
         ).grid(row=gridrow, column=0, sticky="NSEW")

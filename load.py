@@ -105,7 +105,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.news.plugin_prefs(frame, cmdr, is_beta, 1)
     this.release.plugin_prefs(frame, cmdr, is_beta, 2)
     this.patrol.plugin_prefs(frame, cmdr, is_beta, 3)
-    Debug.plugin_prefs(frame, this.client_version, 4)
+    Debug.plugin_prefs(frame, cmdr, is_beta, 4)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 5)
     nb.Checkbutton(
         frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton
@@ -169,26 +169,23 @@ def plugin_start3(plugin_dir):
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
     release.Release.plugin_start(plugin_dir)
+    # префикс логов
     Debug.set_client("Triumvirate")
     patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
     this.plugin_dir = plugin_dir
+    # в логах пишется с префиксом Triumvirate
     Debug.p("Plugin (v{}) loaded successfully.".format(this.version))
     return "Triumvirate-{}".format(this.version)
 
 
 def plugin_start(plugin_dir):
     """
-    EDMC вызывает эту функцию при первом запуске плагина.
+    EDMC вызывает эту функцию при первом запуске плагина в режиме Python 2.
     """
-    plugin_dir = unicode(plugin_dir)
-    release.Release.plugin_start(plugin_dir)
-    Debug.set_client(this.client_version)
-    patrol.CanonnPatrol.plugin_start(plugin_dir)
-    codex.CodexTypes.plugin_start(plugin_dir)
-    this.plugin_dir = plugin_dir
-    Debug.p("Plugin loaded successfully.")
-    return "Triumvirate-{}-Py2-mode".format(this.version)
+    raise EnvironmentError(
+        "Плагин несовместим с версиями EDMC младше 3.50 beta0."
+    )
 
 
 def plugin_stop():
