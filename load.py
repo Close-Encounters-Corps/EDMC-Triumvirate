@@ -71,7 +71,6 @@ this.nearloc = {
 
 myPlugin = "EDMC-Triumvirate"
 
-this.py3 = settings.PY3
 this.version = "1.2.5"
 this.SQNag = 0
 this.client_version = "{}.{}".format(myPlugin, this.version)
@@ -313,12 +312,11 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     if entry["event"] == "JoinedSquadron":
         Squadronsend(cmdr, entry["SquadronName"])
 
+    x, y, z = None, None, None
     if system:
-        x, y, z = Systems.edsmGetSystem(system)
-    else:
-        x = None
-        y = None
-        z = None
+        val =  Systems.edsmGetSystem(system)
+        if val is not None:
+            x, y, z = val
 
     return journal_entry_wrapper(
         cmdr,
@@ -338,11 +336,6 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         this.nearloc["Longitude"],
         this.client_version,
     )
-    # Now Journal_entry_wrapper take
-    # additional variable
-    # this.SysFactionState,
-    # this.SysFactionAllegiance, and
-    # this.DistFromStarLS
 
 
 def journal_entry_wrapper(
