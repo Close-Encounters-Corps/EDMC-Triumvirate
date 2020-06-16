@@ -10,11 +10,12 @@ import requests
 from modules.debug import Debug
 from modules.debug import debug, error
 
-class Systems():
+class Systems:
     '''
         Caching all the Canonn Systems because we don't want to hit them up every time 
         we start the plugin
     '''
+    # TODO реализовать вымывание данных
     systemCache = {
         "HIP 18609":[-15.96875,-85.65625,-173.90625],
         "Kagutsuchi":[-11.5,-84.5625,-162.65625],
@@ -139,37 +140,24 @@ class Systems():
             error("system is null")
             return
 
-        #if not system in cls.systemCache and not cls.scanned:
-            #journalGetSystem()
-            #cls.scanned=True
-
-
-        if system in cls.systemCache:
-
-            return cls.systemCache[system]
-
-        else:
-            url = 'https://www.edsm.net/api-v1/system?systemName=' + quote_plus(system) + '&showCoordinates=1'
-            r = requests.get(url)
+        val = cls.systemCache.get(system)
+        if not val:
+            url = 'https://www.edsm.net/api-v1/system'
+            r = requests.get(url, params={"systemName": system, "showCoordinates": "1"})
             s = r.json()
-
-            cls.systemCache[system] = (s["coords"]["x"], s["coords"]["y"], s["coords"]["z"])
-            return s["coords"]["x"], s["coords"]["y"], s["coords"]["z"]
+            debug("EDMS coords response: {}", s)
+            if not s:
+                return
+            s = s["coords"]
+            val = s["x"], s["y"], s["z"]
+            cls.systemCache[system] = val
+        return val
 
     @classmethod
     def dump(cls):
         for x in cls.systemCache.keys():
             debug('"{}":[{},{},{}],'.format(x, cls.systemCache.get(x)[0], cls.systemCache.get(x)[1],
                                             cls.systemCache.get(x)[2]))
-
-
-def edsmGetSystem(system):
-    Systems.edsmGetSystem(system)
-
-
-def dumpSystemCache():
-    Systems.dump()
-
 
 def journalGetSystem():
     with open(recent_journal(), encoding="utf-8") as f:

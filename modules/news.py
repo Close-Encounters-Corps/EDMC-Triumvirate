@@ -12,6 +12,8 @@
     то вызывает в фоновом потоке `download()`...
 4. ...который выкачивает новости и обновляет таймер.
 
+При вызове plugin_prefs в параметр parent добавляются настройки новостей.
+
 """
 import tkinter as tk
 from tkinter import Frame
@@ -36,7 +38,7 @@ DEFAULT_NEWS_URL = "https://vk.com/close_encounters_corps"
 WRAP_LENGTH = 200
 
 
-class UpdateThread(threading.Thread):
+class Downloader(threading.Thread):
     def __init__(self, widget):
         super().__init__()
         self.widget = widget
@@ -105,65 +107,48 @@ class CECNews(Frame):
         self.hyperlink = NewsLink(self)
         self.hyperlink.grid(row=0, column=1, sticky="NSEW")
 
-        self.news_count = 0
-        self.news_pos = 1
+        self.news_count = 5
+        self.news_pos = 0
         self.minutes = 0
         self.update_visible()
         self.after(250, self.news_update)
 
     def news_update(self):
         if self.isvisible:
-            if self.news_count == self.news_pos:
-                self.news_pos = 1
-            else:
-                self.news_pos += 1
-
             if self.minutes == 0:
-                # вызывает в фоне download()
-                UpdateThread(self).start()
+                Downloader(self).start()
             else:
                 self.minutes -= 1
 
             self.update()
-        # refesh every 60 seconds
         self.after(NEWS_CYCLE, self.news_update)
 
     def update(self):
-        if self.isvisible:
-            if self.news_data:
-                news = self.news_data[self.news_pos-1]
-                self.hyperlink["url"] = news[1]
-                self.hyperlink["text"] = news[2]
-                debug("News debug: {}", news)
-            else:
-                # keep trying until we
-                # have some data
-                # elf.hyperlink['text']
-                # = 'Fetching News...'
-                self.after(1000, self.update)
+        if self.news_data:
+            self.news_pos %= self.news_count
+            news = self.news_data[self.news_pos]
+            self.hyperlink["url"] = news[1]
+            self.hyperlink["text"] = news[2]
+            debug("News debug: '{}'", news[2])
+            self.news_pos += 1
+        elif self.isvisible:
+            # keep trying until we
+            # have some data
+            self.after(1000, self.update)
 
     def click_news(self, event):
-        if self.news_count == self.news_pos:
-            self.news_pos = 1
-        else:
-            self.news_pos += 1
-
         self.update()
 
     def download(self):
-        "Update the news."
-
-        if self.isvisible:
-
-            debug("Fetching News")
-            table = LimitedSpreadsheet(settings.news_url)
-            self.news_data = table
-            self.news_count = 5
-            self.news_pos = 1
-            self.minutes = REFRESH_CYCLES
+        """Выкачивает последние несколько новостей и обновляет поля модуля."""
+        debug("Fetching News")
+        table = LimitedSpreadsheet(settings.news_url)
+        self.news_data = table
+        self.news_pos = 0
+        self.minutes = REFRESH_CYCLES
 
     def plugin_prefs(self, parent, cmdr, is_beta, gridrow):
-        "Called to get a tk Frame for the settings dialog."
+        """Добавляет виджеты (поля настроек) к parent"""
 
         self.hidden.set(config.getint("HideNews"))
         return nb.Checkbutton(
@@ -180,8 +165,6 @@ class CECNews(Frame):
 
 
     def prefs_changed(self, cmdr, is_beta):
-        "Called when the user clicks OK on the settings dialog."
+        """Обновляет параметры модуля новостей."""
         config.set("HideNews", self.hidden.get())
         self.update_visible()
-        if self.isvisible:
-            self.news_update()
