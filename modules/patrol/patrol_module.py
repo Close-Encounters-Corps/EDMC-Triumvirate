@@ -42,6 +42,7 @@ from ..lib.context import global_context
 from ..lib.thread import Thread
 from ..lib.journal import JournalEntry
 from ..lib.spreadsheet import Spreadsheet
+from ..lib.module import Module
 from ..release import Release
 from ..systems import Systems
 
@@ -129,7 +130,7 @@ class InfoLink(HyperlinkLabel):
             self.after(500, self.__reset)
 
 
-class PatrolModule(Frame):
+class PatrolModule(Frame, Module):
     def __init__(self, parent, gridrow):
         "Initialise the ``Patrol``."
 
@@ -746,7 +747,7 @@ class PatrolModule(Frame):
         # poke an evennt safely
         self.event_generate("<<PatrolDone>>", when="tail")
 
-    def plugin_prefs(self, parent, cmdr, is_beta, gridrow):
+    def draw_settings(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
         self.canonnbtn = tk.IntVar(value=config.getint("HidePatrol"))
@@ -827,7 +828,7 @@ class PatrolModule(Frame):
 
         return nearest
 
-    def prefs_changed(self, cmdr, is_beta):
+    def on_settings_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
         config.set("HidePatrol", self.canonnbtn.get())
         config.set("Hidefactions", self.factionbtn.get())
@@ -953,7 +954,7 @@ class PatrolModule(Frame):
         with open(self.patrol_config, "w+") as outfile:
             json.dump(excluded, outfile)
 
-    def plugin_stop(self):
+    def close(self):
         """
         When the plugin stops we want to save the patrols where excluded = True
         We will not inclde ships or BGS in this as they can be excluded in other ways.

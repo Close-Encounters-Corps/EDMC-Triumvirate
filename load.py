@@ -39,20 +39,13 @@ from modules.systems import Systems
 from modules.whitelist import whiteList
 from modules.lib import cmdr as cmdrlib
 from modules.lib import context as contextlib
-from modules.lib import thread
-from modules.lib import journal
+from modules.lib import thread, journal
 import settings
 
-try:  # Py3
-    import tkinter.ttk
-    import tkinter as tk
-    from tkinter import Frame
-    from urllib.parse import quote_plus
-except:  # py2
-    import ttk
-    import Tkinter as tk
-    from Tkinter import Frame
-    from urllib import quote_plus
+import tkinter.ttk
+import tkinter as tk
+from tkinter import Frame
+from urllib.parse import quote_plus
 
 _ = functools.partial(l10n.Translations.translate, context=__file__)
 
@@ -104,7 +97,7 @@ def plugin_prefs(parent, cmdr, is_beta):
 
     this.news.plugin_prefs(frame, cmdr, is_beta, 1)
     this.release.plugin_prefs(frame, cmdr, is_beta, 2)
-    this.patrol.plugin_prefs(frame, cmdr, is_beta, 3)
+    context.by_class(patrol.PatrolModule).draw_settings(frame, cmdr, is_beta, 3)
     Debug.plugin_prefs(frame, cmdr, is_beta, 4)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 5)
     nb.Checkbutton(
@@ -125,7 +118,8 @@ def prefs_changed(cmdr, is_beta):
     """
     this.news.prefs_changed(cmdr, is_beta)
     this.release.prefs_changed(cmdr, is_beta)
-    this.patrol.prefs_changed(cmdr, is_beta)
+    for mod in context.modules:
+        mod.on_settings_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
     config.set("AllowEasterEggs", this.AllowEasternEggsButton.get())
     this.AllowEasternEggs = this.AllowEasternEggsButton.get()
@@ -142,7 +136,8 @@ def Alegiance_get(CMDR, SQ_old):
         if this.SQ is not None:
             debug("SQ ID IS OK")
             this.CMDR = CMDR
-            this.patrol.SQID_set(this.SQ)  # Функция для отправки данных о
+            context.by_class(patrol.PatrolModule).SQID_set(this.SQ)
+            # Функция для отправки данных о
             # сквадроне в модули, использовать как
             # шаблон
             return this.SQ
@@ -184,7 +179,8 @@ def plugin_stop():
     EDMC is closing
     """
     debug("Stopping the plugin")
-    this.patrol.plugin_stop()
+    for mod in context.modules:
+        mod.close()
     thread.Thread.stop_all()
 
 
@@ -227,9 +223,11 @@ def plugin_app(parent):
     table.columnconfigure(1, weight=1)
     table.grid(sticky="NSEW")
     this.codexcontrol = codex.CodexTypes(table, 0)
+    this.modules = [
+        patrol.PatrolModule(table, 3)
+    ]
     this.news = news.CECNews(table, 1)
     this.release = release.Release(table, this.version, 2)
-    this.patrol = patrol.PatrolModule(table, 3)
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     whitelist = whiteList(parent)
     whitelist.fetchData()
@@ -375,7 +373,8 @@ def journal_entry_wrapper(
     fssreports.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
     journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
     clientreport.submit(cmdr, is_beta, client, entry)
-    this.patrol.on_journal_entry(journal_entry)
+    for mod in context.modules:
+        mod.on_journal_entry(journal_entry)
     this.codexcontrol.journal_entry(
         cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
     )
@@ -573,7 +572,8 @@ def cmdr_data(data, is_beta):
     """
     We have new data on our commander
     """
-    this.patrol.cmdr_data(data, is_beta)
+    for mod in context.modules:
+        mod.on_cmdr_data(data, is_beta)
 
 
 def startup_stats(cmdr):

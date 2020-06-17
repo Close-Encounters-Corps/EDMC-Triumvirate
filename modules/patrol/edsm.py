@@ -52,7 +52,8 @@ validtypes = [
 
 
 def get_edsm_patrol() -> list:
-    patrol = global_context.patrol
+    from .patrol_module import PatrolModule
+    patrol = global_context.by_class(PatrolModule)
 
     r = requests.get(edsm_poi_url)
     r.encoding = "utf-8"
