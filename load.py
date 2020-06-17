@@ -139,7 +139,6 @@ def Alegiance_get(CMDR, SQ_old):
         commander = cmdrlib.find_cmdr(CMDR)
         if commander is not None:
             this.SQ = commander.sqid
-            debug("your SQID is: " + str(commander.sqid))
         if this.SQ is not None:
             debug("SQ ID IS OK")
             this.CMDR = CMDR
@@ -163,12 +162,11 @@ def plugin_start3(plugin_dir):
     """
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
+    this.plugin_dir = plugin_dir
     release.Release.plugin_start(plugin_dir)
     # префикс логов
     Debug.set_client("Triumvirate")
-    patrol.CanonnPatrol.plugin_start(plugin_dir)
     codex.CodexTypes.plugin_start(plugin_dir)
-    this.plugin_dir = plugin_dir
     # в логах пишется с префиксом Triumvirate
     Debug.p("Plugin (v{}) loaded successfully.".format(this.version))
     return "Triumvirate-{}".format(this.version)
@@ -221,11 +219,6 @@ def kill_notification():
 
 def plugin_app(parent):
     this.parent = parent
-    # create a new frame as a containier
-    # for the status
-    padx, pady = 10, 5  # formatting
-    sticky = tk.EW + tk.N  # full width, stuck to the top
-    anchor = tk.NW
 
     frame = this.frame = tk.Frame(parent)
     frame.columnconfigure(0, weight=1)
@@ -236,12 +229,10 @@ def plugin_app(parent):
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.news = news.CECNews(table, 1)
     this.release = release.Release(table, this.version, 2)
-    this.patrol = patrol.CanonnPatrol(table, 3)
+    this.patrol = patrol.PatrolModule(table, 3)
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     whitelist = whiteList(parent)
     whitelist.fetchData()
-    # for plugin in plug.PLUGINS:
-    #    debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
     this.AllowEasterEggs = tk.IntVar(value=config.getint("AllowEasterEggs"))
 
     return frame
@@ -578,14 +569,11 @@ def dashboard_entry(cmdr, is_beta, entry):
     this.cmdr_SQID = Alegiance_get(cmdr, this.cmdr_SQID)
     # debug(this.cmdr_SQID)
 
-    def cmdr_data(data, is_beta):
-        """
-        We have new data on our commander
-        """
-        # debug("def cmdr_data")
-        # CAPIDebug=json.dumps(data,indent=4)
-        # debug(CAPIDebug)
-        this.patrol.cmdr_data(data, is_beta)
+def cmdr_data(data, is_beta):
+    """
+    We have new data on our commander
+    """
+    this.patrol.cmdr_data(data, is_beta)
 
 
 def startup_stats(cmdr):

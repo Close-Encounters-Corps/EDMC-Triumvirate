@@ -27,17 +27,23 @@ from urllib.parse import quote_plus
 import requests
 
 import myNotebook as nb
-from config import config
 from l10n import Locale
 from ttkHyperlinkLabel import HyperlinkLabel
+import settings
 from settings import ships, states
 
-from . import legacy
-from .debug import debug as debug_base, error
-from .lib.thread import Thread
-from .lib.journal import JournalEntry
-from .release import Release
-from .systems import Systems
+from .canonn import CanonnPatrols
+from .patrol import build_patrol
+from .edsm import get_edsm_patrol
+from .. import legacy
+from ..debug import debug as debug_base, error
+from ..lib.conf import config
+from ..lib.context import global_context
+from ..lib.thread import Thread
+from ..lib.journal import JournalEntry
+from ..lib.spreadsheet import Spreadsheet
+from ..release import Release
+from ..systems import Systems
 
 CYCLE = 60 * 1000 * 60  # 60 minutes
 
@@ -123,7 +129,7 @@ class InfoLink(HyperlinkLabel):
             self.after(500, self.__reset)
 
 
-class CanonnPatrol(Frame):
+class PatrolModule(Frame):
     def __init__(self, parent, gridrow):
         "Initialise the ``Patrol``."
 
@@ -132,15 +138,16 @@ class CanonnPatrol(Frame):
         Frame.__init__(self, parent)
         self.ships = []
         self.bind("<<PatrolDone>>", self.update_ui)
+        plugin_dir = global_context.plugin_dir
         self.IMG_PREV = tk.PhotoImage(
-            file=os.path.join(CanonnPatrol.plugin_dir, "icons", "left_arrow.gif")
+            file=os.path.join(plugin_dir, "icons", "left_arrow.gif")
         )
         self.IMG_NEXT = tk.PhotoImage(
-            file=os.path.join(CanonnPatrol.plugin_dir, "icons", "right_arrow.gif")
+            file=os.path.join(plugin_dir, "icons", "right_arrow.gif")
         )
 
         self.patrol_config = os.path.join(
-            Release.plugin_dir, "data", "EDMC-Triumvirate.patrol"
+            plugin_dir, "data", "EDMC-Triumvirate.patrol"
         )
 
         self.canonnbtn = tk.IntVar(value=config.getint("HidePatrol"))
@@ -188,21 +195,22 @@ class CanonnPatrol(Frame):
 
         # self.submit.grid(row = 2, column = 1,sticky="NSW")
         self.next.grid(row=0, column=4, sticky="E")
-        self.next.bind("<Button-1>", self.patrol_next)
-        self.prev.bind("<Button-1>", self.patrol_prev)
+        self.next.bind("<Button-1>", self.next_patrol)
+        self.prev.bind("<Button-1>", self.prev_patrol)
 
         self.prev.grid_remove()
         self.next.grid_remove()
 
         self.excluded = {}
 
+        self.patrol_name = None
         self.patrol_list = []
         self.capi_update = False
         self.patrol_count = 0
         self.patrol_pos = 0
         self.minutes = 0
         self.isvisible = False
-        self.visible()
+        self.update_visibility()
         self.cmdr = ""
         self.nearest = {}
 
@@ -217,6 +225,7 @@ class CanonnPatrol(Frame):
         self.SQID = None  # Переменная для хранения информации об
         # сквадроне пилота
         self.sqid_evt = threading.Event()
+        self.update_thread = None
 
         self.bind("<<PatrolDisplay>>", self.update_desc)
 
@@ -224,19 +233,13 @@ class CanonnPatrol(Frame):
         self.hyperlink["text"] = "Fetching {}".format(self.patrol_name)
         self.hyperlink["url"] = None
 
-    @classmethod
-    def plugin_start(cls, plugin_dir):
-        cls.plugin_dir = plugin_dir
-
-    """
-    Every hour we will download the latest data
-    """
-
     def patrol_update(self):
-        UpdateThread(self).start()
+        """Периодически скачивает в фоне новые данные."""
+        self.update_thread = UpdateThread(self)
+        self.update_thread.start()
         self.after(CYCLE, self.patrol_update)
 
-    def patrol_next(self, event):
+    def next_patrol(self, event):
         """
         When the user clicks next it will hide the current patrol for the duration of the session
         It does this by setting an excluded flag on the patrl list
@@ -245,7 +248,7 @@ class CanonnPatrol(Frame):
         # go any further.
         index = self.nearest.get("index")
         if index + 1 < len(self.patrol_list):
-            debug("len {} ind {}".format(len(self.patrol_list), index))
+            debug("len {} ind {}", len(self.patrol_list), index)
             self.nearest["excluded"] = True
             self.patrol_list[index]["excluded"] = True
             self.update()
@@ -256,7 +259,7 @@ class CanonnPatrol(Frame):
             # to deal with it
             # self.prev.grid()
 
-    def patrol_prev(self, event):
+    def prev_patrol(self, event):
         """
         When the user clicks next it will unhide the previous patrol
         It does this by unsetting the excluded flag on the previous patrol
@@ -275,46 +278,46 @@ class CanonnPatrol(Frame):
         self.update()
 
     def update(self):
+        if not self.isvisible:
+            return
 
-        if self.visible():
+        capi_update = self.patrol_list and self.system and self.capi_update
+        journal_update = self.patrol_list and self.system
 
-            capi_update = self.patrol_list and self.system and self.capi_update
-            journal_update = self.patrol_list and self.system
+        if journal_update or capi_update:
+            self.sort_patrol()
+            p = Systems.edsmGetSystem(self.system)
+            self.nearest = self.get_nearest(p)
+            self.hyperlink["text"] = self.nearest.get("system")
+            self.hyperlink[
+                "url"
+            ] = "https://www.edsm.net/en/system?systemName={}".format(
+                quote_plus(self.nearest.get("system"))
+            )
 
-            if journal_update or capi_update:
-                self.sort_patrol()
-                p = Systems.edsmGetSystem(self.system)
-                self.nearest = self.getNearest(p)
-                self.hyperlink["text"] = self.nearest.get("system")
-                self.hyperlink[
-                    "url"
-                ] = "https://www.edsm.net/en/system?systemName={}".format(
-                    quote_plus(self.nearest.get("system"))
+            self.distance["text"] = "{}ly".format(
+                Locale.stringFromNumber(
+                    getDistance(p, self.nearest.get("coords")), 2
                 )
+            )
+            self.infolink["text"] = self.nearest.get("instructions")
+            self.infolink["url"] = self.parseurl(self.nearest.get("url"))
 
-                self.distance["text"] = "{}ly".format(
-                    Locale.stringFromNumber(
-                        getDistance(p, self.nearest.get("coords")), 2
-                    )
-                )
-                self.infolink["text"] = self.nearest.get("instructions")
-                self.infolink["url"] = self.parseurl(self.nearest.get("url"))
+            self.infolink.grid()
+            self.distance.grid()
+            self.prev.grid()
+            self.next.grid()
+            self.capi_update = False
 
-                self.infolink.grid()
-                self.distance.grid()
-                self.prev.grid()
-                self.next.grid()
-                self.capi_update = False
-
+        else:
+            if self.system:
+                self.hyperlink["text"] = "Получение патруля..."
             else:
-                if self.system:
-                    self.hyperlink["text"] = "Получение патруля..."
-                else:
-                    self.hyperlink["text"] = "Ожидание данных о местоположении..."
-                self.infolink.grid_remove()
-                self.distance.grid_remove()
-                self.prev.grid_remove()
-                self.next.grid_remove()
+                self.hyperlink["text"] = "Ожидание данных о местоположении..."
+            self.infolink.grid_remove()
+            self.distance.grid_remove()
+            self.prev.grid_remove()
+            self.next.grid_remove()
 
     def getStates(self, state_name, bgs):
         sa = []
@@ -431,9 +434,7 @@ class CanonnPatrol(Frame):
                 bgsSysAndFac = {system: TFAC}
                 instructions = Description.format(TFAC, TINF)
 
-                # sysLink=
-                # "https://elitebgs.app/system/{}".format()
-                if system != "":
+                if system:
                     if squadron == SQID:
                         if Description != "Basta":
                             self.bgsSystemsAndfactions.update(
@@ -442,30 +443,16 @@ class CanonnPatrol(Frame):
                             # нет модулей для отправки данных
                             SystemsOvireden.append(system)
                             if Description != "Hide" or Description != "Cancel":
-                                try:
-                                    BGSOveride.append(
-                                        newPatrol(
-                                            "BGSO",
-                                            system,
-                                            (float(x), float(y), float(z)),
-                                            instructions,
-                                            None,
-                                            None,
-                                        )
+                                BGSOveride.append(
+                                    build_patrol(
+                                        "BGSO",
+                                        system,
+                                        (float(x), float(y), float(z)),
+                                        instructions,
+                                        None,
+                                        None,
                                     )
-                                except:
-                                    error(
-                                        "patrol {},{},{},{},{},{},{},{}".format(
-                                            "BGSO",
-                                            system,
-                                            x,
-                                            y,
-                                            z,
-                                            instructions,
-                                            None,
-                                            None,
-                                        )
-                                    )
+                                )
 
                 else:
                     error("BGS Overide contains blank lines")
@@ -481,7 +468,7 @@ class CanonnPatrol(Frame):
         if bgs.get("system_name") in BGSOSys:
             return
         else:
-            return newPatrol(
+            return build_patrol(
                 "BGS",
                 bgs.get("system_name"),
                 (x, y, z),
@@ -531,130 +518,99 @@ class CanonnPatrol(Frame):
         else:
             return url
 
-    def getJsonPatrol(self, url):
-        canonnpatrol = []
+    # def getJsonPatrol(self, url):
+    #     canonnpatrol = []
 
-        with closing(requests.get(url)) as r:
-            reader = r.json()
-            for row in reader:
+    #     with closing(requests.get(url)) as r:
+    #         reader = r.json()
+    #         for row in reader:
 
-                type = row.get("type")
-                system = row.get("system")
-                x = row.get("x")
-                y = row.get("y")
-                z = row.get("z")
-                instructions = row.get("instructions")
-                url = row.get("url")
-                event = row.get("event")
-                if system != "":
-                    try:
-                        canonnpatrol.append(
-                            newPatrol(
-                                type,
-                                system,
-                                (float(x), float(y), float(z)),
-                                instructions,
-                                url,
-                                event,
-                            )
-                        )
-                    except:
-                        error(
-                            "patrol {},{},{},{},{},{},{},{}".format(
-                                type, system, x, y, z, instructions, url, event
-                            )
-                        )
-                else:
-                    error("Patrol contains blank lines")
+    #             type = row.get("type")
+    #             system = row.get("system")
+    #             x = row.get("x")
+    #             y = row.get("y")
+    #             z = row.get("z")
+    #             instructions = row.get("instructions")
+    #             url = row.get("url")
+    #             event = row.get("event")
+    #             if system != "":
+    #                 try:
+    #                     canonnpatrol.append(
+    #                         build_patrol(
+    #                             type,
+    #                             system,
+    #                             (float(x), float(y), float(z)),
+    #                             instructions,
+    #                             url,
+    #                             event,
+    #                         )
+    #                     )
+    #                 except:
+    #                     error(
+    #                         "patrol {},{},{},{},{},{},{},{}".format(
+    #                             type, system, x, y, z, instructions, url, event
+    #                         )
+    #                     )
+    #             else:
+    #                 error("Patrol contains blank lines")
 
-        return canonnpatrol
+    #     return canonnpatrol
 
-    def getTsvPatrol(self, url):
+    # def getTsvPatrol(self, url):
 
-        canonnpatrol = []
+    #     canonnpatrol = []
 
-        with closing(requests.get(url, stream=True)) as r:
-            try:
-                reader = csv.reader(
-                    r.content.splitlines(), delimiter="\t"
-                )  # .decode('utf-8')
-                next(reader)
-            except:
-                reader = csv.reader(
-                    r.content.decode("utf-8").splitlines(), delimiter="\t"
-                )  #
-                next(reader)
-            for row in reader:
+    #     with closing(requests.get(url, stream=True)) as r:
+    #         try:
+    #             reader = csv.reader(
+    #                 r.content.splitlines(), delimiter="\t"
+    #             )  # .decode('utf-8')
+    #             next(reader)
+    #         except:
+    #             reader = csv.reader(
+    #                 r.content.decode("utf-8").splitlines(), delimiter="\t"
+    #             )  #
+    #             next(reader)
+    #         for row in reader:
 
-                type = get(row, 0)
-                system = get(row, 1)
-                x = get(row, 2)
-                y = get(row, 3)
-                z = get(row, 4)
-                instructions = get(row, 5)
-                url = get(row, 6)
-                event = get(row, 7)
-                if system != "":
-                    try:
-                        canonnpatrol.append(
-                            newPatrol(
-                                type,
-                                system,
-                                (float(x), float(y), float(z)),
-                                instructions,
-                                url,
-                                event,
-                            )
-                        )
-                    except:
-                        error(
-                            "patrol {},{},{},{},{},{},{},{}".format(
-                                type,
-                                system,
-                                x,
-                                y,
-                                z,
-                                instructions,
-                                self.parseurl(url),
-                                event,
-                            )
-                        )
-                else:
-                    error("Patrol contains blank lines")
+    #             type = get(row, 0)
+    #             system = get(row, 1)
+    #             x = get(row, 2)
+    #             y = get(row, 3)
+    #             z = get(row, 4)
+    #             instructions = get(row, 5)
+    #             url = get(row, 6)
+    #             event = get(row, 7)
+    #             if system != "":
+    #                 try:
+    #                     canonnpatrol.append(
+    #                         build_patrol(
+    #                             type,
+    #                             system,
+    #                             (float(x), float(y), float(z)),
+    #                             instructions,
+    #                             url,
+    #                             event,
+    #                         )
+    #                     )
+    #                 except:
+    #                     error(
+    #                         "patrol {},{},{},{},{},{},{},{}".format(
+    #                             type,
+    #                             system,
+    #                             x,
+    #                             y,
+    #                             z,
+    #                             instructions,
+    #                             self.parseurl(url),
+    #                             event,
+    #                         )
+    #                     )
+    #             else:
+    #                 error("Patrol contains blank lines")
 
-        return canonnpatrol
+    #     return canonnpatrol
 
-    def getCanonnPatrol(self):
-        canonnpatrol = []
-        c = 0
-        url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMFJL2u0TbLMAQQ5zYixzgjjsNtGunZ9-PPZFheB4xzrjwR0JPPMcdMwqLm8ioVMp3MP4-k-JsIVzO/pub?gid=282559555&single=true&output=tsv"
-        with closing(requests.get(url, stream=True)) as r:
-            try:
-                reader = csv.reader(
-                    r.content.splitlines(), delimiter="\t"
-                )  # .decode('utf-8')
-                next(reader)
-            except:
-                reader = csv.reader(
-                    r.content.decode("utf-8").splitlines(), delimiter="\t"
-                )  #
-                next(reader)
-            for row in reader:
-                c = c + 1
-                id, enabled, description, type, link = row
-                if enabled == "Y":
-                    if type == "json":
-                        debug("{} Patrol enabled".format(description))
-                        canonnpatrol = canonnpatrol + self.getJsonPatrol(link)
-                    elif type == "tsv":
-                        debug("{} Patrol enabled".format(description))
-                        canonnpatrol = canonnpatrol + self.getTsvPatrol(link)
-                    else:
-                        debug("no patrol {}".format(row))
-                else:
-                    debug("{} Patrol disabled".format(description))
-
-        return canonnpatrol
 
     def keyval(self, k):
         x, y, z = Systems.edsmGetSystem(self.system)
@@ -692,185 +648,103 @@ class CanonnPatrol(Frame):
 
         # no point if we have no idea
         # where we are
-        if self.system:
-            patrol_list = []
-            self.bgsSystemsAndfactions = {}
-            if self.faction != 1:
-                debug("Getting Faction Data")
-                BGSO, BGSOSys = self.getBGSOveride(self.SQID)
+        if not self.system:
+            return
+        patrol_list = []
+        self.bgsSystemsAndfactions = {}
+        if self.faction != 1:
+            debug("Getting Faction Data")
+            BGSO, BGSOSys = self.getBGSOveride(self.SQID)
 
+            try:
+                patrol_list.extend(BGSO)  # Секция, отвечающая за
+            # загрузку заданий из
+            # гуглофайла
+            except:
+                debug("BGS Overide Complete")  #
+            debug(BGSO + BGSOSys)
+            if self.SQID == "SCEC":
                 try:
-                    patrol_list.extend(BGSO)  # Секция, отвечающая за
-                # загрузку заданий из
-                # гуглофайла
+                    patrol_list.extend(
+                        self.getFactionData("Close Encounters Corps", BGSOSys)
+                    )  # Секция, отвечающаяя за фракцию
+                # 1
                 except:
-                    debug("BGS Overide Complete")  #
-                debug(BGSO + BGSOSys)
-                if self.SQID == "SCEC":
-                    try:
-                        patrol_list.extend(
-                            self.getFactionData("Close Encounters Corps", BGSOSys)
-                        )  # Секция, отвечающаяя за фракцию
-                    # 1
-                    except:
-                        debug("CEC BGS Patrol complete")  #
-                elif self.SQID == "EGPU":
-                    try:
-                        patrol_list.extend(
-                            self.getFactionData("EG Union", BGSOSys)
-                        )  # Секция,
-                    # отвечающаяя за
-                    # фракцию 2
-                    except:
-                        debug("EGP BGS Patrol complete")  #
-                elif self.SQID == "RPSG":  # Секция
-                    # шаблон,
-                    # для
-                    # применения
-                    # в
-                    # случае
-                    # расширения
-                    # списка
-                    # фракций
-                    # или
-                    # сообществ
-                    try:
-                        patrol_list.extend(
-                            self.getFactionData("Royal Phoenix Corporation", BGSOSys)
-                        )  #
-                    except:
-                        debug("RPSG BGS Patrol complete")
-                # elif
-                # self.SQID=="Позывной
-                # сквадрона": # Секция
-                # шаблон, для применения
-                # в случае расширения
-                # списка фракций или
+                    debug("CEC BGS Patrol complete")  #
+            elif self.SQID == "EGPU":
+                try:
+                    patrol_list.extend(
+                        self.getFactionData("EG Union", BGSOSys)
+                    )  # Секция,
+                # отвечающаяя за
+                # фракцию 2
+                except:
+                    debug("EGP BGS Patrol complete")  #
+            elif self.SQID == "RPSG":  # Секция
+                # шаблон,
+                # для
+                # применения
+                # в
+                # случае
+                # расширения
+                # списка
+                # фракций
+                # или
                 # сообществ
-                # try:
-                # patrol_list.extend(self.getFactionData("Название
-                # фракции",BGSOSys)) #
-                # except:
-                # debug("Название
-                # фракции(сокр) BGS
-                # Patrol complete") #
-                if None in patrol_list:
-                    while None in patrol_list:
-                        patrol_list.remove(None)
-                    debug("None Patrols cleared")
+                try:
+                    patrol_list.extend(
+                        self.getFactionData("Royal Phoenix Corporation", BGSOSys)
+                    )  #
+                except:
+                    debug("RPSG BGS Patrol complete")
+            # elif
+            # self.SQID=="Позывной
+            # сквадрона": # Секция
+            # шаблон, для применения
+            # в случае расширения
+            # списка фракций или
+            # сообществ
+            # try:
+            # patrol_list.extend(self.getFactionData("Название
+            # фракции",BGSOSys)) #
+            # except:
+            # debug("Название
+            # фракции(сокр) BGS
+            # Patrol complete") #
+            if None in patrol_list:
+                while None in patrol_list:
+                    patrol_list.remove(None)
+                debug("None Patrols cleared")
 
-            if self.ships and self.HideMyShips != 1:
-                patrol_list.extend(self.ships)
+        if self.ships and self.HideMyShips != 1:
+            patrol_list.extend(self.ships)
 
-            if self.canonn != 1:
-                self.canonnpatrol = self.getCanonnPatrol()
-                patrol_list.extend(self.canonnpatrol)
+        if self.canonn != 1:
+            self.canonnpatrol = CanonnPatrols.new()
+            patrol_list.extend(self.canonnpatrol)
 
-            if self.edsm != 1:
-                patrol_list.extend(self.getEDSMPatrol())
+        if self.edsm != 1:
+            patrol_list.extend(get_edsm_patrol())
 
-            # add exclusions from configuration
-            for num, val in enumerate(patrol_list):
-                system = val.get("system")
-                type = val.get("type")
+        # add exclusions from configuration
+        for num, val in enumerate(patrol_list):
+            system = val.get("system")
+            type = val.get("type")
 
-                if self.excluded.get(type):
-                    if self.excluded.get(type).get(system):
-                        patrol_list[num]["excluded"] = self.excluded.get(type).get(
-                            system
-                        )
-
-            # we will sort the patrol list
-            self.patrol_list = patrol_list
-            self.sort_patrol()
-
-            debug("download done")
-            self.started = True
-            # poke an evennt safely
-            self.event_generate("<<PatrolDone>>", when="tail")
-
-    def getEDSMPatrol(self):
-        url = "https://www.edsm.net/en/galactic-mapping/json"
-
-        types = {
-            "minorPOI": "Minor Point of Interest",
-            "planetaryNebula": "Planetary Nebula",
-            "nebula": "Nebula",
-            "blackHole": "Black Hole",
-            "historicalLocation": "Historical Location",
-            "stellarRemnant": "Stellar Remnant",
-            "planetFeatures": "Planet Features",
-            "regional": "Regional",
-            "pulsar": "Pulsar",
-            "starCluster": "Star Cluster",
-            "jumponiumRichSystem": "Jumponium Rich System",
-            "surfacePOI": "Surface Point of Interest",
-            "deepSpaceOutpost": "Deep Space Outpost",
-            "mysteryPOI": "Mystery Point of Interest",
-            "organicPOI": "Organic Point of Interest",
-            "restrictedSectors": "Restricted Sector",
-            "geyserPOI": "Geyser Point of Interest",
-            "region": "Region",
-            "travelRoute": "Travel Route",
-            "historicalRoute": "Historical Route",
-            "minorRoute": "Minor Route",
-            "neutronRoute": "Neutron Route",
-        }
-
-        validtypes = [
-            "minorPOI",
-            "planetaryNebula",
-            "nebula",
-            "blackHole",
-            "historicalLocation",
-            "stellarRemnant",
-            "planetFeatures",
-            "regional",
-            "pulsar",
-            "starCluster",
-            "jumponiumRichSystem",
-            "surfacePOI",
-            "deepSpaceOutpost",
-            "mysteryPOI",
-            "organicPOI",
-            "restrictedSectors",
-            "geyserPOI",
-        ]
-
-        r = requests.get(url)
-        r.encoding = "utf-8"
-        entries = r.json()
-
-        edsm_patrol = []
-
-        self.patrol_name = "Galactic Mapping"
-
-        for entry in entries:
-
-            if entry.get("type") in validtypes and "Archived: " not in entry.get(
-                "name"
-            ):
-
-                edsm_patrol.append(
-                    newPatrol(
-                        "Galactic Mapping",
-                        entry.get("galMapSearch"),
-                        (
-                            float(entry.get("coordinates")[0]),
-                            float(entry.get("coordinates")[1]),
-                            float(entry.get("coordinates")[2]),
-                        ),
-                        "Galactic Mapping Project: {} : {}".format(
-                            types.get(entry.get("type")),
-                            entry.get("name").encode("utf-8"),
-                        ),
-                        entry.get("galMapUrl"),
-                        None,
+            if self.excluded.get(type):
+                if self.excluded.get(type).get(system):
+                    patrol_list[num]["excluded"] = self.excluded.get(type).get(
+                        system
                     )
-                )
 
+        # we will sort the patrol list
+        self.patrol_list = patrol_list
+        self.sort_patrol()
+
+        debug("download done")
+        self.started = True
+        # poke an evennt safely
         self.event_generate("<<PatrolDone>>", when="tail")
-        return edsm_patrol
 
     def plugin_prefs(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
@@ -920,8 +794,7 @@ class CanonnPatrol(Frame):
 
         return frame
 
-    def visible(self):
-
+    def update_visibility(self):
         nopatrols = (
             self.canonn == 1
             and self.faction == 1
@@ -932,21 +805,19 @@ class CanonnPatrol(Frame):
         if nopatrols:
             self.grid_remove()
             self.isvisible = False
-            return False
         else:
             self.grid()
             self.isvisible = True
-            return True
 
-    def getNearest(self, location):
-        nearest = ""
+    def get_nearest(self, location):
+        nearest = None
         for num, patrol in enumerate(self.patrol_list):
             # add the index to the
             # patrol so we can navigate
             self.patrol_list[num]["index"] = int(num)
 
             if not patrol.get("excluded"):
-                if nearest != "":
+                if nearest:
                     if getDistance(location, patrol.get("coords")) < getDistance(
                         location, nearest.get("coords")
                     ):
@@ -970,7 +841,9 @@ class CanonnPatrol(Frame):
         self.edsm = self.edsmbtn.get()
         self.CopyPatrolAdr = self.copypatrolbtn.get()
 
-        if self.visible():
+        self.update_visibility()
+
+        if self.isvisible:
             # we should fire off an
             # extra download
             UpdateThread(self).start()
@@ -998,7 +871,7 @@ class CanonnPatrol(Frame):
             j = requests.get(
                 self.nearest.get("url").replace("viewform", "formResponse")
             )
-        self.patrol_next(None)
+        self.next_patrol(None)
 
     def on_journal_entry(self, entry: JournalEntry):
         # We don't care what the
@@ -1047,7 +920,7 @@ class CanonnPatrol(Frame):
                 and entry.data.get("event") == "StartJump"
                 and entry.data.get("JumpType") == "Hyperspace"
             ):
-                self.patrol_next(None)
+                self.next_patrol(None)
 
             # After we have done everything
             # else let's see if we can
@@ -1111,19 +984,10 @@ class CanonnPatrol(Frame):
                 if not shipsystems.get(ship_system):
                     debug("first: {}".format(ship_system))
                     shipsystems[ship_system] = []
-                # else:
-                #    debug("second:
-                #    {}".format(ship_system))
 
                 shipsystems[ship_system].append(data.get("ships").get(ship))
-                # if ship_system ==
-                # "Celaeno":
-                #    debug(json.dumps(shipsystems[ship_system],indent=4))
-            # else:
-            # debug("skipping
-            # {}".format(ship))
 
-        for system in list(shipsystems.keys()):
+        for system in shipsystems.keys():
             ship_pos = Systems.edsmGetSystem(system)
             ship_count = len(shipsystems.get(system))
             # if system == "Celaeno":
@@ -1161,7 +1025,7 @@ class CanonnPatrol(Frame):
             else:
                 ship_info = "У вас {} кораблей в этой системе".format(ship_count)
 
-            self.ships.append(newPatrol("SHIPS", system, ship_pos, ship_info, None))
+            self.ships.append(build_patrol("SHIPS", system, ship_pos, ship_info, None))
 
         self.capi_update = True
         if self.system and not self.started:
@@ -1186,13 +1050,3 @@ def getDistance(p, g):
     # gets the distance between two systems
     return math.sqrt(sum(tuple([math.pow(p[i] - g[i], 2) for i in range(3)])))
 
-
-def newPatrol(type, system, coords, instructions, url, event=None):
-    return {
-        "type": type,
-        "system": system,
-        "coords": coords,
-        "instructions": instructions,
-        "url": url,
-        "event": event,
-    }
