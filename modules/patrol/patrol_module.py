@@ -35,6 +35,7 @@ from settings import ships, states
 from .canonn import CanonnPatrols
 from .patrol import build_patrol
 from .edsm import get_edsm_patrol
+from .bgs import BGSTasksOverride, new_bgs_patrol
 from .. import legacy
 from ..debug import debug as debug_base, error
 from ..lib.conf import config
@@ -329,144 +330,6 @@ class PatrolModule(Frame, Module):
             states = ",".join(sa)
             return states
 
-    def getBGSInstructions(self, bgs, faction):
-        target = 0.50 <= float(bgs.get("influence")) <= 0.65
-        over = float(bgs.get("influence")) > 0.65
-        under = float(bgs.get("influence")) < 0.50
-
-        if self.getStates("active_states", bgs):
-            statesraw = self.getStates("active_states", bgs).split(",")
-            # statesraw=" States:
-            # {}".format(self.getStates("active_states",bgs))
-            states = ""
-
-            for i in range(len(statesraw)):
-                states = states + ", " + states[statesraw[i]]
-        else:
-            states = ""
-
-        # 2019-03-24T11:14:38.000Z
-        d1 = datetime.strptime(bgs.get("updated_at"), "%Y-%m-%dT%H:%M:%S.%fZ")
-        d2 = datetime.now()
-
-        last_updated = (d2 - d1).days
-        if last_updated == 0:
-            update_text = ""
-        elif last_updated == 1:
-            update_text = ". Данные обновлены 1 день назад"
-        elif last_updated < 7:
-            update_text = ". Последнее обновление данных {} дней назад".format(
-                last_updated
-            )
-        elif last_updated > 6:
-            update_text = ". Последнее обновление данных {} дней назад. Пожалуйста прыгните в эту систему что бы обновить данные".format(
-                last_updated
-            )
-
-        # if
-        # self.getStates("pending_states",bgs):
-        # pstates=" Pending:
-        # {}".format(self.getStates("pending_states",bgs))
-        # else:
-        # pstates=""
-        if faction == "Close Encounters Corps":
-            contact = "Пожалуйста, свяжитесь с AntonyVern [СЕС]#5904 на сервере СЕС для получения инструкций"
-        if faction == "EG Union":
-            contact = "Пожалуйста, свяжитесь с HEúCMuT#1242 на сервере EGP для получения инструкций"
-        if faction == "Royal Phoenix Corporation":
-            contact = "Пожалуйста, свяжитесь с Saswitz#9598 на сервере RPSG для получения инструкций"
-        if target:
-            retval = "{} Влияние {}%{}{}".format(
-                faction,
-                Locale.stringFromNumber(float(bgs.get("influence") * 100), 2),
-                states,
-                update_text,
-            )
-        if over:
-            retval = "{} Влияние {}%{} {}{}.".format(
-                faction,
-                Locale.stringFromNumber(float(bgs.get("influence") * 100), 2),
-                states,
-                contact,
-                update_text,
-            )
-        if under:
-            retval = "{} Влияние {}%{} Пожалуйста выполняйте миссии за {}, чтобы увеличить наше влияние {}".format(
-                faction,
-                Locale.stringFromNumber(float(bgs.get("influence") * 100), 2),
-                states,
-                faction,
-                update_text,
-            )
-
-        debug("{}: {}".format(bgs.get("system_name"), retval))
-        return retval
-
-    def getBGSOveride(self, SQID):
-        BGSOveride = []
-        SystemsOvireden = []
-        url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQZFJ4O0nb3L1WJk5oMEPJrr1w5quBSnPRwSbz66XCYx0Lq6aAexm9s1t8N8iRxpdbUOtrhKqQMayY/pub?gid=0&single=true&output=tsv"
-        with closing(requests.get(url, stream=True)) as r:
-            r.encoding = "utf-8"
-            try:
-                reader = csv.reader(
-                    r.content.splitlines(), delimiter="\t"
-                )  # .decode('utf-8')
-                next(reader)
-            except:
-                reader = csv.reader(
-                    r.content.decode("utf-8").splitlines(), delimiter="\t"
-                )  #
-                next(reader)
-            for row in reader:
-                try:
-                    squadron, system, x, y, z, TINF, TFAC, Description = row
-                except:
-                    error(
-                        "Detected empty BGS String, please contact VAKazakov/KAZAK0V/Казаков#4700 ASAP"
-                    )
-                bgsSysAndFac = {system: TFAC}
-                instructions = Description.format(TFAC, TINF)
-
-                if system:
-                    if squadron == SQID:
-                        if Description != "Basta":
-                            self.bgsSystemsAndfactions.update(
-                                bgsSysAndFac
-                            )  # пока не проверка не валидна, так как
-                            # нет модулей для отправки данных
-                            SystemsOvireden.append(system)
-                            if Description != "Hide" or Description != "Cancel":
-                                BGSOveride.append(
-                                    build_patrol(
-                                        "BGSO",
-                                        system,
-                                        (float(x), float(y), float(z)),
-                                        instructions,
-                                        None,
-                                        None,
-                                    )
-                                )
-
-                else:
-                    error("BGS Overide contains blank lines")
-
-        legacy.BGS.bgsTasksSet(self.bgsSystemsAndfactions)
-        return BGSOveride, SystemsOvireden
-
-    def getBGSPatrol(self, bgs, faction, BGSOSys):
-        x, y, z = Systems.edsmGetSystem(bgs.get("system_name"))
-        if bgs.get("system_name") in BGSOSys:
-            return
-        else:
-            return build_patrol(
-                "BGS",
-                bgs.get("system_name"),
-                (x, y, z),
-                self.getBGSInstructions(bgs, faction),
-                "https://elitebgs.app/system/{}".format(bgs.get("system_id")),
-            )
-
     def getFactionData(self, faction, BGSOSys):
         """
             We will get Canonn faction data using an undocumented elitebgs api
@@ -479,8 +342,10 @@ class PatrolModule(Frame, Module):
         j = requests.get(url).json()
         if j:
             for bgs in j.get("docs")[0].get("faction_presence"):
-
-                patrol.append(self.getBGSPatrol(bgs, faction, BGSOSys))
+                val = new_bgs_patrol(bgs, faction, BGSOSys)
+                # val = self.getBGSPatrol(bgs, faction, BGSOSys)
+                if val:
+                    patrol.append(val)
 
         return patrol
 
@@ -488,26 +353,23 @@ class PatrolModule(Frame, Module):
         """
         We will provided some sunstitute variables for the urls
         """
-        if url:
-            r = url.replace("{CMDR}", self.cmdr)
+        r = url.replace("{CMDR}", self.cmdr)
 
-            # We will need to
-            # initialise to "" if not
+        # We will need to
+        # initialise to "" if not
 
-            if not self.lat:
-                self.lat = ""
-            if not self.lon:
-                self.lon = ""
-            if not self.body:
-                self.body = ""
+        if not self.lat:
+            self.lat = ""
+        if not self.lon:
+            self.lon = ""
+        if not self.body:
+            self.body = ""
 
-            r = r.replace("{LAT}", str(self.lat))
-            r = r.replace("{LON}", str(self.lon))
-            r = r.replace("{BODY}", self.body)
+        r = r.replace("{LAT}", str(self.lat))
+        r = r.replace("{LON}", str(self.lon))
+        r = r.replace("{BODY}", self.body)
 
-            return r
-        else:
-            return url
+        return r
 
     def keyval(self, k):
         x, y, z = Systems.edsmGetSystem(self.system)
@@ -550,7 +412,8 @@ class PatrolModule(Frame, Module):
         self.bgsSystemsAndfactions = {}
         if self.faction != 1:
             debug("Getting Faction Data")
-            BGSO, BGSOSys = self.getBGSOveride(self.SQID)
+            bgsoverride = BGSTasksOverride.new(self.SQID)
+            BGSO, BGSOSys = bgsoverride.patrols, bgsoverride.systems
 
             try:
                 patrol_list.extend(BGSO)  # Секция, отвечающая за
