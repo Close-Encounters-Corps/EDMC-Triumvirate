@@ -40,6 +40,7 @@ from modules.whitelist import whiteList
 from modules.lib import cmdr as cmdrlib
 from modules.lib import context as contextlib
 from modules.lib import thread
+from modules.lib import journal
 import settings
 
 try:  # Py3
@@ -113,10 +114,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     # release.versionInSettings(frame,
     # cmdr, is_beta,8)
     # entry=nb.Entry(frame,None)
-    nb.Label(
-        frame,
-        text=settings.support_message,
-    ).grid(row=9, column=0, sticky="NW")
+    nb.Label(frame, text=settings.support_message,).grid(row=9, column=0, sticky="NW")
 
     return frame
 
@@ -133,8 +131,6 @@ def prefs_changed(cmdr, is_beta):
     this.AllowEasternEggs = this.AllowEasternEggsButton.get()
 
     Debug.prefs_changed()
-
-
 
 
 def Alegiance_get(CMDR, SQ_old):
@@ -182,9 +178,7 @@ def plugin_start(plugin_dir):
     """
     EDMC вызывает эту функцию при первом запуске плагина в режиме Python 2.
     """
-    raise EnvironmentError(
-        "Плагин несовместим с версиями EDMC младше 3.50 beta0."
-    )
+    raise EnvironmentError("Плагин несовместим с версиями EDMC младше 3.50 beta0.")
 
 
 def plugin_stop():
@@ -314,7 +308,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 
     x, y, z = None, None, None
     if system:
-        val =  Systems.edsmGetSystem(system)
+        val = Systems.edsmGetSystem(system)
         if val is not None:
             x, y, z = val
 
@@ -359,6 +353,24 @@ def journal_entry_wrapper(
     """
     Detect journal events
     """
+    journal_entry = journal.JournalEntry(
+        cmdr=cmdr,
+        is_beta=is_beta,
+        system=system,
+        sys_faction_state=SysFactionState,
+        sys_faction_allegiance=SysFactionAllegiance,
+        dist_from_star=DistFromStarLS,
+        station=station,
+        data=entry,
+        state=state,
+        x=x,
+        y=y,
+        z=z,
+        body=body,
+        lat=lat,
+        lon=lon,
+        client=client
+    )
     # Если мне нужен вывод данных из
     # модулей в строку состояния
     # коннектора, я должен применить
@@ -372,9 +384,7 @@ def journal_entry_wrapper(
     fssreports.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
     journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
     clientreport.submit(cmdr, is_beta, client, entry)
-    this.patrol.journal_entry(
-        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
-    )
+    this.patrol.on_journal_entry(journal_entry)
     this.codexcontrol.journal_entry(
         cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
     )

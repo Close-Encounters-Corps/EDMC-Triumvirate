@@ -1,6 +1,13 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Patrols
+Модуль патруля. Отвечает за отображение информации о системе
+и о ближайших интересных системах на основании EDSM и данных из логов.
+
+Как примерно работает:
+Приходит запись из журнала.
+1. Если в нём есть данные о системе -- начинается периодически выкачиваться
+    база POI EDMC и обновляться данные.
+
 """
 
 import csv
@@ -26,8 +33,9 @@ from ttkHyperlinkLabel import HyperlinkLabel
 from settings import ships, states
 
 from . import legacy
-from .debug import debug, error
+from .debug import debug as debug_base, error
 from .lib.thread import Thread
+from .lib.journal import JournalEntry
 from .release import Release
 from .systems import Systems
 
@@ -37,19 +45,15 @@ DEFAULT_URL = ""
 WRAP_LENGTH = 200
 
 
+def debug(msg, *args):
+    debug_base(f"[patrol] {msg}", *args)
+
+
 def get_ship_type(key):
     key = key.lower()
     debug("Looking for ship '{}'", key)
     name = ships.get(key)
     return name if name else key
-
-
-def _callback(matches):
-    id = matches.group(1)
-    try:
-        return chr(int(id))
-    except:
-        return id
 
 
 class UpdateThread(Thread):
@@ -58,7 +62,6 @@ class UpdateThread(Thread):
         self.widget = widget
 
     def run(self):
-        debug("Patrol: UpdateThread")
         # download cannot contain any
         # tkinter changes
         self.widget.download()
@@ -215,7 +218,6 @@ class CanonnPatrol(Frame):
         # сквадроне пилота
         self.sqid_evt = threading.Event()
 
-        self.patrol_update()
         self.bind("<<PatrolDisplay>>", self.update_desc)
 
     def update_desc(self, event):
@@ -232,7 +234,6 @@ class CanonnPatrol(Frame):
 
     def patrol_update(self):
         UpdateThread(self).start()
-        debug("self.after(CYCLE, self.patrol_update)")
         self.after(CYCLE, self.patrol_update)
 
     def patrol_next(self, event):
@@ -402,6 +403,7 @@ class CanonnPatrol(Frame):
 
         debug("{}: {}".format(bgs.get("system_name"), retval))
         return retval
+
     def getBGSOveride(self, SQID):
         BGSOveride = []
         SystemsOvireden = []
@@ -472,6 +474,7 @@ class CanonnPatrol(Frame):
         debug("bgslist is " + str(self.bgsSystemsAndfactions))
         legacy.BGS.bgsTasksSet(self.bgsSystemsAndfactions)
         return BGSOveride, SystemsOvireden
+
     def getBGSPatrol(self, bgs, faction, BGSOSys):
         debug("bgsDebugSys" + bgs.get("system_name"))
         x, y, z = Systems.edsmGetSystem(bgs.get("system_name"))
@@ -502,6 +505,7 @@ class CanonnPatrol(Frame):
                 patrol.append(self.getBGSPatrol(bgs, faction, BGSOSys))
 
         return patrol
+
     def parseurl(self, url):
         """
         We will provided some sunstitute variables for the urls
@@ -522,7 +526,6 @@ class CanonnPatrol(Frame):
             r = r.replace("{LAT}", str(self.lat))
             r = r.replace("{LON}", str(self.lon))
             r = r.replace("{BODY}", self.body)
-
 
             return r
         else:
@@ -565,6 +568,7 @@ class CanonnPatrol(Frame):
                     error("Patrol contains blank lines")
 
         return canonnpatrol
+
     def getTsvPatrol(self, url):
 
         canonnpatrol = []
@@ -651,6 +655,7 @@ class CanonnPatrol(Frame):
                     debug("{} Patrol disabled".format(description))
 
         return canonnpatrol
+
     def keyval(self, k):
         x, y, z = Systems.edsmGetSystem(self.system)
         return getDistance((x, y, z), k.get("coords"))
@@ -676,11 +681,6 @@ class CanonnPatrol(Frame):
 
     def download(self):
         self.sqid_evt.wait()
-        # while self.SQID is None:
-        #     debug("Waiting CMDR's squadron {}:\n{}".format(self, ""))
-        #     time.sleep(5)
-        #     if Thread.STOP_ALL:
-        #         return
         debug("Download Patrol Data")
 
         # if patrol list is populated
@@ -999,81 +999,62 @@ class CanonnPatrol(Frame):
                 self.nearest.get("url").replace("viewform", "formResponse")
             )
         self.patrol_next(None)
-    def journal_entry(
-        self,
-        cmdr,
-        is_beta,
-        system,
-        station,
-        entry,
-        state,
-        x,
-        y,
-        z,
-        body,
-        lat,
-        lon,
-        client,
-    ):
+
+    def on_journal_entry(self, entry: JournalEntry):
         # We don't care what the
         # journal entry is as long as
         # the system has changed.
 
-        self.body = body
-        self.lat = lat
-        self.lon = lon
-        self.x = x
-        self.y = y
-        self.z = z
+        self.latest_entry = entry
+        self.body = entry.body
+        self.lat = entry.lat
+        self.lon = entry.lon
+        self.x = entry.coords.x
+        self.y = entry.coords.y
+        self.z = entry.coords.z
 
-        if system and not self.started:
+        if entry.system and not self.started:
             debug("Patrol download cycle commencing")
             self.started = True
             self.patrol_update()
 
-        if cmdr:
-            self.cmdr = cmdr
+        if entry.cmdr:
+            self.cmdr = entry.cmdr
+        event = entry.data.get("event")
 
-        if self.system != system and entry.get("event") in (
-            "Location",
-            "FSDJump",
-            "StartUp",
-        ):
-            debug("Refresshing Patrol ({})".format(entry.get("event")))
-            self.system = system
+        if entry.body:
             self.update()
-            if self.nearest and self.CopyPatrolAdr == 1:
-                copyclip(self.nearest.get("system"))
-        if body:
-            self.update()
-        # else:
-        # error("nope
-        # {}".format(entry.get("event")))
-        # error(system)
-        # error(self.system)
 
-        # If we have visted a system and
-        # then jump out then lets
-        # clicknext
-        if system and self.nearest:
+        if entry.system:
+            nearest_system = self.nearest.get("system")
+            same_system = nearest_system.upper() == entry.system.upper() if nearest_system else False
+            if self.system != entry.system and event in (
+                "Location",
+                "FSDJump",
+                "StartUp",
+            ):
+                debug("Refreshing Patrol ({})", event)
+                self.system = entry.system
+                self.update()
+                if self.nearest and self.CopyPatrolAdr == 1:
+                    copyclip(self.nearest.get("system"))
+            # If we have visted a system and
+            # then jump out then lets
+            # clicknext
             if (
-                self.nearest.get("system").upper() == system.upper()
-                and entry.get("event") == "StartJump"
-                and entry.get("JumpType") == "Hyperspace"
+                self.nearest
+                and same_system
+                and entry.data.get("event") == "StartJump"
+                and entry.data.get("JumpType") == "Hyperspace"
             ):
                 self.patrol_next(None)
 
-        # After we have done everything
-        # else let's see if we can
-        # automatically submit and move
-        # on
-        if (
-            system
-            and self.nearest.get("event")
-            and self.nearest.get("system").upper() == system.upper()
-        ):
-            self.trigger(system, entry)
-
+            # After we have done everything
+            # else let's see if we can
+            # automatically submit and move
+            # on
+            if self.nearest.get("event") and same_system:
+                self.trigger(entry.system, entry.data)
 
     def load_excluded(self):
         debug("loading excluded")
