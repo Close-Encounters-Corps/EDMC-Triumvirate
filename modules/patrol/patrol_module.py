@@ -147,9 +147,7 @@ class PatrolModule(Frame, Module):
             file=os.path.join(plugin_dir, "icons", "right_arrow.gif")
         )
 
-        self.patrol_config = os.path.join(
-            plugin_dir, "data", "EDMC-Triumvirate.patrol"
-        )
+        self.patrol_config = os.path.join(plugin_dir, "data", "EDMC-Triumvirate.patrol")
 
         self.canonnbtn = tk.IntVar(value=config.getint("HidePatrol"))
         self.factionbtn = tk.IntVar(value=config.getint("Hidefactions"))
@@ -230,6 +228,9 @@ class PatrolModule(Frame, Module):
 
         self.bind("<<PatrolDisplay>>", self.update_desc)
 
+    def on_start(self, plugin_dir):
+        pass
+
     def update_desc(self, event):
         self.hyperlink["text"] = "Fetching {}".format(self.patrol_name)
         self.hyperlink["url"] = None
@@ -297,9 +298,7 @@ class PatrolModule(Frame, Module):
             )
 
             self.distance["text"] = "{}ly".format(
-                Locale.stringFromNumber(
-                    getDistance(p, self.nearest.get("coords")), 2
-                )
+                Locale.stringFromNumber(getDistance(p, self.nearest.get("coords")), 2)
             )
             self.infolink["text"] = self.nearest.get("instructions")
             self.infolink["url"] = self.parseurl(self.nearest.get("url"))
@@ -327,11 +326,8 @@ class PatrolModule(Frame, Module):
             sa = list(active_states[0].values())
 
         if sa:
-            states = ","
-            states = states.join(sa)
+            states = ",".join(sa)
             return states
-        else:
-            return None
 
     def getBGSInstructions(self, bgs, faction):
         target = 0.50 <= float(bgs.get("influence")) <= 0.65
@@ -340,7 +336,6 @@ class PatrolModule(Frame, Module):
 
         if self.getStates("active_states", bgs):
             statesraw = self.getStates("active_states", bgs).split(",")
-            debug(statesraw)
             # statesraw=" States:
             # {}".format(self.getStates("active_states",bgs))
             states = ""
@@ -380,7 +375,6 @@ class PatrolModule(Frame, Module):
             contact = "Пожалуйста, свяжитесь с HEúCMuT#1242 на сервере EGP для получения инструкций"
         if faction == "Royal Phoenix Corporation":
             contact = "Пожалуйста, свяжитесь с Saswitz#9598 на сервере RPSG для получения инструкций"
-        # debug(bgs)
         if target:
             retval = "{} Влияние {}%{}{}".format(
                 faction,
@@ -425,7 +419,6 @@ class PatrolModule(Frame, Module):
                 )  #
                 next(reader)
             for row in reader:
-                debug(row)
                 try:
                     squadron, system, x, y, z, TINF, TFAC, Description = row
                 except:
@@ -458,13 +451,10 @@ class PatrolModule(Frame, Module):
                 else:
                     error("BGS Overide contains blank lines")
 
-        debug(BGSOveride)
-        debug("bgslist is " + str(self.bgsSystemsAndfactions))
         legacy.BGS.bgsTasksSet(self.bgsSystemsAndfactions)
         return BGSOveride, SystemsOvireden
 
     def getBGSPatrol(self, bgs, faction, BGSOSys):
-        debug("bgsDebugSys" + bgs.get("system_name"))
         x, y, z = Systems.edsmGetSystem(bgs.get("system_name"))
         if bgs.get("system_name") in BGSOSys:
             return
@@ -519,100 +509,6 @@ class PatrolModule(Frame, Module):
         else:
             return url
 
-    # def getJsonPatrol(self, url):
-    #     canonnpatrol = []
-
-    #     with closing(requests.get(url)) as r:
-    #         reader = r.json()
-    #         for row in reader:
-
-    #             type = row.get("type")
-    #             system = row.get("system")
-    #             x = row.get("x")
-    #             y = row.get("y")
-    #             z = row.get("z")
-    #             instructions = row.get("instructions")
-    #             url = row.get("url")
-    #             event = row.get("event")
-    #             if system != "":
-    #                 try:
-    #                     canonnpatrol.append(
-    #                         build_patrol(
-    #                             type,
-    #                             system,
-    #                             (float(x), float(y), float(z)),
-    #                             instructions,
-    #                             url,
-    #                             event,
-    #                         )
-    #                     )
-    #                 except:
-    #                     error(
-    #                         "patrol {},{},{},{},{},{},{},{}".format(
-    #                             type, system, x, y, z, instructions, url, event
-    #                         )
-    #                     )
-    #             else:
-    #                 error("Patrol contains blank lines")
-
-    #     return canonnpatrol
-
-    # def getTsvPatrol(self, url):
-
-    #     canonnpatrol = []
-
-    #     with closing(requests.get(url, stream=True)) as r:
-    #         try:
-    #             reader = csv.reader(
-    #                 r.content.splitlines(), delimiter="\t"
-    #             )  # .decode('utf-8')
-    #             next(reader)
-    #         except:
-    #             reader = csv.reader(
-    #                 r.content.decode("utf-8").splitlines(), delimiter="\t"
-    #             )  #
-    #             next(reader)
-    #         for row in reader:
-
-    #             type = get(row, 0)
-    #             system = get(row, 1)
-    #             x = get(row, 2)
-    #             y = get(row, 3)
-    #             z = get(row, 4)
-    #             instructions = get(row, 5)
-    #             url = get(row, 6)
-    #             event = get(row, 7)
-    #             if system != "":
-    #                 try:
-    #                     canonnpatrol.append(
-    #                         build_patrol(
-    #                             type,
-    #                             system,
-    #                             (float(x), float(y), float(z)),
-    #                             instructions,
-    #                             url,
-    #                             event,
-    #                         )
-    #                     )
-    #                 except:
-    #                     error(
-    #                         "patrol {},{},{},{},{},{},{},{}".format(
-    #                             type,
-    #                             system,
-    #                             x,
-    #                             y,
-    #                             z,
-    #                             instructions,
-    #                             self.parseurl(url),
-    #                             event,
-    #                         )
-    #                     )
-    #             else:
-    #                 error("Patrol contains blank lines")
-
-    #     return canonnpatrol
-
-
     def keyval(self, k):
         x, y, z = Systems.edsmGetSystem(self.system)
         return getDistance((x, y, z), k.get("coords"))
@@ -633,7 +529,6 @@ class PatrolModule(Frame, Module):
             self.SQID = SQ
         else:
             self.SQID = "None"
-        debug("SQID In Patrol IS " + self.SQID)
         self.sqid_evt.set()
 
     def download(self):
@@ -663,7 +558,6 @@ class PatrolModule(Frame, Module):
             # гуглофайла
             except:
                 debug("BGS Overide Complete")  #
-            debug(BGSO + BGSOSys)
             if self.SQID == "SCEC":
                 try:
                     patrol_list.extend(
@@ -734,9 +628,7 @@ class PatrolModule(Frame, Module):
 
             if self.excluded.get(type):
                 if self.excluded.get(type).get(system):
-                    patrol_list[num]["excluded"] = self.excluded.get(type).get(
-                        system
-                    )
+                    patrol_list[num]["excluded"] = self.excluded.get(type).get(system)
 
         # we will sort the patrol list
         self.patrol_list = patrol_list
@@ -810,24 +702,6 @@ class PatrolModule(Frame, Module):
             self.grid()
             self.isvisible = True
 
-    def get_nearest(self, location):
-        nearest = None
-        for num, patrol in enumerate(self.patrol_list):
-            # add the index to the
-            # patrol so we can navigate
-            self.patrol_list[num]["index"] = int(num)
-
-            if not patrol.get("excluded"):
-                if nearest:
-                    if getDistance(location, patrol.get("coords")) < getDistance(
-                        location, nearest.get("coords")
-                    ):
-                        nearest = patrol
-                else:
-                    nearest = patrol
-
-        return nearest
-
     def on_settings_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
         config.set("HidePatrol", self.canonnbtn.get())
@@ -853,26 +727,6 @@ class PatrolModule(Frame, Module):
                 self.canonn, self.faction, self.HideMyShips, self.edsm
             )
         )
-
-    def trigger(self, system, entry):
-        # exit if the events dont match
-
-        event = json.loads(self.nearest.get("event"))
-        debug("event {}".format(event))
-        for key in list(event.keys()):
-            if event.get(key):
-                debug("event key {} value {}".format(key, event.get(key)))
-                if not str(entry.get(key)).upper() == str(event.get(key)).upper():
-                    return False
-
-        debug("triggered")
-        # autosubmit the form --
-        # allowing for google forms
-        if self.nearest.get("url"):
-            j = requests.get(
-                self.nearest.get("url").replace("viewform", "formResponse")
-            )
-        self.next_patrol(None)
 
     def on_journal_entry(self, entry: JournalEntry):
         # We don't care what the
@@ -901,7 +755,11 @@ class PatrolModule(Frame, Module):
 
         if entry.system:
             nearest_system = self.nearest.get("system")
-            same_system = nearest_system.upper() == entry.system.upper() if nearest_system else False
+            same_system = (
+                nearest_system.upper() == entry.system.upper()
+                if nearest_system
+                else False
+            )
             if self.system != entry.system and event in (
                 "Location",
                 "FSDJump",
@@ -930,49 +788,22 @@ class PatrolModule(Frame, Module):
             if self.nearest.get("event") and same_system:
                 self.trigger(entry.system, entry.data)
 
-    def load_excluded(self):
-        debug("loading excluded")
-        self.patrol_config = os.path.join(
-            Release.plugin_dir, "data", "EDMC-Triumvirate.patrol"
-        )
-        try:
-            with open(self.patrol_config) as json_file:
-                self.excluded = json.load(json_file)
-        except:
-            pass  # debug("no config file {}".format(self.patrol_config))
-
-    def save_excluded(self):
-        self.patrol_config = os.path.join(
-            Release.plugin_dir, "data", "EDMC-Triumvirate.patrol"
-        )
-        excluded = {}
-        for patrol in self.patrol_list:
-            if patrol.get("excluded") and not patrol.get("type") in ("BGS", "SHIPS"):
-                if not excluded.get(patrol.get("type")):
-                    excluded[patrol.get("type")] = {}
-                excluded[patrol.get("type")][patrol.get("system")] = True
-        with open(self.patrol_config, "w+") as outfile:
-            json.dump(excluded, outfile)
-
-    def close(self):
-        """
-        When the plugin stops we want to save the patrols where excluded = True
-        We will not inclde ships or BGS in this as they can be excluded in other ways.
-        """
-        self.save_excluded()
-
-    def cmdr_data(self, data, is_beta):
+    def on_cmdr_data(self, data, is_beta):
         """
         We have new data on our commander
 
         Lets get a list of ships
         """
-        self.cmdr = data.get("commander").get("name")
+        cmdr = data["commander"]
+        cmdr_name = cmdr.get("name")
+        if cmdr_name is None:
+            return
+        self.cmdr = cmdr_name
 
         self.ships = []
         self.system = data.get("lastSystem").get("name")
 
-        current_ship = data.get("commander").get("currentShipId")
+        current_ship = cmdr["currentShipId"]
 
         shipsystems = {}
 
@@ -988,41 +819,15 @@ class PatrolModule(Frame, Module):
 
                 shipsystems[ship_system].append(data.get("ships").get(ship))
 
-        for system in shipsystems.keys():
+        for system, ships in shipsystems.items():
             ship_pos = Systems.edsmGetSystem(system)
-            ship_count = len(shipsystems.get(system))
-            # if system == "Celaeno":
-            #    debug(json.dumps(shipsystems.get(system),indent=4))
+            ship_count = len(ships)
             if ship_count == 1:
-                # debug(shipsystems.get(system))
-                ship_type = get_ship_type(shipsystems.get(system)[0].get("name"))
-                ship_name = shipsystems.get(system)[0].get("shipName")
-                ship_station = shipsystems.get(system)[0].get("station").get("name")
-                ship_info = "Ваш{}, {} пристыкован(а) к {}".format(
-                    ship_type, ship_name, ship_station
+                ship = ships[0]
+                ship_type = get_ship_type(ship.get("name"))
+                ship_info = "Ваш {}, {} пристыкован(а) к {}".format(
+                    ship_type, ship.get("shipName"), ship["station"].get("name")
                 )
-            elif ship_count == 2:
-
-                if shipsystems.get(system)[0].get("station").get(
-                    "name"
-                ) == shipsystems.get(system)[1].get("station").get("name"):
-                    ship_info = "Ваш{} ({}) и ваш{} ({}) пристыкованы к {}".format(
-                        get_ship_type(shipsystems.get(system)[0].get("name")),
-                        get_ship_type(shipsystems.get(system)[0].get("shipName")),
-                        get_ship_type(shipsystems.get(system)[1].get("name")),
-                        get_ship_type(shipsystems.get(system)[1].get("shipName")),
-                        shipsystems.get(system)[0].get("station").get("name"),
-                    )
-                else:
-
-                    ship_info = "Ваш{} ({}) пристыкован(а) к {} и ваш{} ({}) пристыкован к {}".format(
-                        get_ship_type(shipsystems.get(system)[0].get("name")),
-                        get_ship_type(shipsystems.get(system)[0].get("shipName")),
-                        shipsystems.get(system)[1].get("station").get("name"),
-                        get_ship_type(shipsystems.get(system)[1].get("name")),
-                        get_ship_type(shipsystems.get(system)[1].get("shipName")),
-                        shipsystems.get(system)[0].get("station").get("name"),
-                    )
             else:
                 ship_info = "У вас {} кораблей в этой системе".format(ship_count)
 
@@ -1033,6 +838,75 @@ class PatrolModule(Frame, Module):
             debug("Patrol download cycle commencing")
             self.started = True
             self.patrol_update()
+
+    def close(self):
+        """
+        When the plugin stops we want to save the patrols where excluded = True
+        We will not inclde ships or BGS in this as they can be excluded in other ways.
+        """
+        self.save_excluded()
+
+    def load_excluded(self):
+        debug("loading excluded")
+        self.patrol_config = os.path.join(
+            Release.plugin_dir, "data", "EDMC-Triumvirate.patrol"
+        )
+        try:
+            with open(self.patrol_config) as json_file:
+                self.excluded = json.load(json_file)
+        except:
+            pass
+
+    def save_excluded(self):
+        self.patrol_config = os.path.join(
+            Release.plugin_dir, "data", "EDMC-Triumvirate.patrol"
+        )
+        excluded = {}
+        for patrol in self.patrol_list:
+            if patrol.get("excluded") and not patrol.get("type") in ("BGS", "SHIPS"):
+                if not excluded.get(patrol.get("type")):
+                    excluded[patrol.get("type")] = {}
+                excluded[patrol.get("type")][patrol.get("system")] = True
+        with open(self.patrol_config, "w+") as outfile:
+            json.dump(excluded, outfile)
+
+    def trigger(self, system, entry):
+        # exit if the events dont match
+
+        event = json.loads(self.nearest.get("event"))
+        debug("event {}".format(event))
+        for key in list(event.keys()):
+            if event.get(key):
+                debug("event key {} value {}".format(key, event.get(key)))
+                if not str(entry.get(key)).upper() == str(event.get(key)).upper():
+                    return False
+
+        debug("triggered")
+        # autosubmit the form --
+        # allowing for google forms
+        if self.nearest.get("url"):
+            j = requests.get(
+                self.nearest.get("url").replace("viewform", "formResponse")
+            )
+        self.next_patrol(None)
+
+    def get_nearest(self, location):
+        nearest = None
+        for num, patrol in enumerate(self.patrol_list):
+            # add the index to the
+            # patrol so we can navigate
+            self.patrol_list[num]["index"] = int(num)
+
+            if not patrol.get("excluded"):
+                if nearest:
+                    if getDistance(location, patrol.get("coords")) < getDistance(
+                        location, nearest.get("coords")
+                    ):
+                        nearest = patrol
+                else:
+                    nearest = patrol
+
+        return nearest
 
 
 def copyclip(value):
@@ -1050,4 +924,3 @@ def copyclip(value):
 def getDistance(p, g):
     # gets the distance between two systems
     return math.sqrt(sum(tuple([math.pow(p[i] - g[i], 2) for i in range(3)])))
-
