@@ -35,7 +35,7 @@ class Emitter(threading.Thread):
         Should probably make this a heritable class as this is a repeating pattern
     '''
     urls = { 
-        "live": "https://api2.canonn.tech:2053" ,#"https://api.canonn.tech",     #TODO!!!!! ВЕРНУТЬ ОБРАТНО ПЕРЕД ДЕПЛОЕМ, ЕСЛИ ДМ НЕ СКАЖЕТ ОБРАТНОГО!!!!!!!
+        "live": "https://api.canonn.tech" ,
         "staging": "https://api.canonn.tech:2053",
         "development":  "https://api.canonn.tech:2083"
     }               
