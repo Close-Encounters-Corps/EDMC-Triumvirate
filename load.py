@@ -21,6 +21,7 @@ import requests
 from modules import clientreport, codex, factionkill
 from modules import friendfoe as FF
 from modules import (
+    allowlist,
     fssreports,
     hdreport,
     journaldata,
@@ -36,7 +37,6 @@ from modules.debug import Debug, debug, error
 from modules.player import Player
 from modules.release import Release
 from modules.systems import Systems
-from modules.whitelist import whiteList
 from modules.lib import cmdr as cmdrlib
 from modules.lib import context as contextlib
 from modules.lib import thread, journal
@@ -225,13 +225,12 @@ def plugin_app(parent):
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.modules = [
         patrol.PatrolModule(table, 3),
-        sos.SosModule()
+        sos.SosModule(),
+        allowlist.AllowlistModule(parent)
     ]
     this.news = news.CECNews(table, 1)
     this.release = release.Release(table, this.version, 2)
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
-    whitelist = whiteList(parent)
-    whitelist.fetchData()
     this.AllowEasterEggs = tk.IntVar(value=config.getint("AllowEasterEggs"))
 
     return frame
@@ -371,16 +370,19 @@ def journal_entry_wrapper(
     clientreport.submit(cmdr, is_beta, client, entry)
     if journal_entry.data["event"] in {"SendText", "ReceiveText"}:
         for mod in context.enabled_modules:
-            val = mod.on_chat_message(journal_entry)
+            # TODO переписать на менеджер контекста?
+            try:
+                val = mod.on_chat_message(journal_entry)
+            except Exception as e:
+                error("Error while sending chat message to module {}: {}".format(
+                    mod, e
+                ))
             status_message = status_message or val
     else:
         for mod in context.enabled_modules:
             val = mod.on_journal_entry(journal_entry)
             status_message = status_message or val
     this.codexcontrol.journal_entry(
-        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
-    )
-    whiteList.journal_entry(
         cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
     )
     materialReport.submit(
@@ -411,30 +413,8 @@ def journal_entry_wrapper(
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
     legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
-    test(
-        cmdr,
-        is_beta,
-        system,
-        SysFactionState,
-        SysFactionAllegiance,
-        DistFromStarLS,
-        station,
-        entry,
-        state,
-        x,
-        y,
-        z,
-        body,
-        lat,
-        lon,
-        client,
-    )
     Easter_Egs(entry)
     return status_message
-
-
-def test(*args, **kwargs):
-    pass
 
 
 def Easter_Egs(entry):

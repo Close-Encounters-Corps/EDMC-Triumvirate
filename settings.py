@@ -139,6 +139,12 @@ fuel_reservoirs = {
 }
 
 
+##########################
+### whitelist settings ###
+##########################
+whitelist_list_url = "https://us-central1-canonn-api-236217.cloudfunctions.net/whitelist"
+whitelist_submit_url = "https://us-central1-canonn-api-236217.cloudfunctions.net/submitRaw"
+
 #############
 ### other ###
 #############
