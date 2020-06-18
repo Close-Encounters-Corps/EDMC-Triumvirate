@@ -103,14 +103,14 @@ def get_bgs_instructions(bgs, faction):
     if faction == "Royal Phoenix Corporation":
         contact = "Пожалуйста, свяжитесь с Saswitz#9598 на сервере RPSG для получения инструкций"
     if target:
-        retval = "{} Влияние {}%{}{}".format(
+        retval = "{} Влияние {}%;{}{}".format(
             faction,
             Locale.stringFromNumber(float(bgs.get("influence") * 100), 2),
             states,
             update_text,
         )
     if over:
-        retval = "{} Влияние {}%{} {}{}.".format(
+        retval = "{} Влияние {}%;{} {}{}.".format(
             faction,
             Locale.stringFromNumber(float(bgs.get("influence") * 100), 2),
             states,
@@ -118,7 +118,7 @@ def get_bgs_instructions(bgs, faction):
             update_text,
         )
     if under:
-        retval = "{} Влияние {}%{} Пожалуйста выполняйте миссии за {}, чтобы увеличить наше влияние {}".format(
+        retval = "{} Влияние {}%;{} Пожалуйста выполняйте миссии за {}, чтобы увеличить наше влияние {}".format(
             faction,
             Locale.stringFromNumber(float(bgs.get("influence") * 100), 2),
             states,
@@ -126,5 +126,5 @@ def get_bgs_instructions(bgs, faction):
             update_text,
         )
 
-    debug("{}: {}".format(bgs.get("system_name"), retval))
+    debug("[patrol.bgs] System {}: {}".format(bgs.get("system_name"), retval))
     return retval

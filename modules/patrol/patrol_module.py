@@ -4,10 +4,13 @@
 и о ближайших интересных системах на основании EDSM и данных из логов.
 
 Как примерно работает:
-Приходит запись из журнала.
-1. Если в нём есть данные о системе -- начинается периодически выкачиваться
-    база POI EDMC и обновляться данные.
 
+При первой записи из журнала (с данными о системе), при первых данных о командире
+или при изменении настроек начинает периодически выкачиваться база POI EDMC
+и обновляться соответствующие поля.
+
+Фоновый поток обновления может быть остановлен, если в настройках отключить
+все галочки патруля.
 """
 
 import csv
@@ -47,7 +50,8 @@ from ..lib.module import Module
 from ..release import Release
 from ..systems import Systems
 
-CYCLE = 60 * 1000 * 60  # 60 minutes
+# CYCLE = 60 * 1000 * 60  # 60 minutes
+CYCLE = 60 * 1000  # 1 minute
 
 DEFAULT_URL = ""
 WRAP_LENGTH = 200
@@ -72,7 +76,10 @@ class UpdateThread(Thread):
     def run(self):
         # download cannot contain any
         # tkinter changes
-        self.widget.download()
+        while not self.STOP:
+            self.widget.download()
+            time.sleep(CYCLE / 1000)
+        debug("Background thread stopped.")
 
 
 def get(list, index):
@@ -133,11 +140,10 @@ class InfoLink(HyperlinkLabel):
 
 class PatrolModule(Frame, Module):
     def __init__(self, parent, gridrow):
-        "Initialise the ``Patrol``."
+        super().__init__(parent)
 
         sticky = tk.EW + tk.N  # full width, stuck to the top
 
-        Frame.__init__(self, parent)
         self.ships = []
         self.bind("<<PatrolDone>>", self.update_ui)
         plugin_dir = global_context.plugin_dir
@@ -222,7 +228,7 @@ class PatrolModule(Frame, Module):
 
         self.started = False
 
-        self.SQID = None  # Переменная для хранения информации об
+        self._SQID = None  # Переменная для хранения информации об
         # сквадроне пилота
         self.sqid_evt = threading.Event()
         self.update_thread = None
@@ -232,15 +238,20 @@ class PatrolModule(Frame, Module):
     def on_start(self, plugin_dir):
         pass
 
+    def start_background_thread(self):
+        if self.enabled and not self.update_thread:
+            self.update_thread = UpdateThread(self)
+            self.update_thread.start()
+            self.started = True
+
+
     def update_desc(self, event):
         self.hyperlink["text"] = "Fetching {}".format(self.patrol_name)
         self.hyperlink["url"] = None
 
     def patrol_update(self):
         """Периодически скачивает в фоне новые данные."""
-        self.update_thread = UpdateThread(self)
-        self.update_thread.start()
-        self.after(CYCLE, self.patrol_update)
+        self.start_background_thread()
 
     def next_patrol(self, event):
         """
@@ -281,7 +292,7 @@ class PatrolModule(Frame, Module):
         self.update()
 
     def update(self):
-        if not self.isvisible:
+        if not self.enabled:
             return
 
         capi_update = self.patrol_list and self.system and self.capi_update
@@ -302,7 +313,8 @@ class PatrolModule(Frame, Module):
                 Locale.stringFromNumber(getDistance(p, self.nearest.get("coords")), 2)
             )
             self.infolink["text"] = self.nearest.get("instructions")
-            self.infolink["url"] = self.parseurl(self.nearest.get("url"))
+            url = self.nearest.get("url")
+            self.infolink["url"] = self.parseurl(url) if url else ""
 
             self.infolink.grid()
             self.distance.grid()
@@ -343,7 +355,6 @@ class PatrolModule(Frame, Module):
         if j:
             for bgs in j.get("docs")[0].get("faction_presence"):
                 val = new_bgs_patrol(bgs, faction, BGSOSys)
-                # val = self.getBGSPatrol(bgs, faction, BGSOSys)
                 if val:
                     patrol.append(val)
 
@@ -355,19 +366,9 @@ class PatrolModule(Frame, Module):
         """
         r = url.replace("{CMDR}", self.cmdr)
 
-        # We will need to
-        # initialise to "" if not
-
-        if not self.lat:
-            self.lat = ""
-        if not self.lon:
-            self.lon = ""
-        if not self.body:
-            self.body = ""
-
-        r = r.replace("{LAT}", str(self.lat))
-        r = r.replace("{LON}", str(self.lon))
-        r = r.replace("{BODY}", self.body)
+        r = r.replace("{LAT}", str(self.lat or ""))
+        r = r.replace("{LON}", str(self.lon or ""))
+        r = r.replace("{BODY}", self.body or "")
 
         return r
 
@@ -385,17 +386,19 @@ class PatrolModule(Frame, Module):
 
         self.patrol_list = patrol_list
 
-    def SQID_set(self, SQ):
-        self.SQID
-        if SQ != "":
-            self.SQID = SQ
-        else:
-            self.SQID = "None"
+    @property
+    def sqid(self):
+        return self._SQID
+
+    @sqid.setter
+    def sqid(self, SQ):
+        self._SQID = SQ or "None"
         self.sqid_evt.set()
 
     def download(self):
+        debug("Waiting for SQID event...")
         self.sqid_evt.wait()
-        debug("Download Patrol Data")
+        debug("Downloading patrol data...")
 
         # if patrol list is populated
         # then was can save
@@ -412,67 +415,25 @@ class PatrolModule(Frame, Module):
         self.bgsSystemsAndfactions = {}
         if self.faction != 1:
             debug("Getting Faction Data")
-            bgsoverride = BGSTasksOverride.new(self.SQID)
+            bgsoverride = BGSTasksOverride.new(self.sqid)
             BGSO, BGSOSys = bgsoverride.patrols, bgsoverride.systems
 
-            try:
-                patrol_list.extend(BGSO)  # Секция, отвечающая за
-            # загрузку заданий из
-            # гуглофайла
-            except:
-                debug("BGS Overide Complete")  #
-            if self.SQID == "SCEC":
-                try:
-                    patrol_list.extend(
-                        self.getFactionData("Close Encounters Corps", BGSOSys)
-                    )  # Секция, отвечающаяя за фракцию
-                # 1
-                except:
-                    debug("CEC BGS Patrol complete")  #
-            elif self.SQID == "EGPU":
-                try:
-                    patrol_list.extend(
-                        self.getFactionData("EG Union", BGSOSys)
-                    )  # Секция,
-                # отвечающаяя за
-                # фракцию 2
-                except:
-                    debug("EGP BGS Patrol complete")  #
-            elif self.SQID == "RPSG":  # Секция
-                # шаблон,
-                # для
-                # применения
-                # в
-                # случае
-                # расширения
-                # списка
-                # фракций
-                # или
-                # сообществ
-                try:
-                    patrol_list.extend(
-                        self.getFactionData("Royal Phoenix Corporation", BGSOSys)
-                    )  #
-                except:
-                    debug("RPSG BGS Patrol complete")
-            # elif
-            # self.SQID=="Позывной
-            # сквадрона": # Секция
-            # шаблон, для применения
-            # в случае расширения
-            # списка фракций или
-            # сообществ
-            # try:
-            # patrol_list.extend(self.getFactionData("Название
-            # фракции",BGSOSys)) #
-            # except:
-            # debug("Название
-            # фракции(сокр) BGS
-            # Patrol complete") #
-            if None in patrol_list:
-                while None in patrol_list:
-                    patrol_list.remove(None)
-                debug("None Patrols cleared")
+            patrol_list.extend(BGSO)
+            if self.sqid == "SCEC":
+                patrol_list.extend(
+                    self.getFactionData("Close Encounters Corps", BGSOSys)
+                )
+            elif self.sqid == "EGPU":
+                patrol_list.extend(
+                    self.getFactionData("EG Union", BGSOSys)
+                )
+            elif self.sqid == "RPSG":
+                patrol_list.extend(
+                    self.getFactionData("Royal Phoenix Corporation", BGSOSys)
+                )
+            
+            while None in patrol_list:
+                patrol_list.remove(None)
 
         if self.ships and self.HideMyShips != 1:
             patrol_list.extend(self.ships)
@@ -497,7 +458,7 @@ class PatrolModule(Frame, Module):
         self.patrol_list = patrol_list
         self.sort_patrol()
 
-        debug("download done")
+        debug("Patrol downloaded successfully.")
         self.started = True
         # poke an evennt safely
         self.event_generate("<<PatrolDone>>", when="tail")
@@ -581,15 +542,19 @@ class PatrolModule(Frame, Module):
 
         self.update_visibility()
 
-        if self.isvisible:
-            # we should fire off an
-            # extra download
-            UpdateThread(self).start()
+        if not self.enabled and self.update_thread:
+            self.update_thread.STOP = True
+            self.update_thread = None
+        self.start_background_thread()
         debug(
             "canonn: {}, faction: {} hideships {} hideEDSM {}".format(
                 self.canonn, self.faction, self.HideMyShips, self.edsm
             )
         )
+
+    @property
+    def enabled(self):
+        return self.isvisible
 
     def on_journal_entry(self, entry: JournalEntry):
         # We don't care what the
@@ -664,23 +629,23 @@ class PatrolModule(Frame, Module):
         self.cmdr = cmdr_name
 
         self.ships = []
-        self.system = data.get("lastSystem").get("name")
+        self.system = data["lastSystem"]["name"]
 
         current_ship = cmdr["currentShipId"]
 
         shipsystems = {}
 
-        # debug(json.dumps(data.get("ships"),indent=4))
+        ships = data["ships"]
+        for ship in ships:
+            if int(ship) == int(current_ship):
+                continue
 
-        for ship in list(data.get("ships").keys()):
+            ship_system = ships[ship]["starsystem"]["name"]
+            if not shipsystems.get(ship_system):
+                debug("first: {}".format(ship_system))
+                shipsystems[ship_system] = []
 
-            if int(ship) != int(current_ship):
-                ship_system = data.get("ships").get(ship).get("starsystem").get("name")
-                if not shipsystems.get(ship_system):
-                    debug("first: {}".format(ship_system))
-                    shipsystems[ship_system] = []
-
-                shipsystems[ship_system].append(data.get("ships").get(ship))
+            shipsystems[ship_system].append(data.get("ships").get(ship))
 
         for system, ships in shipsystems.items():
             ship_pos = Systems.edsmGetSystem(system)

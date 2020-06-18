@@ -27,6 +27,10 @@ class Context(object):
                 return x
         raise KeyError(cls)
 
+    @property
+    def enabled_modules(self):
+        return [mod for mod in self.modules if mod.enabled]
+
     def dump(self):
         from modules.debug import debug
         debug(self._store)

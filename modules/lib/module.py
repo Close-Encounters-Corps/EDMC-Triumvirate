@@ -41,3 +41,10 @@ class Module(ABC):
         """
         Вызывается в момент завершения работы плагина.
         """
+
+    @property
+    @abstractmethod
+    def enabled(self) -> bool:
+        """
+        Сообщает, включен ли плагин.
+        """

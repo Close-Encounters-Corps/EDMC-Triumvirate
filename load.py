@@ -136,7 +136,7 @@ def Alegiance_get(CMDR, SQ_old):
         if this.SQ is not None:
             debug("SQ ID IS OK")
             this.CMDR = CMDR
-            context.by_class(patrol.PatrolModule).SQID_set(this.SQ)
+            context.by_class(patrol.PatrolModule).sqid = this.SQ
             # Функция для отправки данных о
             # сквадроне в модули, использовать как
             # шаблон
@@ -373,7 +373,7 @@ def journal_entry_wrapper(
     fssreports.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
     journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
     clientreport.submit(cmdr, is_beta, client, entry)
-    for mod in context.modules:
+    for mod in context.enabled_modules:
         mod.on_journal_entry(journal_entry)
     this.codexcontrol.journal_entry(
         cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
@@ -572,7 +572,7 @@ def cmdr_data(data, is_beta):
     """
     We have new data on our commander
     """
-    for mod in context.modules:
+    for mod in context.enabled_modules:
         mod.on_cmdr_data(data, is_beta)
 
 
