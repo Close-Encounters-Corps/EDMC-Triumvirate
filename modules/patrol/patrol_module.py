@@ -33,11 +33,11 @@ import myNotebook as nb
 from l10n import Locale
 from ttkHyperlinkLabel import HyperlinkLabel
 import settings
-from settings import ships, states
 
 from .canonn import CanonnPatrols
 from .patrol import build_patrol
 from .edsm import get_edsm_patrol
+from .exclusions import PatrolExclusions
 from .bgs import BGSTasksOverride, new_bgs_patrol
 from .. import legacy
 from ..debug import debug as debug_base, error
@@ -50,8 +50,7 @@ from ..lib.module import Module
 from ..release import Release
 from ..systems import Systems
 
-# CYCLE = 60 * 1000 * 60  # 60 minutes
-CYCLE = 60 * 1000  # 1 minute
+CYCLE = 60 * 1000 * 60  # 60 minutes
 
 DEFAULT_URL = ""
 WRAP_LENGTH = 200
@@ -64,22 +63,21 @@ def debug(msg, *args):
 def get_ship_type(key):
     key = key.lower()
     debug("Looking for ship '{}'", key)
-    name = ships.get(key)
+    name = settings.ships.get(key)
     return name if name else key
 
 
 class UpdateThread(Thread):
     def __init__(self, widget):
-        Thread.__init__(self)
+        super().__init__(name="patrol.update_thread")
         self.widget = widget
 
-    def run(self):
+    def do_run(self):
         # download cannot contain any
         # tkinter changes
-        while not self.STOP:
+        while 1:
             self.widget.download()
-            time.sleep(CYCLE / 1000)
-        debug("Background thread stopped.")
+            self.sleep(CYCLE / 1000)
 
 
 def get(list, index):
@@ -154,8 +152,6 @@ class PatrolModule(Frame, Module):
             file=os.path.join(plugin_dir, "icons", "right_arrow.gif")
         )
 
-        self.patrol_config = os.path.join(plugin_dir, "data", "EDMC-Triumvirate.patrol")
-
         self.canonnbtn = tk.IntVar(value=config.getint("HidePatrol"))
         self.factionbtn = tk.IntVar(value=config.getint("Hidefactions"))
         self.hideshipsbtn = tk.IntVar(value=config.getint("HideMyShips"))
@@ -207,7 +203,7 @@ class PatrolModule(Frame, Module):
         self.prev.grid_remove()
         self.next.grid_remove()
 
-        self.excluded = {}
+        self.excluded = None
 
         self.patrol_name = None
         self.patrol_list = []
@@ -222,12 +218,6 @@ class PatrolModule(Frame, Module):
 
         self.system = ""
 
-        self.body = ""
-        self.lat = ""
-        self.lon = ""
-
-        self.started = False
-
         self._SQID = None  # Переменная для хранения информации об
         # сквадроне пилота
         self.sqid_evt = threading.Event()
@@ -235,233 +225,12 @@ class PatrolModule(Frame, Module):
 
         self.bind("<<PatrolDisplay>>", self.update_desc)
 
+    ########################################
+    ############# MODULE HOOKS #############
+    ########################################
+
     def on_start(self, plugin_dir):
         pass
-
-    def start_background_thread(self):
-        if self.enabled and not self.update_thread:
-            self.update_thread = UpdateThread(self)
-            self.update_thread.start()
-            self.started = True
-
-
-    def update_desc(self, event):
-        self.hyperlink["text"] = "Fetching {}".format(self.patrol_name)
-        self.hyperlink["url"] = None
-
-    def patrol_update(self):
-        """Периодически скачивает в фоне новые данные."""
-        self.start_background_thread()
-
-    def next_patrol(self, event):
-        """
-        When the user clicks next it will hide the current patrol for the duration of the session
-        It does this by setting an excluded flag on the patrl list
-        """
-        # if it the last patrol lets not
-        # go any further.
-        index = self.nearest.get("index")
-        if index + 1 < len(self.patrol_list):
-            debug("len {} ind {}", len(self.patrol_list), index)
-            self.nearest["excluded"] = True
-            self.patrol_list[index]["excluded"] = True
-            self.update()
-            if self.CopyPatrolAdr == 1:
-                copyclip(self.nearest.get("system"))
-            # if there are excluded
-            # closer then we might need
-            # to deal with it
-            # self.prev.grid()
-
-    def prev_patrol(self, event):
-        """
-        When the user clicks next it will unhide the previous patrol
-        It does this by unsetting the excluded flag on the previous patrol
-        """
-        index = self.nearest.get("index")
-        debug("prev {}".format(index))
-        if index > 0:
-            self.patrol_list[index - 1]["excluded"] = False
-            self.update()
-            if self.CopyPatrolAdr == 1:
-                copyclip(self.nearest.get("system"))
-
-    def update_ui(self, event=None):
-        # rerun every 5 seconds
-        self.after(5000, self.update_ui)
-        self.update()
-
-    def update(self):
-        if not self.enabled:
-            return
-
-        capi_update = self.patrol_list and self.system and self.capi_update
-        journal_update = self.patrol_list and self.system
-
-        if journal_update or capi_update:
-            self.sort_patrol()
-            p = Systems.edsmGetSystem(self.system)
-            self.nearest = self.get_nearest(p)
-            self.hyperlink["text"] = self.nearest.get("system")
-            self.hyperlink[
-                "url"
-            ] = "https://www.edsm.net/en/system?systemName={}".format(
-                quote_plus(self.nearest.get("system"))
-            )
-
-            self.distance["text"] = "{}ly".format(
-                Locale.stringFromNumber(getDistance(p, self.nearest.get("coords")), 2)
-            )
-            self.infolink["text"] = self.nearest.get("instructions")
-            url = self.nearest.get("url")
-            self.infolink["url"] = self.parseurl(url) if url else ""
-
-            self.infolink.grid()
-            self.distance.grid()
-            self.prev.grid()
-            self.next.grid()
-            self.capi_update = False
-
-        else:
-            if self.system:
-                self.hyperlink["text"] = "Получение патруля..."
-            else:
-                self.hyperlink["text"] = "Ожидание данных о местоположении..."
-            self.infolink.grid_remove()
-            self.distance.grid_remove()
-            self.prev.grid_remove()
-            self.next.grid_remove()
-
-    def getStates(self, state_name, bgs):
-        sa = []
-        active_states = bgs.get(state_name)
-        if active_states:
-            sa = list(active_states[0].values())
-
-        if sa:
-            states = ",".join(sa)
-            return states
-
-    def getFactionData(self, faction, BGSOSys):
-        """
-            We will get Canonn faction data using an undocumented elitebgs api
-            NB: It is possible this could get broken so need to contact CMDR Garud
-        """
-
-        patrol = []
-
-        url = "https://elitebgs.app/frontend/factions?name={}".format(faction)
-        j = requests.get(url).json()
-        if j:
-            for bgs in j.get("docs")[0].get("faction_presence"):
-                val = new_bgs_patrol(bgs, faction, BGSOSys)
-                if val:
-                    patrol.append(val)
-
-        return patrol
-
-    def parseurl(self, url):
-        """
-        We will provided some sunstitute variables for the urls
-        """
-        r = url.replace("{CMDR}", self.cmdr)
-
-        r = r.replace("{LAT}", str(self.lat or ""))
-        r = r.replace("{LON}", str(self.lon or ""))
-        r = r.replace("{BODY}", self.body or "")
-
-        return r
-
-    def keyval(self, k):
-        x, y, z = Systems.edsmGetSystem(self.system)
-        return getDistance((x, y, z), k.get("coords"))
-
-    def sort_patrol(self):
-        patrol_list = sorted(self.patrol_list, key=self.keyval)
-        for num, val in enumerate(patrol_list):
-            system = val.get("system")
-            type = val.get("type")
-
-            patrol_list[num]["index"] = num
-
-        self.patrol_list = patrol_list
-
-    @property
-    def sqid(self):
-        return self._SQID
-
-    @sqid.setter
-    def sqid(self, SQ):
-        self._SQID = SQ or "None"
-        self.sqid_evt.set()
-
-    def download(self):
-        debug("Waiting for SQID event...")
-        self.sqid_evt.wait()
-        debug("Downloading patrol data...")
-
-        # if patrol list is populated
-        # then was can save
-        if self.patrol_list:
-            self.save_excluded()
-        else:
-            self.load_excluded()
-
-        # no point if we have no idea
-        # where we are
-        if not self.system:
-            return
-        patrol_list = []
-        self.bgsSystemsAndfactions = {}
-        if self.faction != 1:
-            debug("Getting Faction Data")
-            bgsoverride = BGSTasksOverride.new(self.sqid)
-            BGSO, BGSOSys = bgsoverride.patrols, bgsoverride.systems
-
-            patrol_list.extend(BGSO)
-            if self.sqid == "SCEC":
-                patrol_list.extend(
-                    self.getFactionData("Close Encounters Corps", BGSOSys)
-                )
-            elif self.sqid == "EGPU":
-                patrol_list.extend(
-                    self.getFactionData("EG Union", BGSOSys)
-                )
-            elif self.sqid == "RPSG":
-                patrol_list.extend(
-                    self.getFactionData("Royal Phoenix Corporation", BGSOSys)
-                )
-            
-            while None in patrol_list:
-                patrol_list.remove(None)
-
-        if self.ships and self.HideMyShips != 1:
-            patrol_list.extend(self.ships)
-
-        if self.canonn != 1:
-            self.canonnpatrol = CanonnPatrols.new()
-            patrol_list.extend(self.canonnpatrol)
-
-        if self.edsm != 1:
-            patrol_list.extend(get_edsm_patrol())
-
-        # add exclusions from configuration
-        for num, val in enumerate(patrol_list):
-            system = val.get("system")
-            type = val.get("type")
-
-            if self.excluded.get(type):
-                if self.excluded.get(type).get(system):
-                    patrol_list[num]["excluded"] = self.excluded.get(type).get(system)
-
-        # we will sort the patrol list
-        self.patrol_list = patrol_list
-        self.sort_patrol()
-
-        debug("Patrol downloaded successfully.")
-        self.started = True
-        # poke an evennt safely
-        self.event_generate("<<PatrolDone>>", when="tail")
 
     def draw_settings(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
@@ -509,23 +278,6 @@ class PatrolModule(Frame, Module):
             )
         )
 
-        return frame
-
-    def update_visibility(self):
-        nopatrols = (
-            self.canonn == 1
-            and self.faction == 1
-            and self.HideMyShips == 1
-            and self.edsm == 1
-        )
-
-        if nopatrols:
-            self.grid_remove()
-            self.isvisible = False
-        else:
-            self.grid()
-            self.isvisible = True
-
     def on_settings_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
         config.set("HidePatrol", self.canonnbtn.get())
@@ -552,69 +304,49 @@ class PatrolModule(Frame, Module):
             )
         )
 
-    @property
-    def enabled(self):
-        return self.isvisible
-
     def on_journal_entry(self, entry: JournalEntry):
-        # We don't care what the
-        # journal entry is as long as
-        # the system has changed.
-
         self.latest_entry = entry
-        self.body = entry.body
-        self.lat = entry.lat
-        self.lon = entry.lon
-        self.x = entry.coords.x
-        self.y = entry.coords.y
-        self.z = entry.coords.z
 
-        if entry.system and not self.started:
-            debug("Patrol download cycle commencing")
-            self.started = True
-            self.patrol_update()
+        self.start_background_thread()
 
         if entry.cmdr:
             self.cmdr = entry.cmdr
+
+        if not entry.system:
+            return
         event = entry.data.get("event")
+        nearest_system = self.nearest.get("system")
+        same_system = (
+            nearest_system.upper() == entry.system.upper()
+            if nearest_system
+            else False
+        )
+        if self.system != entry.system and event in (
+            "Location",
+            "FSDJump",
+            "StartUp",
+        ):
+            debug("Refreshing Patrol ({})", event)
+            self.system = entry.system
+            if self.nearest and self.CopyPatrolAdr == 1:
+                copyclip(self.nearest.get("system"))
+        # If we have visted a system and
+        # then jump out then lets
+        # clicknext
+        if (
+            self.nearest
+            and same_system
+            and entry.data.get("event") == "StartJump"
+            and entry.data.get("JumpType") == "Hyperspace"
+        ):
+            self.next_patrol(None)
 
-        if entry.body:
-            self.update()
-
-        if entry.system:
-            nearest_system = self.nearest.get("system")
-            same_system = (
-                nearest_system.upper() == entry.system.upper()
-                if nearest_system
-                else False
-            )
-            if self.system != entry.system and event in (
-                "Location",
-                "FSDJump",
-                "StartUp",
-            ):
-                debug("Refreshing Patrol ({})", event)
-                self.system = entry.system
-                self.update()
-                if self.nearest and self.CopyPatrolAdr == 1:
-                    copyclip(self.nearest.get("system"))
-            # If we have visted a system and
-            # then jump out then lets
-            # clicknext
-            if (
-                self.nearest
-                and same_system
-                and entry.data.get("event") == "StartJump"
-                and entry.data.get("JumpType") == "Hyperspace"
-            ):
-                self.next_patrol(None)
-
-            # After we have done everything
-            # else let's see if we can
-            # automatically submit and move
-            # on
-            if self.nearest.get("event") and same_system:
-                self.trigger(entry.system, entry.data)
+        # After we have done everything
+        # else let's see if we can
+        # automatically submit and move
+        # on
+        if self.nearest.get("event") and same_system:
+            self.trigger(entry.system, entry.data)
 
     def on_cmdr_data(self, data, is_beta):
         """
@@ -645,7 +377,7 @@ class PatrolModule(Frame, Module):
                 debug("first: {}".format(ship_system))
                 shipsystems[ship_system] = []
 
-            shipsystems[ship_system].append(data.get("ships").get(ship))
+            shipsystems[ship_system].append(ships[ship])
 
         for system, ships in shipsystems.items():
             ship_pos = Systems.edsmGetSystem(system)
@@ -657,46 +389,258 @@ class PatrolModule(Frame, Module):
                     ship_type, ship.get("shipName"), ship["station"].get("name")
                 )
             else:
-                ship_info = "У вас {} кораблей в этой системе".format(ship_count)
+                ship_info = f"У вас {ship_count} кораблей в этой системе"
 
             self.ships.append(build_patrol("SHIPS", system, ship_pos, ship_info, None))
 
         self.capi_update = True
-        if self.system and not self.started:
-            debug("Patrol download cycle commencing")
-            self.started = True
-            self.patrol_update()
+        if self.system:
+            self.start_background_thread()
 
     def close(self):
         """
         When the plugin stops we want to save the patrols where excluded = True
         We will not inclde ships or BGS in this as they can be excluded in other ways.
         """
-        self.save_excluded()
+        if self.excluded is not None:
+            self.excluded.save(self.patrol_list)
 
-    def load_excluded(self):
-        debug("loading excluded")
-        self.patrol_config = os.path.join(
-            Release.plugin_dir, "data", "EDMC-Triumvirate.patrol"
-        )
-        try:
-            with open(self.patrol_config) as json_file:
-                self.excluded = json.load(json_file)
-        except:
-            pass
+    @property
+    def enabled(self):
+        return self.isvisible
 
-    def save_excluded(self):
-        self.patrol_config = os.path.join(
-            Release.plugin_dir, "data", "EDMC-Triumvirate.patrol"
+    ########################################
+    ############## INTERNALS ###############
+    ########################################
+
+    def start_background_thread(self):
+        """
+        Запускает фоновый поток обновления данных в случае необходимости.
+        """
+        if self.enabled and not self.update_thread:
+            self.update_thread = UpdateThread(self)
+            self.update_thread.start()
+
+
+    def update_desc(self, event):
+        self.hyperlink["text"] = "Подгрузка данных {}".format(self.patrol_name)
+        self.hyperlink["url"] = None
+
+    def next_patrol(self, event):
+        """
+        When the user clicks next it will hide the current patrol for the duration of the session
+        It does this by setting an excluded flag on the patrl list
+        """
+        # if it the last patrol lets not
+        # go any further.
+        self.patrol_pos = (self.patrol_pos + 1) % len(self.patrol_list)
+        self.nearest["excluded"] = True
+        self.patrol_list[self.patrol_pos]["excluded"] = True
+        self.update()
+        if self.CopyPatrolAdr == 1:
+            copyclip(self.nearest.get("system"))
+
+    def prev_patrol(self, event):
+        """
+        When the user clicks next it will unhide the previous patrol
+        It does this by unsetting the excluded flag on the previous patrol
+        """
+        self.patrol_pos = (self.patrol_pos - 1) % len(self.patrol_list)
+        # дополнительная проверка, чтобы не перейти с нулевого патруля на последний,
+        # а остаться на нулевом
+        if self.patrol_pos == (len(self.patrol_list) - 1):
+            self.patrol_pos = 0
+        self.patrol_list[self.patrol_pos]["excluded"] = False
+        self.update()
+        if self.CopyPatrolAdr == 1:
+            copyclip(self.nearest.get("system"))
+
+    def update_ui(self, event=None):
+        # rerun every 5 seconds
+        self.after(5000, self.update_ui)
+        self.update()
+
+    def update(self):
+        if not self.enabled:
+            return
+
+        capi_update = self.patrol_list and self.system and self.capi_update
+        journal_update = self.patrol_list and self.system
+
+        if journal_update or capi_update:
+            self.sort_patrol()
+            p = Systems.edsmGetSystem(self.system)
+            self.nearest = self.get_nearest(p)
+            self.hyperlink["text"] = self.nearest.get("system")
+            self.hyperlink[
+                "url"
+            ] = "https://www.edsm.net/en/system?systemName={}".format(
+                quote_plus(self.nearest.get("system"))
+            )
+
+            self.distance["text"] = "{}ly".format(
+                Locale.stringFromNumber(distance_between(p, self.nearest.get("coords")), 2)
+            )
+            self.infolink["text"] = self.nearest.get("instructions")
+            url = self.nearest.get("url")
+            self.infolink["url"] = self.format_url(url) if url else ""
+
+            self.infolink.grid()
+            self.distance.grid()
+            self.prev.grid()
+            self.next.grid()
+            self.capi_update = False
+
+        else:
+            if self.system:
+                self.hyperlink["text"] = "Получение патруля..."
+            else:
+                self.hyperlink["text"] = "Ожидание данных о местоположении..."
+            self.infolink.grid_remove()
+            self.distance.grid_remove()
+            self.prev.grid_remove()
+            self.next.grid_remove()
+
+    def getStates(self, state_name, bgs):
+        sa = []
+        active_states = bgs.get(state_name)
+        if active_states:
+            sa = list(active_states[0].values())
+
+        if sa:
+            states = ",".join(sa)
+            return states
+
+    def getFactionData(self, faction, BGSOSys):
+        """
+            We will get Canonn faction data using an undocumented elitebgs api
+            NB: It is possible this could get broken so need to contact CMDR Garud
+        """
+
+        patrol = []
+
+        url = "https://elitebgs.app/frontend/factions?name={}".format(faction)
+        j = requests.get(url).json()
+        if j:
+            for bgs in j.get("docs")[0].get("faction_presence"):
+                val = new_bgs_patrol(bgs, faction, BGSOSys)
+                if val:
+                    patrol.append(val)
+
+        return patrol
+
+    def format_url(self, url):
+        """
+        We will provided some substitute variables for the urls
+        """
+        r = url.replace("{CMDR}", self.cmdr)
+
+        r = r.replace("{LAT}", str(self.latest_entry.lat or ""))
+        r = r.replace("{LON}", str(self.latest_entry.lon or ""))
+        r = r.replace("{BODY}", self.latest_entry.body or "")
+
+        return r
+
+    def keyval(self, k):
+        x, y, z = Systems.edsmGetSystem(self.system)
+        return distance_between((x, y, z), k.get("coords"))
+
+    def sort_patrol(self):
+        patrol_list = sorted(self.patrol_list, key=self.keyval)
+        for num in range(len(patrol_list)):
+            patrol_list[num]["index"] = num
+
+        self.patrol_list = patrol_list
+
+    @property
+    def sqid(self):
+        return self._SQID
+
+    @sqid.setter
+    def sqid(self, SQ):
+        self._SQID = SQ or "None"
+        self.sqid_evt.set()
+
+    @property
+    def copy_patrol_enabled(self):
+        return self.copypatrolbtn.get() == 1
+
+    def download(self):
+        debug("Waiting for SQID event...")
+        self.sqid_evt.wait()
+        debug("Downloading patrol data...")
+
+        # if patrol list is populated
+        # then was can save
+        if not self.patrol_list:
+            self.excluded = PatrolExclusions.from_file()
+        # no point if we have no idea
+        # where we are
+        if not self.system:
+            return
+        patrol_list = []
+        self.bgsSystemsAndfactions = {}
+        if self.faction != 1:
+            debug("Getting Faction Data")
+            bgsoverride = BGSTasksOverride.new(self.sqid)
+            BGSO, BGSOSys = bgsoverride.patrols, bgsoverride.systems
+
+            patrol_list.extend(BGSO)
+            if self.sqid == "SCEC":
+                patrol_list.extend(
+                    self.getFactionData("Close Encounters Corps", BGSOSys)
+                )
+            elif self.sqid == "EGPU":
+                patrol_list.extend(
+                    self.getFactionData("EG Union", BGSOSys)
+                )
+            elif self.sqid == "RPSG":
+                patrol_list.extend(
+                    self.getFactionData("Royal Phoenix Corporation", BGSOSys)
+                )
+            
+        if self.ships and self.HideMyShips != 1:
+            patrol_list.extend(self.ships)
+
+        if self.canonn != 1:
+            self.canonnpatrol = CanonnPatrols.new()
+            patrol_list.extend(self.canonnpatrol)
+
+        if self.edsm != 1:
+            patrol_list.extend(get_edsm_patrol())
+
+        # add exclusions from configuration
+        for num, val in enumerate(patrol_list):
+            system = val.get("system")
+            type = val.get("type")
+
+            if self.excluded.get(type):
+                if self.excluded.get(type).get(system):
+                    patrol_list[num]["excluded"] = self.excluded.get(type).get(system)
+
+        # we will sort the patrol list
+        self.patrol_list = patrol_list
+        self.sort_patrol()
+
+        debug("Patrol downloaded successfully.")
+        # poke an evennt safely
+        self.event_generate("<<PatrolDone>>", when="tail")
+
+
+    def update_visibility(self):
+        nopatrols = (
+            self.canonn == 1
+            and self.faction == 1
+            and self.HideMyShips == 1
+            and self.edsm == 1
         )
-        excluded = {}
-        for patrol in self.patrol_list:
-            if patrol.get("excluded") and not patrol.get("type") in ("BGS", "SHIPS"):
-                if not excluded.get(patrol.get("type")):
-                    excluded[patrol.get("type")] = {}
-                excluded[patrol.get("type")][patrol.get("system")] = True
-        with open(self.patrol_config, "w+") as outfile:
-            json.dump(excluded, outfile)
+
+        if nopatrols:
+            self.grid_remove()
+            self.isvisible = False
+        else:
+            self.grid()
+            self.isvisible = True
 
     def trigger(self, system, entry):
         # exit if the events dont match
@@ -727,7 +671,7 @@ class PatrolModule(Frame, Module):
 
             if not patrol.get("excluded"):
                 if nearest:
-                    if getDistance(location, patrol.get("coords")) < getDistance(
+                    if distance_between(location, patrol.get("coords")) < distance_between(
                         location, nearest.get("coords")
                     ):
                         nearest = patrol
@@ -749,6 +693,6 @@ def copyclip(value):
     debug("copyclip done")
 
 
-def getDistance(p, g):
+def distance_between(p, g):
     # gets the distance between two systems
     return math.sqrt(sum(tuple([math.pow(p[i] - g[i], 2) for i in range(3)])))

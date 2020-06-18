@@ -46,7 +46,6 @@ ships = {
     "empire_courier": " Imperial Courier",
     "imperial cutter": " Imperial Cutter",
     "cutter": " Imperial Cutter",
-    "imperial eagle": " Imperial Eagle",
     "empire_eagle": " Imperial Eagle",
     "keelback": " Keelback",
     "independant_trader": " Keelback",  # ???
