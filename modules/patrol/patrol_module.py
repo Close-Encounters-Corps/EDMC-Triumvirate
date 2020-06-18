@@ -48,7 +48,6 @@ from ..lib.journal import JournalEntry
 from ..lib.spreadsheet import Spreadsheet
 from ..lib.module import Module
 from ..release import Release
-from ..systems import Systems
 
 CYCLE = 60 * 1000 * 60  # 60 minutes
 
@@ -374,7 +373,7 @@ class PatrolModule(Frame, Module):
             shipsystems[ship_system].append(ships[ship])
 
         for system, ships in shipsystems.items():
-            ship_pos = Systems.edsmGetSystem(system)
+            ship_pos = global_context.systems_module.get_system_coords(system)
             ship_count = len(ships)
             if ship_count == 1:
                 ship = ships[0]
@@ -462,7 +461,7 @@ class PatrolModule(Frame, Module):
 
         if journal_update or capi_update:
             self.sort_patrol()
-            p = Systems.edsmGetSystem(self.system)
+            p = global_context.systems_module.get_system_coords(self.system)
             self.nearest = self.get_nearest(p)
             self.hyperlink["text"] = self.nearest.get("system")
             self.hyperlink[
@@ -537,7 +536,7 @@ class PatrolModule(Frame, Module):
         return r
 
     def keyval(self, k):
-        x, y, z = Systems.edsmGetSystem(self.system)
+        x, y, z = global_context.systems_module.get_system_coords(self.system)
         return distance_between((x, y, z), k.get("coords"))
 
     def sort_patrol(self):

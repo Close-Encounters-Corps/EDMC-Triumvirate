@@ -2,14 +2,10 @@
 import requests
 import sys
 import json
+from .lib.context import global_context
 from .emitter import Emitter
-from .debug import debug
-from .debug import debug,error
-from .systems import Systems
-try:#py3
-    from urllib.parse import quote_plus
-except:#py2
-    from urllib import quote_plus
+from .debug import debug, error
+from urllib.parse import quote_plus
 
 class gSubmitNHSS(threading.Thread):
     def __init__(self,cmdr,system,x,y,z,threat_level):
@@ -91,7 +87,7 @@ class NHSS(Emitter):
         url = self.getUrl()
         self.send(payload,url)
         
-        x,y,z = Systems.edsmGetSystem(self.system)
+        x,y,z = global_context.systems_module.get_system_coords(self.system)
         gSubmitNHSS(self.cmdr,self.system,x,y,z,threatLevel).start()
 
 

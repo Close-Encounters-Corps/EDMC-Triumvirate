@@ -36,7 +36,7 @@ from modules import (
 from modules.debug import Debug, debug, error
 from modules.player import Player
 from modules.release import Release
-from modules.systems import Systems
+from modules.systems import SystemsModule
 from modules.lib import cmdr as cmdrlib
 from modules.lib import context as contextlib
 from modules.lib import thread, journal
@@ -223,10 +223,12 @@ def plugin_app(parent):
     table.columnconfigure(1, weight=1)
     table.grid(sticky="NSEW")
     this.codexcontrol = codex.CodexTypes(table, 0)
+    this.systems_module = SystemsModule()
     this.modules = [
         patrol.PatrolModule(table, 3),
         sos.SosModule(),
-        allowlist.AllowlistModule(parent)
+        allowlist.AllowlistModule(parent),
+        this.systems_module
     ]
     this.news = news.CECNews(table, 1)
     this.release = release.Release(table, this.version, 2)
@@ -284,20 +286,19 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         debug("DistFromStarLS=" + str(this.DistFromStarLS))
 
     if entry.get("event") == "FSDJump":
-        Systems.storeSystem(system, entry.get("StarPos"))
         this.DistFromStarLS = None
         this.body = None
 
     if "Body" in entry:
         this.body = entry["Body"]
-        debug(this.body)
+        debug("Body: {}", this.body)
 
     if entry["event"] == "JoinedSquadron":
         Squadronsend(cmdr, entry["SquadronName"])
 
     x, y, z = None, None, None
     if system:
-        val = Systems.edsmGetSystem(system)
+        val = this.systems_module.get_system_coords(system)
         if val is not None:
             x, y, z = val
 

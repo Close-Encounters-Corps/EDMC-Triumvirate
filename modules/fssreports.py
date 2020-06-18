@@ -4,14 +4,10 @@ import sys
 import json
 import modules.emitter
 from modules.emitter import Emitter
-try: #py3
-    from urllib.parse import quote_plus
-    import  urllib.parse as urlparse
-except:#py2
-    from urllib import quote_plus
-    import urllib as urlparse
+from urllib.parse import quote_plus
+import urllib.parse as urlparse
 from .debug import debug,error
-from .systems import Systems
+from .lib.context import global_context
 import random
 import time
 
@@ -68,7 +64,8 @@ class fssEmitter(Emitter):
 
     def gSubmitAXCZ(self, payload):
         p = payload.copy()
-        p["x"], p["y"], p["z"] = Systems.edsmGetSystem(payload.get("systemName"))
+        # TODO check for None
+        p["x"], p["y"], p["z"] = global_context.systems_module.get_system_coords(payload["systemName"])
         if p.get("isBeta"):
             p["isBeta"] = 'Y'
         else:

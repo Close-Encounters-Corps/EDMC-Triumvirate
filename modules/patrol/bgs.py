@@ -9,7 +9,6 @@ from l10n import Locale
 from ..debug import debug, error
 from ..lib.context import global_context
 from ..lib.spreadsheet import Spreadsheet
-from ..systems import Systems
 from .patrol import build_patrol
 
 EXCLUDE = {"Basta", "Hide", "Cancel"}
@@ -59,7 +58,7 @@ def new_bgs_patrol(bgs, faction, override):
     return build_patrol(
         type="BGS",
         system=system,
-        coords=Systems.edsmGetSystem(system),
+        coords=global_context.systems_module.get_system_coords(system),
         instructions=get_bgs_instructions(bgs, faction),
         url="https://elitebgs.app/system/{}".format(bgs.get("system_id")),
     )
