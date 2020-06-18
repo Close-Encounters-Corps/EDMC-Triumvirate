@@ -317,15 +317,9 @@ class PatrolModule(Frame, Module):
         event = entry.data.get("event")
         nearest_system = self.nearest.get("system")
         same_system = (
-            nearest_system.upper() == entry.system.upper()
-            if nearest_system
-            else False
+            nearest_system.upper() == entry.system.upper() if nearest_system else False
         )
-        if self.system != entry.system and event in (
-            "Location",
-            "FSDJump",
-            "StartUp",
-        ):
+        if self.system != entry.system and event in ("Location", "FSDJump", "StartUp",):
             debug("Refreshing Patrol ({})", event)
             self.system = entry.system
             if self.nearest and self.CopyPatrolAdr == 1:
@@ -421,7 +415,6 @@ class PatrolModule(Frame, Module):
             self.update_thread = UpdateThread(self)
             self.update_thread.start()
 
-
     def update_desc(self, event):
         self.hyperlink["text"] = "Подгрузка данных {}".format(self.patrol_name)
         self.hyperlink["url"] = None
@@ -479,7 +472,9 @@ class PatrolModule(Frame, Module):
             )
 
             self.distance["text"] = "{}ly".format(
-                Locale.stringFromNumber(distance_between(p, self.nearest.get("coords")), 2)
+                Locale.stringFromNumber(
+                    distance_between(p, self.nearest.get("coords")), 2
+                )
             )
             self.infolink["text"] = self.nearest.get("instructions")
             url = self.nearest.get("url")
@@ -591,14 +586,12 @@ class PatrolModule(Frame, Module):
                     self.getFactionData("Close Encounters Corps", BGSOSys)
                 )
             elif self.sqid == "EGPU":
-                patrol_list.extend(
-                    self.getFactionData("EG Union", BGSOSys)
-                )
+                patrol_list.extend(self.getFactionData("EG Union", BGSOSys))
             elif self.sqid == "RPSG":
                 patrol_list.extend(
                     self.getFactionData("Royal Phoenix Corporation", BGSOSys)
                 )
-            
+
         if self.ships and self.HideMyShips != 1:
             patrol_list.extend(self.ships)
 
@@ -625,7 +618,6 @@ class PatrolModule(Frame, Module):
         debug("Patrol downloaded successfully.")
         # poke an evennt safely
         self.event_generate("<<PatrolDone>>", when="tail")
-
 
     def update_visibility(self):
         nopatrols = (
@@ -671,9 +663,9 @@ class PatrolModule(Frame, Module):
 
             if not patrol.get("excluded"):
                 if nearest:
-                    if distance_between(location, patrol.get("coords")) < distance_between(
-                        location, nearest.get("coords")
-                    ):
+                    if distance_between(
+                        location, patrol.get("coords")
+                    ) < distance_between(location, nearest.get("coords")):
                         nearest = patrol
                 else:
                     nearest = patrol

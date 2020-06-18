@@ -53,6 +53,7 @@ validtypes = [
 
 def get_edsm_patrol() -> list:
     from .patrol_module import PatrolModule
+
     patrol = global_context.by_class(PatrolModule)
 
     r = requests.get(edsm_poi_url)
@@ -79,11 +80,9 @@ def get_edsm_patrol() -> list:
                 system=entry.get("galMapSearch"),
                 coords=coords,
                 instructions=instructions,
-                url=entry.get("galMapUrl")
+                url=entry.get("galMapUrl"),
             )
             edsm_patrol.append(item)
 
     patrol.event_generate("<<PatrolDone>>", when="tail")
     return edsm_patrol
-
-

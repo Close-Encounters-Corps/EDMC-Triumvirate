@@ -4,6 +4,7 @@ import json
 
 from ..lib.context import global_context
 
+
 class PatrolExclusions(dict):
     def __init__(self, path, **kwargs):
         super().__init__(BGS={}, SHIPS={})
@@ -21,7 +22,6 @@ class PatrolExclusions(dict):
             return
         with open(self.path) as fd:
             self.update(json.load(fd))
-        
 
     def save(self, data):
         for patrol in data:

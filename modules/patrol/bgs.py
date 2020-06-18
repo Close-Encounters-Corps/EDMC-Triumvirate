@@ -14,6 +14,7 @@ from .patrol import build_patrol
 
 EXCLUDE = {"Basta", "Hide", "Cancel"}
 
+
 class BGSTasksOverride:
     """
     Замена PatrolModule.getBGSOveride.
@@ -31,7 +32,7 @@ class BGSTasksOverride:
         for row in spreadsheet:
             squadron, system, x, y, z, TINF, TFAC, Description = row
             instructions = Description.format(TFAC, TINF)
-            
+
             if Description in EXCLUDE:
                 continue
 
@@ -47,7 +48,6 @@ class BGSTasksOverride:
                 )
 
                 patrols.append(item)
-
 
         return cls(patrols, systems=systems_override)
 
@@ -67,6 +67,7 @@ def new_bgs_patrol(bgs, faction, override):
 
 def get_bgs_instructions(bgs, faction):
     from .patrol_module import PatrolModule
+
     patrol = global_context.by_class(PatrolModule)
     target = 0.50 <= float(bgs.get("influence")) <= 0.65
     over = float(bgs.get("influence")) > 0.65
@@ -88,9 +89,7 @@ def get_bgs_instructions(bgs, faction):
     elif last_updated == 1:
         update_text = ". Данные обновлены 1 день назад"
     elif last_updated < 7:
-        update_text = ". Последнее обновление данных {} дней назад".format(
-            last_updated
-        )
+        update_text = ". Последнее обновление данных {} дней назад".format(last_updated)
     elif last_updated > 6:
         update_text = ". Последнее обновление данных {} дней назад. Пожалуйста прыгните в эту систему что бы обновить данные".format(
             last_updated

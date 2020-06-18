@@ -9,8 +9,8 @@ from ..lib.spreadsheet import Spreadsheet
 from ..debug import debug, error
 from .patrol import build_patrol
 
-class CanonnPatrols(list):
 
+class CanonnPatrols(list):
     @classmethod
     def new(cls):
         output = cls()
@@ -30,7 +30,6 @@ class CanonnPatrols(list):
                 debug("{} Patrol disabled".format(description))
         return output
 
-
     @classmethod
     def from_json(cls, url):
         patrols = []
@@ -42,7 +41,7 @@ class CanonnPatrols(list):
                 coords=[float(x) for x in (row.get("x"), row.get("y"), row.get("z"))],
                 instructions=row.get("instructions"),
                 url=row.get("url"),
-                event=row.get("event")
+                event=row.get("event"),
             )
             patrols.append(patrol)
         return cls(patrols)
@@ -61,7 +60,7 @@ class CanonnPatrols(list):
                     coords=[float(x) for x in (row[2], row[3], row[4])],
                     instructions=row[5],
                     url=row[6],
-                    event=row[7]
+                    event=row[7],
                 )
                 if not patrol["system"]:
                     error(f"No system in patrol {patrol}")
