@@ -86,7 +86,62 @@ states = {
     "retreat": "Отступление",
     "war": "Война",
 }
+####################
+### SOS settings ###
+####################
+life_supports_sizes = {
+    "class1": "5:00",
+    "class2": "7:30",
+    "class3": "10:00",
+    "class4": "15:00",
+    "class5": "25:00",
+}
+fuel_icon_url = "https://raw.githubusercontent.com/VAKazakov/EDMC-Triumvirate/master/.github/FuelAlarmIcon.png"
+fuel_reservoirs = {
+    "sidewinder": 0.3,
+    "eagle": 0.34,
+    "hauler": 0.25,
+    "adder": 0.36,
+    "empire_eagle": 0.37,
+    "viper": 0.41,
+    "cobramkiii": 0.49,
+    "viper_mkiv": 0.46,
+    "diamondback": 0.49,
+    "cobramkiv": 0.51,
+    "type6": 0.39,
+    "dolphin": 0.5,
+    "diamondbackxl": 0.52,
+    "empire_courier": 0.41,
+    "independant_trader": 0.39,
+    "asp_scout": 0.47,
+    "vulture": 0.57,
+    "asp": 0.63,
+    "federation_dropship": 0.83,
+    "type7": 0.52,
+    "typex": 0.77,
+    "federation_dropship_mkii": 0.72,
+    "empire_trader": 0.74,
+    "typex_2": 0.77,
+    "typex_3": 0.77,
+    "federation_gunship": 0.82,
+    "krait_light": 0.63,
+    "krait_mkii": 0.63,
+    "orca": 0.79,
+    "ferdelance": 0.67,
+    "mamba": 0.5,
+    "python": 0.83,
+    "type9": 0.77,
+    "belugaliner": 0.81,
+    "type9_military": 0.77,
+    "anaconda": 1.07,
+    "federation_corvette": 1.13,
+    "cutter": 1.16,
+}
 
+
+#############
+### other ###
+#############
 support_message = """В случае возникновения проблем с плагином
 или в случае, если Вы поставили неправильное сообщество в гугл-форме,
 пишите в канал CEC #triumvirate_tech_support или в личку Казаков#4700"""

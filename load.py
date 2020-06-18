@@ -18,7 +18,6 @@ from config import config
 import requests
 
 ### модули плагина ###
-import modules.Commands
 from modules import clientreport, codex, factionkill
 from modules import friendfoe as FF
 from modules import (
@@ -31,6 +30,7 @@ from modules import (
     nhss,
     patrol,
     release,
+    sos
 )
 from modules.debug import Debug, debug, error
 from modules.player import Player
@@ -224,7 +224,8 @@ def plugin_app(parent):
     table.grid(sticky="NSEW")
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.modules = [
-        patrol.PatrolModule(table, 3)
+        patrol.PatrolModule(table, 3),
+        sos.SosModule()
     ]
     this.news = news.CECNews(table, 1)
     this.release = release.Release(table, this.version, 2)
@@ -360,12 +361,7 @@ def journal_entry_wrapper(
         lon=lon,
         client=client
     )
-    # Если мне нужен вывод данных из
-    # модулей в строку состояния
-    # коннектора, я должен применить
-    # конструкцию Return= Return or
-    # <Вызов модуля>
-    Return = None
+    status_message = None
     factionkill.submit(cmdr, is_beta, system, station, entry, client)
     nhss.submit(cmdr, is_beta, system, station, entry, client)
     hdreport.submit(cmdr, is_beta, system, station, entry, client)
@@ -373,8 +369,14 @@ def journal_entry_wrapper(
     fssreports.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
     journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
     clientreport.submit(cmdr, is_beta, client, entry)
-    for mod in context.enabled_modules:
-        mod.on_journal_entry(journal_entry)
+    if journal_entry.data["event"] in {"SendText", "ReceiveText"}:
+        for mod in context.enabled_modules:
+            val = mod.on_chat_message(journal_entry)
+            status_message = status_message or val
+    else:
+        for mod in context.enabled_modules:
+            val = mod.on_journal_entry(journal_entry)
+            status_message = status_message or val
     this.codexcontrol.journal_entry(
         cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
     )
@@ -402,30 +404,6 @@ def journal_entry_wrapper(
         cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
     )
 
-    # Triumvirate reporting
-    # FF.FriendFoe.friendFoe(cmdr,
-    # system, station, entry, state)
-    Return = Return or modules.Commands.commands(
-        cmdr,
-        is_beta,
-        system,
-        SysFactionState,
-        DistFromStarLS,
-        station,
-        entry,
-        state,
-        x,
-        y,
-        z,
-        body,
-        lat,
-        lon,
-        client,
-        this.fuel,
-        this.fuel_cons,
-        this.SRVmode,
-        this.Fightermode,
-    )
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
     legacy.CodexEntry(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
@@ -452,27 +430,10 @@ def journal_entry_wrapper(
         client,
     )
     Easter_Egs(entry)
-    return Return
+    return status_message
 
 
-def test(
-    cmdr,
-    is_beta,
-    system,
-    SysFactionState,
-    SysFactionAllegiance,
-    DistFromStarLS,
-    station,
-    entry,
-    state,
-    x,
-    y,
-    z,
-    body,
-    lat,
-    lon,
-    client,
-):
+def test(*args, **kwargs):
     pass
 
 
