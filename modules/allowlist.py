@@ -32,9 +32,11 @@ class AllowlistModule(Frame, Module):
         self.fetch_data()
 
     def on_journal_entry(self, entry):
+        if not self.list:
+            return # список ещё скачивается, nothing to do here
         for event in self.list:
             if matchkeys(event, entry.data) and entry.data["event"] == event["event"]:
-                debug("Match {}", entry.data["event"])
+                debug("Allowlist match {}", entry.data["event"])
                 self.publish_data(entry)
 
     def publish_data(self, entry):

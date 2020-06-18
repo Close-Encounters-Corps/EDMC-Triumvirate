@@ -1,6 +1,8 @@
 import requests
 import logging
 
+from ..debug import debug
+
 class WebClient(requests.Session):
     def __init__(self):
         super().__init__()
@@ -10,6 +12,11 @@ class WebClient(requests.Session):
         resp = super().request(method, url, *args, **kwargs)
         if not resp.ok:
             raise HttpError(resp)
+        debug(
+            "Request is OK! ({} {})", 
+            resp.request.method,
+            resp.request.url.split("?")[0]
+        )
         return resp
 
 class HttpError(Exception):
