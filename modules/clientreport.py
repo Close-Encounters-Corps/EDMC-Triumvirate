@@ -8,7 +8,7 @@ try: #py3
     from urllib.parse import quote_plus
 except:#py2
     from urllib import quote_plus
-from .debug import debug
+from .lib.context import global_context
 from .debug import debug,error
 from .release import Release
 
@@ -25,7 +25,7 @@ class clientReport(modules.emitter.Emitter):
         payload["cmdrName"] = self.cmdr  
         payload["isBeta"] = self.is_beta
         payload["clientVersion"] = self.client
-        if Release.get_auto() == 1:
+        if global_context.by_class(Release).auto.get() == 1:
             payload["AutoUpdateDisabled"] = False
         else:
             payload["AutoUpdateDisabled"] = True

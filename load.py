@@ -65,7 +65,7 @@ this.nearloc = {
 
 myPlugin = "EDMC-Triumvirate"
 
-this.version = "1.2.5"
+this.version = settings.version
 this.SQNag = 0
 this.client_version = "{}.{}".format(myPlugin, this.version)
 this.body = None
@@ -80,7 +80,6 @@ this.cmdr_SQID = None  # variable for allegiance check
 this.CMDR = None
 this.SQ = None
 this.SRVmode, this.Fightermode = False, False
-this.old_time = 0
 this.fuel = 0
 this.fuel_cons = 0
 this.AllowEasternEggs = None
@@ -96,7 +95,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     frame.columnconfigure(1, weight=1)
 
     this.news.plugin_prefs(frame, cmdr, is_beta, 1)
-    this.release.plugin_prefs(frame, cmdr, is_beta, 2)
+    context.by_class(release.Release).draw_settings(frame, cmdr, is_beta, 2)
     context.by_class(patrol.PatrolModule).draw_settings(frame, cmdr, is_beta, 3)
     Debug.plugin_prefs(frame, cmdr, is_beta, 4)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 5)
@@ -104,9 +103,6 @@ def plugin_prefs(parent, cmdr, is_beta):
         frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton
     ).grid(row=6, column=0, sticky="NW")
     hdreport.HDInspector(frame, cmdr, is_beta, this.client_version, 7)
-    # release.versionInSettings(frame,
-    # cmdr, is_beta,8)
-    # entry=nb.Entry(frame,None)
     nb.Label(frame, text=settings.support_message,).grid(row=9, column=0, sticky="NW")
 
     return frame
@@ -117,7 +113,6 @@ def prefs_changed(cmdr, is_beta):
     Save settings.
     """
     this.news.prefs_changed(cmdr, is_beta)
-    this.release.prefs_changed(cmdr, is_beta)
     for mod in context.modules:
         mod.on_settings_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
@@ -158,7 +153,6 @@ def plugin_start3(plugin_dir):
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
     this.plugin_dir = plugin_dir
-    release.Release.plugin_start(plugin_dir)
     # префикс логов
     Debug.set_client("Triumvirate")
     codex.CodexTypes.plugin_start(plugin_dir)
@@ -228,10 +222,10 @@ def plugin_app(parent):
         patrol.PatrolModule(table, 3),
         sos.SosModule(),
         allowlist.AllowlistModule(parent),
-        this.systems_module
+        this.systems_module,
+        release.Release(this.plugin_dir, table, this.version, 2)
     ]
     this.news = news.CECNews(table, 1)
-    this.release = release.Release(table, this.version, 2)
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     this.AllowEasterEggs = tk.IntVar(value=config.getint("AllowEasterEggs"))
 
@@ -464,14 +458,12 @@ def dashboard_entry(cmdr, is_beta, entry):
     if this.plug_start == 0:
         this.plug_start = 1
         this.fuel = entry["Fuel"]
-        this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
     try:
         debug("Checking fuel consumption " + str(this.FuelCount))
         if this.FuelCount == 10:
             this.fuel_cons = fuel_consumption(
                 entry, this.fuel, this.old_time, this.fuel_cons
             )
-            this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
             this.fuel = entry["Fuel"]
             this.FuelCount = 0
         else:
@@ -527,6 +519,8 @@ def startup_stats(cmdr):
         url = "https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
         url += "&entry.1181808218=" + quote_plus(cmdr)
         url += "&entry.254549730=" + quote_plus(this.version)
-        url += "&entry.1210213202=" + quote_plus(str(Release.get_auto()))
+        url += "&entry.1210213202=" + quote_plus(
+            this.by_class(Release).auto.get()
+        )
 
         legacy.Reporter(url).start()

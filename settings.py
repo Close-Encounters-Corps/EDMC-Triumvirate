@@ -256,6 +256,12 @@ systems_static_coords = {
 }
 edsm_system_url = "https://www.edsm.net/api-v1/system"
 
+########################
+### release settings ###
+########################
+release_gh_url = "https://github.com/VAKazakov/EDMC-Triumvirate/releases"
+release_gh_latest = "https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest"
+release_zip_template = "https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip"
 
 #############
 ### other ###
@@ -263,3 +269,4 @@ edsm_system_url = "https://www.edsm.net/api-v1/system"
 support_message = """В случае возникновения проблем с плагином
 или в случае, если Вы поставили неправильное сообщество в гугл-форме,
 пишите в канал CEC #triumvirate_tech_support или в личку Казаков#4700"""
+version = "1.3.0"
