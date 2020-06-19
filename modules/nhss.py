@@ -77,14 +77,14 @@ class NHSSModule(Module):
 
     def on_journal_entry(self, entry):
         if not (
-            entry["event"] in ("USSDrop", "FSSSignalDiscovered")
-            and entry.get("USSType") == "$USS_Type_NonHuman;"
+            entry.data["event"] in ("USSDrop", "FSSSignalDiscovered")
+            and entry.data.get("USSType") == "$USS_Type_NonHuman;"
         ):
             return
         threat_level = (
-            entry.get("ThreatLevel")
-            if entry["event"] == "FSSSignalDiscovered"
-            else entry.get("USSThreat")
+            entry.data.get("ThreatLevel")
+            if entry.data["event"] == "FSSSignalDiscovered"
+            else entry.data.get("USSThreat")
         )
         global_fss = None
         try:
