@@ -14,6 +14,7 @@ import os
 import random
 import re
 import shutil
+import sys
 import tkinter as tk
 import uuid
 import zipfile
@@ -83,7 +84,6 @@ class Release(Frame, Module):
         self.installed = False
 
         self.auto = tk.IntVar(value=config.getint("AutoUpdate"))
-        self.novoices = tk.IntVar(value=config.getint("NoVoices"))
         self.rmbackup = tk.IntVar(value=config.getint("RemoveBackup"))
 
         self.columnconfigure(1, weight=1)
@@ -96,7 +96,7 @@ class Release(Frame, Module):
         self.hyperlink.grid(row=0, column=1, sticky="NSEW")
 
         self.button = tk.Button(
-            self, text="Нажмите чтобы обновить", command=self.click_installer
+            self, text="Нажмите чтобы обновить", command=self.download
         )
         self.button.grid(row=1, column=0, columnspan=2, sticky="NSEW")
         self.button.grid_remove()
@@ -142,9 +142,6 @@ class Release(Frame, Module):
         nb.Checkbutton(
             frame, text="Хранить бекапы версий", variable=self.rmbackup
         ).grid(row=0, column=1, sticky="NW")
-        nb.Checkbutton(
-            frame, text="Отключить голосовые сообщения", variable=self.novoices
-        ).grid(row=0, column=2, sticky="NW")
 
         return frame
 
@@ -157,20 +154,6 @@ class Release(Frame, Module):
     @property
     def enabled(self):
         return config.getint("AutoUpdate") == 1
-
-    def click_installer(self):
-        self.button.grid_remove()
-
-        if self.installer():
-            self.hyperlink[
-                "text"
-            ] = "Релиз {}  Установлен, пожалуйста перезагрузите EDMC".format(
-                self.latest.get("tag_name")
-            )
-        else:
-            self.hyperlink["text"] = "Релиз {}  Не установлен, ошибка".format(
-                self.latest.get("tag_name")
-            )
 
     def check(self):
         if self.installed:
@@ -192,7 +175,7 @@ class Release(Frame, Module):
             debug("Automatic update disabled.")
             return
         self.download(latest_tag)
-        
+
     def download(self, tag):
         debug("Downloading version {}", tag)
         url = settings.release_zip_template.format(tag)
@@ -204,8 +187,12 @@ class Release(Frame, Module):
             zf.extractall(os.path.dirname(self.plugin_dir))
         finally:
             response.close()
-        os.rename(self.plugin_dir, f"{self.plugin_dir}.disabled")
+        renamed = f"{self.plugin_dir}.disabled"
+        os.rename(self.plugin_dir, renamed)
         debug("Upgrade completed.")
         self.plugin_dir = new_plugin_dir
         self.installed = True
+        if sys.platform == "win32":
+            import winsound
+            winsound.MessageBeep(type=winsound.MB_OK)
 
