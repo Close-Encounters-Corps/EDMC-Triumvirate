@@ -30,8 +30,8 @@ from ttkHyperlinkLabel import HyperlinkLabel
 
 from .debug import debug, error
 from .lib.conf import config
-from .lib.http import WebClient
 from .lib.context import global_context
+from .lib.http import WebClient
 from .lib.module import Module
 from .lib.thread import Thread
 from .lib.version import Version
@@ -39,7 +39,6 @@ from .player import Player
 
 RELEASE_CYCLE = 60 * 1000 * 60  # 1 Hour
 WRAP_LENGTH = 200
-
 
 
 class ReleaseLink(HyperlinkLabel):
@@ -67,7 +66,7 @@ class ReleaseThread(Thread):
 
     def do_run(self):
         while 1:
-            self.release.check()
+            self.release.check_updates()
             if self.release.installed:
                 return
             self.sleep(RELEASE_CYCLE)
@@ -115,23 +114,16 @@ class Release(Frame, Module):
 
         if self.rmbackup.get() == 0 and config.get("RemoveBackup") != "None":
             delete_dir = config.get("RemoveBackup")
-            debug("RemoveBackup {}".format(delete_dir))
-            try:
-                shutil.rmtree(delete_dir)
-
-            except:
-                error("Cant delete {}".format(delete_dir))
-
-            ## lets not keep trying
+            debug("RemoveBackup {}", delete_dir)
+            shutil.rmtree(delete_dir)
+            # lets not keep trying
             config.set("RemoveBackup", "None")
-
 
     def draw_settings(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
         self.auto = tk.IntVar(value=config.getint("AutoUpdate"))
         self.rmbackup = tk.IntVar(value=config.getint("RemoveBackup"))
-        self.novoices = tk.IntVar(value=config.getint("NoVoices"))
 
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
@@ -149,13 +141,12 @@ class Release(Frame, Module):
         "Called when the user clicks OK on the settings dialog."
         config.set("AutoUpdate", self.auto.get())
         config.set("RemoveBackup", self.rmbackup.get())
-        config.set("NoVoices", self.novoices.get())
 
     @property
     def enabled(self):
         return config.getint("AutoUpdate") == 1
 
-    def check(self):
+    def check_updates(self):
         if self.installed:
             return
         url = settings.release_gh_latest
@@ -173,6 +164,7 @@ class Release(Frame, Module):
             return
         if self.auto.get() != 1:
             debug("Automatic update disabled.")
+            self.notify()
             return
         self.download(latest_tag)
 
@@ -192,7 +184,8 @@ class Release(Frame, Module):
         debug("Upgrade completed.")
         self.plugin_dir = new_plugin_dir
         self.installed = True
-        if sys.platform == "win32":
-            import winsound
-            winsound.MessageBeep(type=winsound.MB_OK)
+        config.set("RemoveBackup", renamed)
 
+    def notify(self):
+        sound = random.choice(["sounds/nag1.wav", "sounds/nag2.wav"])
+        Player(self.plugin_dir, [sound]).start()
