@@ -19,7 +19,9 @@ class Version:
                 # другая версия больше текущей
                 return True
         return False
-        
+
+    def __str__(self):
+        return self.raw_value
 
     def __repr__(self):
         return "{}({!r})".format(self.__class__.__name__, self.raw_value)

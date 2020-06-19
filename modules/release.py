@@ -32,7 +32,7 @@ from ttkHyperlinkLabel import HyperlinkLabel
 from .debug import debug, error
 from .lib.conf import config
 from .lib.context import global_context
-from .lib.http import WebClient
+from .lib.http import WebClient, HttpError
 from .lib.module import Module
 from .lib.thread import Thread, BasicThread
 from .lib.version import Version
@@ -176,10 +176,16 @@ class Release(Frame, Module):
             self.grid_remove()
 
     def update_release_env(self) -> Environment:
-        resp = WebClient().get(settings.release_gh_ver_info.format(self.version))
-        if resp.status_code == 404:
-            debug("Release not in GitHub")
-            self.env = Environment.DEVELOPMENT
+        try:
+            resp = WebClient().get(settings.release_gh_ver_info.format(self.version))
+        except HttpError as e:
+            resp = e.response
+            if resp.status_code == 404:
+                debug("Release not in GitHub")
+                self.env = Environment.DEVELOPMENT
+                return
+            else:
+                raise
         data = resp.json()
         if data["prerelease"]:
             self.env = Environment.STAGING
