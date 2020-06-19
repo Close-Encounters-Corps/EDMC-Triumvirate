@@ -80,6 +80,7 @@ this.cmdr_SQID = None  # variable for allegiance check
 this.CMDR = None
 this.SQ = None
 this.SRVmode, this.Fightermode = False, False
+this.old_time = 0
 this.fuel = 0
 this.fuel_cons = 0
 this.AllowEasternEggs = None
@@ -458,12 +459,14 @@ def dashboard_entry(cmdr, is_beta, entry):
     if this.plug_start == 0:
         this.plug_start = 1
         this.fuel = entry["Fuel"]
+        this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")	
     try:
         debug("Checking fuel consumption " + str(this.FuelCount))
         if this.FuelCount == 10:
             this.fuel_cons = fuel_consumption(
                 entry, this.fuel, this.old_time, this.fuel_cons
             )
+            this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
             this.fuel = entry["Fuel"]
             this.FuelCount = 0
         else:
@@ -515,12 +518,10 @@ def startup_stats(cmdr):
         this.first_event
     except:
         this.first_event = True
-
+        auto_update = 1 if this.by_class(Release).no_auto.get() == 0 else 0
         url = "https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
         url += "&entry.1181808218=" + quote_plus(cmdr)
         url += "&entry.254549730=" + quote_plus(this.version)
-        url += "&entry.1210213202=" + quote_plus(
-            this.by_class(Release).auto.get()
-        )
+        url += "&entry.1210213202=" + quote_plus(str(auto_update))
 
         legacy.Reporter(url).start()

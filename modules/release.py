@@ -72,17 +72,27 @@ class ReleaseThread(Thread):
             self.sleep(RELEASE_CYCLE)
 
 
+class SimpleThread(Thread):
+    def __init__(self, target):
+        super().__init__()
+        self.target = target
+
+    def do_run(self):
+        self.target()
+
+
 class Release(Frame, Module):
     def __init__(self, plugin_dir, parent, version, gridrow):
 
         sticky = tk.EW + tk.N  # full width, stuck to the top
 
         super().__init__(parent)
+
         self.plugin_dir = plugin_dir
 
         self.installed = False
 
-        self.auto = tk.IntVar(value=config.getint("AutoUpdate"))
+        self.no_auto = tk.IntVar(value=config.getint("DisableAutoUpdate"))
         self.rmbackup = tk.IntVar(value=config.getint("RemoveBackup"))
 
         self.columnconfigure(1, weight=1)
@@ -103,16 +113,15 @@ class Release(Frame, Module):
         self.version = Version(version)
         self.release_thread = None
         self.latest = {}
-        self.launch()
+        if config.getint("DisableAutoUpdate") == 0:
+            self.launch()
 
     def launch(self):
-        if not self.enabled:
-            return
         self.release_thread = ReleaseThread(self)
         self.release_thread.start()
-        debug("RemoveBackup: {}", config.get("RemoveBackup"))
+        debug("RemoveBackup: {!r}", config.get("RemoveBackup"))
 
-        if self.rmbackup.get() == 0 and config.get("RemoveBackup") != "None":
+        if self.rmbackup.get() == 0 and config.get("RemoveBackup") not in ("None", None):
             delete_dir = config.get("RemoveBackup")
             debug("RemoveBackup {}", delete_dir)
             shutil.rmtree(delete_dir)
@@ -122,15 +131,15 @@ class Release(Frame, Module):
     def draw_settings(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
-        self.auto = tk.IntVar(value=config.getint("AutoUpdate"))
+        self.no_auto = tk.IntVar(value=config.getint("DisableAutoUpdate"))
         self.rmbackup = tk.IntVar(value=config.getint("RemoveBackup"))
 
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
         frame.grid(row=gridrow, column=0, sticky="NSEW")
-        nb.Checkbutton(frame, text="Включить автообновление", variable=self.auto).grid(
-            row=0, column=0, sticky="NW"
-        )
+        nb.Checkbutton(
+            frame, text="Отключить автообновление", variable=self.no_auto
+        ).grid(row=0, column=0, sticky="NW")
         nb.Checkbutton(
             frame, text="Хранить бекапы версий", variable=self.rmbackup
         ).grid(row=0, column=1, sticky="NW")
@@ -139,12 +148,21 @@ class Release(Frame, Module):
 
     def on_settings_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set("AutoUpdate", self.auto.get())
+        config.set("DisableAutoUpdate", self.no_auto.get())
         config.set("RemoveBackup", self.rmbackup.get())
+        # остановка и запуск потока обновления (при необходимости)
+        SimpleThread(target=self.restart_thread).start()
 
-    @property
-    def enabled(self):
-        return config.getint("AutoUpdate") == 1
+    def restart_thread(self):
+        self.release_thread.STOP = True
+        self.release_thread.join()
+        if config.getint("DisableAutoUpdate") == 0:
+            self.grid()
+            self.release_thread = ReleaseThread(self)
+            self.release_thread.start()
+        else:
+            self.grid_remove()
+
 
     def check_updates(self):
         if self.installed:
@@ -162,9 +180,9 @@ class Release(Frame, Module):
         elif latest_version < self.version:
             self.hyperlink["text"] = f"Тестовая версия {self.version.raw_value}"
             return
-        if self.auto.get() != 1:
+        if self.no_auto.get() == 1:
             debug("Automatic update disabled.")
-            self.notify()
+            # self.notify()
             return
         self.download(latest_tag)
 

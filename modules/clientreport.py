@@ -25,7 +25,7 @@ class clientReport(modules.emitter.Emitter):
         payload["cmdrName"] = self.cmdr  
         payload["isBeta"] = self.is_beta
         payload["clientVersion"] = self.client
-        if global_context.by_class(Release).auto.get() == 1:
+        if global_context.by_class(Release).no_auto.get() == 0:
             payload["AutoUpdateDisabled"] = False
         else:
             payload["AutoUpdateDisabled"] = True
