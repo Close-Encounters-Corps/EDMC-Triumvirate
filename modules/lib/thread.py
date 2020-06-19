@@ -5,7 +5,7 @@ import time
 
 from ..debug import debug
 
-class Thread(threading.Thread):
+class BasicThread(threading.Thread):
     """
     Обёртка над Thread'ом с различными
     дополнительными методами для управления
@@ -16,7 +16,7 @@ class Thread(threading.Thread):
 
     def __init__(self, **kwargs):
         super().__init__(self, **kwargs)
-        Thread.pool.append(self)
+        BasicThread.pool.append(self)
         # флаг для сигнализирования потоку, что ему пора бы остановиться
         self.STOP = False
         self.sleep_duration = 5
@@ -37,6 +37,11 @@ class Thread(threading.Thread):
         for thread in cls.pool:
             thread.STOP = True
 
+    @classmethod
+    def list_alive(cls):
+        return [x for x in cls.pool if x.is_alive()]
+
+class Thread(BasicThread):
     def run(self):
         try:
             self.do_run()
@@ -47,10 +52,6 @@ class Thread(threading.Thread):
 
     def do_run(self):
         raise NotImplementedError()
-
-    @classmethod
-    def list_alive(cls):
-        return [x for x in cls.pool if x.is_alive()]
 
 
 class ThreadExit(Exception):

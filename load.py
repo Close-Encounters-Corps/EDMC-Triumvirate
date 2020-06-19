@@ -224,7 +224,8 @@ def plugin_app(parent):
         sos.SosModule(),
         allowlist.AllowlistModule(parent),
         this.systems_module,
-        release.Release(this.plugin_dir, table, this.version, 2)
+        release.Release(this.plugin_dir, table, this.version, 2),
+        nhss.NHSSModule()
     ]
     this.news = news.CECNews(table, 1)
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
@@ -358,7 +359,6 @@ def journal_entry_wrapper(
     )
     status_message = None
     factionkill.submit(cmdr, is_beta, system, station, entry, client)
-    nhss.submit(cmdr, is_beta, system, station, entry, client)
     hdreport.submit(cmdr, is_beta, system, station, entry, client)
     codex.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
     fssreports.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)

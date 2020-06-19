@@ -8,6 +8,7 @@
 3. Если включено автообновление -- скачиваем и распаковываем архив с ним.
 """
 
+from enum import Enum
 import io
 import json
 import os
@@ -33,12 +34,18 @@ from .lib.conf import config
 from .lib.context import global_context
 from .lib.http import WebClient
 from .lib.module import Module
-from .lib.thread import Thread
+from .lib.thread import Thread, BasicThread
 from .lib.version import Version
 from .player import Player
 
 RELEASE_CYCLE = 60 * 1000 * 60  # 1 Hour
 WRAP_LENGTH = 200
+
+
+class Environment(Enum):
+    DEVELOPMENT = "DEVELOPMENT"
+    STAGING = "STAGING"
+    LIVE = "LIVE"
 
 
 class ReleaseLink(HyperlinkLabel):
@@ -111,17 +118,22 @@ class Release(Frame, Module):
         self.button.grid_remove()
 
         self.version = Version(version)
+        self.env = None
         self.release_thread = None
         self.latest = {}
         if config.getint("DisableAutoUpdate") == 0:
             self.launch()
+        BasicThread(target=self.update_release_env).start()
 
     def launch(self):
         self.release_thread = ReleaseThread(self)
         self.release_thread.start()
         debug("RemoveBackup: {!r}", config.get("RemoveBackup"))
 
-        if self.rmbackup.get() == 0 and config.get("RemoveBackup") not in ("None", None):
+        if self.rmbackup.get() == 0 and config.get("RemoveBackup") not in (
+            "None",
+            None,
+        ):
             delete_dir = config.get("RemoveBackup")
             debug("RemoveBackup {}", delete_dir)
             shutil.rmtree(delete_dir)
@@ -163,6 +175,16 @@ class Release(Frame, Module):
         else:
             self.grid_remove()
 
+    def update_release_env(self) -> Environment:
+        resp = WebClient().get(settings.release_gh_ver_info.format(self.version))
+        if resp.status_code == 404:
+            debug("Release not in GitHub")
+            self.env = Environment.DEVELOPMENT
+        data = resp.json()
+        if data["prerelease"]:
+            self.env = Environment.STAGING
+        else:
+            self.env = Environment.LIVE
 
     def check_updates(self):
         if self.installed:

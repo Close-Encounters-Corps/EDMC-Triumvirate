@@ -262,6 +262,12 @@ edsm_system_url = "https://www.edsm.net/api-v1/system"
 release_gh_url = "https://github.com/VAKazakov/EDMC-Triumvirate/releases"
 release_gh_latest = "https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest"
 release_zip_template = "https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip"
+release_gh_ver_info = "https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/tags/{}"
+
+#####################
+### NHSS settings ###
+#####################
+nhss_canonn_url = "https://us-central1-canonn-api-236217.cloudfunctions.net/submitNHSS"
 
 #############
 ### other ###

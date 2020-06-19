@@ -5,6 +5,8 @@ import sys
 import json
 from .debug import Debug
 from .debug import debug,error
+from .lib.context import global_context
+from .release import Release, Environment
 
 class postJson(threading.Thread):
     def __init__(self, url,payload):
@@ -29,17 +31,22 @@ def post(url,payload):
     postJson(url,payload).start()            
 
 
+def get_endpoint(is_beta=False):
+    urls = {
+        Environment.LIVE: "https://api.canonn.tech:2053",
+        Environment.STAGING: "https://api.canonn.tech:2053",
+        Environment.DEVELOPMENT:  "https://api.canonn.tech:2083"
+    }
+    if is_beta:
+        return urls[Environment.STAGING]
+    env = env = global_context.by_class(Release).env
+    return urls[env]
 
 class Emitter(threading.Thread):
     '''
         Should probably make this a heritable class as this is a repeating pattern
     '''
-    urls = { 
-        "live": "https://api.canonn.tech:2053",
-        "staging": "https://api.canonn.tech:2053",
-        "development":  "https://api.canonn.tech:2083"
-    }               
-        
+
     route = ""    
         
     def __init__(self,cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):
@@ -64,24 +71,12 @@ class Emitter(threading.Thread):
         if Emitter.route:
             return Emitter.route
         else:
-            # first check to see if we
-            # are an official release
-            repo,tag = client.split(".",1)
-            r = requests.get("https://api.github.com/repos/VAKazakov/{}/releases/tags/{}".format(repo,tag))
-            j = r.json()
-            if r.status_code == 404:
-                debug("Release not in github")
-                Emitter.route = Emitter.urls.get("development")
-            elif j.get("prerelease"):
-                debug("Prerelease in github")
-                Emitter.route=Emitter.urls.get("staging")              
-            else:
-                debug("Release in github")
-                Emitter.route = Emitter.urls.get("live")
+            endpoint = get_endpoint()
+            Emitter.route = endpoint
             
-            r = requests.get("{}/clientroutes?clientVersion={}".format(Emitter.urls.get("live"),client))
+            r = requests.get("{}/clientroutes?clientVersion={}".format(endpoint, client))
             j = r.json()
-            if not r.status_code == requests.codes.ok or not j:
+            if not r.ok or not j:
                 debug("Using {}".format(Emitter.route))
             else:   
                 Emitter.route = j[0].get("route")
@@ -91,11 +86,7 @@ class Emitter(threading.Thread):
 
         
     def getUrl(self):
-        if self.is_beta:
-            url = Emitter.urls.get("staging")
-        else:
-            url = Emitter.route
-        return url
+        return get_endpoint(self.is_beta)
         
     def setPayload(self):
         payload = {}
@@ -116,7 +107,7 @@ class Emitter(threading.Thread):
         fullurl = "{}/{}".format(url,self.modelreport)
         r = requests.post(fullurl,data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),headers={"content-type":"application/json"})  
         
-        if not r.status_code == requests.codes.ok:
+        if not r.ok:
             error("{}/{}".format(url,self.modelreport))
             error(r.status_code)
             headers = r.headers
