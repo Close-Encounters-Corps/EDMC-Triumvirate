@@ -95,7 +95,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
 
-    this.news.plugin_prefs(frame, cmdr, is_beta, 1)
+    context.by_class(news.CECNews).draw_settings(frame, cmdr, is_beta, 1)
     context.by_class(release.Release).draw_settings(frame, cmdr, is_beta, 2)
     context.by_class(patrol.PatrolModule).draw_settings(frame, cmdr, is_beta, 3)
     Debug.plugin_prefs(frame, cmdr, is_beta, 4)
@@ -113,7 +113,6 @@ def prefs_changed(cmdr, is_beta):
     """
     Save settings.
     """
-    this.news.prefs_changed(cmdr, is_beta)
     for mod in context.modules:
         mod.on_settings_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
@@ -225,9 +224,9 @@ def plugin_app(parent):
         allowlist.AllowlistModule(parent),
         this.systems_module,
         release.Release(this.plugin_dir, table, this.version, 2),
-        nhss.NHSSModule()
+        nhss.NHSSModule(),
+        news.CECNews(table, 1)
     ]
-    this.news = news.CECNews(table, 1)
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     this.AllowEasterEggs = tk.IntVar(value=config.getint("AllowEasterEggs"))
 

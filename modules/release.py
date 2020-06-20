@@ -163,7 +163,7 @@ class Release(Frame, Module):
         config.set("DisableAutoUpdate", self.no_auto.get())
         config.set("RemoveBackup", self.rmbackup.get())
         # остановка и запуск потока обновления (при необходимости)
-        SimpleThread(target=self.restart_thread).start()
+        BasicThread(target=self.restart_thread).start()
 
     def restart_thread(self):
         self.release_thread.STOP = True
