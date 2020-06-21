@@ -42,3 +42,4 @@ class JournalEntry:
         self.body = body
         self.lat = lat
         self.lon = lon
+        self.client = client

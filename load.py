@@ -3,49 +3,48 @@ import csv
 import functools
 import json
 import sys
+import tkinter as tk
+import tkinter.ttk
 import webbrowser
 from contextlib import closing
 from datetime import datetime
+from tkinter import Frame
+from urllib.parse import quote_plus
+
+### third-party модули ###
+import requests
 
 ### модули EDMC ###
 import l10n
 import myNotebook as nb
 import plug
-from ttkHyperlinkLabel import HyperlinkLabel
 from config import config
 
-### third-party модули ###
-import requests
-
 ### модули плагина ###
-from modules import clientreport, codex, factionkill
+from modules import allowlist, clientreport, codex, factionkill
 from modules import friendfoe as FF
 from modules import (
-    allowlist,
     fssreports,
     hdreport,
     journaldata,
     legacy,
     materialReport,
+    message_label,
     news,
     nhss,
     patrol,
     release,
-    sos
+    sos,
 )
 from modules.debug import Debug, debug, error
+from modules.lib import cmdr as cmdrlib
+from modules.lib import context as contextlib
+from modules.lib import journal, thread
 from modules.player import Player
 from modules.release import Release
 from modules.systems import SystemsModule
-from modules.lib import cmdr as cmdrlib
-from modules.lib import context as contextlib
-from modules.lib import thread, journal
+from ttkHyperlinkLabel import HyperlinkLabel
 import settings
-
-import tkinter.ttk
-import tkinter as tk
-from tkinter import Frame
-from urllib.parse import quote_plus
 
 _ = functools.partial(l10n.Translations.translate, context=__file__)
 
@@ -213,21 +212,29 @@ def plugin_app(parent):
     frame = this.frame = tk.Frame(parent)
     frame.columnconfigure(0, weight=1)
 
-    table = tk.Frame(frame)
-    table.columnconfigure(1, weight=1)
+    rows = tk.Frame(frame)
+    rows.grid_columnconfigure(1, weight=1)
+    rows.grid(sticky="NSEW")
+
+
+    table = tk.Frame(rows)
+    table.columnconfigure(2, weight=1)
     table.grid(sticky="NSEW")
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.systems_module = SystemsModule()
     this.modules = [
+        news.CECNews(table, 1),
+        release.Release(this.plugin_dir, table, this.version, 2),
         patrol.PatrolModule(table, 3),
         sos.SosModule(),
         allowlist.AllowlistModule(parent),
         this.systems_module,
-        release.Release(this.plugin_dir, table, this.version, 2),
         nhss.NHSSModule(),
-        news.CECNews(table, 1)
+        materialReport.MaterialsModule(),
     ]
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
+    # лейбл, в котором содержится текст из вывода модулей
+    this.message_label = message_label.MessageLabel(rows, row=5)
     this.AllowEasterEggs = tk.IntVar(value=config.getint("AllowEasterEggs"))
 
     return frame
@@ -245,9 +252,6 @@ def Squadronsend(CMDR, entry):
 
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
-    """
-
-    """
     # capture some stats when we launch
     # not read for that yet
     startup_stats(cmdr)
@@ -291,30 +295,23 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     if entry["event"] == "JoinedSquadron":
         Squadronsend(cmdr, entry["SquadronName"])
 
-    x, y, z = None, None, None
-    if system:
-        val = this.systems_module.get_system_coords(system)
-        if val is not None:
-            x, y, z = val
-
-    return journal_entry_wrapper(
-        cmdr,
-        is_beta,
-        system,
-        this.SysFactionState,
-        this.SysFactionAllegiance,
-        this.DistFromStarLS,
-        station,
-        entry,
-        state,
-        x,
-        y,
-        z,
-        this.body_name,
-        this.nearloc["Latitude"],
-        this.nearloc["Longitude"],
-        this.client_version,
-    )
+    thread.BasicThread(
+        target=lambda: journal_entry_wrapper(
+            cmdr,
+            is_beta,
+            system,
+            this.SysFactionState,
+            this.SysFactionAllegiance,
+            this.DistFromStarLS,
+            station,
+            entry,
+            state,
+            this.body_name,
+            this.nearloc["Latitude"],
+            this.nearloc["Longitude"],
+            this.client_version,
+        )
+    ).start()
 
 
 def journal_entry_wrapper(
@@ -327,9 +324,6 @@ def journal_entry_wrapper(
     station,
     entry,
     state,
-    x,
-    y,
-    z,
     body,
     lat,
     lon,
@@ -338,6 +332,12 @@ def journal_entry_wrapper(
     """
     Detect journal events
     """
+    x, y, z = None, None, None
+    if system:
+        val = this.systems_module.get_system_coords(system)
+        if val is not None:
+            x, y, z = val
+
     journal_entry = journal.JournalEntry(
         cmdr=cmdr,
         is_beta=is_beta,
@@ -354,7 +354,7 @@ def journal_entry_wrapper(
         body=body,
         lat=lat,
         lon=lon,
-        client=client
+        client=client,
     )
     status_message = None
     factionkill.submit(cmdr, is_beta, system, station, entry, client)
@@ -369,9 +369,9 @@ def journal_entry_wrapper(
             try:
                 val = mod.on_chat_message(journal_entry)
             except Exception as e:
-                error("Error while sending chat message to module {}: {}".format(
-                    mod, e
-                ))
+                error(
+                    f"Error while sending chat message to module {mod}: {e}"
+                )
             status_message = status_message or val
     else:
         for mod in context.enabled_modules:
@@ -379,23 +379,6 @@ def journal_entry_wrapper(
             status_message = status_message or val
     this.codexcontrol.journal_entry(
         cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
-    )
-    materialReport.submit(
-        cmdr,
-        is_beta,
-        system,
-        SysFactionState,
-        SysFactionAllegiance,
-        DistFromStarLS,
-        station,
-        entry,
-        x,
-        y,
-        z,
-        body,
-        lat,
-        lon,
-        client,
     )
     codex.saaScan.journal_entry(
         cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
@@ -409,7 +392,8 @@ def journal_entry_wrapper(
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
     legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
     Easter_Egs(entry)
-    return status_message
+    if status_message is not None:
+        this.message_label.text = status_message
 
 
 def Easter_Egs(entry):
@@ -458,7 +442,7 @@ def dashboard_entry(cmdr, is_beta, entry):
     if this.plug_start == 0:
         this.plug_start = 1
         this.fuel = entry["Fuel"]
-        this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")	
+        this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
     try:
         debug("Checking fuel consumption " + str(this.FuelCount))
         if this.FuelCount == 10:
@@ -503,6 +487,7 @@ def dashboard_entry(cmdr, is_beta, entry):
     debug(this.body_name)
     this.cmdr_SQID = Alegiance_get(cmdr, this.cmdr_SQID)
     # debug(this.cmdr_SQID)
+
 
 def cmdr_data(data, is_beta):
     """

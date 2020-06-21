@@ -16,47 +16,17 @@ from .emitter import get_endpoint
 from .lib.module import Module
 from .lib.thread import Thread
 from .lib.http import WebClient
+from .lib.canonn_api import CanonnApi, CanonnRealtimeApi
 
 class NHSSSubmitter(Thread):
     def __init__(self, entry, threat_level):
         super().__init__()
         self.entry = entry
-        self.cmdr = entry.cmdr
-        self.system = entry.system
-        self.x = entry.coords.x
-        self.y = entry.coords.y
-        self.z = entry.coords.z
         self.threat_level = threat_level
 
     def run(self):
-        client = WebClient()
-        client.get(
-            settings.nhss_canonn_url,
-            params=dict(
-                cmdrName=self.cmdr,
-                systemName=self.system,
-                x=self.x,
-                y=self.y,
-                z=self.z,
-                thread_level=self.threat_level,
-            ),
-        )
-        endpoint = get_endpoint()
-        if self.entry.data["event"] == "FSSSignalDiscovered":
-            event_type = "FSS"
-        else:
-            event_type = "Drop"
-        payload = dict(
-            systemName=self.system,
-            cmdrName=self.cmdr,
-            nhssRawJson=self.entry.data,
-            threatLevel=self.threat_level,
-            isBeta=self.entry.is_beta,
-            clientVersion=self.entry.client,
-            reportStatus="accepted",
-            reportComment=event_type
-        )
-        client.post(endpoint, json=payload)
+        CanonnRealtimeApi().submit_nhss(self.entry, self.threat_level)
+        CanonnApi(self.entry.is_beta).submit_nhss(self.entry, self.threat_level)
 
 
 """
