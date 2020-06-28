@@ -378,7 +378,7 @@ class PatrolModule(Frame, Module):
             if ship_count == 1:
                 ship = ships[0]
                 ship_type = get_ship_type(ship.get("name"))
-                ship_info = "Ваш {}, {} пристыкован(а) к {}".format(
+                ship_info = "Ваш{}, {} пристыкован(а) к {}".format(  #Тип пишется вплотную, потому что в подстановке названия кораблей идут с доп символом в начале, если тип женскогго рода
                     ship_type, ship.get("shipName"), ship["station"].get("name")
                 )
             else:
