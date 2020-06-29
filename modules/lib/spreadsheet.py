@@ -25,7 +25,7 @@ class Spreadsheet:
             if not resp.ok:
                 debug("Spreadsheets response: {}:\n{}", resp, resp.text)
                 raise AssertionError(
-                    "Response from Google Spreadsheets is not OK."
+                    f"Response from Google Spreadsheets ({resp.request.url!r}) is not OK."
                 )
             self.response = resp
             self.process()
