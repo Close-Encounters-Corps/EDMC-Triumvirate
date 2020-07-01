@@ -41,7 +41,10 @@ class Spreadsheet:
             self.download()
         stream = BytesDecoder(self.response.raw)
         reader = csv.reader(stream)
-        next(reader) # пропускаем заголовок
+        try:
+            next(reader) # пропускаем заголовок
+        except StopIteration: # ну и ладно...
+            pass
         yield from reader
 
     def __getitem__(self, num):

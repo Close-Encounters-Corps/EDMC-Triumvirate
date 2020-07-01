@@ -30,14 +30,20 @@ def find_cmdr(name):
         # пропускаем заголовок
         next(reader)
         for row in reader:
-            cmdr, squadron, SQID = row
-            # debug("Comparing: {} ({})", cmdr, type(cmdr))
-            if cmdr == name:
-                cmdrobj = Commander(name, squadron, SQID)
-                debug("Commander found! ({})", cmdrobj)
-                return cmdrobj
+            try:
+                cmdr, squadron, SQID = row
+                # debug("Comparing: {} ({})", cmdr, type(cmdr))
+                if cmdr == name:
+                    cmdrobj = Commander(name, squadron, SQID)
+                    debug("Commander found! ({})", cmdrobj)
+                    return cmdrobj
+            except Exception as e:
+                debug(
+                    "[lib/cmdr] line {} skipped because of error: {}", 
+                    reader.line_num, e
+                )
     except csv.Error:
-        debug("Error at reading CSV (line {}):", reader.line_num)
+        debug("[lib/cmdr] error at reading CSV (line {}):", reader.line_num)
         raise
 
 
