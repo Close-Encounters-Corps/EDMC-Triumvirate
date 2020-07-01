@@ -46,7 +46,7 @@ class clientReport(modules.emitter.Emitter):
                              "cmdr": payload.get("cmdrName"),
                              "beta": payload.get("isBeta"),
                              "client": payload.get("clientVersion"),
-                             "autoupdate": payload.get("AutoUpdateDisabled")
+                             "autoupdate": not payload.get("AutoUpdateDisabled")
                          })
 
 
