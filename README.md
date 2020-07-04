@@ -1,7 +1,7 @@
 ![Latest Release](https://img.shields.io/github/release/VAKazakov/EDMC-Triumvirate.svg)
 
 # EDMC-Triumvirate
-Плагин Triumvirate для EDMC, разработанный фракцией Close Encounters Corps (KAZAK0V, AntonyVern), является мощнейшим инструментом по обработке данных, позволяет отслеживать влияние в подконтрольных фракционных системах, точечно прописывать задачи по БГС к каждой системе, собирать научные данные, координировать работу пилотов, оповещать коллег о нештатных ситуациях в дальних перелетах и собирать статистические данные по Таргоидам и аномалиям. В дальнейшем этот плагин получит ряд улучшений, призванных еще сильнее упростить работу пилотов на просторах Галактики.
+Плагин Triumvirate для EDMC, разработанный фракцией Close Encounters Corps, является мощнейшим инструментом по обработке данных, позволяет отслеживать влияние в подконтрольных фракционных системах, точечно прописывать задачи по БГС к каждой системе, собирать научные данные, координировать работу пилотов, оповещать коллег о нештатных ситуациях в дальних перелетах и собирать статистические данные по Таргоидам и аномалиям. В дальнейшем этот плагин получит ряд улучшений, призванных еще сильнее упростить работу пилотов на просторах Галактики.
 
 ***Конфиденциальная информация пользователя, характеристики системы и необщедоступные персональные данные принципиально не собираются, не хранятся и не обрабатываются.***
 
@@ -86,6 +86,6 @@ EDMC-Triumvirate use data from [Canonn API V2](https://docs.canonn.tech), [ED St
 
 EDMC-Triumvirate based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), with permission of initial developers.
 
-All Contents Copyright ©️ 2016-2020 Close Encounters Corps, Triumvirate. All Rights Reserved.
+All Contents Copyright ©️ 2016-2020 Close Encounters Corps, Triumvirate. KAZAK0V, AntonyVern, Osmium. All Rights Reserved.
 
 Logo - Антон Верницкий aka AntonyVern/Automatic system.
