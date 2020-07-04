@@ -183,7 +183,7 @@ class EDMCLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Пожалуйста, поставьте EDMC версии 3.5 или выше по этой ссылке",
+            text="Пожалуйста, поставьте EDMC версии 3.5 или выше по следующей ссылке",
             url="https://github.com/Marginal/EDMarketConnector/releases",
             popup_copy=True,
             # wraplength=50, # updated
