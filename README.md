@@ -7,7 +7,7 @@
 
 # Обратите особое внимание:
 
-Плагин для EDMC Triumvirate категорически НЕСОВМЕСТИМ с плагином EDMC-Canonn, EDMC-USS-Survey и с устаревшим EDMC-USS-Survey-Triumvirate-edition. Плагин EDMC-Canonn был изначально интегрирован в Triumvirate.
+Плагин для EDMC Triumvirate категорически НЕСОВМЕСТИМ с плагином EDMC-Canonn, EDMC-USS-Survey и с устаревшим EDMC-USS-Survey-Triumvirate-edition. Плагин EDMC-Canonn был изначально интегрирован в Triumvirate, интегрирована поддержка FCMC и передача собранных научных данных не только на сервера Canonn, но и по адресам ATEL-IGAU.
 
 # Функции плагина (будет обновляться по мере внесения улучшений)
 
