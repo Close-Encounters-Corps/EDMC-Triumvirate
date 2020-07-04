@@ -280,7 +280,5 @@ nhss_canonn_url = "https://us-central1-canonn-api-236217.cloudfunctions.net/subm
 #############
 ### other ###
 #############
-support_message = """В случае возникновения проблем с плагином
-или в случае, если Вы поставили неправильное сообщество в гугл-форме,
-пишите в канал CEC #triumvirate_tech_support или в личку Казаков#4700"""
+support_message = """В случае возникновения проблем с плагином обращайтесь в дискорд Close Encounters Corps, канал #triumvirate_tech_support или в личные сообщения Казаков#4700"""
 version = "1.3.0"
