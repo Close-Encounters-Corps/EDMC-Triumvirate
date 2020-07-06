@@ -107,9 +107,17 @@ class fssEmitter(Emitter):
 
         self.getExcluded()
 
+        FSSSignalDiscovered=(self.entry.get("event") == "FSSSignalDiscovered")
+        USS=("$USS" in self.entry.get("SignalName"))
+        FleetCarrier=(self.entry.get("SignalName_Localised")[-4] == '-')
+        isStation=(self.entry.get("IsStation"))
+        FleetCarrier = (self.entry.get("SignalName_Localised")[-4] == '-' and isStation)
+        life_event=("$Fixed_Event_Life" in self.entry.get("SignalName"))
+        excluded=fssEmitter.excludefss.get(self.entry.get("SignalName"))
+
         # don't bother sending USS
-        if self.entry["event"] == "FSSSignalDiscovered" and not "$USS" in self.entry.get("SignalName"):
-            modules.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postFSSSignal",
+        if FSSSignalDiscovered and not USS and not FleetCarrier:
+            canonn.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postFSSSignal",
                         {
                             "signalname": self.entry.get("SignalName"),
                             "signalNameLocalised": self.entry.get("SignalName_Localised"),
@@ -120,7 +128,7 @@ class fssEmitter(Emitter):
                             "z": self.z,
                             "raw_json": self.entry,
                         })
-
+            
         # is this a code entry and do we want to record it?
         # We dont want o record any that don't begin with $ and and with ;
         if self.entry["event"] == "FSSSignalDiscovered" and \
