@@ -130,12 +130,8 @@ class fssEmitter(Emitter):
                         })
             
         # is this a code entry and do we want to record it?
-        # We dont want o record any that don't begin with $ and and with ;
-        if self.entry["event"] == "FSSSignalDiscovered" and \
-                not fssEmitter.excludefss.get(self.entry.get("SignalName")) and \
-                not "$USS" in self.entry.get("SignalName") and \
-                not self.entry.get(      "IsStation") and \
-                '$' in self.entry.get("SignalName"):
+        # We don't want to record any that don't begin with $ and and with ;
+        if FSSSignalDiscovered and not excluded and not USS and not isStation and '$' in self.entry.get("SignalName"):
 
             url = self.getUrl()
 
@@ -143,8 +139,8 @@ class fssEmitter(Emitter):
                 payload = self.getAXPayload()
                 self.gSubmitAXCZ(payload)
                 self.modelreport = "axczfssreports"
-            elif "$Fixed_Event_Life_Cloud" in self.entry.get("SignalName"):
-                debug("Life Cloud")
+            elif life_event:
+                debug(self.entry.get("SignalName"))
 
                 payload = self.getLcPayload()
                 self.modelreport = "lcfssreports"
