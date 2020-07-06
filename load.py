@@ -439,7 +439,7 @@ this.plug_start = False
 
 def dashboard_entry(cmdr, is_beta, entry):
     debug("Dashboard entry: {}", entry)
-    if this.plug_start == 0:
+    if this.plug_start == 0 and "Fuel" in entry:
         this.plug_start = 1
         this.fuel = entry["Fuel"]
         this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
