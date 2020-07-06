@@ -4,6 +4,12 @@ canonn_patrols_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMFJL2u0T
 bgs_tasks_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQZFJ4O0nb3L1WJk5oMEPJrr1w5quBSnPRwSbz66XCYx0Lq6aAexm9s1t8N8iRxpdbUOtrhKqQMayY/pub?gid=0&single=true&output=csv"
 edsm_poi_url = "https://www.edsm.net/en/galactic-mapping/json"
 
+
+####################
+### CEC SETTINGS ###
+####################
+cec_endpoint = "https://closeencounterscorps.org"
+
 ###################
 ### CANONN URLS ###
 ###################
@@ -284,3 +290,8 @@ support_message = """В случае возникновения проблем �
 или в случае, если Вы поставили неправильное сообщество в гугл-форме,
 пишите в канал CEC #triumvirate_tech_support или в личку Казаков#4700"""
 version = "1.3.0"
+
+try:
+    from settings_local import *
+except ImportError:
+    pass

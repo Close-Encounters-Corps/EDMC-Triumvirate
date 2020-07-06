@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 import shutil
 
-FILES = ["load.py", "settings.py"]
+FILES = ["load.py", "settings.py", "settings_local.py"]
 
 DEST = Path.home() / "AppData" / "Local" / "EDMarketConnector" / "plugins" / "EDMC-Triumvirate"
 
@@ -29,4 +29,7 @@ for folder, _, files in os.walk("modules"):
         do_copy(src, dst)
 
 for item in FILES:
+    if not Path(item).exists:
+        print(f"Warning: {item} does not exist, skipping")
+        continue
     do_copy(item, DEST / item)

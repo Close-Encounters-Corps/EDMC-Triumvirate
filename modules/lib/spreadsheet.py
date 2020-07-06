@@ -23,6 +23,7 @@ class Spreadsheet:
     def download(self):
         with closing(requests.get(self.url, stream=True)) as resp:
             if not resp.ok:
+                debug("Original URL: {}", self.url)
                 debug("Spreadsheets response: {}:\n{}", resp, resp.text)
                 raise AssertionError(
                     f"Response from Google Spreadsheets ({resp.request.url!r}) is not OK."

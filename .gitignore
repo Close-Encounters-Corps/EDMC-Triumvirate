@@ -17,5 +17,5 @@
 *.pyproj
 /EDMC-Triumvirate.sln
 /modules/modules.zip
-
+/settings_local.py
 .vscode
