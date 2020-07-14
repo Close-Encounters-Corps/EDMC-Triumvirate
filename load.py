@@ -38,6 +38,7 @@ from modules import (
 )
 from modules.debug import Debug, debug, error
 from modules.lib import cmdr as cmdrlib
+from modules.lib import canonn_api
 from modules.lib import context as contextlib
 from modules.lib import journal, thread
 from modules.player import Player
@@ -222,6 +223,7 @@ def plugin_app(parent):
     table.grid(sticky="NSEW")
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.systems_module = SystemsModule()
+    this.canonn_rt_api = canonn_api.CanonnRealtimeApi()
     this.modules = [
         news.CECNews(table, 1),
         release.Release(this.plugin_dir, table, this.version, 2),
@@ -231,6 +233,7 @@ def plugin_app(parent):
         this.systems_module,
         nhss.NHSSModule(),
         materialReport.MaterialsModule(),
+        clientreport.ClientReportModule()
     ]
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     # лейбл, в котором содержится текст из вывода модулей
@@ -362,7 +365,6 @@ def journal_entry_wrapper(
     codex.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
     fssreports.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
     journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
-    clientreport.submit(cmdr, is_beta, client, entry)
     if journal_entry.data["event"] in {"SendText", "ReceiveText"}:
         for mod in context.enabled_modules:
             # TODO переписать на менеджер контекста?
@@ -439,9 +441,8 @@ this.plug_start = False
 
 def dashboard_entry(cmdr, is_beta, entry):
     debug("Dashboard entry: {}", entry)
-    if this.plug_start == 0 and "Fuel" in entry:
+    if this.plug_start == 0:
         this.plug_start = 1
-        this.fuel = entry["Fuel"]
         this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
     try:
         debug("Checking fuel consumption {}", this.FuelCount)
