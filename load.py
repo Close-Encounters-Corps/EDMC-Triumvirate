@@ -35,12 +35,14 @@ from modules import (
     patrol,
     release,
     sos,
+    fleetcarrier
 )
 from modules.debug import Debug, debug, error
 from modules.lib import cmdr as cmdrlib
 from modules.lib import canonn_api
 from modules.lib import context as contextlib
 from modules.lib import journal, thread
+from modules.lib import cec_api
 from modules.player import Player
 from modules.release import Release
 from modules.systems import SystemsModule
@@ -105,6 +107,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     ).grid(row=6, column=0, sticky="NW")
     hdreport.HDInspector(frame, cmdr, is_beta, this.client_version, 7)
     nb.Label(frame, text=settings.support_message,).grid(row=9, column=0, sticky="NW")
+    context.cec_api.draw_settings(frame, cmdr, is_beta, 10)
 
     return frame
 
@@ -224,6 +227,7 @@ def plugin_app(parent):
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.systems_module = SystemsModule()
     this.canonn_rt_api = canonn_api.CanonnRealtimeApi()
+    this.cec_api = cec_api.CecApi(base_url=settings.cec_endpoint)
     this.modules = [
         news.CECNews(table, 1),
         release.Release(this.plugin_dir, table, this.version, 2),
@@ -233,7 +237,9 @@ def plugin_app(parent):
         this.systems_module,
         nhss.NHSSModule(),
         materialReport.MaterialsModule(),
-        clientreport.ClientReportModule()
+        clientreport.ClientReportModule(),
+        this.cec_api,
+        fleetcarrier.FleetCarrierModule()
     ]
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     # лейбл, в котором содержится текст из вывода модулей
