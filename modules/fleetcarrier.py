@@ -3,31 +3,48 @@ from .lib.module import Module
 from .debug import debug
 
 class FleetCarrierModule(Module):
+    base_url = "/api/triumvirate/v1/fc"
     def on_journal_entry(self, entry):
-        if entry.data["event"] == "Docked" and entry.data["StationType"] == "FleetCarrier":
+        event = entry.data["event"]
+        if event == "Docked" and entry.data["StationType"] == "FleetCarrier":
             name = entry.data["StationName"]
             system = entry.data["StarSystem"]
             x, y, z = None, None, None
             global_context.cec_api.submit(
                 method="PUT", 
-                url=f"/api/triumvirate/v1/fc/{name}/system", 
+                url=f"{self.base_url}/{name}/system", 
                 data={"name": system, "x": x, "y": y, "z": z}
             )
-        elif entry.data["event"] == "CarrierJump":
+        elif event == "CarrierJump":
             name = entry.data["StationName"]
             system = entry.data["StarSystem"]
             x, y, z = entry.data["StarPos"]
             global_context.cec_api.submit(
                 method="PUT", 
-                url=f"/api/triumvirate/v1/fc/{name}/system", 
+                url=f"{self.base_url}/{name}/system", 
                 data={"name": system, "x": x, "y": y, "z": z}
             )
-        elif entry.data["event"] == "Location" and entry.data["StationType"] == "FleetCarrier":
+        elif event == "Location" and entry.data["StationType"] == "FleetCarrier":
             name = entry.data["StationName"]
             system = entry.data["StarSystem"]
             x, y, z = entry.data["StarPos"]
             global_context.cec_api.submit(
                 method="PUT", 
-                url=f"/api/triumvirate/v1/fc/{name}/system", 
+                url=f"{self.base_url}/{name}/system", 
                 data={"name": system, "x": x, "y": y, "z": z}
+            )
+        elif event in {"CarrierJumpRequest", "CarrierJumpCancelled"} and not entry.is_beta:
+            name = entry.data["StationName"]
+            data = dict(
+                cmdr=entry.cmdr,
+                is_beta=entry.is_beta,
+                system=entry.system,
+                station=entry.station,
+                data=entry.data,
+                state=entry.state
+            )
+            global_context.cec_api.submit(
+                method="PUT",
+                url=f"{self.base_url}/{name}/jump",
+                data=data
             )
