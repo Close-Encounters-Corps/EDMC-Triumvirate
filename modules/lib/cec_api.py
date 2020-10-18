@@ -3,9 +3,10 @@ import tkinter as tk
 import myNotebook as nb
 
 from .http import WebClient
-from ..debug import debug, error
+from ..debug import Debug, debug, error
 from .conf import config
 from .module import Module
+import traceback
 
 
 class CecApi(WebClient, Module):
@@ -34,3 +35,5 @@ class CecApi(WebClient, Module):
             debug("Sent data to {} successfully.", url)
         except Exception as e:
             error(f"Error submitting data: {e}")
+            if Debug.debugswitch == 1:
+                traceback.print_exc()
