@@ -44,7 +44,7 @@ class FleetCarrierModule(Module):
                 data=entry.data,
                 state=entry.state
             )
-            debug("CARRIER JUMP PAYLOAD: {}", pformat(payload))
+            # debug("CARRIER JUMP PAYLOAD: {}", pformat(payload))
             global_context.cec_api.submit(
                 method="PUT",
                 url=f"{self.base_url}/{entry.station}/jump",

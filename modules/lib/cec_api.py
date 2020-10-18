@@ -1,4 +1,6 @@
+import json
 import tkinter as tk
+import traceback
 
 import myNotebook as nb
 
@@ -6,8 +8,12 @@ from .http import WebClient
 from ..debug import Debug, debug, error
 from .conf import config
 from .module import Module
-import traceback
 
+
+def _encode(item):
+    if isinstance(item, set):
+        return list(item)
+    raise TypeError(item)
 
 class CecApi(WebClient, Module):
     def __init__(self, base_url):
@@ -31,7 +37,8 @@ class CecApi(WebClient, Module):
         if not self.token:
             return
         try:
-            self.request(method, url, json=data, headers={"X-Triumvirate-Token": self.token})
+            encoded_json = json.dumps(data, default=_encode)
+            self.request(method, url, json=encoded_json, headers={"X-Triumvirate-Token": self.token})
             debug("Sent data to {} successfully.", url)
         except Exception as e:
             error(f"Error submitting data: {e}")
