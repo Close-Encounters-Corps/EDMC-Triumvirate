@@ -1,16 +1,19 @@
-﻿import threading
+try:
+    from urllib.parse import quote_plus
+    from urllib.parse import urlencode
+except:
+    from urllib import quote_plus
+    from urllib import urlencode
+
+
+import threading
 import requests
 import sys
 import json
-import modules.emitter
 from modules.emitter import Emitter
-try: #py3
-    from urllib.parse import quote_plus
-    import  urllib.parse as urlparse
-except:#py2
-    from urllib import quote_plus
-    import urllib as urlparse
-from .debug import debug,error
+import modules.emitter
+from .debug import Debug
+from .debug import debug, error
 from .systems import Systems
 import random
 import time
@@ -23,7 +26,8 @@ class fssEmitter(Emitter):
     fssFlag = False
 
     def __init__(self, cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client):
-        Emitter.__init__(self, cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
+        Emitter.__init__(self, cmdr, is_beta, system, x, y,
+                         z, entry, body, lat, lon, client)
         self.modelreport = "xxreports"
         self.modeltype = "xxtypes"
 
@@ -35,7 +39,8 @@ class fssEmitter(Emitter):
         payload["signalNameLocalised"] = self.entry.get("SignalName_Localised")
 
         payload["spawningState"] = self.entry.get("SpawningState")
-        payload["spawningStateLocalised"] = self.entry.get("SpawningState_Localised")
+        payload["spawningStateLocalised"] = self.entry.get(
+            "SpawningState_Localised")
         payload["spawningFaction"] = self.entry.get("SpawningFaction")
 
         payload["rawJson"] = self.entry
@@ -68,13 +73,15 @@ class fssEmitter(Emitter):
 
     def gSubmitAXCZ(self, payload):
         p = payload.copy()
-        p["x"], p["y"], p["z"] = Systems.edsmGetSystem(payload.get("systemName"))
+        p["x"], p["y"], p["z"] = Systems.edsmGetSystem(
+            payload.get("systemName"))
         if p.get("isBeta"):
             p["isBeta"] = 'Y'
         else:
             p["isBeta"] = 'N'
 
-        p["rawJson"] = json.dumps(payload.get("rawJson"), ensure_ascii=False).encode('utf8')
+        p["rawJson"] = json.dumps(payload.get(
+            "rawJson"), ensure_ascii=False).encode('utf8')
 
         url = "https://us-central1-canonn-api-236217.cloudfunctions.net/submitAXCZ"
         debug("gSubmitAXCZ {}".format(p.get("systemName")))
@@ -97,7 +104,8 @@ class fssEmitter(Emitter):
         if not fssEmitter.fssFlag:
             fssEmitter.fssFlag = True
             debug("Getting FSS exclusions")
-            r = requests.get("{}/excludefsses?_limit=1000".format(self.getUrl()))
+            r = requests.get(
+                "{}/excludefsses?_limit=1000".format(self.getUrl()))
             debug("{}/excludefsses?_limit=1000".format(self.getUrl()))
             if r.status_code == requests.codes.ok:
                 for exc in r.json():
@@ -110,27 +118,32 @@ class fssEmitter(Emitter):
 
         self.getExcluded()
 
+        FSSSignalDiscovered = (self.entry.get(
+            "event") == "FSSSignalDiscovered")
+        USS = ("$USS" in self.entry.get("SignalName"))
+        isStation = (self.entry.get("IsStation"))
+        FleetCarrier = (self.entry.get("SignalName") and self.entry.get(
+            "SignalName")[-4] == '-' and isStation)
+        life_event = ("$Fixed_Event_Life" in self.entry.get("SignalName"))
+        excluded = fssEmitter.excludefss.get(self.entry.get("SignalName"))
+
         # don't bother sending USS
-        if self.entry["event"] == "FSSSignalDiscovered" and not "$USS" in self.entry.get("SignalName"):
-            modules.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postFSSSignal",
-                        {
-                            "signalname": self.entry.get("SignalName"),
-                            "signalNameLocalised": self.entry.get("SignalName_Localised"),
-                            "cmdr": self.cmdr,
-                            "system": self.system,
-                            "x": self.x,
-                            "y": self.y,
-                            "z": self.z,
-                            "raw_json": self.entry,
-                        })
+        if FSSSignalDiscovered and not USS and not FleetCarrier:
+            canonn.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postFSSSignal",
+                                {
+                                    "signalname": self.entry.get("SignalName"),
+                                    "signalNameLocalised": self.entry.get("SignalName_Localised"),
+                                    "cmdr": self.cmdr,
+                                    "system": self.system,
+                                    "x": self.x,
+                                    "y": self.y,
+                                    "z": self.z,
+                                    "raw_json": self.entry,
+                                })
 
         # is this a code entry and do we want to record it?
-        # We dont want o record any that don't begin with $ and and with ;
-        if self.entry["event"] == "FSSSignalDiscovered" and \
-                not fssEmitter.excludefss.get(self.entry.get("SignalName")) and \
-                not "$USS" in self.entry.get("SignalName") and \
-                not self.entry.get(      "IsStation") and \
-                '$' in self.entry.get("SignalName"):
+        # We don't want to record any that don't begin with $ and and with ;
+        if FSSSignalDiscovered and not excluded and not USS and not isStation and '$' in self.entry.get("SignalName"):
 
             url = self.getUrl()
 
@@ -138,8 +151,8 @@ class fssEmitter(Emitter):
                 payload = self.getAXPayload()
                 self.gSubmitAXCZ(payload)
                 self.modelreport = "axczfssreports"
-            elif "$Fixed_Event_Life_Cloud" in self.entry.get("SignalName"):
-                debug("Life Cloud")
+            elif life_event:
+                debug(self.entry.get("SignalName"))
 
                 payload = self.getLcPayload()
                 self.modelreport = "lcfssreports"
@@ -152,4 +165,5 @@ class fssEmitter(Emitter):
 
 def submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client):
     if entry.get("event") == "FSSSignalDiscovered":
-        fssEmitter(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client).start()
+        fssEmitter(cmdr, is_beta, system, x, y, z,
+                   entry, body, lat, lon, client).start()
