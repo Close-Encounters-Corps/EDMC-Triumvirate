@@ -66,7 +66,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version = '1.2.5'
+this.version = '1.2.6'
 this.SQNag = 0
 this.client_version = '{}.{}'.format(myPlugin, this.version)
 this.body = None
@@ -146,7 +146,7 @@ def Alegiance_get(CMDR, SQ_old):
                 next(reader)
 
             for row in reader:
-
+                debug(row)
                 cmdr, squadron, SQID = row
 
                 if cmdr == CMDR:
