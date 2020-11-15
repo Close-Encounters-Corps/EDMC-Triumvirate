@@ -17,7 +17,7 @@ def _encode(item):
 
 class CecApi(WebClient, Module):
     def __init__(self, base_url):
-        super().__init__(base_url)
+        super().__init__(base_url + "/api/triumvirate")
         self.token = config.get("triumvirate-token")
         self.text = None
 
@@ -32,6 +32,23 @@ class CecApi(WebClient, Module):
         token = self.text.get(1.0, tk.END).strip()
         self.token = token
         config.set("triumvirate-token", token)
+
+    def fetch(self, url, require_token=False, **kwargs):
+        """
+        Makes GET-requres to URL relative to base URL (.../api/triumvirate).
+        
+        require_token: requires to have token in system.
+        Returns None, if there is a flag require_token and there is no registered token in system.
+        In all other cases returns decoded JSON.
+        """
+        headers = {"Accept": "application/json"}
+        if require_token:
+            if not self.token:
+                return
+            headers["X-Triumvirate-Token"] = self.token
+        resp = self.request("GET", url, **kwargs)
+        return resp.json()
+
 
     def submit(self, url, data, method="POST"):
         if not self.token:

@@ -1,39 +1,38 @@
 ﻿# -*- coding: utf-8 -*-
 """
-Модуль, отвечающий за отображение новостей.
+Module responsible for showing news.
 
-Как работает:
-1. Класс CECNews при инициализации проверяет настройки,
-    и если новости там отключены, то плагин убирает
-    свои поля и ставит isvisible = True.
-2. В конце инициализации ставит коллбэк на `fetch_and_update()`.
-3. Тот, в свою очередь, каждые 60 секунд проверяет isvisible,
-    и если плагин включен и таймер дошёл до нуля,
-    то вызывает в фоновом потоке `download()`...
-4. ...который выкачивает новости и обновляет таймер.
-5. Также, время от времени в `fetch_and_update()` триггерится `update()`,
-    который обновляет поля новостей в интерфейсе.
-
+How it works:
+1. Class CECNews on initialization checks settings, and
+    if news are disabled, then module removes its fields and
+    sets `isvisible` = False.
+2. In the end of initialization makes callback on `fetch_and_update()`.
+3. That method, in turn, every 60 seconds checks `isvisible`,
+    and if plugin is enabled and timer reached zero,
+    then calls in background thread `download()`...
+4. ...that downloads news and updates the timer.
+5. Also, from time to time, in `fetch_and_update()` triggers `update()`,
+    that updates news fields in UI.
 """
+from datetime import datetime
 import tkinter as tk
 from tkinter import Frame
+import traceback
 
 import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 import settings
 
-from .debug import debug
-from .lib.spreadsheet import Spreadsheet
+from .debug import debug, Debug, error
 from .lib.conf import config
 from .lib.thread import Thread, BasicThread
 from .lib.module import Module
+from .lib.context import global_context
 
-# число циклов (NEWS_CYCLE) перед обновлением новостей из базы
+# number of cycles (NEWS_CYCLE) before getting news from platform
 REFRESH_CYCLES = 60
-# 60 секунд
+# 60 seconds
 NEWS_CYCLE = 60 * 1000
-DEFAULT_NEWS_URL = "https://vk.com/close_encounters_corps"
-WRAP_LENGTH = 200
 
 
 class DownloadThread(Thread):
@@ -49,18 +48,6 @@ class DownloadThread(Thread):
             self.widget.download()
             self.sleep(REFRESH_CYCLES * NEWS_CYCLE)
 
-
-class LimitedSpreadsheet(Spreadsheet):
-    limit = 5
-
-    def process(self):
-        self.data = []
-        for i, row in enumerate(self, start=1):
-            self.data.append(row)
-            if i == self.limit:
-                break
-
-
 class NewsLink(HyperlinkLabel):
     def __init__(self, parent):
 
@@ -68,7 +55,7 @@ class NewsLink(HyperlinkLabel):
             self,
             parent,
             text="Получение новостей...",
-            url=DEFAULT_NEWS_URL,
+            url=settings.cec_endpoint,
             wraplength=50,  # updated in __configure_event below
             anchor=tk.NW,
         )
@@ -103,7 +90,7 @@ class CECNews(Frame, Module):
 
         self.label = tk.Label(self, text="Новости:")
         self.label.grid(row=0, column=0, sticky=sticky)
-        # TODO почему-то не работает
+        # TODO does not work...
         self.label.bind("<Button-1>", self.click_news)
 
         self.hyperlink = NewsLink(self)
@@ -118,7 +105,7 @@ class CECNews(Frame, Module):
         self.after(250, self.fetch_and_update)
 
     def draw_settings(self, parent_widget, cmdr, is_beta, position):
-        """Добавляет виджеты (поля настроек) к parent"""
+        """Attaches widgets (settings fields) to parent"""
 
         self.hidden.set(config.getint("HideNews"))
         return nb.Checkbutton(
@@ -126,7 +113,6 @@ class CECNews(Frame, Module):
         ).grid(row=position, column=0, sticky="NSEW")
 
     def on_settings_changed(self, cmdr, is_beta):
-        """Обновляет параметры модуля новостей."""
         config.set("HideNews", self.hidden.get())
         self.update_visible()
         BasicThread(target=self.restart_thread).start()
@@ -154,10 +140,11 @@ class CECNews(Frame, Module):
     def update(self):
         if self.news_data:
             self.news_pos %= self.news_count
-            news = self.news_data[self.news_pos]
-            self.hyperlink["url"] = news[1]
-            self.hyperlink["text"] = news[2]
-            debug("News debug: {!r}", news[2])
+            article = self.news_data[self.news_pos]
+            self.hyperlink["url"] = article["link"]
+            dt = datetime.fromisoformat(article["whenPublished"]).strftime("%d.%m.%Y")
+            self.hyperlink["text"] = f"{article['title']} {dt}"
+            debug("News debug: {!r}", dt)
             self.news_pos += 1
         elif self.isvisible:
             # keep trying until we
@@ -168,12 +155,19 @@ class CECNews(Frame, Module):
         self.update()
 
     def download(self):
-        """Выкачивает последние несколько новостей и обновляет поля модуля."""
+        """Download last news and update module fields."""
         debug("Fetching News")
-        table = LimitedSpreadsheet(settings.news_url)
-        self.news_data = table
-        self.news_pos = 0
-        self.minutes = REFRESH_CYCLES
+        try:
+            data = global_context.cec_api.fetch("/v1/news")
+            self.news_data = data
+            self.news_pos = 0
+            self.minutes = REFRESH_CYCLES
+        except:
+            self.hyperlink["text"] = "Ошибка при запросе новостей"
+            error("Error submitting data:")
+            if Debug.debugswitch == 1:
+                traceback.print_exc()
+
 
 
     def update_visible(self):

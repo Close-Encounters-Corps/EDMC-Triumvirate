@@ -5,7 +5,7 @@ from .lib.module import Module
 from .debug import debug
 
 class FleetCarrierModule(Module):
-    base_url = "/api/triumvirate/v1/fc"
+    base_url = "/fc"
     def on_journal_entry(self, entry):
         event = entry.data["event"]
         if event == "Docked" and entry.data["StationType"] == "FleetCarrier":
@@ -44,9 +44,8 @@ class FleetCarrierModule(Module):
                 data=entry.data,
                 state=entry.state
             )
-            # debug("CARRIER JUMP PAYLOAD: {}", pformat(payload))
             global_context.cec_api.submit(
                 method="PUT",
-                url=f"{self.base_url}/{entry.station}/jump",
+                url=f"{self.base_url}/jump",
                 data=payload
             )
