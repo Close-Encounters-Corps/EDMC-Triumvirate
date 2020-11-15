@@ -5,7 +5,7 @@ from .lib.module import Module
 from .debug import debug
 
 class FleetCarrierModule(Module):
-    base_url = "/fc"
+    base_url = "/v1/fc"
     def on_journal_entry(self, entry):
         event = entry.data["event"]
         if event == "Docked" and entry.data["StationType"] == "FleetCarrier":

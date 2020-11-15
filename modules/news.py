@@ -98,7 +98,6 @@ class CECNews(Frame, Module):
 
         self.download_thread = None
 
-        self.news_count = 5
         self.news_pos = 0
         self.minutes = 0
         self.update_visible()
@@ -139,7 +138,7 @@ class CECNews(Frame, Module):
 
     def update(self):
         if self.news_data:
-            self.news_pos %= self.news_count
+            self.news_pos %= len(self.news_data)
             article = self.news_data[self.news_pos]
             self.hyperlink["url"] = article["link"]
             dt = datetime.fromisoformat(article["whenPublished"]).strftime("%d.%m.%Y")
