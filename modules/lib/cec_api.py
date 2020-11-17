@@ -46,7 +46,7 @@ class CecApi(WebClient, Module):
             if not self.token:
                 return
             headers["X-Triumvirate-Token"] = self.token
-        resp = self.request("GET", url, **kwargs)
+        resp = self.request("GET", url, headers=headers, **kwargs)
         return resp.json()
 
 

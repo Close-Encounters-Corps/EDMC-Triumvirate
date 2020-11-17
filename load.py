@@ -38,7 +38,7 @@ from modules import (
     fleetcarrier
 )
 from modules.debug import Debug, debug, error
-from modules.lib import cmdr as cmdrlib
+from modules.lib import conf as conflib
 from modules.lib import canonn_api
 from modules.lib import context as contextlib
 from modules.lib import journal, thread
@@ -86,6 +86,7 @@ this.old_time = 0
 this.fuel = 0
 this.fuel_cons = 0
 this.AllowEasternEggs = None
+context.help_page_opened = False
 
 
 def plugin_prefs(parent, cmdr, is_beta):
@@ -125,28 +126,19 @@ def prefs_changed(cmdr, is_beta):
     Debug.prefs_changed()
 
 
-def Alegiance_get(CMDR, SQ_old):
-    if CMDR != this.CMDR:
-        debug("Community Check started")
-        commander = cmdrlib.find_cmdr(CMDR)
-        if commander is not None:
-            this.SQ = commander.sqid
-        if this.SQ is not None:
-            debug("SQ ID IS OK")
-            this.CMDR = CMDR
-            context.by_class(patrol.PatrolModule).sqid = this.SQ
-            # Функция для отправки данных о
-            # сквадроне в модули, использовать как
-            # шаблон
-            return this.SQ
-        else:
-            if this.Nag == 0:
-                debug("SQID need to be instaled")
-                url = "https://docs.google.com/forms/d/e/1FAIpQLSeERKxF6DlrQ3bMqFdceycSlBV0kwkzziIhYD0ctDzrytm8ug/viewform?usp=pp_url"
-                url += "&entry.42820869=" + quote_plus(CMDR)
-                this.Nag = this.Nag + 1
-                debug("SQID " + str(url))
-                webbrowser.open(url)
+def get_allegiance(CMDR, SQ_old):
+    if this.CMDR is None:
+        user = context.cec_api.fetch("/v1/whoami", require_token=True)
+        if user is None and not context.help_page_opened:
+            debug("Token not found, redirecting to help page")
+            url = settings.cec_endpoint + "/help"
+            context.help_page_opened = True
+            webbrowser.open(url)
+            return
+        context.CMDR = CMDR
+        context.SQ = user["squadron"] or "N/A"
+        context.by_class(patrol.PatrolModule).sqid = context.SQ
+        return context.SQ
     else:
         return SQ_old
 
@@ -493,7 +485,7 @@ def dashboard_entry(cmdr, is_beta, entry):
     else:
         this.body_name = None
     debug(this.body_name)
-    this.cmdr_SQID = Alegiance_get(cmdr, this.cmdr_SQID)
+    this.cmdr_SQID = get_allegiance(cmdr, this.cmdr_SQID)
     # debug(this.cmdr_SQID)
 
 
