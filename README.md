@@ -85,7 +85,7 @@
 На текущий момент плагин, как и EDMC в целом, работает на Python 3.7., но, возможен дальнейший переход и на более свежие версии Python.
 Как подготовить окружение для разработки:
 ```bash
-pip2 install -r requirements-dev.txt
+pip install -r requirements-dev.txt
 pre-commit install
 ```
 
