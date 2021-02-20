@@ -11,7 +11,7 @@ cec_endpoint = "https://closeencounterscorps.org"
 ###################
 ### CANONN URLS ###
 ###################
-canonn_live_url = "https://api.canonn.tech:2053"
+canonn_live_url = "https://api.canonn.tech"
 canonn_staging_url = "https://api.canonn.tech:2053"
 canonn_dev_url = "https://api.canonn.tech:2083"
 canonn_realtime_url = "https://us-central1-canonn-api-236217.cloudfunctions.net"
@@ -285,7 +285,7 @@ nhss_canonn_url = "https://us-central1-canonn-api-236217.cloudfunctions.net/subm
 ### other ###
 #############
 support_message = """В случае возникновения проблем с плагином обращайтесь в дискорд Close Encounters Corps, канал #triumvirate_tech_support или в личные сообщения Казаков#4700"""
-version = "1.3.0"
+version = "1.9.0"
 
 try:
     from settings_local import *
