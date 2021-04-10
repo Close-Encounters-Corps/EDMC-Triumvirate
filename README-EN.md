@@ -9,7 +9,7 @@ Triumvirate plugin for EDMC, developed by Close Encounters Corps faction, is an 
 
 # Pay attention:
 
-The EDMC Triumvirate plugin is strongly NOT compatible with the EDMC-Canonn plugin, EDMC-USS-Survey and the outdated EDMC-USS-Survey-Triumvirate-edition. The EDMC-Canonn plugin was originally integrated into Triumvirate, and we have also integrated support for Discord Presence, FCMC and the transfer of collected scientific data not only to Canonn servers, but also to ATEL-IGAU addresses. A system of issuing and accounting for completed missions within the framework of the activity against the Club is working.
+The EDMC Triumvirate plugin is strongly NOT compatible with the EDMC-Canonn plugin, EDMC-USS-Survey and the outdated EDMC-USS-Survey-Triumvirate-edition. The EDMC-Canonn plugin was originally integrated into Triumvirate, and we have also integrated support for Discord Presence, FCMC and the transfer of collected scientific data not only to Canonn servers, but also to the addresses of other scientific organizations. A system of issuing and accounting for completed missions within the framework of the activity against the Club is working.
 
 # Plugin features (will be updated as improvements are made)
 
@@ -55,7 +55,7 @@ Collects and analyzes complete information about the current system.
 
 ## The Codex Element
 
-Collects log entry information and voluntarily synchronizes it with external scientific services, such as [Canonn database](https://api.canonn.tech/documentation) and [ATEL-IGAU database](https://github.com/Elite-IGAU/ATEL-EDMC).
+Collects log entry information and voluntarily synchronizes it with external scientific services, such as [Canonn database](https://api.canonn.tech/documentation).
 
 ## Element on analyzing information from the pilot's journal
 
