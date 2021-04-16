@@ -33,7 +33,6 @@ import time
 from . import legacy
 
 CYCLE = 60 * 1000 * 60 # 60 minutes
-
 DEFAULT_URL = ""
 WRAP_LENGTH = 200
 
@@ -204,16 +203,15 @@ class InfoLink(HyperlinkLabel):
 class CanonnPatrol(Frame):
 
     def __init__(self, parent,gridrow):
+        self.plugin_kill = False
         "Initialise the ``Patrol``."
 
         padx, pady = 10, 5  # formatting
         sticky = tk.EW + tk.N  # full width, stuck to the top
         anchor = tk.NW        
         
-        Frame.__init__(
-            self,
-            parent
-            )
+        Frame.__init__(self,
+            parent)
         self.ships = []
         self.bind('<<PatrolDone>>', self.update_ui)
         self.IMG_PREV = tk.PhotoImage(file = os.path.join(CanonnPatrol.plugin_dir,"icons","left_arrow.gif"))
@@ -304,6 +302,7 @@ class CanonnPatrol(Frame):
         
     @classmethod    
     def plugin_start(cls,plugin_dir):
+        
         cls.plugin_dir = plugin_dir
         
     '''
@@ -468,7 +467,7 @@ class CanonnPatrol(Frame):
                 reader = csv.reader(r.content.splitlines(), delimiter='\t') # .decode('utf-8')
                 next(reader)
             except :
-                reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t') # 
+                reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t') #
                 next(reader)
             for row in reader:
                 debug(row)
@@ -483,7 +482,11 @@ class CanonnPatrol(Frame):
                     if squadron == SQID:
                         if  Description != "Basta":
                             self.bgsSystemsAndfactions.update(bgsSysAndFac)  #пока не проверка не валидна, так как
-                                                                             #нет модулей для отправки данных
+                                                                             #нет
+                                                                                                                                                        #модулей
+                                                                                                                                                        #для
+                                                                                                                                                        #отправки
+                                                                                                                                                        #данных
                             SystemsOvireden.append(system)
                             if Description != "Hide" or Description != "Cancel" :
                                 try:
@@ -594,7 +597,7 @@ class CanonnPatrol(Frame):
                 reader = csv.reader(r.content.splitlines(), delimiter='\t') # .decode('utf-8')
                 next(reader)
             except :
-                reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t') # 
+                reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t') #
                 next(reader)
             for row in reader:
                 
@@ -625,7 +628,7 @@ class CanonnPatrol(Frame):
                 reader = csv.reader(r.content.splitlines(), delimiter='\t') # .decode('utf-8')
                 next(reader)
             except :
-                reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t') # 
+                reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t') #
                 next(reader)
             for row in reader:
                 c = c + 1
@@ -700,7 +703,7 @@ class CanonnPatrol(Frame):
                 
                 try: patrol_list.extend(BGSO)            # Секция, отвечающая за
                                                          # загрузку заданий из
-                                                         # гуглофайла
+                                                                                                      # гуглофайла
                 except: debug("BGS Overide Complete")    #
                 debug(BGSO + BGSOSys)
                 if self.SQID == "SCEC":
@@ -709,20 +712,22 @@ class CanonnPatrol(Frame):
                     except: debug("CEC BGS Patrol complete")                                             #
                 elif self.SQID == "EGPU":
                     try: patrol_list.extend(self.getFactionData("EG Union",BGSOSys))                     # Секция,
-                                                                                                         # отвечающаяя за
-                                                                                                         # фракцию 2
+                                                                                                         # отвечающаяя
+                                                                                                                                                                                             # за
+                                                                                                                                                                                             # фракцию
+                                                                                                                                                                                             # 2
                     except: debug("EGP BGS Patrol complete")                                             #
                 elif self.SQID == "RPSG":                                                        # Секция
                                                                                                  # шаблон,
-                                                                                                 # для
-                                                                                                 # применения
-                                                                                                 # в
-                                                                                                 # случае
-                                                                                                 # расширения
-                                                                                                 # списка
-                                                                                                 # фракций
-                                                                                                 # или
-                                                                                                 # сообществ
+                                                                                                                                          # для
+                                                                                                                                          # применения
+                                                                                                                                          # в
+                                                                                                                                          # случае
+                                                                                                                                          # расширения
+                                                                                                                                          # списка
+                                                                                                                                          # фракций
+                                                                                                                                          # или
+                                                                                                                                          # сообществ
                     try: patrol_list.extend(self.getFactionData("Royal Phoenix Corporation",BGSOSys))                #
                     except: debug("RPSG BGS Patrol complete")
                 #elif
@@ -811,7 +816,7 @@ class CanonnPatrol(Frame):
         entries = r.json()
         categories = {}
 
-        edsm_patrol=[]
+        edsm_patrol = []
 
         self.patrol_name = "Galactic Mapping"
 
@@ -819,17 +824,13 @@ class CanonnPatrol(Frame):
 
             if entry.get("type") in validtypes and "Archived: " not in entry.get("name"):
 
-                edsm_patrol.append(
-                    newPatrol("Galactic Mapping",
-                            entry.get("galMapSearch"), (
-                                float(entry.get("coordinates")[0]),
+                edsm_patrol.append(newPatrol("Galactic Mapping",
+                            entry.get("galMapSearch"), (float(entry.get("coordinates")[0]),
                                 float(entry.get("coordinates")[1]),
-                                float(entry.get("coordinates")[2])
-                            ),
+                                float(entry.get("coordinates")[2])),
                               "Galactic Mapping Project: {} : {}".format(types.get(entry.get("type")),entry.get("name").encode('utf-8')),
                               entry.get("galMapUrl"),
-                              None)
-                )
+                              None))
 
         self.event_generate('<<PatrolDone>>', when='tail')
         return edsm_patrol
@@ -1075,10 +1076,8 @@ class CanonnPatrol(Frame):
                 ship_info = "Ваш{}, {} пристыкован(а) к {}".format(ship_type,ship_name,ship_station)
             elif ship_count == 2:
                 
-                if shipsystems.get(system)[0].get("station").get("name") == shipsystems.get(system)[1].get(
-                    "station").get("name"):
-                    ship_info = "Ваш{} ({}) и ваш{} ({}) пристыкованы к {}".format(
-                        getShipType(shipsystems.get(system)[0].get("name")),
+                if shipsystems.get(system)[0].get("station").get("name") == shipsystems.get(system)[1].get("station").get("name"):
+                    ship_info = "Ваш{} ({}) и ваш{} ({}) пристыкованы к {}".format(getShipType(shipsystems.get(system)[0].get("name")),
                         getShipType(shipsystems.get(system)[0].get("shipName")),
                         getShipType(shipsystems.get(system)[1].get("name")),
                         getShipType(shipsystems.get(system)[1].get("shipName")),
@@ -1086,8 +1085,7 @@ class CanonnPatrol(Frame):
                     #debug(ship_info)
                 else:
                 
-                    ship_info = "Ваш{} ({}) пристыкован(а) к {} и ваш{} ({}) пристыкован к {}".format(
-                        getShipType(shipsystems.get(system)[0].get("name")),
+                    ship_info = "Ваш{} ({}) пристыкован(а) к {} и ваш{} ({}) пристыкован к {}".format(getShipType(shipsystems.get(system)[0].get("name")),
                         getShipType(shipsystems.get(system)[0].get("shipName")),
                         shipsystems.get(system)[1].get("station").get("name"),
                         getShipType(shipsystems.get(system)[1].get("name")),
@@ -1124,7 +1122,7 @@ def getDistance(p, g):
     return math.sqrt(sum(tuple([math.pow(p[i] - g[i], 2) for i in range(3)])))
 
 
-def newPatrol(type, system, coords, instructions, url, event = None):
+def newPatrol(type, system, coords, instructions, url, event=None):
     return {
         "type": type,
         "system": system,
