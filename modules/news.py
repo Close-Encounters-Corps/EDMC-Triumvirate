@@ -157,7 +157,7 @@ class CECNews(Frame):
         if self.isvisible:
         
             debug('Fetching News')
-            self.news_data = requests.get('https://docs.google.com/spreadsheets/d/1UnrH5ULSycKzySonUDA79aPBqxUbvNOEOSlW85NY1a0/export?&format=tsv')
+            self.news_data = requests.get('https://docs.google.com/spreadsheets/d/e/2PACX-1vR0unKSP7aPTNctPE4ddE79OkzxmtIln-6s0uSsdubdzIhEEKCfdmmV3lb3rgcnLvLXsC1wA8gLv9M0/pub?gid=15798959&single=true&output=tsv')
             debug(self.news_data)
             #self.news_count=len(self.news_data)-1
             self.news_count = 5
