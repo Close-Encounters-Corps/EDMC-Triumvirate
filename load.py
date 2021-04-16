@@ -66,6 +66,7 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
+
 this.version = '1.2.7'
 this.SQNag = 0
 this.client_version = '{}.{}'.format(myPlugin, this.version)
@@ -146,7 +147,7 @@ def Alegiance_get(CMDR, SQ_old):
                 next(reader)
 
             for row in reader:
-
+                debug(row)
                 cmdr, squadron, SQID = row
 
                 if cmdr == CMDR:
@@ -351,7 +352,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         x = None
         y = None
         z = None
-     
+
     return journal_entry_wrapper(cmdr, is_beta, system, this.SysFactionState, this.SysFactionAllegiance, this.DistFromStarLS, station, entry,
                                  state, x, y, z, this.body_name, this.nearloc[
                                      'Latitude'], this.nearloc['Longitude'],
@@ -374,6 +375,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     # конструкцию Return= Return or
     # <Вызов модуля>
     Return = None
+
     #Блокировка работы альфа версии:
     if is_beta:
         return
