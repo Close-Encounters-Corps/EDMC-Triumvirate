@@ -674,6 +674,9 @@ class CanonnPatrol(Frame):
     def download(self):
         #import traceback
         while self.SQID is None:
+            if self.plugin_kill:
+                self.event_generate('<<PatrolDone>>', when='tail')
+                return  # это выведет нас из петли и вырубит плагин, если поступила команда от EDMC
             debug("Waiting CMDR's squadron {}:\n{}".format(self,""))#traceback.print_stack(Limit=None)
             time.sleep(5)
         debug("Download Patrol Data")
@@ -1021,6 +1024,7 @@ class CanonnPatrol(Frame):
         We will not inclde ships or BGS in this as they can be excluded in other ways. 
         '''
         self.save_excluded()
+        self.plugin_kill = True
         
     def cmdr_data(self,data, is_beta):
         """

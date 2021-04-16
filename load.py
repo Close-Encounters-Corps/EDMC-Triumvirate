@@ -66,7 +66,8 @@ this.nearloc = {
 myPlugin = 'EDMC-Triumvirate'
 
 
-this.version = '1.2.6'
+
+this.version = '1.2.7'
 this.SQNag = 0
 this.client_version = '{}.{}'.format(myPlugin, this.version)
 this.body = None
@@ -374,6 +375,10 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     # конструкцию Return= Return or
     # <Вызов модуля>
     Return = None
+
+    #Блокировка работы альфа версии:
+    if is_beta:
+        return
     factionkill.submit(cmdr, is_beta, system, station, entry, client)
     nhss.submit(cmdr, is_beta, system, station, entry, client)
     hdreport.submit(cmdr, is_beta, system, station, entry, client)

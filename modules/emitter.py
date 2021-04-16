@@ -35,7 +35,7 @@ class Emitter(threading.Thread):
         Should probably make this a heritable class as this is a repeating pattern
     '''
     urls = { 
-        "live": "https://api.canonn.tech",
+        "live": "https://api.canonn.tech" ,
         "staging": "https://api.canonn.tech:2053",
         "development":  "https://api.canonn.tech:2083"
     }               
@@ -74,12 +74,7 @@ class Emitter(threading.Thread):
                 Emitter.route = Emitter.urls.get("development")
             elif j.get("prerelease"):
                 debug("Prerelease in github")
-                #Emitter.route=Emitter.urls.get("staging")
-                #Убрано что бы не
-                #блокировать отправку
-                #данных в период деплоя
-                #3.5 едсм
-                Emitter.route = Emitter.urls.get("live")
+                Emitter.route=Emitter.urls.get("staging")              
             else:
                 debug("Release in github")
                 Emitter.route = Emitter.urls.get("live")
