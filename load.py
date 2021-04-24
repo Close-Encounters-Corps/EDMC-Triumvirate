@@ -84,9 +84,10 @@ this.SQ = None
 this.SRVmode, this.Fightermode = False, False
 this.old_time = 0
 this.fuel = 0
-this.fuel_cons = 0
+this.fuel_cons = 0.0
 this.AllowEasternEggs = None
 context.help_page_opened = False
+context.latest_dashboard_entry = None
 
 
 def plugin_prefs(parent, cmdr, is_beta):
@@ -136,7 +137,12 @@ def get_allegiance(CMDR, SQ_old):
             webbrowser.open(url)
             return
         context.CMDR = CMDR
-        context.SQ = user["squadron"] or "N/A"
+        debug("Faction: {}", user["faction"])
+        faction = user["faction"]
+        if faction is not None:
+            context.SQ = faction["shortName"]
+        else:
+            context.SQ = "N/A"
         context.by_class(patrol.PatrolModule).sqid = context.SQ
         return context.SQ
     else:
@@ -296,20 +302,21 @@ def startup_stats(cmdr):
     try:
         this.first_event
     except:
-      this.first_event = True
-      addr = requests.get('https://api.ipify.org').text
-      addr6 = requests.get('https://api6.ipify.org').text
-      url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
-      url+="&entry.1181808218="+quote_plus(cmdr)
-      url+="&entry.254549730="+quote_plus(this.version)
-      url+="&entry.1622540328="+quote_plus(addr)
-      if addr6 != addr:
-          url+="&entry.488844173="+quote_plus(addr6)
-      else:
-          url+="&entry.488844173="+quote_plus("0")
-      url+="&entry.1210213202="+str(release.get_auto())
+        this.first_event = True
 
-        legacy.Reporter(url).start()
+        # addr = requests.get('https://api.ipify.org').text
+        # addr6 = requests.get('https://api6.ipify.org').text
+        # url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
+        # url+="&entry.1181808218="+quote_plus(cmdr)
+        # url+="&entry.254549730="+quote_plus(this.version)
+        # url+="&entry.1622540328="+quote_plus(addr)
+        # if addr6 != addr:
+        #     url+="&entry.488844173="+quote_plus(addr6)
+        # else:
+        #     url+="&entry.488844173="+quote_plus("0")
+        # url+="&entry.1210213202="+str(release.get_auto())
+
+        # legacy.Reporter(url).start()
 
 def journal_entry_wrapper(
     cmdr,
@@ -435,6 +442,7 @@ this.plug_start = False
 
 def dashboard_entry(cmdr, is_beta, entry):
     # debug("Dashboard entry: {}", entry)
+    context.latest_dashboard_entry = entry
     if this.plug_start == 0:
         this.plug_start = 1
         this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")

@@ -55,7 +55,12 @@ class CecApi(WebClient, Module):
             return
         try:
             encoded_json = json.dumps(data, default=_encode)
-            self.request(method, url, data=encoded_json, headers={"X-Triumvirate-Token": self.token, "Content-Type": "application/json"})
+            headers = headers={
+                "X-Triumvirate-Token": self.token,
+                "Content-Type": "application/json; charset=UTF-8"
+            }
+            resp = self.request(method, url, data=encoded_json, headers=headers)
+            return resp
             debug("Sent data to {} successfully.", url)
         except Exception as e:
             error(f"Error submitting data: {e}")

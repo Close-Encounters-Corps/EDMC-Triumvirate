@@ -43,3 +43,15 @@ class JournalEntry:
         self.lat = lat
         self.lon = lon
         self.client = client
+
+    def as_dict(self):
+        return {
+            "cmdr": self.cmdr,
+            "is_beta": self.is_beta,
+            "system": self.system,
+            "station": self.station,
+            "data": self.data,
+            "state": self.state,
+            "dist_from_star": self.dist_from_star,
+            "body": self.body
+        }
