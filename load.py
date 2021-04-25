@@ -21,7 +21,7 @@ import plug
 from config import config
 
 ### модули плагина ###
-from modules import allowlist, clientreport, codex, factionkill
+from modules import clientreport, codex, factionkill
 from modules import friendfoe as FF
 from modules import (
     fssreports,
@@ -210,7 +210,6 @@ def plugin_app(parent):
         release.Release(this.plugin_dir, table, this.version, 2),
         patrol.PatrolModule(table, 3),
         sos.SosModule(),
-        allowlist.AllowlistModule(parent),
         this.systems_module,
         nhss.NHSSModule(),
         materialReport.MaterialsModule(),

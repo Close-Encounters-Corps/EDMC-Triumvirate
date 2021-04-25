@@ -1,12 +1,4 @@
-﻿import glob
-import json
-import os
-from urllib.parse import quote_plus
-
-import requests
-
-import settings
-from modules.debug import Debug, debug, error
+﻿import settings
 from .lib.module import Module
 from .lib.cache import Cache
 from .lib.http import HttpError
@@ -16,7 +8,7 @@ from .lib.cec_api import CecApi
 
 class SystemsModule(Module):
     def __init__(self):
-        self.cache = Cache(max_size=1024, static=settings.systems_static_coords)
+        self.cache = Cache(max_size=1024)
         self.cache.start()
 
     def on_journal_entry(self, entry):
