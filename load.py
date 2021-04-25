@@ -46,6 +46,7 @@ from modules.lib import cec_api
 from modules.player import Player
 from modules.release import Release
 from modules.systems import SystemsModule
+from modules.platform_sender import PlatformSender
 from ttkHyperlinkLabel import HyperlinkLabel
 import settings
 
@@ -215,7 +216,8 @@ def plugin_app(parent):
         materialReport.MaterialsModule(),
         clientreport.ClientReportModule(),
         this.cec_api,
-        fleetcarrier.FleetCarrierModule()
+        fleetcarrier.FleetCarrierModule(),
+        PlatformSender()
     ]
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     # лейбл, в котором содержится текст из вывода модулей
