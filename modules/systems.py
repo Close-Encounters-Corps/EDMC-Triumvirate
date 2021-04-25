@@ -9,7 +9,9 @@ import settings
 from modules.debug import Debug, debug, error
 from .lib.module import Module
 from .lib.cache import Cache
-from .lib.http import WebClient
+from .lib.http import HttpError
+from .lib.context import global_context
+from .lib.cec_api import CecApi
 
 
 class SystemsModule(Module):
@@ -32,11 +34,14 @@ class SystemsModule(Module):
                 return self.cache[system]
 
     def fetch_system(self, system):
-        client = WebClient()
-        data = client.get(
-            settings.edsm_system_url,
-            params={"systemName": system, "showCoordinates": "1"}
-        ).json()
-        if data:
-            coords = data["coords"]
-            return coords["x"], coords["y"], coords["z"]
+        try:
+            data = global_context.by_class(CecApi).fetch(
+                "/v1/system", 
+                require_token=True, 
+                params={"name": system}
+            )
+            return data["x"], data["y"], data["z"]
+        except HttpError as err:
+            if err.response.status_code != 404:
+                raise err
+            return None # system not found

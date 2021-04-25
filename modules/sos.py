@@ -8,30 +8,6 @@ from .lib.context import global_context
 
 import settings
 
-class Range(object):
-    """
-    Класс, который проверяет на вхождение объектов в диапазон
-    """
-    def __init__(self, start, end):
-        self.start = start
-        self.end = end
-
-    def __contains__(self, obj):
-        return self.start <= obj < self.end
-
-    def __hash__(self):
-        return hash((self.start, self.end))
-
-    def __repr__(self):
-        return "{}({}, {})".format(
-            self.__class__.__name__,
-            self.start,
-            self.end
-        )
-
-
-
-
 
 class SosModule(Module):
     def on_chat_message(self, entry) -> str:

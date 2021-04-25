@@ -8,7 +8,8 @@ class FleetCarrierModule(Module):
     base_url = "/v1/fc"
     def on_journal_entry(self, entry):
         event = entry.data["event"]
-        if event == "Docked" and entry.data["StationType"] == "FleetCarrier":
+        if event == "Docked" \
+            and entry.data.get("StationType") == "FleetCarrier":
             name = entry.data["StationName"]
             system = entry.data["StarSystem"]
             x, y, z = None, None, None
@@ -26,7 +27,7 @@ class FleetCarrierModule(Module):
                 url=f"{self.base_url}/{name}/system", 
                 data={"name": system, "x": x, "y": y, "z": z}
             )
-        elif event == "Location" and entry.data["StationType"] == "FleetCarrier":
+        elif event == "Location" and entry.data.get("StationType") == "FleetCarrier":
             name = entry.data["StationName"]
             system = entry.data["StarSystem"]
             x, y, z = entry.data["StarPos"]
