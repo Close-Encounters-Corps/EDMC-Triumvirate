@@ -60,5 +60,6 @@ class JournalEntry:
                 "z": self.coords.z,
                 "lat": self.lat,
                 "lon": self.lon
-            }
+            },
+            "client": self.client
         }

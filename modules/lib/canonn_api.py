@@ -21,24 +21,6 @@ class CanonnApi(WebClient):
         endpoint = get_endpoint(is_beta=is_beta)
         super().__init__(base_url=endpoint)
 
-    def submit_nhss(self, entry, threat_level):
-        """Отправляет информацию о Non-human signal source в Canonn."""
-        if entry.data["event"] == "FSSSignalDiscovered":
-            event_type = "FSS"
-        else:
-            event_type = "Drop"
-        payload = dict(
-            systemName=entry.system,
-            cmdrName=entry.cmdr,
-            nhssRawJson=entry.data,
-            threatLevel=threat_level,
-            isBeta=entry.is_beta,
-            clientVersion=entry.client,
-            reportStatus="accepted",
-            reportComment=event_type
-        )
-        return self.post("/", json=payload)
-
     def submit_materialreward(self, entry):
         categories = {
             "$MICRORESOURCE_CATEGORY_Manufactured;": "Manufactured",
@@ -99,16 +81,16 @@ class CanonnRealtimeApi(WebClient):
     def __init__(self):
         super().__init__(base_url=settings.canonn_realtime_url)
 
-    def submit_nhss(self, entry, threat_level):
-        params = dict(
-            cmdrName=entry.cmdr,
-            systemName=entry.system,
-            x=entry.coords.x,
-            y=entry.coords.y,
-            z=entry.coords.z,
-            threat_level=threat_level
-        )
-        return self.get("/submitNHSS", params=params)
+    # def submit_nhss(self, entry, threat_level):
+    #     params = dict(
+    #         cmdrName=entry.cmdr,
+    #         systemName=entry.system,
+    #         x=entry.coords.x,
+    #         y=entry.coords.y,
+    #         z=entry.coords.z,
+    #         threat_level=threat_level
+    #     )
+    #     return self.get("/submitNHSS", params=params)
 
     def sumbit_game_version(self, entry):
         job = BasicThread(target=lambda: self._submit_game_version(entry))
