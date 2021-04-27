@@ -50,7 +50,12 @@ class JournalEntry:
             "is_beta": self.is_beta,
             "system": self.system,
             "station": self.station,
+            "system_faction": {
+                "state": self.sys_faction.state,
+                "allegiance": self.sys_faction.allegiance
+            }
             "data": self.data,
+            "body": self.body,
             "state": self.state,
             "dist_from_star": self.dist_from_star,
             "body": self.body,
