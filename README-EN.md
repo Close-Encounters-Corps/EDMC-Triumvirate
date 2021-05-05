@@ -3,7 +3,7 @@
 This ReadMe on other languages: [Русский](README.md)
 
 # EDMC-Triumvirate
-Triumvirate plugin for EDMC, developed by Close Encounters Corps faction, is an important part of the overall ecosystem "server-site-plugin-discord", acts as a universal tool for collecting and processing game data, allows you to track the influence in the controlled faction systems, pinpoint the user tasks on BGS, coordinate the work of pilots, notify colleagues about abnormal situations in long-haul flights. In the future, this plugin will receive a number of improvements designed to further optimize the work of pilots in the vastness of the Galaxy.
+Triumvirate plugin for EDMC, developed by Close Encounters Corps, is an important part of the overall ecosystem "Gehirn" (server-site-plugin-discord), acts as a universal tool for collecting and processing game data, allows you to track the influence in controlled faction systems, pinpoint tasks for the user on BGS, coordinate the work of pilots, notify colleagues about abnormal situations in long haul flights. In the future, this plugin will receive a number of improvements designed to further optimize the work of pilots in the vastness of the Galaxy.
 
 ***Confidential user information, system characteristics and non-public personal data are not collected, stored or processed as a matter of principle.***
 
