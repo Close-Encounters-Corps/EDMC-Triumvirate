@@ -10,7 +10,8 @@ import sys
 import threading
 
 import myNotebook as nb
-from config import config
+from .lib.conf import config
+#from config import config
 
 
 class Debug:

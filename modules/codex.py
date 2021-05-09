@@ -9,7 +9,8 @@ import threading
 from modules.debug import Debug
 from modules.debug import debug, error
 from modules.emitter import Emitter
-from config import config
+#from config import config
+from .lib.conf import config
 from math import sqrt, pow
 try:#py3
     from urllib.parse import quote_plus, unquote

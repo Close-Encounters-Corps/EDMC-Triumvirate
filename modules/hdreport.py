@@ -12,7 +12,8 @@ from urllib.parse import quote_plus
 import requests
 
 import modules.emitter
-from config import config
+from .lib.conf import config
+#from config import config
 from modules.emitter import Emitter
 
 from .debug import Debug, debug, error

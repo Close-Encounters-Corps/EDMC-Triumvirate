@@ -15,7 +15,8 @@ import requests
 import json
 import re
 import myNotebook as nb
-from config import config
+from .lib.conf import config
+#from config import config
 import threading
 from .debug import debug
 from .debug import debug,error
