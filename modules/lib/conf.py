@@ -9,6 +9,9 @@ class Config:
     def getint(self, key):
         return base_config.get_int(f"{self.prefix}.{key}")
 
+    def get_int(self, key):
+        return base_config.get_int(f"{self.prefix}.{key}")
+
     def get(self, key):
         return base_config.get(f"{self.prefix}.{key}")
 

@@ -99,8 +99,10 @@ class Release(Frame, Module):
 
         self.installed = False
 
-        self.no_auto = tk.IntVar(value=config.getint("DisableAutoUpdate"))
-        self.rmbackup = tk.IntVar(value=config.getint("RemoveBackup"))
+        self.no_auto = tk.IntVar(value=config.get_int("DisableAutoUpdate"))
+        self.rmbackup = tk.StringVar(value=config.get_str("RemoveBackup"))
+        self.no_auto = self.no_auto.get()
+        self.rmbackup = self.rmbackup.get()
 
         self.columnconfigure(1, weight=1)
         self.grid(row=gridrow, column=0, sticky="NSEW", columnspan=2)
@@ -116,7 +118,7 @@ class Release(Frame, Module):
         )
         self.button.grid(row=1, column=0, columnspan=2, sticky="NSEW")
         self.button.grid_remove()
-
+        
         self.version = Version(version)
         self.env = None
         self.release_thread = None
@@ -128,14 +130,13 @@ class Release(Frame, Module):
     def launch(self):
         self.release_thread = ReleaseThread(self)
         self.release_thread.start()
-        debug("RemoveBackup: {!r}", config.get("RemoveBackup"))
-
-        if self.rmbackup.get() == 0 and config.get("RemoveBackup") not in (
+        print(f"RemoveBackup: {self.rmbackup}" )
+        if self.no_auto == 0 and self.rmbackup not in (
             "None",
             None,
         ):
-            delete_dir = config.get("RemoveBackup")
-            debug("RemoveBackup {}", delete_dir)
+            delete_dir = self.rmbackup
+            debug(f"RemoveBackup {delete_dir}")
             shutil.rmtree(delete_dir)
             # lets not keep trying
             config.set("RemoveBackup", "None")
@@ -143,8 +144,8 @@ class Release(Frame, Module):
     def draw_settings(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
-        self.no_auto = tk.IntVar(value=config.getint("DisableAutoUpdate"))
-        self.rmbackup = tk.IntVar(value=config.getint("RemoveBackup"))
+        self.no_auto = tk.IntVar(value=config.get_int("DisableAutoUpdate"))
+        self.rmbackup = tk.StringVar(value=config.get_str("RemoveBackup"))
 
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
@@ -231,6 +232,11 @@ class Release(Frame, Module):
         self.plugin_dir = new_plugin_dir
         self.installed = True
         config.set("RemoveBackup", renamed)
+
+
+    def get_auto(cls):
+        return tk.IntVar(value=config.get_int("DisableAutoUpdate")).get()
+
 
     def notify(self):
         sound = random.choice(["sounds/nag1.wav", "sounds/nag2.wav"])

@@ -18,7 +18,7 @@ def _encode(item):
 class CecApi(WebClient, Module):
     def __init__(self, base_url):
         super().__init__(base_url + "/api/triumvirate")
-        self.token = config.get("triumvirate-token")
+        self.token = config.get_str("triumvirate-token")
         self.text = None
 
     def draw_settings(self, parent_widget, cmdr, is_beta, position):

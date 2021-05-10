@@ -12,14 +12,9 @@ from modules.emitter import Emitter
 #from config import config
 from .lib.conf import config
 from math import sqrt, pow
-try:#py3
-    from urllib.parse import quote_plus, unquote
-    from tkinter import Frame
-    import tkinter as tk
-except:#py2
-    from urllib import quote_plus, unquote
-    from Tkinter import Frame
-    import Tkinter as tk
+from urllib.parse import quote_plus, unquote
+from tkinter import Frame
+import tkinter as tk
 
 nvl = lambda a,b: a or b
 
