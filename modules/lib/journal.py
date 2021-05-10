@@ -53,7 +53,7 @@ class JournalEntry:
             "system_faction": {
                 "state": self.sys_faction.state,
                 "allegiance": self.sys_faction.allegiance
-            }
+            },
             "data": self.data,
             "body": self.body,
             "state": self.state,
