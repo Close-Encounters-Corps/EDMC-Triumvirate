@@ -15,7 +15,7 @@ class BasicThread(threading.Thread):
     STOP_ALL = False
 
     def __init__(self, **kwargs):
-        super().__init__(self, **kwargs)
+        super().__init__(**kwargs)
         BasicThread.pool.append(self)
         # флаг для сигнализирования потоку, что ему пора бы остановиться
         self.STOP = False
