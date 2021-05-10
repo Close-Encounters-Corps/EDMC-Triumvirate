@@ -28,7 +28,6 @@ from modules import (
     hdreport,
     journaldata,
     legacy,
-    materialReport,
     message_label,
     news,
     nhss,
@@ -212,7 +211,6 @@ def plugin_app(parent):
         sos.SosModule(),
         this.systems_module,
         nhss.NHSSModule(),
-        materialReport.MaterialsModule(),
         clientreport.ClientReportModule(),
         this.cec_api,
         fleetcarrier.FleetCarrierModule(),
@@ -305,19 +303,19 @@ def startup_stats(cmdr):
     except:
         this.first_event = True
 
-        # addr = requests.get('https://api.ipify.org').text
-        # addr6 = requests.get('https://api6.ipify.org').text
-        # url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
-        # url+="&entry.1181808218="+quote_plus(cmdr)
-        # url+="&entry.254549730="+quote_plus(this.version)
-        # url+="&entry.1622540328="+quote_plus(addr)
-        # if addr6 != addr:
-        #     url+="&entry.488844173="+quote_plus(addr6)
-        # else:
-        #     url+="&entry.488844173="+quote_plus("0")
-        # url+="&entry.1210213202="+str(release.get_auto())
+        addr = requests.get('https://api.ipify.org').text
+        addr6 = requests.get('https://api6.ipify.org').text
+        url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
+        url+="&entry.1181808218="+quote_plus(cmdr)
+        url+="&entry.254549730="+quote_plus(this.version)
+        url+="&entry.1622540328="+quote_plus(addr)
+        if addr6 != addr:
+            url+="&entry.488844173="+quote_plus(addr6)
+        else:
+            url+="&entry.488844173="+quote_plus("0")
+        url+="&entry.1210213202="+str(Release.get_auto())
 
-        # legacy.Reporter(url).start()
+        legacy.Reporter(url).start()
 
 def journal_entry_wrapper(
     cmdr,
