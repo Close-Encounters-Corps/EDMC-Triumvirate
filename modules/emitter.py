@@ -3,9 +3,16 @@ import threading
 import requests
 import sys
 import json
+import time
 from .debug import Debug
 from .debug import debug,error
 
+
+
+def isItTime():
+    if time.time() > 1621407600: # epoch of 07:00:00 19.05.2021 Zulu
+        return True
+    
 class postJson(threading.Thread):
     def __init__(self, url,payload):
         threading.Thread.__init__(self)
@@ -106,11 +113,14 @@ class Emitter(threading.Thread):
         return payload   
     
     def run(self):
-    
-        #configure the payload
-        payload = self.setPayload()
-        url = self.getUrl()
-        self.send(payload,url)
+        if isItTime() is True:
+            debug("ПЛАГИН РАБОТАЕТ ПОСЛЕ ЗАПУСКА ОДИСЕИ! БЛОКИРОВКА ДОСТУПА К АПИ КАНОННОВ")
+            return
+        else:
+            #configure the payload
+            payload = self.setPayload()
+            url = self.getUrl()
+            self.send(payload,url)
     
     def send(self,payload,url):
         fullurl = "{}/{}".format(url,self.modelreport)
