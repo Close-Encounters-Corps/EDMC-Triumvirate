@@ -100,4 +100,4 @@ EDMC-Triumvirate based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-C
 
 All Contents Copyright ©️ 2016-2021 Close Encounters Corps, Triumvirate. KAZAK0V, AntonyVern, Osmium. All Rights Reserved.
 
-Logo - Anton Vernitsky aka AntonyVern/Automatic system.
+Logo - Anton Vernitskiy aka AntonyVern/Automatic system.
