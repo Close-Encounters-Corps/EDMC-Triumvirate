@@ -96,7 +96,7 @@ def sos(cmdr,system,DistFromStarLS,state,body,lat,lon,fuel,fuel_cons,is_SRV,is_F
     if  is_SRV == True: return _("SOS отключен, пока вы в СРВ") #эта команда прервет выполнение, если
                                                                #игрок находится в СРВ (Если ЕДМС
                                                                #передаст эту инфу)
-    if is_Fighter == True: return _("SOS отключен, пока вы в Истребителе"))
+    if is_Fighter == True: return _("SOS отключен, пока вы в Истребителе")
     if DistFromStarLS is not None: Distance = str(",\n" + str(DistFromStarLS) + " Св.Сек.")
     else:   Distance = str("")
     
