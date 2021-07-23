@@ -41,7 +41,7 @@ class Debug:
         frame.columnconfigure(1, weight=1)
         frame.grid(row=0, column=0, sticky="NSEW")
 
-        nb.Checkbutton(frame, text="Включить отладку", variable=cls.debugvar).grid(row=0, column=0, sticky="NW")
+        nb.Checkbutton(frame, text=_("Включить отладку"), variable=cls.debugvar).grid(row=0, column=0, sticky="NW")
 
         return frame
 

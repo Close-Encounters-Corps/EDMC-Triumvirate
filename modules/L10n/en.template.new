@@ -1,0 +1,108 @@
+/* Language name */
+"!Language" = "English";
+
+/* [codex.py] */
+"Ammonia World" = "Ammonia World";
+
+/* [codex.py] */
+"Anomalous stellar phenomena" = "Anomalous stellar phenomena";
+
+/* [codex.py] */
+"Biological surface signals" = "Biological surface signals";
+
+/* [codex.py] */
+"Earthlike World" = "Earthlike World";
+
+/* [codex.py] */
+"Geology: Vents and fumeroles" = "Geology: Vents and fumeroles";
+
+/* [codex.py] */
+"Guardian sites" = "Guardian sites";
+
+/* [codex.py] */
+"Human Sites" = "Human Sites";
+
+/* [codex.py] */
+"Lagrange Clouds" = "Lagrange Clouds";
+
+/* [codex.py] */
+"Metal-Rich Body" = "Metal-Rich Body";
+
+/* [codex.py] */
+"Other Sites" = "Other Sites";
+
+/* [codex.py] */
+"Planetary Ring Resources" = "Planetary Ring Resources";
+
+/* [Commands.py] */
+"SOS отключен, пока вы в Истребителе" = "SOS отключен, пока вы в Истребителе";
+
+/* эта команда прервет выполнение, если. [Commands.py] */
+"SOS отключен, пока вы в СРВ" = "SOS отключен, пока вы в СРВ";
+
+/* [codex.py] */
+"Thargoid sites or barnacles" = "Thargoid sites or barnacles";
+
+/* [codex.py] */
+"Tourist Informatiom" = "Tourist Informatiom";
+
+/* [codex.py] */
+"Unclassified codex entry" = "Unclassified codex entry";
+
+/* [codex.py] */
+"Valuable Planets" = "Valuable Planets";
+
+/* [codex.py] */
+"Water World" = "Water World";
+
+/* [release.py] */
+"Версия {}  установлена. Пожалуйста, перезапустите EDMC" = "Версия {}  установлена. Пожалуйста, перезапустите EDMC";
+
+/* [release.py] */
+"Версия:" = "Версия:";
+
+/* [release.py] */
+"Включить автообновление" = "Включить автообновление";
+
+/* [debug.py] */
+"Включить отладку" = "Включить отладку";
+
+/* Эта команда прервет выполнение, если. [Commands.py] */
+"Вы находитесь в экипаже, SOS отключено" = "Вы находитесь в экипаже, SOS отключено";
+
+/* [release.py] */
+"Нажмите чтобы обновить" = "Нажмите чтобы обновить";
+
+/* [codex.py] */
+"Настройки Кодекса" = "Настройки Кодекса";
+
+/* [news.py] */
+"Новости:" = "Новости:";
+
+/* [release.py] */
+"Обновление до версии {} не удалось" = "Обновление до версии {} не удалось";
+
+/* [release.py] */
+"Отключить голосовые сообщения" = "Отключить голосовые сообщения";
+
+/* [release.py] */
+"Пожалуйста поставьте версию {}" = "Пожалуйста поставьте версию {}";
+
+/* [release.py] */
+"Релиз {}  Не установлен, ошибка" = "Релиз {}  Не установлен, ошибка";
+
+/* [release.py] */
+"Релиз {}  Установлен, пожалуйста перезагрузите EDMC" = "Релиз {}  Установлен, пожалуйста перезагрузите EDMC";
+
+/* [codex.py] */
+"Скрыть иконки кодекса" = "Скрыть иконки кодекса";
+
+/* [news.py] */
+"Скрыть новости СЕС" = "Скрыть новости СЕС";
+
+/* [release.py] */
+"Тестовая версия {}" = "Тестовая версия {}";
+
+/* [release.py] */
+"Хранить бекапы версий" = "Хранить бекапы версий";
+
