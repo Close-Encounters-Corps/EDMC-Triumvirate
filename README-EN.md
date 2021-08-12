@@ -5,13 +5,14 @@ This ReadMe on other languages: [Русский](README.md)
 ![Triumvirate](https://user-images.githubusercontent.com/25157296/117574269-03a3d500-b0e5-11eb-901d-44a4812e2de0.png)
 
 # EDMC-Triumvirate
-Triumvirate plugin for EDMC, developed by Close Encounters Corps, is an important part of the overall ecosystem "Gehirn" (server-site-plugin-discord), acts as a universal tool for collecting and processing game data, allows you to track the influence in controlled faction systems, pinpoint tasks for the user on BGS, coordinate the work of pilots, notify colleagues about abnormal situations in long haul flights. In the future, this plugin will receive a number of improvements designed to further optimize the work of pilots in the vastness of the Galaxy.
+Triumvirate plugin for EDMC, developed by Close Encounters Corps faction, is an important part of the overall ecosystem "Gehirn" (server-website-plugin-discord), acts as a universal tool for collecting and processing game data, allows you to track the influence in controlled faction systems, pinpoint tasks for the user on BGS, coordinate the work of pilots, notify colleagues about abnormal situations in long haul flights. In the future, this plugin will receive a number of improvements designed to further optimize the work of pilots in the vastness of the Galaxy.
+
 
 ***Confidential user information, system characteristics and non-public personal data are not collected, stored or processed as a matter of principle.***
 
 # Pay attention:
 
-The functionality is guaranteed on Windows 10 and Windows 11 systems. The EDMC Triumvirate plugin is strongly NOT compatible with the EDMC-Canonn plugin, EDMC-USS-Survey and the outdated EDMC-USS-Survey-Triumvirate-edition. The EDMC-Canonn plugin was originally integrated into Triumvirate, and we have also integrated support for Discord Presence, FCMC and the transfer of collected scientific data not only to Canonn servers, but also to the addresses of other scientific organizations. A system of issuing and accounting for completed missions within the framework of the activity against the Club is working.
+The functionality is guaranteed on Windows 10 and Windows 11 systems and NOT guaranteed on Windows 8 and below. Supports two user interface languages, Russian and English International. The EDMC Triumvirate plugin is strongly NOT compatible with the EDMC-Canonn plugin, EDMC-USS-Survey and the outdated EDMC-USS-Survey-Triumvirate-edition. The EDMC-Canonn plugin was originally integrated into Triumvirate, and we have also integrated transfer of collected scientific data not only to Canonn servers, but also to the addresses of other scientific organizations. A system of issuing and accounting for completed missions within the framework of the activity against the Club is working.
 
 # Plugin features (will be updated as improvements are made)
 
