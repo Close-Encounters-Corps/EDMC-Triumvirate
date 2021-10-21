@@ -20,9 +20,9 @@ The functionality is guaranteed on Windows 10 and Windows 11 systems and NOT gua
 
 ### The /sos command
 
-After the pilot will write in the game chat command "/sos" (in any register), the plugin will generate and send to the faction discord chat* (in a specially designated channel) a data packet with the location, amount of fuel, location and time to empty tank. Thanks to this data, a pilot in a dangerous situation will be able to get fuel and will be refueled in a timely manner.
+After the pilot will write in the game chat command "/sos" (in any case), the plugin will form and transmit to the faction discord chat* (in a specially designated channel) a data packet with the location, amount of fuel, location and time to empty tank. Thanks to this data, a pilot in a dangerous situation will be able to get fuel and refuel in time. ATTENTION: One request is enough, spamming requests will lead to their complete ignoring. After a single request you need to go to the game menu and contact the Close Encounters Corps discord server to clarify which of the pilots responded to the important request.
 
-\*If you are an independent pilot (according to the plugin), your request for help will be forwarded to Close Encounters Corps
+\*If you are an independent pilot (according to the plugin), your request for help will be forwarded to Close Encounters Corps.
 
 ## Element of the orienteering system (aka Patrol)
 
