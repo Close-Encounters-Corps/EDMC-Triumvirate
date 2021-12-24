@@ -24,7 +24,7 @@ After the pilot will write in the game chat command "/sos" (in any case), the pl
 
 ATTENTION: One request is enough, spamming requests will lead to their complete ignoring. After a single request, you need to go to the game menu and contact the Close Encounters Corps discord server to find out which pilot responded to your request. Requests from the "beginner" list systems are not accepted, due to the impossibility of arriving at them. Pilots found to be hostile to factions of the Close Encounters Corps Coalition, or found to have engaged in suspicious, provocative behavior, will not be serviced by the system.
 
-\*If you are an independent pilot (according to the plugin), your request for help will be forwarded to Close Encounters Corps.
+\*If you are an independent pilot (according to the plugin), are not listed as an enemy of the community, and do not engage in suspicious destructive activity, your request for help will be forwarded to Close Encounters Corps.
 
 ## Element of the orienteering system (aka Patrol)
 
