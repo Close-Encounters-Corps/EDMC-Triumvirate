@@ -21,7 +21,9 @@ This ReadMe on other languages: [English](README-EN.md)
 
 После того, как пилот напишет в чате игры команду "/sos" (в любом регистре), плагином будет сформирован и передан в чат дискорда фракции* (в специально выделенный канал) пакет данных с местоположением, количеством топлива, местом и временем до опустошения бака. Благодаря этим данным, пилоту, попавшему в опасную ситуацию, можно будет своевременно довезти топливо и произвести дозаправку.
 
-\*Если вы независимый пилот (по данным плагина) то ваш запрос о помощи будет передан в Close Encounters Corps
+ВНИМАНИЕ! Достаточно одного запроса, спам запросами будет вести к их полному игнорированию. После разовой подачи запроса вам необходимо выйти в игровое меню и обратиться на дискорд-сервер Close Encounters Corps для уточнения того, кто из пилотов ответил на ваш запрос. Запросы из систем перечня "лягушатника" не принимаются, в силу невозможности прибыть в них. Пилоты, признанные враждебными фракциям Коалиции Close Encounters Corps, либо замеченные в подозрительных, провокативных действиях обслуживаться системой не будут.
+
+\*Если вы независимый пилот (по данным плагина), не внесены в список врагов сообщества и не занимаетесь подозрительной деструктивной деятельностью, ваш запрос о помощи будет передан в Close Encounters Corps.
 
 ## Элемент системы ориентирования (aka Патруль)
 
@@ -100,6 +102,6 @@ EDMC-Triumvirate use data from [Canonn API V2](https://docs.canonn.tech), [ED St
 
 EDMC-Triumvirate based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), with permission of initial developers.
 
-All Contents Copyright ©️ 2016-2021 Close Encounters Corps, Triumvirate. KAZAK0V, AntonyVern, Osmium. All Rights Reserved.
+All Contents Copyright ©️ 2016-2022 Close Encounters Corps, Triumvirate. KAZAK0V, AntonyVern, Osmium. All Rights Reserved.
 
-Logo - Антон Верницкий aka AntonyVern/Automatic system.
+Logo - Антон Верницкий aka AntonyVern/Automatic system
