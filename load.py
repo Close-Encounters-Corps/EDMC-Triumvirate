@@ -364,6 +364,11 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     # this.DistFromStarLS
 
 
+
+def isItTime():
+    if time.time() > 1621407600: # epoch of 07:00:00 19.05.2021 Zulu
+        return True
+    
 def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, state, x, y, z, body,
                           lat, lon, client):
     '''
@@ -379,28 +384,32 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     #Блокировка работы альфа версии:
     if is_beta:
         return
-    factionkill.submit(cmdr, is_beta, system, station, entry, client)
-    nhss.submit(cmdr, is_beta, system, station, entry, client)
-    hdreport.submit(cmdr, is_beta, system, station, entry, client)
-    codex.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
-    fssreports.submit(cmdr, is_beta, system, x, y, z,
-                      entry, body, lat, lon, client)
-    fleet_carrier.submit(cmdr, is_beta, system, x, y, z,
-                         entry, body, lat, lon, client)
-    journaldata.submit(cmdr, is_beta, system, station,
-                       entry, client, body, lat, lon)
-    clientreport.submit(cmdr, is_beta, client, entry)
-    this.patrol.journal_entry(
-        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client)
-    this.codexcontrol.journal_entry(
-        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client)
-    whiteList.journal_entry(cmdr, is_beta, system, station,
-                            entry, state, x, y, z, body, lat, lon, client)
-    materialReport.submit(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, x, y, z, body, lat,
-                          lon, client)
-    codex.saaScan.journal_entry(
-        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client)
 
+    clientreport.submit(cmdr, is_beta, client, entry)
+
+    if isItTime() is True:
+        debug("ПЛАГИН РАБОТАЕТ ПОСЛЕ ЗАПУСКА ОДИСЕИ! БЛОКИРОВКА ДОСТУПА К АПИ КАНОННОВ")
+    else:
+        this.patrol.journal_entry(
+        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client)
+        this.codexcontrol.journal_entry(
+        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client)
+        whiteList.journal_entry(cmdr, is_beta, system, station,
+                            entry, state, x, y, z, body, lat, lon, client)
+        materialReport.submit(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, x, y, z, body, lat,
+                          lon, client)
+        codex.saaScan.journal_entry(
+        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client)
+        factionkill.submit(cmdr, is_beta, system, station, entry, client)
+        nhss.submit(cmdr, is_beta, system, station, entry, client)
+        hdreport.submit(cmdr, is_beta, system, station, entry, client)
+        codex.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
+        fssreports.submit(cmdr, is_beta, system, x, y, z,
+                          entry, body, lat, lon, client)
+        fleet_carrier.submit(cmdr, is_beta, system, x, y, z,
+                             entry, body, lat, lon, client)
+        journaldata.submit(cmdr, is_beta, system, station,
+                           entry, client, body, lat, lon)
     # Triumvirate reporting
     # FF.FriendFoe.friendFoe(cmdr,
     # system, station, entry, state)
