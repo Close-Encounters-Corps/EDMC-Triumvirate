@@ -67,7 +67,7 @@ myPlugin = 'EDMC-Triumvirate'
 
 
 
-this.version = '1.2.7'
+this.version = '1.2.8'
 this.SQNag = 0
 this.client_version = '{}.{}'.format(myPlugin, this.version)
 this.body = None
@@ -416,6 +416,7 @@ def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAlle
     legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
     test(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance,
          DistFromStarLS, station, entry, state, x, y, z, body, lat, lon, client)
+    legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     Easter_Egs(entry)
     return Return
 
