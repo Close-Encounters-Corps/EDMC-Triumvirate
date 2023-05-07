@@ -129,7 +129,7 @@ class fssEmitter(Emitter):
 
         # don't bother sending USS
         if FSSSignalDiscovered and not USS and not FleetCarrier:
-            canonn.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postFSSSignal",
+            modules.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postFSSSignal",
                                 {
                                     "signalname": self.entry.get("SignalName"),
                                     "signalNameLocalised": self.entry.get("SignalName_Localised"),
