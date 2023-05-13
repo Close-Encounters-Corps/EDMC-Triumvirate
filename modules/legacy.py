@@ -107,6 +107,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):#Сделано
                     url = 'https://docs.google.com/forms/d/e/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url'
                     url+= '&entry.262880086=' + quote_plus(entry["BodyName"])
                     url+= '&entry.808713567=' + quote_plus(str(component["Percent"]).replace('.', ','))
+                    url+= '&entry.549950938=' + quote_plus(entry["StarSystem"])
                     #https://docs.google.com/forms/d/e/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/viewform?usp=pp_url&entry.262880086=test&entry.808713567=test
                     Reporter(url).start()
 
@@ -115,6 +116,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):#Сделано
         url = 'https://docs.google.com/forms/d/e/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url'
         url+= '&entry.422166846=' + quote_plus(entry["BodyName"])
         url+= '&entry.371313324=' + quote_plus(entry["StarType"])
+        url+= '&entry.770073835=' + quote_plus(entry["StarSystem"])
         Reporter(url).start()
         
 
