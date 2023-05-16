@@ -1,20 +1,8 @@
-from ..debug import debug
-from .context import global_context
 from .http import WebClient
 from .thread import BasicThread
-from ..release import Environment, Release
+from utils import get_endpoint
 import settings
 
-def get_endpoint(is_beta=False):
-    urls = {
-        Environment.LIVE: settings.canonn_live_url,
-        Environment.STAGING: settings.canonn_staging_url,
-        Environment.DEVELOPMENT: settings.canonn_dev_url,
-    }
-    if is_beta:
-        return urls[Environment.STAGING]
-    env = env = global_context.by_class(Release).env
-    return urls[env]
 
 class CanonnApi(WebClient):
     def __init__(self, is_beta=False):
@@ -30,7 +18,7 @@ class CanonnRealtimeApi(WebClient):
         job = BasicThread(target=lambda: self._submit_game_version(entry))
         job.start()
         return job
-    
+
     def _submit_game_version(self, entry):
         self.post("/postGameVersion", json=entry)
 

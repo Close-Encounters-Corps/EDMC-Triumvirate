@@ -3,9 +3,7 @@ import threading
 import requests
 import json
 from .debug import debug, error
-from .lib.context import global_context
-from .release import Release, Environment
-from settings import canonn_staging_url, canonn_dev_url
+from .lib.utils import get_endpoint
 
 
 class postJson(threading.Thread):
@@ -33,18 +31,6 @@ class postJson(threading.Thread):
 
 def post(url, payload):
     postJson(url, payload).start()
-
-
-def get_endpoint(is_beta=False):
-    urls = {
-        Environment.LIVE: canonn_staging_url,
-        Environment.STAGING: canonn_staging_url,
-        Environment.DEVELOPMENT: canonn_dev_url
-    }
-    if is_beta:
-        return urls[Environment.STAGING]
-    env = env = global_context.by_class(Release).env
-    return urls[env]
 
 
 class Emitter(threading.Thread):
