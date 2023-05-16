@@ -1,7 +1,7 @@
 from .http import WebClient
 from .thread import BasicThread
 from utils import get_endpoint
-import settings
+from settings import canonn_realtime_url
 
 
 class CanonnApi(WebClient):
@@ -12,7 +12,7 @@ class CanonnApi(WebClient):
 
 class CanonnRealtimeApi(WebClient):
     def __init__(self):
-        super().__init__(base_url=settings.canonn_realtime_url)
+        super().__init__(base_url=canonn_realtime_url)
 
     def sumbit_game_version(self, entry):
         job = BasicThread(target=lambda: self._submit_game_version(entry))

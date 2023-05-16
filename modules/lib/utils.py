@@ -1,13 +1,13 @@
 from ..release import Environment, Release
 from .context import global_context
-import settings
+from settings import canonn_live_url, canonn_staging_url, canonn_dev_url
 
 
 def get_endpoint(is_beta=False):
     urls = {
-        Environment.LIVE: settings.canonn_live_url,
-        Environment.STAGING: settings.canonn_staging_url,
-        Environment.DEVELOPMENT: settings.canonn_dev_url,
+        Environment.LIVE: canonn_live_url,
+        Environment.STAGING: canonn_staging_url,
+        Environment.DEVELOPMENT: canonn_dev_url,
     }
     if is_beta:
         return urls[Environment.STAGING]
