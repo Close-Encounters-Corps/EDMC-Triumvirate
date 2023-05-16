@@ -1,9 +1,8 @@
 import requests
 
-import settings
-
 from .thread import BasicThread
-from ..debug import debug, error
+from ..debug import error
+
 
 class CecApi(requests.Session):
     def __init__(self, url, token):
@@ -33,7 +32,6 @@ class CecApi(requests.Session):
             self.post(url, json=json)
         except ApiError as e:
             error(f"Error on submitting data: {e}")
-
 
 
 class ApiError(Exception):
