@@ -4,19 +4,18 @@ import json
 import myNotebook as nb
 import os
 import requests
-import sys
 import threading
-from modules.debug import Debug
 from modules.debug import debug, error
 from modules.emitter import Emitter
-#from config import config
 from .lib.conf import config
 from math import sqrt, pow
 from urllib.parse import quote_plus, unquote
 from tkinter import Frame
 import tkinter as tk
+from settings import canonn_realtime_url, edsm_url
 
-nvl = lambda a,b: a or b
+nvl = lambda a, b: a or b
+
 
 def surface_pressure(tag, value):
     if tag == "surfacePressure":
@@ -52,22 +51,25 @@ class saaScan():
         debug("We only use class methods here")
 
     @classmethod
-    def journal_entry(cls, cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client):
+    def journal_entry(cls, cmdr, is_beta, system, station, entry, state,
+                      x, y, z, body, lat, lon, client):
         if entry.get("event") == "SAASignalsFound":
-            modules.emitter.post("https://us-central1-canonn-api-236217.cloudfunctions.net/postSAA",
-                                {
-                                    "cmdr": cmdr,
-                                    "beta": is_beta,
-                                    "system": system,
-                                    "x": x,
-                                    "y": y,
-                                    "z": z,
-                                    "entry": entry,
-                                    "body": body,
-                                    "lat": lat,
-                                    "lon": lon,
-                                    "client": client
-                                })
+            modules.emitter.post(
+                f"{canonn_realtime_url}/postSAA",
+                {
+                    "cmdr": cmdr,
+                    "beta": is_beta,
+                    "system": system,
+                    "x": x,
+                    "y": y,
+                    "z": z,
+                    "entry": entry,
+                    "body": body,
+                    "lat": lat,
+                    "lon": lon,
+                    "client": client
+                }
+            )
 
 
 class CodexTypes(Frame):
@@ -155,6 +157,7 @@ class CodexTypes(Frame):
         self.grid_remove()
 
     # wrapper for visualise
+
     def evisualise(self, event):
         self.visualise()
 
@@ -164,30 +167,40 @@ class CodexTypes(Frame):
 
         try:
             self.poidata = []
-            url = "https://us-central1-canonn-api-236217.cloudfunctions.net/poiListSignals?system={}".format(
-                quote_plus(system.encode('utf8')))
+            system_name = quote_plus(system.encode('utf8'))
+            params = {
+                "system": system_name,
+            }
+            url = f"{canonn_realtime_url}/poiListSignals"
             debug(url)
-            r = requests.get(url)
+            r = requests.get(url, params=params)
+
             if r.status_code == requests.codes.ok:
                 poidata = r.json()
 
             for r in poidata:
-                self.merge_poi(r.get("hud_category"), r.get("english_name"), r.get("body"))
+                self.merge_poi(
+                    r.get("hud_category"),
+                    r.get("english_name"),
+                    r.get("body")
+                )
 
             usystem = unquote(system)
-
-            edsm = "https://www.edsm.net/api-system-v1/bodies?systemName={}".format(quote_plus(system.encode('utf8')))
+            params = {
+                "systemName": system_name,
+            }
+            edsm = f"{edsm_url}/api-system-v1/bodies"
             debug(edsm)
-            r = requests.get(edsm)
+            r = requests.get(edsm, params=params)
             if r.status_code == requests.codes.ok:
-
                 bodies = r.json().get("bodies")
                 if bodies:
                     CodexTypes.bodycount = len(bodies)
                     debug("bodycount: {}".format(CodexTypes.bodycount))
-
                     if bodies[0].get("solarRadius"):
-                        CodexTypes.parentRadius = self.light_seconds("solarRadius", bodies[0].get("solarRadius"))
+                        CodexTypes.parentRadius = self.light_seconds(
+                            "solarRadius", bodies[0].get("solarRadius")
+                        )
 
                     for body in bodies:
                         debug(body.get("subType"))
@@ -196,28 +209,38 @@ class CodexTypes(Frame):
 
                         # Terraforming
                         if body.get('terraformingState') == 'Candidate for terraforming':
-                            self.merge_poi("Planets", "Terraformable", body_code)
+                            self.merge_poi(
+                                "Planets", "Terraformable", body_code
+                            )
 
                         # Landable Volcanism
-                        if body.get('type') == 'Planet' and body.get('volcanismType') != 'No volcanism' and body.get(
-                                'isLandable'):
-                            self.merge_poi("Geology", body.get('volcanismType'), body_code)
+                        if body.get('type') == 'Planet' and body.get('volcanismType') != 'No volcanism' and body.get('isLandable'):
+                            self.merge_poi(
+                                "Geology", body.get('volcanismType'), body_code
+                            )
 
                         # water ammonia etc
                         if body.get('subType') in CodexTypes.body_types.keys():
-                            self.merge_poi("Planets", CodexTypes.body_types.get(body.get('subType')), body_code)
+                            self.merge_poi(
+                                "Planets",
+                                CodexTypes.body_types.get(body.get('subType')),
+                                body_code
+                            )
 
                         # fast orbits
                         if body.get('orbitalPeriod'):
                             if abs(float(body.get('orbitalPeriod'))) <= 0.042:
-                                self.merge_poi("Tourist", 'Fast Orbital Period', body_code)
+                                self.merge_poi(
+                                    "Tourist", 'Fast Orbital Period', body_code
+                                )
 
                         # Ringed ELW etc
                         if body.get('subType') in ('Earth-like world', 'Water world', 'Ammonia world'):
                             if body.get("rings"):
-                                self.merge_poi("Tourist",
-                                               'Ringed {}'.format(CodexTypes.body_types.get(body.get('subType'))),
-                                               body_code)
+                                self.merge_poi(
+                                    "Tourist",
+                                    'Ringed {}'.format(CodexTypes.body_types.get(body.get('subType'))),
+                                    body_code)
                             if body.get("parents")[0].get("Planet"):
                                 self.merge_poi("Tourist",
                                                '{} Moon'.format(CodexTypes.body_types.get(body.get('subType'))),

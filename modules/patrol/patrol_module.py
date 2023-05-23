@@ -367,7 +367,7 @@ class PatrolModule(Frame, Module):
 
             ship_system = ships[ship]["starsystem"]["name"]
             if not shipsystems.get(ship_system):
-                debug("first: {}".format(ship_system))
+                debug(f"first: {ship_system}")
                 shipsystems[ship_system] = []
 
             shipsystems[ship_system].append(ships[ship])
@@ -640,7 +640,7 @@ class PatrolModule(Frame, Module):
         debug("event {}".format(event))
         for key in list(event.keys()):
             if event.get(key):
-                debug("event key {} value {}".format(key, event.get(key)))
+                debug(f"event key {key} value {event.get(key)}")
                 if not str(entry.get(key)).upper() == str(event.get(key)).upper():
                     return False
 
