@@ -12,6 +12,9 @@ from .debug import debug
 from .debug import debug,error
 
 
+URL_GOOGLE = 'https://docs.google.com/forms/d/e'
+
+
 class Reporter(threading.Thread):
     def __init__(self, payload):
         threading.Thread.__init__(self)
@@ -70,55 +73,48 @@ def faction_kill(cmdr, is_beta, system, station, entry, state):#Сделано
 # &entry.1546311301=WasDiscovered
 # &entry.1533734556=WasMapped
 # &entry.1572906861=StarSystem
-def GusonExpeditions(cmdr, is_beta, system, entry):#Сделано
-    if entry['event'] != 'Scan':
+def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
+    if entry.get('event') != 'Scan':
         return
-        
-    if entry['ScanType'] == "Detailed":   
-        if "Atmosphere" not in entry:
-            return
-            
-        if "thin" in entry["Atmosphere"] : 
-            SurfaceGrav = entry["SurfaceGravity"] / 10
-            if 0.6 >= SurfaceGrav:
-                url = 'https://docs.google.com/forms/d/e/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url'
-                url+='&entry.347011697=' + quote_plus(cmdr)
-                #if is_beta:
-                #    beta = 'Y'
-                #else: 
-                #    beta = 'N'
-                #url+='&entry.1534486210=' + quote_plus(beta)
-                url+='&entry.1687350455=' + quote_plus(entry["BodyName"])
-                url+='&entry.1816286975=' + quote_plus(entry["PlanetClass"])
-                url+='&entry.511521292=' + quote_plus(entry["Atmosphere"])
-                url+='&entry.241360196=' + quote_plus(entry["Volcanism"] or "None")
-                url+='&entry.2023664263=' + quote_plus(str(SurfaceGrav).replace('.', ','))
-                url+='&entry.1625198123=' + quote_plus(str(entry["SurfaceTemperature"]).replace('.', ','))
-                url+='&entry.464017034=' + quote_plus(str(entry["SurfacePressure"]).replace('.', ','))
-                url+='&entry.1546311301=' + quote_plus(str(entry["WasDiscovered"]))
-                url+='&entry.1533734556=' + quote_plus(str(entry["WasMapped"]))
-                url+='&entry.1572906861=' + quote_plus(entry["StarSystem"])
+
+    if entry.get('ScanType') == "Detailed" and entry.get("Atmosphere"):
+        if "thin" in entry["Atmosphere"] and entry.get("SurfaceGravity", 0) / 10 <= 0.6:
+            url_params = {
+                "entry.347011697": cmdr,
+                "entry.1687350455": entry.get("BodyName", ""),
+                "entry.1816286975": entry.get("PlanetClass", ""),
+                "entry.511521292": entry.get("Atmosphere", ""),
+                "entry.241360196": entry.get("Volcanism", "None"),
+                "entry.2023664263": str(entry.get("SurfaceGravity", 0) / 10).replace('.', ','),
+                "entry.1625198123": str(entry.get("SurfaceTemperature", 0)).replace('.', ','),
+                "entry.464017034": str(entry.get("SurfacePressure", 0)).replace('.', ','),
+                "entry.1546311301": str(entry.get("WasDiscovered", "")),
+                "entry.1533734556": str(entry.get("WasMapped", "")),
+                "entry.1572906861": entry.get("StarSystem", "")
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+            Reporter(url).start()
+
+        if "gas giant" in entry.get("PlanetClass", ""):
+            helium_components = [component for component in entry.get("AtmosphereComposition", []) if
+                                 "Helium" in component.get("Name", "")]
+            if helium_components:
+                url_params = {
+                    "entry.262880086": entry.get("BodyName", ""),
+                    "entry.808713567": str(helium_components[0].get("Percent", 0)).replace('.', ','),
+                    "entry.549950938": entry.get("StarSystem", "")
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
                 Reporter(url).start()
 
-            
-        if "gas giant" in entry["PlanetClass"]:
-            for component in entry["AtmosphereComposition"]:
-                if "Helium" in component["Name"]:
-                    url = 'https://docs.google.com/forms/d/e/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url'
-                    url+= '&entry.262880086=' + quote_plus(entry["BodyName"])
-                    url+= '&entry.808713567=' + quote_plus(str(component["Percent"]).replace('.', ','))
-                    url+= '&entry.549950938=' + quote_plus(entry["StarSystem"])
-                    #https://docs.google.com/forms/d/e/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/viewform?usp=pp_url&entry.262880086=test&entry.808713567=test
-                    Reporter(url).start()
-
     if "StarType" in entry:
-        #https://docs.google.com/forms/d/e/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/viewform?usp=pp_url&entry.422166846=%D0%B5%D1%83%D1%8B%D0%B5&entry.371313324=%D0%B5%D1%83%D1%8B%D0%B5
-        url = 'https://docs.google.com/forms/d/e/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url'
-        url+= '&entry.422166846=' + quote_plus(entry["BodyName"])
-        url+= '&entry.371313324=' + quote_plus(entry["StarType"])
-        url+= '&entry.770073835=' + quote_plus(entry["StarSystem"])
+        url_params = {
+            "entry.422166846": entry.get("BodyName", ""),
+            "entry.371313324": entry.get("StarType", ""),
+            "entry.770073835": entry.get("StarSystem", "")
+        }
+        url = f'{URL_GOOGLE}/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
         Reporter(url).start()
-        
 
 
 def CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):#сделано
