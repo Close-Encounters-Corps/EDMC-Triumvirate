@@ -1,0 +1,9 @@
+/* Language name */
+"!Language" = "English";
+
+/* [load.py] */
+"В случае возникновения проблем с плагином \nили в случае, если Вы ошибочно выбрали неправильное сообщество в специальной форме форме (куда вас перебрасывает при первом запуске), \nпишите в личные сообщения Дискорда пользователю @Казаков#4700" = "If you have any problems with the plugin \nor if you mistakenly select the wrong community in the special form (where you are thrown the first time you start the plugin), \nplease write to the personal messages of Discord user @Казаков#4700";
+
+/* [load.py] */
+"Включить пасхалки" = "Turn on the easter eggs";
+
