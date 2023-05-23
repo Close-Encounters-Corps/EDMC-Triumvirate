@@ -393,6 +393,7 @@ def journal_entry_wrapper(
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
     legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
+    legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     Easter_Egs(entry)
     if status_message is not None:
         this.message_label.text = status_message

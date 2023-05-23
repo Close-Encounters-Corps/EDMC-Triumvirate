@@ -107,6 +107,55 @@ def CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):#сде
         
         Reporter(url).start()
 
+
+def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
+    if entry['event'] != 'Scan':
+        return
+
+    if entry['ScanType'] == "Detailed":
+        if "Atmosphere" not in entry:
+            return
+
+        if "thin" in entry["Atmosphere"]:
+            SurfaceGrav = entry["SurfaceGravity"] / 10
+            if 0.6 >= SurfaceGrav:
+                url = 'https://docs.google.com/forms/d/e/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url'
+                url += '&entry.347011697=' + quote_plus(cmdr)
+                # if is_beta:
+                #    beta = 'Y'
+                # else:
+                #    beta = 'N'
+                # url+='&entry.1534486210=' + quote_plus(beta)
+                url += '&entry.1687350455=' + quote_plus(entry["BodyName"])
+                url += '&entry.1816286975=' + quote_plus(entry["PlanetClass"])
+                url += '&entry.511521292=' + quote_plus(entry["Atmosphere"])
+                url += '&entry.241360196=' + quote_plus(entry["Volcanism"] or "None")
+                url += '&entry.2023664263=' + quote_plus(str(SurfaceGrav).replace('.', ','))
+                url += '&entry.1625198123=' + quote_plus(str(entry["SurfaceTemperature"]).replace('.', ','))
+                url += '&entry.464017034=' + quote_plus(str(entry["SurfacePressure"]).replace('.', ','))
+                url += '&entry.1546311301=' + quote_plus(str(entry["WasDiscovered"]))
+                url += '&entry.1533734556=' + quote_plus(str(entry["WasMapped"]))
+                url += '&entry.1572906861=' + quote_plus(entry["StarSystem"])
+                Reporter(url).start()
+
+        if "gas giant" in entry["PlanetClass"]:
+            for component in entry["AtmosphereComposition"]:
+                if "Helium" in component["Name"]:
+                    url = 'https://docs.google.com/forms/d/e/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url'
+                    url += '&entry.262880086=' + quote_plus(entry["BodyName"])
+                    url += '&entry.808713567=' + quote_plus(str(component["Percent"]).replace('.', ','))
+                    url += '&entry.549950938=' + quote_plus(entry["StarSystem"])
+                    # https://docs.google.com/forms/d/e/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/viewform?usp=pp_url&entry.262880086=test&entry.808713567=test
+                    Reporter(url).start()
+
+    if "StarType" in entry:
+        # https://docs.google.com/forms/d/e/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/viewform?usp=pp_url&entry.422166846=%D0%B5%D1%83%D1%8B%D0%B5&entry.371313324=%D0%B5%D1%83%D1%8B%D0%B5
+        url = 'https://docs.google.com/forms/d/e/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url'
+        url += '&entry.422166846=' + quote_plus(entry["BodyName"])
+        url += '&entry.371313324=' + quote_plus(entry["StarType"])
+        url += '&entry.770073835=' + quote_plus(entry["StarSystem"])
+        Reporter(url).start()
+
      
 def AXZone(cmdr, is_beta, system,x,y,z,station, entry, state):#Сделано
     #{
