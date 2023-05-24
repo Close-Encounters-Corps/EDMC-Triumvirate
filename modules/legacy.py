@@ -115,6 +115,18 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
     if entry.get('event') != 'Scan':
         return
 
+    if "StarType" in entry:
+        url_params = {
+            "entry.422166846": entry.get("BodyName", ""),
+            "entry.371313324": entry.get("StarType", "") + str(entry.get("Subclass", "")) + entry.get("Luminosity"),
+            "entry.770073835": entry.get("StarSystem", ""),
+            "entry.1133676298": str(entry.get("SurfaceTemperature", "")),
+            "entry.786810023": str(entry.get("Age_MY"))
+
+        }
+        url = f'{URL_GOOGLE}/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+        Reporter(url).start()
+
     if entry.get('ScanType') == "Detailed" and entry.get("Atmosphere"):
         if "thin" in entry["Atmosphere"] and entry.get("SurfaceGravity", 0) / 10 <= 0.6:
             url_params = {
@@ -144,15 +156,6 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
                 }
                 url = f'{URL_GOOGLE}/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
                 Reporter(url).start()
-
-    if "StarType" in entry:
-        url_params = {
-            "entry.422166846": entry.get("BodyName", ""),
-            "entry.371313324": entry.get("StarType", ""),
-            "entry.770073835": entry.get("StarSystem", "")
-        }
-        url = f'{URL_GOOGLE}/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-        Reporter(url).start()
 
      
 def AXZone(cmdr, is_beta, system,x,y,z,station, entry, state):#Сделано
