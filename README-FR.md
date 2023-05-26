@@ -59,7 +59,7 @@ Collecte et analyse des informations sur les signaux extraterrestres détectés.
 
 Collecte et analyse des informations complètes sur le système actuel.
 
-## Élément de Code
+## Élément de Codex
 
 Collecte des informations sur les entrées du journal et les synchronise avec des services scientifiques externes tels que la [base de données Canonn] (https://api.canonn.tech/documentation) dans un mode d'échange volontaire.
 
