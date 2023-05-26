@@ -1,6 +1,6 @@
 ![Latest Release](https://img.shields.io/github/release/VAKazakov/EDMC-Triumvirate.svg)
 
-This ReadMe on other languages: [English](README-EN.md)
+This ReadMe on other languages: [English](README-EN.md), [French](README-FR.md)
 
 ![Triumvirate](https://user-images.githubusercontent.com/25157296/117574269-03a3d500-b0e5-11eb-901d-44a4812e2de0.png)
 
