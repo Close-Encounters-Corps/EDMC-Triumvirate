@@ -1,0 +1,8 @@
+/* Language name */
+"!Language" = "French";
+
+/* [load.py] */
+"В случае возникновения проблем с плагином \nили в случае, если Вы указали неправильную принадлежность к сообществу в опросной форме, \nпишите по адресу help@cec.org" = "Si vous rencontrez des problèmes avec le plugin ou si vous entrez la mauvaise appartenance communautaire dans le formulaire d'enquête, veuillez contacter help@cec.org";
+
+/* [load.py] */
+"Включить пасхалки" = "Activer les easter eggs";
