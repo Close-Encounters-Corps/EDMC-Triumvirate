@@ -2,7 +2,8 @@
  
 import tkinter as tk
 from tkinter import Frame
- 
+import logging
+
 import datetime
 import sys
 import threading
@@ -13,36 +14,30 @@ from .lib.conf import config
 
 
 class Debug:
+    log: logging.Logger = None
     debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
-    debugswitch = debugvar.get()
-    client = "Triumvirate"
-    lock = threading.Lock()
 
     @classmethod
-    def set_client(cls, client):
-        Debug.client = client
+    def setup(cls, log: logging.Logger):
+        cls.log = log
 
     @classmethod
     def p(cls, value):
-        cls.lock.acquire()
-        try:
-            print("{} [{}] {}".format(datetime.datetime.now(), Debug.client, str(value)))
-            sys.stdout.flush()
-        finally:
-            cls.lock.release()
+        cls.log.info(value)
 
     @classmethod
     def debug(cls, value, *args):
-        if cls.debugswitch == 1:
+        if cls.log.level <= logging.DEBUG:
             if args:
                 value = value.format(*args)
-            cls.p(value)
+            cls.log.debug(value)
 
     @classmethod
     def plugin_prefs(cls, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
         cls.debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
+        cls.log.level = logging.DEBUG if cls.debugvar.get() == 1 else logging.INFO
         cls.debugswitch = cls.debugvar.get()
 
         frame = nb.Frame(parent)
@@ -57,7 +52,7 @@ class Debug:
     def prefs_changed(cls):
         "Called when the user clicks OK on the settings dialog."
         config.set('CanonnDebug', cls.debugvar.get())
-        cls.debugswitch = cls.debugvar.get()
+        cls.log.level = logging.DEBUG if cls.debugvar.get() == 1 else logging.INFO
 
 
 def debug(value, *args):

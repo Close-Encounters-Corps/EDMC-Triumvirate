@@ -10,6 +10,7 @@ from contextlib import closing
 from datetime import datetime
 from tkinter import Frame
 from urllib.parse import quote_plus
+import logging
 
 ### third-party модули ###
 import requests
@@ -18,7 +19,7 @@ import requests
 import l10n
 import myNotebook as nb
 import plug
-from config import config
+from config import config, appname
 
 ### модули плагина ###
 from modules import clientreport, codex, factionkill
@@ -51,10 +52,24 @@ import settings
 
 _ = functools.partial(l10n.Translations.translate, context=__file__)
 
+logger = logging.getLogger(f'{appname}.{settings.plugin_name}')
+if not logger.hasHandlers():
+    level = logging.INFO
+    logger.setLevel(level)
+    logger_channel = logging.StreamHandler()
+    logger_formatter = logging.Formatter(f'%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(lineno)d:%(funcName)s: %(message)s')
+    logger_formatter.default_time_format = '%Y-%m-%d %H:%M:%S'
+    logger_formatter.default_msec_format = '%s.%03d'
+    logger_channel.setFormatter(logger_formatter)
+    logger.addHandler(logger_channel)
+
+
 # хранилище данных плагина
 context = contextlib.global_context
 # алиас для совместимости с легаси кодом
 this = context
+
+this.log = logger
 
 this.nearloc = {
     "Latitude": None,
@@ -78,14 +93,13 @@ this.DistFromStarLS = None
 this.SysFactionAllegiance = None  # variable for allegiance of
 # controlling faction
 this.Nag = 0
-this.cmdr_SQID = None  # variable for allegiance check
+# this.cmdr_SQID = None  # variable for allegiance check
 this.CMDR = None
 this.SQ = None
 this.SRVmode, this.Fightermode = False, False
 this.old_time = 0
 this.fuel = 0
 this.fuel_cons = 0.0
-this.AllowEasternEggs = None
 context.help_page_opened = False
 context.latest_dashboard_entry = None
 
@@ -94,22 +108,17 @@ def plugin_prefs(parent, cmdr, is_beta):
     """
     Return a TK Frame for adding to the EDMC settings dialog.
     """
-    this.AllowEasternEggsButton = tk.IntVar(value=config.getint("AllowEasterEggs"))
-    this.AllowEasternEggs = this.AllowEasternEggsButton.get()
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
 
-    context.by_class(news.CECNews).draw_settings(frame, cmdr, is_beta, 1)
-    context.by_class(release.Release).draw_settings(frame, cmdr, is_beta, 2)
-    context.by_class(patrol.PatrolModule).draw_settings(frame, cmdr, is_beta, 3)
-    Debug.plugin_prefs(frame, cmdr, is_beta, 4)
-    this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 5)
-    nb.Checkbutton(
-        frame, text="Включить пасхалки", variable=this.AllowEasternEggsButton
-    ).grid(row=6, column=0, sticky="NW")
-    hdreport.HDInspector(frame, cmdr, is_beta, this.client_version, 7)
-    nb.Label(frame, text=settings.support_message,).grid(row=9, column=0, sticky="NW")
-    context.cec_api.draw_settings(frame, cmdr, is_beta, 10)
+    # context.by_class(news.CECNews).draw_settings(frame, cmdr, is_beta, 1)
+    context.by_class(release.Release).draw_settings(frame, cmdr, is_beta, 1)
+    context.by_class(patrol.PatrolModule).draw_settings(frame, cmdr, is_beta, 2)
+    Debug.plugin_prefs(frame, cmdr, is_beta, 3)
+    this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 4)
+    hdreport.HDInspector(frame, cmdr, is_beta, this.client_version, 6)
+    nb.Label(frame, text=settings.support_message,).grid(row=8, column=0, sticky="NW")
+    # context.cec_api.draw_settings(frame, cmdr, is_beta, 9)
 
     return frame
 
@@ -121,9 +130,6 @@ def prefs_changed(cmdr, is_beta):
     for mod in context.modules:
         mod.on_settings_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
-    config.set("AllowEasterEggs", this.AllowEasternEggsButton.get())
-    this.AllowEasternEggs = this.AllowEasternEggsButton.get()
-
     Debug.prefs_changed()
 
 
@@ -153,9 +159,9 @@ def plugin_start3(plugin_dir):
     """
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
+    Debug.setup(logger)
     this.plugin_dir = plugin_dir
     # префикс логов
-    Debug.set_client("Triumvirate")
     codex.CodexTypes.plugin_start(plugin_dir)
     # в логах пишется с префиксом Triumvirate
     Debug.p("Plugin (v{}) loaded successfully.".format(this.version))
@@ -203,24 +209,22 @@ def plugin_app(parent):
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.systems_module = SystemsModule()
     this.canonn_rt_api = canonn_api.CanonnRealtimeApi()
-    this.cec_api = cec_api.CecApi(base_url=settings.cec_endpoint)
+    # this.cec_api = cec_api.CecApi(base_url=settings.cec_endpoint)
     this.modules = [
-        news.CECNews(table, 1),
-        release.Release(this.plugin_dir, table, this.version, 2),
-        patrol.PatrolModule(table, 3),
+        release.Release(this.plugin_dir, table, this.version, 1),
+        patrol.PatrolModule(table, 2),
+        # news.CECNews(table, 3),
         sos.SosModule(),
         this.systems_module,
         nhss.NHSSModule(),
         clientreport.ClientReportModule(),
-        this.cec_api,
+        # this.cec_api,
         fleetcarrier.FleetCarrierModule(),
         PlatformSender()
     ]
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     # лейбл, в котором содержится текст из вывода модулей
     this.message_label = message_label.MessageLabel(rows, row=5)
-    this.AllowEasterEggs = tk.IntVar(value=config.getint("AllowEasterEggs"))
-
     return frame
 
 
@@ -394,23 +398,8 @@ def journal_entry_wrapper(
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
     legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
     legacy.GusonExpeditions(cmdr, is_beta, system, entry)
-    Easter_Egs(entry)
     if status_message is not None:
         this.message_label.text = status_message
-
-
-def Easter_Egs(entry):
-    if this.AllowEasternEggs == True:
-        debug("Easter Check")
-        if (
-            entry["event"] == "HullDamage"
-            and entry["PlayerPilot"] == True
-            and entry["Fighter"] == False
-        ):  # and entry['PlayerPilot'] == True and entry["Fighter"] == False
-            if entry["Health"] < 0.3:
-                debug("plaing sound")
-                Player(this.plugin_dir, ["sounds\\hullAlarm.wav"]).start()
-
 
 def fuel_consumption(entry, old_fuel, old_timestamp, old_fuel_cons):
     # debug(old_timestamp==entry["timestamp"])
@@ -489,7 +478,7 @@ def dashboard_entry(cmdr, is_beta, entry):
     else:
         this.body_name = None
     debug(this.body_name)
-    this.cmdr_SQID = get_allegiance(cmdr, this.cmdr_SQID)
+    # this.cmdr_SQID = get_allegiance(cmdr, this.cmdr_SQID)
     # debug(this.cmdr_SQID)
 
 

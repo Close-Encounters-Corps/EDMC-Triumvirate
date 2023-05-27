@@ -100,10 +100,10 @@ states = {
 ########################
 ### release settings ###
 ########################
-release_gh_url = "https://github.com/VAKazakov/EDMC-Triumvirate/releases"
-release_gh_latest = "https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest"
-release_zip_template = "https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip"
-release_gh_ver_info = "https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/tags/{}"
+release_gh_url = "https://github.com/Close-Encounters-Corps/EDMC-Triumvirate/releases"
+release_gh_latest = "https://api.github.com/repos/Close-Encounters-Corps/EDMC-Triumvirate/releases/latest"
+release_zip_template = "https://github.com/Close-Encounters-Corps/EDMC-Triumvirate/archive/{}.zip"
+release_gh_ver_info = "https://api.github.com/repos/Close-Encounters-Corps/EDMC-Triumvirate/releases/tags/{}"
 
 #####################
 ### NHSS settings ###
@@ -114,6 +114,7 @@ nhss_canonn_url = "https://us-central1-canonn-api-236217.cloudfunctions.net/subm
 ### other ###
 #############
 support_message = """В случае возникновения проблем с плагином обращайтесь в дискорд Close Encounters Corps, канал #triumvirate_tech_support, в личные сообщения Казаков#4700 или на почтовый адрес help@cec.org"""
+plugin_name = "EDMC-Triumvirate"
 version = "1.9.0"
 
 try:

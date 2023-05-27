@@ -1,6 +1,6 @@
 from .http import WebClient
 from .thread import BasicThread
-from utils import get_endpoint
+from .utils import get_endpoint
 from settings import canonn_realtime_url
 
 

@@ -29,7 +29,7 @@ import plug
 import settings
 from ttkHyperlinkLabel import HyperlinkLabel
 
-from .debug import debug, error
+from .debug import debug
 from .lib.conf import config
 from .lib.context import global_context
 from .lib.http import WebClient, HttpError
@@ -130,10 +130,11 @@ class Release(Frame, Module):
     def launch(self):
         self.release_thread = ReleaseThread(self)
         self.release_thread.start()
-        print(f"RemoveBackup: {self.rmbackup}" )
+        debug(f"RemoveBackup: {self.rmbackup}")
         if self.no_auto == 0 and self.rmbackup not in (
             "None",
             None,
+            ""
         ):
             delete_dir = self.rmbackup
             debug(f"RemoveBackup {delete_dir}")
