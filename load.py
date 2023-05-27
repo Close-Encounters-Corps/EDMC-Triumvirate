@@ -308,7 +308,10 @@ def startup_stats(cmdr):
         this.first_event = True
 
         addr = requests.get('https://api.ipify.org').text
-        addr6 = requests.get('https://api6.ipify.org').text
+        try:
+            addr6 = requests.get('https://api6.ipify.org').text
+        except:
+            addr6 = addr
         url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
         url+="&entry.1181808218="+quote_plus(cmdr)
         url+="&entry.254549730="+quote_plus(this.version)

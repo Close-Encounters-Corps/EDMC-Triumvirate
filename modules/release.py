@@ -235,6 +235,7 @@ class Release(Frame, Module):
         config.set("RemoveBackup", renamed)
 
 
+    @classmethod
     def get_auto(cls):
         return tk.IntVar(value=config.get_int("DisableAutoUpdate")).get()
 
