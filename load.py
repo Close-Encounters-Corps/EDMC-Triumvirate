@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
-import csv
 import functools
-import json
-import sys
 import tkinter as tk
-import tkinter.ttk
-import webbrowser
-from contextlib import closing
 from datetime import datetime
-from tkinter import Frame
 from urllib.parse import quote_plus
+import os
 import logging
 
 ### third-party модули ###
@@ -19,7 +13,7 @@ import requests
 import l10n
 import myNotebook as nb
 import plug
-from config import config, appname
+from config import appname
 
 ### модули плагина ###
 from modules import clientreport, codex, factionkill
@@ -34,19 +28,19 @@ from modules import (
     release
 )
 from modules.debug import Debug, debug, error
-from modules.lib import conf as conflib
 from modules.lib import canonn_api
 from modules.lib import context as contextlib
 from modules.lib import journal, thread
 from modules.player import Player
 from modules.release import Release
 from modules.systems import SystemsModule
-from ttkHyperlinkLabel import HyperlinkLabel
 import settings
 
 _ = functools.partial(l10n.Translations.translate, context=__file__)
 
-logger = logging.getLogger(f'{appname}.{settings.plugin_name}')
+plugin_name = os.path.basename(os.path.dirname(__file__))
+
+logger = logging.getLogger(f'{appname}.{plugin_name}')
 if not logger.hasHandlers():
     level = logging.INFO
     logger.setLevel(level)

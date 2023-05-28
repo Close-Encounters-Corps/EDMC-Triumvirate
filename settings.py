@@ -114,7 +114,6 @@ nhss_canonn_url = "https://us-central1-canonn-api-236217.cloudfunctions.net/subm
 ### other ###
 #############
 support_message = """В случае возникновения проблем с плагином обращайтесь в дискорд Close Encounters Corps, канал #triumvirate_tech_support, в личные сообщения Казаков#4700 или на почтовый адрес help@cec.org"""
-plugin_name = "EDMC-Triumvirate"
 version = "1.9.0"
 
 try:
