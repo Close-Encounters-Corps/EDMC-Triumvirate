@@ -30,7 +30,6 @@ from modules import (
     journaldata,
     legacy,
     message_label,
-    nhss,
     patrol,
     release,
     sos
@@ -43,7 +42,6 @@ from modules.lib import journal, thread
 from modules.player import Player
 from modules.release import Release
 from modules.systems import SystemsModule
-from modules.platform_sender import PlatformSender
 from ttkHyperlinkLabel import HyperlinkLabel
 import settings
 
@@ -188,9 +186,7 @@ def plugin_app(parent):
         patrol.PatrolModule(table, 2),
         sos.SosModule(),
         this.systems_module,
-        nhss.NHSSModule(),
-        clientreport.ClientReportModule(),
-        PlatformSender()
+        clientreport.ClientReportModule()
     ]
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     # лейбл, в котором содержится текст из вывода модулей
