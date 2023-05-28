@@ -31,8 +31,7 @@ from modules import (
     legacy,
     message_label,
     patrol,
-    release,
-    sos
+    release
 )
 from modules.debug import Debug, debug, error
 from modules.lib import conf as conflib
@@ -184,7 +183,6 @@ def plugin_app(parent):
     this.modules = [
         release.Release(this.plugin_dir, table, this.version, 1),
         patrol.PatrolModule(table, 2),
-        sos.SosModule(),
         this.systems_module,
         clientreport.ClientReportModule()
     ]
