@@ -1,27 +1,24 @@
 ﻿import glob
 import json
+import math
 import os
-import requests
 import sys
 import threading
 import time
-import math
-from .debug import Debug
-from .debug import debug, error
+import tkinter as tk
+from tkinter import Button, Frame
+from urllib.parse import quote_plus
+
+import requests
+
 import modules.emitter
+from .lib.conf import config
+#from config import config
 from modules.emitter import Emitter
-from .systems import Systems
-from config import config
-try: #py3
-    import tkinter as tk
-    from tkinter import Button
-    from tkinter import Frame
-    from urllib.parse import quote_plus
-except: #py2
-    import Tkinter as tk
-    from Tkinter import Button
-    from Tkinter import Frame
-    from urllib import quote_plus
+
+from .debug import Debug, debug, error
+from .lib.context import global_context
+
 
 '''
 
@@ -142,7 +139,7 @@ class HDInspector(Frame):
         self.commander = cmdr
         self.is_beta = is_beta
         self.grid(row=gridrow, column=0)
-        self.button = Button(self, text="Нажмите сюда, что бы просканировать журнал на предмет Гиперперехватов")
+        self.button = Button(self, text="Нажмите, чтобы просканировать журнал на предмет гиперперехватов")
         self.button.bind('<Button-1>', self.run)
         self.button.grid(row=0, column=0)
         Emitter.setRoute(is_beta, client)
@@ -255,7 +252,8 @@ class hyperdictionDetector():
         if cls.state == 2:
             debug("Hyperdiction Detected")
             cls.show()
-            x, y, z = Systems.edsmGetSystem(system)
+            # TODO check for None
+            x, y, z = global_context.systems_module.get_system(system)
             modules.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postHDDetected",
                                 {"cmdr": cmdr, "system": system, "timestamp": timestamp, "x": x, "y": y, "z": z})
             plug.show_error("Hyperdiction: Exit to main menu")
@@ -295,8 +293,8 @@ def post_traffic(system, entry):
 
 
 def get_distance(a, b):
-    x, y, z = Systems.edsmGetSystem(a)
-    a, b, c = Systems.edsmGetSystem(b)
+    x, y, z = global_context.systems_module.get_system_coords(a)
+    a, b, c = global_context.systems_module.get_system_coords(b)
     return math.sqrt(math.pow(x - a, 2) + math.pow(y - b, 2) + math.pow(z - c, 2))
 
 
@@ -336,7 +334,7 @@ def submit(cmdr, is_beta, system, station, entry, client):
                 lastsystem = "Delphi"
 
             debug({"cmdr": cmdr, "system": lastsystem, "timestamp": tgtime})
-            x, y, z = Systems.edsmGetSystem(lastsystem)
+            x, y, z = global_context.systems_module.get_system_coords(lastsystem)
             # we are going to submit the hyperdiction here.
             modules.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postHD",
                                 {"cmdr": cmdr, "system": lastsystem, "timestamp": tgtime, "x": x, "y": y, "z": z})

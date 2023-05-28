@@ -1,21 +1,17 @@
 ﻿
 #coding=utf-8
-'''
-    Модуль, осуществляющий поиск сквадронов и пилотов в базах данных ЕГУ, а в случае не обнаружения отправляющий новые данные 
-'''
-try: #py3
-    import tkinter as tk
-    from tkinter import Frame
-except: #py2
-    import Tkinter as tk
-    from Tkinter import Frame
+
+import tkinter as tk
+from tkinter import Frame
+ 
 import uuid
 from ttkHyperlinkLabel import HyperlinkLabel
 import requests
 import json
 import re
 import myNotebook as nb
-from config import config
+from .lib.conf import config
+#from config import config
 import threading
 from .debug import debug
 from .debug import debug,error

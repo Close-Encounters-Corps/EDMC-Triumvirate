@@ -1,18 +1,17 @@
 ![Latest Release](https://img.shields.io/github/release/VAKazakov/EDMC-Triumvirate.svg)
 
-This ReadMe on other languages: [Русский](README.md)
+This ReadMe on other languages: [Русский](README.md), [French](README-FR.md)
 
 ![Triumvirate](https://user-images.githubusercontent.com/25157296/117574269-03a3d500-b0e5-11eb-901d-44a4812e2de0.png)
 
 # EDMC-Triumvirate
-Triumvirate plugin for EDMC, developed by Close Encounters Corps faction, is an important part of the overall ecosystem "Gehirn" (server-website-plugin-discord), acts as a universal tool for collecting and processing game data, allows you to track the influence in controlled faction systems, pinpoint tasks for the user on BGS, coordinate the work of pilots, notify colleagues about abnormal situations in long haul flights. In the future, this plugin will receive a number of improvements designed to further optimize the work of pilots in the vastness of the Galaxy.
-
+Triumvirate plugin for EDMC, developed by Close Encounters Corps, is an important part of the overall ecosystem "Gehirn" (server-site-plugin-discord), acts as a universal tool for collecting and processing game data, allows you to track the influence in controlled faction systems, pinpoint tasks for the user on BGS, coordinate the work of pilots, notify colleagues about abnormal situations in long haul flights. In the future, this plugin will receive a number of improvements designed to further optimize the work of pilots in the vastness of the Galaxy.
 
 ***Confidential user information, system characteristics and non-public personal data are not collected, stored or processed as a matter of principle.***
 
 # Pay attention:
 
-The functionality is guaranteed on Windows 10 and Windows 11 systems and NOT guaranteed on Windows 8 and below. Supports two user interface languages, Russian and English International. The EDMC Triumvirate plugin is strongly NOT compatible with the EDMC-Canonn plugin, EDMC-USS-Survey and the outdated EDMC-USS-Survey-Triumvirate-edition. The EDMC-Canonn plugin was originally integrated into Triumvirate, and we have also integrated transfer of collected scientific data not only to Canonn servers, but also to the addresses of other scientific organizations. A system of issuing and accounting for completed missions within the framework of the activity against the Club is working.
+The functionality is guaranteed on Windows 10 and Windows 11 systems. The EDMC Triumvirate plugin is strongly NOT compatible with the EDMC-Canonn plugin, EDMC-USS-Survey and the outdated EDMC-USS-Survey-Triumvirate-edition. The EDMC-Canonn plugin was originally integrated into Triumvirate, and we have also integrated support for Discord Presence, FCMC and the transfer of collected scientific data not only to Canonn servers, but also to the addresses of other scientific organizations. A system of issuing and accounting for completed missions within the framework of the activity against the Club is working.
 
 # Plugin features (will be updated as improvements are made)
 
@@ -20,11 +19,9 @@ The functionality is guaranteed on Windows 10 and Windows 11 systems and NOT gua
 
 ### The /sos command
 
-After the pilot will write in the game chat command "/sos" (in any case), the plugin will form and transmit to the faction discord chat* (in a dedicated channel) a data packet with the location, amount of fuel, location and time to empty tank. Thanks to this data, a pilot in a dangerous situation will be able to get fuel and refuel in time.
+After the pilot will write in the game chat command "/sos" (in any register), the plugin will generate and send to the faction discord chat* (in a specially designated channel) a data packet with the location, amount of fuel, location and time to empty tank. Thanks to this data, a pilot in a dangerous situation will be able to get fuel and will be refueled in a timely manner.
 
-ATTENTION: One request is enough, spamming requests will lead to their complete ignoring. After a single request, you need to go to the game menu and contact the Close Encounters Corps discord server to find out which pilot responded to your request. Requests from the "beginner" list systems are not accepted, due to the impossibility of arriving at them. Pilots found to be hostile to factions of the Close Encounters Corps Coalition, or found to have engaged in suspicious, provocative behavior, will not be serviced by the system.
-
-\*If you are an independent pilot (according to the plugin), are not listed as an enemy of the community, and do not engage in suspicious destructive activity, your request for help will be forwarded to Close Encounters Corps.
+\*If you are an independent pilot (according to the plugin), your request for help will be forwarded to Close Encounters Corps
 
 ## Element of the orienteering system (aka Patrol)
 
@@ -101,6 +98,6 @@ EDMC-Triumvirate use data from [Canonn API V2](https://docs.canonn.tech), [ED St
 
 EDMC-Triumvirate based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), with permission of initial developers.
 
-All Contents Copyright ©️ 2016-2023 Close Encounters Corps, Triumvirate. KAZAK0V, AntonyVern, Osmium. All Rights Reserved.
+All Contents Copyright ©️ 2016-2023 Close Encounters Corps, Triumvirate. KAZAK0V, AntonyVern, Osmium, Art-py. All Rights Reserved.
 
-Logo - Anton Vernitskiy aka AntonyVern/Automatic system.
+Logo - Anton Vernitskiy aka AntonyVern/Automatic system

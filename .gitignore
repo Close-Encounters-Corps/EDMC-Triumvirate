@@ -4,6 +4,8 @@
 /*.bat
 /data/EDMC-Canonn.patrol
 /EDMC.log
+/.venv
+/venv
 *.pyc
 /.vs/slnx.sqlite
 /.vs
@@ -15,6 +17,6 @@
 *.pyproj
 /EDMC-Triumvirate.sln
 /modules/modules.zip
-
+/settings_local.py
 .vscode
 /EDMC-Triumvirate.pyproj.user

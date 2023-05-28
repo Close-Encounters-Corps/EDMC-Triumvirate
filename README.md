@@ -1,6 +1,6 @@
 ![Latest Release](https://img.shields.io/github/release/VAKazakov/EDMC-Triumvirate.svg)
 
-This ReadMe on other languages: [English](README-EN.md)
+This ReadMe on other languages: [English](README-EN.md), [French](README-FR.md)
 
 ![Triumvirate](https://user-images.githubusercontent.com/25157296/117574269-03a3d500-b0e5-11eb-901d-44a4812e2de0.png)
 
@@ -102,6 +102,6 @@ EDMC-Triumvirate use data from [Canonn API V2](https://docs.canonn.tech), [ED St
 
 EDMC-Triumvirate based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), with permission of initial developers.
 
-All Contents Copyright ©️ 2016-2023 Close Encounters Corps, Triumvirate. KAZAK0V, AntonyVern, Osmium. All Rights Reserved.
+All Contents Copyright ©️ 2016-2023 Close Encounters Corps, Triumvirate. KAZAK0V, AntonyVern, Osmium, Art-py. All Rights Reserved.
 
 Logo - Антон Верницкий aka AntonyVern/Automatic system

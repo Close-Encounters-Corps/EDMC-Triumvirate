@@ -11,10 +11,10 @@ import requests
 import sys
 import json
 from modules.emitter import Emitter
-import modules.emitter
-from .debug import Debug
-from .debug import debug, error
-from .systems import Systems
+from urllib.parse import quote_plus
+import urllib.parse as urlparse
+from .debug import debug,error
+from .lib.context import global_context
 import random
 import time
 
@@ -73,8 +73,8 @@ class fssEmitter(Emitter):
 
     def gSubmitAXCZ(self, payload):
         p = payload.copy()
-        p["x"], p["y"], p["z"] = Systems.edsmGetSystem(
-            payload.get("systemName"))
+        # TODO check for None
+        p["x"], p["y"], p["z"] = global_context.systems_module.get_system_coords(payload["systemName"])
         if p.get("isBeta"):
             p["isBeta"] = 'Y'
         else:
@@ -118,29 +118,28 @@ class fssEmitter(Emitter):
 
         self.getExcluded()
 
-        FSSSignalDiscovered = (self.entry.get(
-            "event") == "FSSSignalDiscovered")
-        USS = ("$USS" in self.entry.get("SignalName"))
-        isStation = (self.entry.get("IsStation"))
-        FleetCarrier = (self.entry.get("SignalName") and self.entry.get(
-            "SignalName")[-4] == '-' and isStation)
-        life_event = ("$Fixed_Event_Life" in self.entry.get("SignalName"))
-        excluded = fssEmitter.excludefss.get(self.entry.get("SignalName"))
+        FSSSignalDiscovered=(self.entry.get("event") == "FSSSignalDiscovered")
+        USS=("$USS" in self.entry.get("SignalName"))
+        FleetCarrier=(self.entry.get("SignalName_Localised")[-4] == '-')
+        isStation=(self.entry.get("IsStation"))
+        FleetCarrier = (self.entry.get("SignalName_Localised")[-4] == '-' and isStation)
+        life_event=("$Fixed_Event_Life" in self.entry.get("SignalName"))
+        excluded=fssEmitter.excludefss.get(self.entry.get("SignalName"))
 
         # don't bother sending USS
         if FSSSignalDiscovered and not USS and not FleetCarrier:
             canonn.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postFSSSignal",
-                                {
-                                    "signalname": self.entry.get("SignalName"),
-                                    "signalNameLocalised": self.entry.get("SignalName_Localised"),
-                                    "cmdr": self.cmdr,
-                                    "system": self.system,
-                                    "x": self.x,
-                                    "y": self.y,
-                                    "z": self.z,
-                                    "raw_json": self.entry,
-                                })
-
+                        {
+                            "signalname": self.entry.get("SignalName"),
+                            "signalNameLocalised": self.entry.get("SignalName_Localised"),
+                            "cmdr": self.cmdr,
+                            "system": self.system,
+                            "x": self.x,
+                            "y": self.y,
+                            "z": self.z,
+                            "raw_json": self.entry,
+                        })
+            
         # is this a code entry and do we want to record it?
         # We don't want to record any that don't begin with $ and and with ;
         if FSSSignalDiscovered and not excluded and not USS and not isStation and '$' in self.entry.get("SignalName"):

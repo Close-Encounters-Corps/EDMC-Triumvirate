@@ -1,322 +1,245 @@
 ﻿"""
-Module to provide the news.
+Модуль, который отвечает за проверку обновлений плагина и их автоматическую установку.
+
+Как примерно работает:
+1. при запуске класса поднимается фоновый поток, который периодически
+    проверяет GitHub на новые релизы.
+2. Появился релиз с новой версией -- сообщеаем об этом в окне EDMC.
+3. Если включено автообновление -- скачиваем и распаковываем архив с ним.
 """
 
-
-try:
-    import tkinter as tk    
-    from tkinter import Frame
-    from io import BytesIO
-    from io import StringIO
-except:
-    import Tkinter as tk    
-    from Tkinter import Frame
-    import StringIO
-    import StringIO as BytesIO
-import uuid
-from ttkHyperlinkLabel import HyperlinkLabel
-import requests
-import json
-import re
-import myNotebook as nb
-from config import config
-import zipfile
+from enum import Enum
 import io
+import json
 import os
-import shutil
-import threading
-from  .player import Player
-from .debug import debug
-from .debug import debug,error
-import plug
 import random
+import re
+import shutil
+import sys
+import tkinter as tk
+import uuid
+import zipfile
+from io import BytesIO, StringIO
+from tkinter import Frame
 
-RELEASE_CYCLE = 60 * 1000 * 60 # 1 Hour
-DEFAULT_URL = 'https://github.com/VAKazakov/EDMC-Triumvirate/releases'
+import requests
+
+import myNotebook as nb
+import plug
+import settings
+from ttkHyperlinkLabel import HyperlinkLabel
+
+from .debug import debug
+from .lib.conf import config
+from .lib.context import global_context
+from .lib.http import WebClient, HttpError
+from .lib.module import Module
+from .lib.thread import Thread, BasicThread
+from .lib.version import Version
+from .player import Player
+
+RELEASE_CYCLE = 60 * 1000 * 60  # 1 Hour
 WRAP_LENGTH = 200
 
-def _callback(matches):
-    id = matches.group(1)
-    try:
-        return chr(int(id))
-    except:
-        return id
 
+class Environment(Enum):
+    DEVELOPMENT = "DEVELOPMENT"
+    STAGING = "STAGING"
+    LIVE = "LIVE"
 
-def decode_unicode_references(data):
-    return re.sub("&#(\d+)(;|(?=\s))", _callback, data)
 
 class ReleaseLink(HyperlinkLabel):
-
     def __init__(self, parent):
 
-        HyperlinkLabel.__init__(self,
+        super().__init__(
             parent,
             text="Поиск",
-            url=DEFAULT_URL,
+            url=settings.release_gh_url,
             wraplength=50,  # updated in __configure_event below
-            anchor=tk.NW)
-        self.bind('<Configure>', self.__configure_event)
+            anchor=tk.NW,
+        )
+        self.bind("<Configure>", self.__configure_event)
 
     def __configure_event(self, event):
         "Handle resizing."
 
         self.configure(wraplength=event.width)
-    
-class ReleaseThread(threading.Thread):
+
+
+class ReleaseThread(Thread):
     def __init__(self, release):
-        threading.Thread.__init__(self)
+        super().__init__()
         self.release = release
-    
-    def run(self):
-        debug("Release: UpdateThread")
-        self.release.release_pull()
-        
-        
-class Release(Frame):
 
-    def __init__(self, parent, release, gridrow):
-        "Initialise the ``News``."
+    def do_run(self):
+        while 1:
+            self.release.check_updates()
+            if self.release.installed:
+                return
+            self.sleep(RELEASE_CYCLE)
 
-        padx, pady = 10, 5  # formatting
+
+class SimpleThread(Thread):
+    def __init__(self, target):
+        super().__init__()
+        self.target = target
+
+    def do_run(self):
+        self.target()
+
+
+class Release(Frame, Module):
+    def __init__(self, plugin_dir, parent, version, gridrow):
+
         sticky = tk.EW + tk.N  # full width, stuck to the top
-        anchor = tk.NW        
-        
-        Frame.__init__(
-            self,
-            parent
-        )
-        
+
+        super().__init__(parent)
+
+        self.plugin_dir = plugin_dir
+
         self.installed = False
-        
-        self.auto = tk.IntVar(value=config.getint("AutoUpdate"))                
-        self.novoices = tk.IntVar(value=config.getint("NoVoices"))                
-        self.rmbackup = tk.IntVar(value=config.getint("RemoveBackup"))                
-        
+
+        self.no_auto = tk.IntVar(value=config.get_int("DisableAutoUpdate"))
+        self.rmbackup = tk.StringVar(value=config.get_str("RemoveBackup"))
+        self.no_auto = self.no_auto.get()
+        self.rmbackup = self.rmbackup.get()
+
         self.columnconfigure(1, weight=1)
-        self.grid(row = gridrow, column = 0, sticky="NSEW",columnspan=2)
-        
-        self.label = tk.Label(self, text=  _("Версия:"))
-        self.label.grid(row = 0, column = 0, sticky=sticky)
-        
-        
+        self.grid(row=gridrow, column=0, sticky="NSEW", columnspan=2)
+
+        self.label = tk.Label(self, text="Версия:")
+        self.label.grid(row=0, column=0, sticky=sticky)
+
         self.hyperlink = ReleaseLink(self)
-        self.hyperlink.grid(row = 0, column = 1,sticky="NSEW")
-        
-        self.button = tk.Button(self, text=_("Нажмите чтобы обновить"), command=self.click_installer)
-        self.button.grid(row = 1, column = 0,columnspan=2,sticky="NSEW")
+        self.hyperlink.grid(row=0, column=1, sticky="NSEW")
+
+        self.button = tk.Button(
+            self, text="Нажмите чтобы обновить", command=self.download
+        )
+        self.button.grid(row=1, column=0, columnspan=2, sticky="NSEW")
         self.button.grid_remove()
         
-        self.release = release
-        self.news_count = 0
-        self.news_pos = 0
-        self.minutes = 0
+        self.version = Version(version)
+        self.env = None
+        self.release_thread = None
         self.latest = {}
-        self.update()
-        #self.hyperlink.bind('<Configure>',
-        #self.hyperlink.configure_event)
-        
-        debug(config.get('Canonn:RemoveBackup'))
-        
-        if self.rmbackup.get() == 0 and config.get('Canonn:RemoveBackup') != "None":
-            delete_dir = config.get('Canonn:RemoveBackup')
-            debug('Canonn:RemoveBackup {}'.format(delete_dir))
-            try:
-                shutil.rmtree(delete_dir)
-                
-            except:
-                error("Cant delete {}".format(delete_dir))
-                
-            ## lets not keep trying
-            config.set('Canonn:RemoveBackup',"None")
-            
-        
-    def update(self):    
-        self.release_thread()
-        self.after(1000, self.release_update)
-        
-    def version2number(self,version):
-        major,minor,patch = version.split('.')
-        return (int(major) * 1000000) + (int(minor) * 1000) + int(patch)
+        if config.getint("DisableAutoUpdate") == 0:
+            self.launch()
+        BasicThread(target=self.update_release_env).start()
 
-    def release_thread(self):    
-        ReleaseThread(self).start()
-        
-    def release_pull(self):
-        self.latest = {}
-        r = requests.get("https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest")
-        latest = r.json()
-        #debug(latest)
-        if not r.status_code == requests.codes.ok:
-            
-            error("Error fetching release from github")
-            error(r.status_code)
-            error(r.json())
-            
-        else:
-            self.latest = latest
-            debug("latest release downloaded")
-       
-        
-        
-    def release_update(self):
+    def launch(self):
+        self.release_thread = ReleaseThread(self)
+        self.release_thread.start()
+        debug(f"RemoveBackup: {self.rmbackup}")
+        if self.no_auto == 0 and self.rmbackup not in (
+            "None",
+            None,
+            ""
+        ):
+            delete_dir = self.rmbackup
+            debug(f"RemoveBackup {delete_dir}")
+            shutil.rmtree(delete_dir)
+            # lets not keep trying
+            config.set("RemoveBackup", "None")
 
-        # if we have just installed a
-        # new version we can end the
-        # cycle
-        if not self.installed:
-            
-            if self.latest:
-                debug("Latest is not null")
-                
-                
-                #checjed again in an
-                #hour
-                self.after(RELEASE_CYCLE, self.update)    
-                
-                #self.latest=requests.get("https://api.github.com/repos/VAKazakov/EDMC-Triumvirate/releases/latest").json()
-                
-                current = self.version2number(self.release)
-                release = self.version2number(self.latest.get("tag_name"))
-                
-                self.hyperlink['url'] = self.latest.get("html_url")
-                self.hyperlink['text'] = "EDMC-Triumvirate: {}".format(self.latest.get("tag_name"))
-
-                if current == release:
-                    self.grid_remove()
-                elif current > release:
-                    self.hyperlink['text']= _("Тестовая версия {}").format(self.release)                     
-                    self.grid()
-                    
-                else:
-                    
-                    if self.auto.get() == 1:
-                        self.hyperlink['text'] = _("Версия {}  установлена. Пожалуйста, перезапустите EDMC").format(self.latest.get("tag_name"))     
-                        
-                        if self.installer():
-                            self.hyperlink['text'] = _("Версия {}  установлена. Пожалуйста, перезапустите EDMC").format(self.latest.get("tag_name"))     
-                        else:
-                            self.hyperlink['text'] = _("Обновление до версии {} не удалось").format(self.latest.get("tag_name"))     
-                        
-                    else:
-                        self.hyperlink['text'] = _("Пожалуйста поставьте версию {}").format(self.latest.get("tag_name"))
-                        self.button.grid()
-                        if self.novoices.get() != 1:
-                            nag_sel = random.randint(0,1)
-                            if nag_sel == 1:
-                                Player(Release.plugin_dir,["sounds\\nag1.wav"]).start()
-                            else: Player(Release.plugin_dir,["sounds\\nag0.wav"]).start()
-                    self.grid()
-            else:
-                debug("Latest is null")
-                self.after(1000,self.release_update)
-    
-    def plugin_prefs(self, parent, cmdr, is_beta,gridrow):
+    def draw_settings(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
-        self.auto = tk.IntVar(value=config.getint("AutoUpdate"))
-        self.rmbackup = tk.IntVar(value=config.getint("RemoveBackup"))
-        self.novoices = tk.IntVar(value=config.getint("NoVoices"))
-        
+        self.no_auto = tk.IntVar(value=config.get_int("DisableAutoUpdate"))
+        self.rmbackup = tk.StringVar(value=config.get_str("RemoveBackup"))
+
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
-        frame.grid(row = gridrow, column = 0,sticky="NSEW")
-        nb.Checkbutton(frame, text=_("Включить автообновление"), variable=self.auto).grid(row = 0, column = 0,sticky="NW")
-        nb.Checkbutton(frame, text=_("Хранить бекапы версий"), variable=self.rmbackup).grid(row = 0, column = 1,sticky="NW")
-        nb.Checkbutton(frame, text=_("Отключить голосовые сообщения"), variable=self.novoices).grid(row = 0, column = 2,sticky="NW")
-        
+        frame.grid(row=gridrow, column=0, sticky="NSEW")
+        nb.Checkbutton(
+            frame, text="Отключить автообновление", variable=self.no_auto
+        ).grid(row=0, column=0, sticky="NW")
+        nb.Checkbutton(
+            frame, text="Хранить бекапы версий", variable=self.rmbackup
+        ).grid(row=0, column=1, sticky="NW")
+
         return frame
 
-    def prefs_changed(self, cmdr, is_beta):
+    def on_settings_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set('AutoUpdate', self.auto.get())      
-        config.set('RemoveBackup', self.rmbackup.get())      
-        config.set('NoVoices', self.novoices.get())   
-        
+        config.set("DisableAutoUpdate", self.no_auto.get())
+        config.set("RemoveBackup", self.rmbackup.get())
+        # остановка и запуск потока обновления (при необходимости)
+        BasicThread(target=self.restart_thread).start()
 
-
-    #def versionInSettings(self,
-    #parent, cmdr,
-    #is_beta,version,gridrow):
-     #   frame = nb.Frame(parent)
-      #  nb.Label(frame, text="Current
-      #  version is"+version)
-        
-    def click_installer(self):
-        self.button.grid_remove()
-                
-        if self.installer():
-            self.hyperlink['text'] = _("Релиз {}  Установлен, пожалуйста перезагрузите EDMC").format(self.latest.get("tag_name"))     
+    def restart_thread(self):
+        self.release_thread.STOP = True
+        self.release_thread.join()
+        if config.getint("DisableAutoUpdate") == 0:
+            self.grid()
+            self.release_thread = ReleaseThread(self)
+            self.release_thread.start()
         else:
-            self.hyperlink['text'] = _("Релиз {}  Не установлен, ошибка").format(self.latest.get("tag_name"))     
-        
-        
-    def installer(self):
-        # need to add some defensive
-        # code around this
-        tag_name = self.latest.get("tag_name")
-        
-        debug("Installing {}".format(tag_name))
-        
-        new_plugin_dir = os.path.join(os.path.dirname(Release.plugin_dir),"EDMC-Triumvirate-{}".format(tag_name))
-        
-        debug("Checking for pre-existence")
-        if os.path.isdir(new_plugin_dir):
-            error("Download already exists: {}".format(new_plugin_dir))
-            plug.show_error("Triumvirate upgrade failed")
-            return False
-                
+            self.grid_remove()
+
+    def update_release_env(self) -> Environment:
         try:
-            debug("Downloading new version")
-            download = requests.get("https://github.com/VAKazakov/EDMC-Triumvirate/archive/{}.zip".format(tag_name), stream=True)
-            try:
-                z = zipfile.ZipFile(io.BytesIO(download.content))
-                z.extractall(os.path.dirname(Release.plugin_dir))
-            except:
-                z = zipfile.ZipFile(io.StringIO.StringIO(download.content))
-                z.extractall(os.path.dirname(Release.plugin_dir))
-        except:
-            error("Download failed: {}".format(new_plugin_dir))
-            plug.show_error("Triumvirate upgrade failed")
-            return False
-        
-        #If we got this far then we
-        #have a new plugin so any
-        #failures and we will need to
-        #delete it
-        
-        debug("disable the current plugin")
+            resp = WebClient().get(settings.release_gh_ver_info.format(self.version))
+        except HttpError as e:
+            resp = e.response
+            if resp.status_code == 404:
+                debug("Release not in GitHub")
+                self.env = Environment.DEVELOPMENT
+                return
+            else:
+                raise
+        data = resp.json()
+        if data["prerelease"]:
+            self.env = Environment.STAGING
+        else:
+            self.env = Environment.LIVE
+
+    def check_updates(self):
+        if self.installed:
+            return
+        url = settings.release_gh_latest
+        client = WebClient()
+        data = client.get(url).json()
+        latest_tag = data["tag_name"]
+        latest_version = Version(latest_tag)
+        self.hyperlink["url"] = data["html_url"]
+        self.hyperlink["text"] = f"EDMC-Triumvirate: {latest_tag}"
+        if latest_version == self.version:
+            self.grid_remove()
+            return
+        elif latest_version < self.version:
+            self.hyperlink["text"] = f"Тестовая версия {self.version.raw_value}"
+            return
+        if self.no_auto.get() == 1:
+            debug("Automatic update disabled.")
+            # self.notify()
+            return
+        self.download(latest_tag)
+
+    def download(self, tag):
+        debug("Downloading version {}", tag)
+        url = settings.release_zip_template.format(tag)
+        new_plugin_dir = f"EDMC-Triumvirate-{tag}"
+        client = WebClient()
+        response = client.get(url, stream=True)
         try:
-            os.rename(Release.plugin_dir,str("{}.disabled".format(Release.plugin_dir)))
-            debug("Renamed {} to {}".format(Release.plugin_dir,"{}.disabled".format(Release.plugin_dir)))
-        except:
-            error("Upgrade failed reverting: {}".format(new_plugin_dir))
-            plug.show_error("Canonn upgrade failed")
-            shutil.rmtree(new_plugin_dir)
-            return False
-        
-        
-        if self.rmbackup.get() == 0:
-            config.set('Canonn:RemoveBackup',"{}.disabled".format(Release.plugin_dir))
-            
-        debug("Upgrade complete")    
-            
-        Release.plugin_dir = new_plugin_dir
+            zf = zipfile.ZipFile(response.raw)
+            zf.extractall(os.path.dirname(self.plugin_dir))
+        finally:
+            response.close()
+        renamed = f"{self.plugin_dir}.disabled"
+        os.rename(self.plugin_dir, renamed)
+        debug("Upgrade completed.")
+        self.plugin_dir = new_plugin_dir
         self.installed = True
-        
-        return True
-        
-    @classmethod            
+        config.set("RemoveBackup", renamed)
+
+
+    @classmethod
     def get_auto(cls):
-        return tk.IntVar(value=config.getint("AutoUpdate")).get()
-        
-    @classmethod    
-    def plugin_start(cls,plugin_dir):
-        cls.plugin_dir = plugin_dir
+        return tk.IntVar(value=config.get_int("DisableAutoUpdate")).get()
 
 
-
-
-
-
-
+    def notify(self):
+        sound = random.choice(["sounds/nag1.wav", "sounds/nag2.wav"])
+        Player(self.plugin_dir, [sound]).start()

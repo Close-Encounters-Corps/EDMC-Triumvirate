@@ -1,41 +1,44 @@
 ﻿# -*- coding: utf-8 -*-
-try: #Py3
-    import tkinter as tk
-    from tkinter import Frame
-except: #py2
-    import Tkinter as tk
-    from Tkinter import Frame
-import myNotebook as nb
-from config import config
-import datetime 
+ 
+import tkinter as tk
+from tkinter import Frame
+import logging
+
+import datetime
 import sys
+import threading
+
+import myNotebook as nb
+from .lib.conf import config
+#from config import config
+
 
 class Debug:
+    log: logging.Logger = None
     debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
-    debugswitch = debugvar.get()
-    client = "Triumvirate"
 
     @classmethod
-    def setClient(cls, client):
-        Debug.client = client
+    def setup(cls, log: logging.Logger):
+        cls.log = log
 
     @classmethod
     def p(cls, value):
-        print("{} [{}] {}".format(datetime.datetime.now(), Debug.client, str(value)))
-        sys.stdout.flush()
+        cls.log.info(value)
 
     @classmethod
-    def debug(cls, value):
-        if cls.debugswitch == 1:
-            cls.p(value)
+    def debug(cls, value, *args):
+        if cls.log.level <= logging.DEBUG:
+            if args:
+                value = value.format(*args)
+            cls.log.debug(value)
 
     @classmethod
-    def plugin_prefs(cls, parent, client, gridrow):
+    def plugin_prefs(cls, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
         cls.debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
+        cls.log.level = logging.DEBUG if cls.debugvar.get() == 1 else logging.INFO
         cls.debugswitch = cls.debugvar.get()
-        Debug.client = client
 
         frame = nb.Frame(parent)
         frame.columnconfigure(1, weight=1)
@@ -49,13 +52,12 @@ class Debug:
     def prefs_changed(cls):
         "Called when the user clicks OK on the settings dialog."
         config.set('CanonnDebug', cls.debugvar.get())
-        cls.debugswitch = cls.debugvar.get()
+        cls.log.level = logging.DEBUG if cls.debugvar.get() == 1 else logging.INFO
 
 
-def debug(value):
-    Debug.debug(value)
+def debug(value, *args):
+    Debug.debug(value, *args)
 
 
 def error(value):
-    Debug.p(value) 
-
+    Debug.p(value)

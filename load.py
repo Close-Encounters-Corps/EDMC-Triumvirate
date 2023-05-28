@@ -1,75 +1,84 @@
 # -*- coding: utf-8 -*-
-from modules.player import Player
-from ttkHyperlinkLabel import HyperlinkLabel
-import functools
-import l10n
-from datetime import datetime
-import modules.Discord as Discord
-from config import config
-import myNotebook as nb
-import requests
-import json
-import webbrowser
-from modules import journaldata
-from modules import factionkill
-from modules import nhss
-from modules import codex
-from modules import hdreport
-from modules import news
-from modules import release
-from modules.release import Release
-from modules import legacy
-
-from modules import clientreport
-from modules import fssreports
-from modules import fssreports
-from modules import fleet_carrier
-from modules import patrol
-from modules import friendfoe as FF
-from modules.systems import Systems
-from modules.debug import Debug
-from modules.debug import debug
-
-from modules import materialReport
-from contextlib import closing
-from modules.whitelist import whiteList
 import csv
-import plug
-import modules.Commands
+import functools
+import json
 import sys
-this = sys.modules[__name__]
-try:  # Py3
-    import tkinter.ttk
-    import tkinter as tk
-    from tkinter import Frame
-    from urllib.parse import quote_plus
-    this.py3 = True
-except:  # py2
-    import ttk
-    import Tkinter as tk
-    from Tkinter import Frame
-    from urllib import quote_plus
-    this.py3 = False
+import tkinter as tk
+import tkinter.ttk
+import webbrowser
+from contextlib import closing
+from datetime import datetime
+from tkinter import Frame
+from urllib.parse import quote_plus
+import logging
 
+### third-party модули ###
+import requests
+
+### модули EDMC ###
+import l10n
+import myNotebook as nb
+import plug
+from config import config, appname
+
+### модули плагина ###
+from modules import clientreport, codex, factionkill
+from modules import friendfoe as FF
+from modules import (
+    fssreports,
+    hdreport,
+    journaldata,
+    legacy,
+    message_label,
+    patrol,
+    release
+)
+from modules.debug import Debug, debug, error
+from modules.lib import conf as conflib
+from modules.lib import canonn_api
+from modules.lib import context as contextlib
+from modules.lib import journal, thread
+from modules.player import Player
+from modules.release import Release
+from modules.systems import SystemsModule
+from ttkHyperlinkLabel import HyperlinkLabel
+import settings
 
 _ = functools.partial(l10n.Translations.translate, context=__file__)
 
+logger = logging.getLogger(f'{appname}.{settings.plugin_name}')
+if not logger.hasHandlers():
+    level = logging.INFO
+    logger.setLevel(level)
+    logger_channel = logging.StreamHandler()
+    logger_formatter = logging.Formatter(f'%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(lineno)d:%(funcName)s: %(message)s')
+    logger_formatter.default_time_format = '%Y-%m-%d %H:%M:%S'
+    logger_formatter.default_msec_format = '%s.%03d'
+    logger_channel.setFormatter(logger_formatter)
+    logger.addHandler(logger_channel)
+
+
+# хранилище данных плагина
+context = contextlib.global_context
+# алиас для совместимости с легаси кодом
+this = context
+
+this.log = logger
+
 this.nearloc = {
-    'Latitude': None,
-    'Longitude': None,
-    'Altitude': None,
-    'Heading': None,
-    'Time': None
+    "Latitude": None,
+    "Longitude": None,
+    "Altitude": None,
+    "Heading": None,
+    "Time": None,
 }
 
 
-myPlugin = 'EDMC-Triumvirate'
+myPlugin = "EDMC-Triumvirate"
 
-
-
-this.version = '1.2.7'
+this.version = settings.version
 this.SQNag = 0
-this.client_version = '{}.{}'.format(myPlugin, this.version)
+this.client_version = "{}.{}".format(myPlugin, this.version)
 this.body = None
 this.body_name = None
 
@@ -78,163 +87,74 @@ this.DistFromStarLS = None
 this.SysFactionAllegiance = None  # variable for allegiance of
 # controlling faction
 this.Nag = 0
-this.cmdr_SQID = None  # variable for allegiance check
+# this.cmdr_SQID = None  # variable for allegiance check
 this.CMDR = None
+this.SQ = None
 this.SRVmode, this.Fightermode = False, False
 this.old_time = 0
 this.fuel = 0
-this.fuel_cons = 0
-this.AllowEasternEggs = None
+this.fuel_cons = 0.0
+context.help_page_opened = False
+context.latest_dashboard_entry = None
 
 
 def plugin_prefs(parent, cmdr, is_beta):
-    '''
+    """
     Return a TK Frame for adding to the EDMC settings dialog.
-    '''
-    this.AllowEasternEggsButton = tk.IntVar(
-        value=config.getint("AllowEasterEggs"))
-    this.AllowEasternEggs = this.AllowEasternEggsButton.get()
+    """
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
 
-    this.news.plugin_prefs(frame, cmdr, is_beta, 1)
-    this.release.plugin_prefs(frame, cmdr, is_beta, 2)
-    this.patrol.plugin_prefs(frame, cmdr, is_beta, 3)
-    Debug.plugin_prefs(frame, this.client_version, 4)
-    this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 5)
-    nb.Checkbutton(frame, text=_("Включить пасхалки"), variable=this.AllowEasternEggsButton).grid(
-        row=6, column=0, sticky="NW")
-    hdreport.HDInspector(frame, cmdr, is_beta, this.client_version, 7)
-    # release.versionInSettings(frame,
-    # cmdr, is_beta,8)
-   # entry=nb.Entry(frame,None)
-    nb.Label(frame, text=_("В случае возникновения проблем с плагином \nили в случае, если Вы поставили неправильное сообщество в гугл-форме, \nпишите в личку Дискорда Казаков#4700")).grid(row=9, column=0, sticky="NW")
+    # context.by_class(news.CECNews).draw_settings(frame, cmdr, is_beta, 1)
+    context.by_class(release.Release).draw_settings(frame, cmdr, is_beta, 1)
+    context.by_class(patrol.PatrolModule).draw_settings(frame, cmdr, is_beta, 2)
+    Debug.plugin_prefs(frame, cmdr, is_beta, 3)
+    this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 4)
+    hdreport.HDInspector(frame, cmdr, is_beta, this.client_version, 6)
+    nb.Label(frame, text=settings.support_message,).grid(row=8, column=0, sticky="NW")
 
     return frame
 
 
 def prefs_changed(cmdr, is_beta):
-    '''
+    """
     Save settings.
-    '''
-    this.news.prefs_changed(cmdr, is_beta)
-    this.release.prefs_changed(cmdr, is_beta)
-    this.patrol.prefs_changed(cmdr, is_beta)
+    """
+    for mod in context.modules:
+        mod.on_settings_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
-    config.set('AllowEasterEggs', this.AllowEasternEggsButton.get())
-    this.AllowEasternEggs = this.AllowEasternEggsButton.get()
-
     Debug.prefs_changed()
 
 
-SQ = None
-
-
-def Alegiance_get(CMDR, SQ_old):
-
-    global SQ
-    if CMDR != this.CMDR:
-        debug("Community Check started")
-        url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"
-        with closing(requests.get(url, stream=True)) as r:
-            try:
-                reader = csv.reader(r.content.splitlines(),
-                                    delimiter='\t')  # .decode('utf-8')
-                next(reader)
-            except:
-                reader = csv.reader(r.content.decode(
-                    'utf-8').splitlines(), delimiter='\t')
-                next(reader)
-
-            for row in reader:
-                debug(row)
-                cmdr, squadron, SQID = row
-
-                if cmdr == CMDR:
-                    try:
-                        SQ = SQID
-                        debug("your SQID is " + str(SQ))
-                    except:
-                        error("Set SQID Failed")
-
-        if SQ != None:
-            debug("SQ ID IS OK")
-            this.CMDR = CMDR
-            Discord.SQID_set(SQ)
-            this.patrol.SQID_set(SQ)  # Функция для отправки данных о
-            # сквадроне в модули, использовать как
-            # шаблон
-            return SQ
-        else:
-            if this.Nag == 0:
-                debug("SQID need to be instaled")
-                url = "https://docs.google.com/forms/d/e/1FAIpQLSeERKxF6DlrQ3bMqFdceycSlBV0kwkzziIhYD0ctDzrytm8ug/viewform?usp=pp_url"
-                url += "&entry.42820869=" + quote_plus(CMDR)
-                this.Nag = this.Nag + 1
-                debug("SQID " + str(url))
-                webbrowser.open(url)
-    else:
-        return SQ_old
-
-
 def plugin_start3(plugin_dir):
-    '''
-    Load Template plugin into EDMC
-    '''
-
-    # print this.patrol
-    plugin_dir = str(plugin_dir)
-    release.Release.plugin_start(plugin_dir)
-    Debug.setClient(this.client_version)
-    this.patrol.CanonnPatrol.plugin_start(plugin_dir)
-    codex.CodexTypes.plugin_start(plugin_dir)
+    """
+    EDMC вызывает эту функцию при первом запуске плагина (Python 3).
+    """
+    Debug.setup(logger)
     this.plugin_dir = plugin_dir
+    # префикс логов
+    codex.CodexTypes.plugin_start(plugin_dir)
+    # в логах пишется с префиксом Triumvirate
+    Debug.p("Plugin (v{}) loaded successfully.".format(this.version))
+    return "Triumvirate-{}".format(this.version)
 
-    return 'Triumvirate-{}'.format(this.version)
 
 
 def plugin_start(plugin_dir):
-    '''
-    Load Template plugin into EDMC
-    '''
-    plugin_dir = unicode(plugin_dir)
-    # except: pass
-    release.Release.plugin_start(plugin_dir)
-    Debug.setClient(this.client_version)
-    this.patrol.CanonnPatrol.plugin_start(plugin_dir)
-    codex.CodexTypes.plugin_start(plugin_dir)
-    this.plugin_dir = plugin_dir
-
-    return 'Triumvirate-{}-Py2-mode'.format(this.version)
+    """
+    EDMC вызывает эту функцию при первом запуске плагина в режиме Python 2.
+    """
+    raise EnvironmentError("Плагин несовместим с версиями EDMC младше 3.50 beta0.")
 
 
 def plugin_stop():
-    '''
+    """
     EDMC is closing
-    '''
-    debug('Stopping the plugin')
-    this.patrol.plugin_stop()
-
-
-class EDMCLink(HyperlinkLabel):
-
-    def __init__(self, parent):
-
-        HyperlinkLabel.__init__(self,
-                                parent,
-                                text="Пожалуйста, поставьте EDMC версии 3.5 или выше по этой ссылке",
-                                url="https://github.com/Marginal/EDMarketConnector/releases",
-                                popup_copy=True,
-                                # wraplength=50, # updated
-                                # in __configure_event below
-                                anchor=tk.NW)
-        # self.bind('<Configure>',
-        # self.__configure_event)
-
-    def __configure_event(self, event):
-        "Handle resizing."
-
-        self.configure(wraplength=event.width)
+    """
+    debug("Stopping the plugin")
+    for mod in context.modules:
+        mod.close()
+    thread.Thread.stop_all()
 
 
 def kill_notification():
@@ -245,45 +165,31 @@ def kill_notification():
 
 
 def plugin_app(parent):
-
     this.parent = parent
-    # create a new frame as a containier
-    # for the status
-    padx, pady = 10, 5  # formatting
-    sticky = tk.EW + tk.N  # full width, stuck to the top
-    anchor = tk.NW
 
     frame = this.frame = tk.Frame(parent)
     frame.columnconfigure(0, weight=1)
 
-    table = tk.Frame(frame)
-    table.columnconfigure(1, weight=1)
-    table.grid(sticky='NSEW')
-    # if this.py3 == False:
-    #    tk.Label(table)
-    #    this.wrongEDMCBanner = tk.Label(table,text=u"Устаревшая версия EDMC!",fg="red")
-    #    this.wrongEDMCBanner.grid(row=0, column=0, columnspan=1, sticky="NSEW")
-    #    this.wrongEDMCBanner.config(font=("Arial Black", 22))
-    #    this.wrongEDMCBannerInstructions = tk.Label(table,text="Плагин работает на несовместимой версии EDMC, \nработа всех функций не гарантируется",fg="red")
-    #    this.wrongEDMCBannerInstructions.grid(row=1, column=0, columnspan=1, sticky="NSEW")
-    #    this.wrongEDMCBannerInstructions.config(font=("Arial Black", 8))
-    #    this.hyperlink = EDMCLink(table)
-    #    this.hyperlink.grid(row = 2, column = 0)
-    #    this.button = tk.Button(table, text="Нажмите, что бы скрыть предупреждение",command=kill_notification)
-    #    this.button.grid(row=3,column = 0)
-    #    this.hyperdiction = hdreport.hyperdictionDetector.setup(table,4)
-    # else:
-    this.codexcontrol = codex.CodexTypes(table, 0)
-    this.news = news.CECNews(table, 1)
-    this.release = release.Release(table, this.version, 2)
-    this.patrol = patrol.CanonnPatrol(table, 3)
-    this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
-    whitelist = whiteList(parent)
-    whitelist.fetchData()
-    # for plugin in plug.PLUGINS:
-    #    debug(str(plugin.name)+str(plugin.get_app)+str(plugin.get_prefs))
-    this.AllowEasterEggs = tk.IntVar(value=config.getint("AllowEasterEggs"))
+    rows = tk.Frame(frame)
+    rows.grid_columnconfigure(1, weight=1)
+    rows.grid(sticky="NSEW")
 
+
+    table = tk.Frame(rows)
+    table.columnconfigure(2, weight=1)
+    table.grid(sticky="NSEW")
+    this.codexcontrol = codex.CodexTypes(table, 0)
+    this.systems_module = SystemsModule()
+    this.canonn_rt_api = canonn_api.CanonnRealtimeApi()
+    this.modules = [
+        release.Release(this.plugin_dir, table, this.version, 1),
+        patrol.PatrolModule(table, 2),
+        this.systems_module,
+        clientreport.ClientReportModule()
+    ]
+    this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
+    # лейбл, в котором содержится текст из вывода модулей
+    this.message_label = message_label.MessageLabel(rows, row=5)
     return frame
 
 
@@ -299,15 +205,12 @@ def Squadronsend(CMDR, entry):
 
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
-    '''
-
-    '''
     # capture some stats when we launch
     # not read for that yet
     startup_stats(cmdr)
 
     if "SystemFaction" in entry:
-        ''' "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }'''
+        """ "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }"""
         SystemFaction = entry.get("SystemFaction")
         # debug(SystemFaction)
         try:
@@ -327,7 +230,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         debug("SysFaction's allegiance is" + str(this.SysFactionAllegiance))
 
     if "DistFromStarLS" in entry:
-        '''"DistFromStarLS":144.821411'''
+        """"DistFromStarLS":144.821411"""
         try:
             this.DistFromStarLS = entry.get("DistFromStarLS")
         except:
@@ -335,111 +238,147 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
         debug("DistFromStarLS=" + str(this.DistFromStarLS))
 
     if entry.get("event") == "FSDJump":
-        Systems.storeSystem(system, entry.get("StarPos"))
         this.DistFromStarLS = None
         this.body = None
 
-    if ('Body' in entry):
-        this.body = entry['Body']
-        debug(this.body)
+    if "Body" in entry:
+        this.body = entry["Body"]
+        debug("Body: {}", this.body)
 
     if entry["event"] == "JoinedSquadron":
         Squadronsend(cmdr, entry["SquadronName"])
 
-    if system:
-        x, y, z = Systems.edsmGetSystem(system)
-    else:
-        x = None
-        y = None
-        z = None
+    thread.BasicThread(
+        target=lambda: journal_entry_wrapper(
+            cmdr,
+            is_beta,
+            system,
+            this.SysFactionState,
+            this.SysFactionAllegiance,
+            this.DistFromStarLS,
+            station,
+            entry,
+            state,
+            this.body_name,
+            this.nearloc["Latitude"],
+            this.nearloc["Longitude"],
+            this.client_version,
+        )
+    ).start()
 
-    return journal_entry_wrapper(cmdr, is_beta, system, this.SysFactionState, this.SysFactionAllegiance, this.DistFromStarLS, station, entry,
-                                 state, x, y, z, this.body_name, this.nearloc[
-                                     'Latitude'], this.nearloc['Longitude'],
-                                 this.client_version)
-    # Now Journal_entry_wrapper take
-    # additional variable
-    # this.SysFactionState,
-    # this.SysFactionAllegiance, and
-    # this.DistFromStarLS
+def startup_stats(cmdr):
+    try:
+        this.first_event
+    except:
+        this.first_event = True
 
+        addr = requests.get('https://api.ipify.org').text
+        try:
+            addr6 = requests.get('https://api6.ipify.org').text
+        except:
+            addr6 = addr
+        url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
+        url+="&entry.1181808218="+quote_plus(cmdr)
+        url+="&entry.254549730="+quote_plus(this.version)
+        url+="&entry.1622540328="+quote_plus(addr)
+        if addr6 != addr:
+            url+="&entry.488844173="+quote_plus(addr6)
+        else:
+            url+="&entry.488844173="+quote_plus("0")
+        url+="&entry.1210213202="+str(Release.get_auto())
 
-def journal_entry_wrapper(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, state, x, y, z, body,
-                          lat, lon, client):
-    '''
+        legacy.Reporter(url).start()
+
+def journal_entry_wrapper(
+    cmdr,
+    is_beta,
+    system,
+    SysFactionState,
+    SysFactionAllegiance,
+    DistFromStarLS,
+    station,
+    entry,
+    state,
+    body,
+    lat,
+    lon,
+    client,
+):
+    """
     Detect journal events
-    '''
-    # Если мне нужен вывод данных из
-    # модулей в строку состояния
-    # коннектора, я должен применить
-    # конструкцию Return= Return or
-    # <Вызов модуля>
-    Return = None
+    """
+    x, y, z = None, None, None
+    if system:
+        val = this.systems_module.get_system_coords(system)
+        if val is not None:
+            x, y, z = val
 
-    #Блокировка работы альфа версии:
-    if is_beta:
-        return
+    journal_entry = journal.JournalEntry(
+        cmdr=cmdr,
+        is_beta=is_beta,
+        system=system,
+        sys_faction_state=SysFactionState,
+        sys_faction_allegiance=SysFactionAllegiance,
+        dist_from_star=DistFromStarLS,
+        station=station,
+        data=entry,
+        state=state,
+        body=body,
+        lat=lat,
+        lon=lon,
+        client=client,
+    )
+    status_message = None
     factionkill.submit(cmdr, is_beta, system, station, entry, client)
-    nhss.submit(cmdr, is_beta, system, station, entry, client)
     hdreport.submit(cmdr, is_beta, system, station, entry, client)
     codex.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
-    fssreports.submit(cmdr, is_beta, system, x, y, z,
-                      entry, body, lat, lon, client)
-    fleet_carrier.submit(cmdr, is_beta, system, x, y, z,
-                         entry, body, lat, lon, client)
-    journaldata.submit(cmdr, is_beta, system, station,
-                       entry, client, body, lat, lon)
-    clientreport.submit(cmdr, is_beta, client, entry)
-    this.patrol.journal_entry(
-        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client)
+    fssreports.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
+    journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
+    if journal_entry.data["event"] in {"SendText", "ReceiveText"}:
+        for mod in context.enabled_modules:
+            # TODO переписать на менеджер контекста?
+            try:
+                val = mod.on_chat_message(journal_entry)
+            except Exception as e:
+                error(
+                    f"Error while sending chat message to module {mod}: {e}"
+                )
+            status_message = status_message or val
+    else:
+        for mod in context.enabled_modules:
+            val = mod.on_journal_entry(journal_entry)
+            status_message = status_message or val
     this.codexcontrol.journal_entry(
-        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client)
-    whiteList.journal_entry(cmdr, is_beta, system, station,
-                            entry, state, x, y, z, body, lat, lon, client)
-    materialReport.submit(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, x, y, z, body, lat,
-                          lon, client)
+        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
+    )
     codex.saaScan.journal_entry(
-        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client)
+        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
+    )
 
-    # Triumvirate reporting
-    # FF.FriendFoe.friendFoe(cmdr,
-    # system, station, entry, state)
-    Return = Return or modules.Commands.commands(cmdr, is_beta, system, SysFactionState, DistFromStarLS, station,
-                                                 entry, state, x, y, z, body, lat, lon, client, this.fuel, this.fuel_cons, this.SRVmode, this.Fightermode)
     # legacy logging to google sheets
     legacy.statistics(cmdr, is_beta, system, station, entry, state)
-    legacy.CodexEntry(cmdr, is_beta, system, x, y, z,
-                      entry, body, lat, lon, client)
+    legacy.CodexEntry(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
     legacy.AXZone(cmdr, is_beta, system, x, y, z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
     legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
-    test(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance,
-         DistFromStarLS, station, entry, state, x, y, z, body, lat, lon, client)
-    Easter_Egs(entry)
-    return Return
-
-
-def test(cmdr, is_beta, system, SysFactionState, SysFactionAllegiance, DistFromStarLS, station, entry, state, x, y, z, body, lat, lon, client):
-    pass
-
-
-def Easter_Egs(entry):
-    if this.AllowEasternEggs == True:
-        debug("Easter Check")
-        # and entry['PlayerPilot'] == True and entry["Fighter"] == False
-        if entry['event'] == "HullDamage" and entry['PlayerPilot'] == True and entry["Fighter"] == False:
-            if entry['Health'] < 0.3:
-                debug("plaing sound")
-                Player(this.plugin_dir, ["sounds\\hullAlarm.wav"]).start()
-
+    legacy.GusonExpeditions(cmdr, is_beta, system, entry)
+    if status_message is not None:
+        this.message_label.text = status_message
 
 def fuel_consumption(entry, old_fuel, old_timestamp, old_fuel_cons):
     # debug(old_timestamp==entry["timestamp"])
     if entry["timestamp"] != old_timestamp and old_fuel != 0:
         try:
-            fuel_cons = ((old_fuel["FuelMain"] + old_fuel["FuelReservoir"]) - (entry["Fuel"]["FuelMain"] + entry["Fuel"]["FuelReservoir"])
-                         ) / float((datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ") - old_timestamp).total_seconds())
+            fuel_cons = (
+                (old_fuel["FuelMain"] + old_fuel["FuelReservoir"])
+                - (entry["Fuel"]["FuelMain"] + entry["Fuel"]["FuelReservoir"])
+            ) / float(
+                (
+                    datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+                    - old_timestamp
+                ).total_seconds()
+            )
         except ZeroDivisionError:
             return old_fuel_cons
         # debug("Fuel consumption is
@@ -456,23 +395,23 @@ this.plug_start = False
 
 
 def dashboard_entry(cmdr, is_beta, entry):
-    debug(entry)
+    # debug("Dashboard entry: {}", entry)
+    context.latest_dashboard_entry = entry
     if this.plug_start == 0:
         this.plug_start = 1
-        this.fuel = entry["Fuel"]
-        this.old_time = datetime.strptime(
-            entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+        this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
     try:
-        debug("Checking fuel consumption " + str(this.FuelCount))
-        if this.FuelCount == 10:
-            this.fuel_cons = fuel_consumption(
-                entry, this.fuel, this.old_time, this.fuel_cons)
-            this.old_time = datetime.strptime(
-                entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
-            this.fuel = entry["Fuel"]
-            this.FuelCount = 0
-        else:
-            this.FuelCount += 1
+        debug("Checking fuel consumption {}", this.FuelCount)
+        if entry.get("Fuel") is not None:
+            if this.FuelCount == 10:
+                this.fuel_cons = fuel_consumption(
+                    entry, this.fuel, this.old_time, this.fuel_cons
+                )
+                this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+                this.fuel = entry["Fuel"]
+                this.FuelCount = 0
+            else:
+                this.FuelCount += 1
     except NameError:
         # debug("Can't check fuel
         # consumption, waiting for
@@ -482,50 +421,35 @@ def dashboard_entry(cmdr, is_beta, entry):
     # debug("Dashboard update
     # "+str(entry["Fuel"]))
 
-    this.landed = entry['Flags'] & 1 << 1 and True or False
-    this.SCmode = entry['Flags'] & 1 << 4 and True or False
-    this.SRVmode = entry['Flags'] & 1 << 26 and True or False
-    this.Fightermode = entry['Flags'] & 1 << 25 and True or False
+    this.landed = entry["Flags"] & 1 << 1 and True or False
+    this.SCmode = entry["Flags"] & 1 << 4 and True or False
+    this.SRVmode = entry["Flags"] & 1 << 26 and True or False
+    this.Fightermode = entry["Flags"] & 1 << 25 and True or False
     this.landed = this.landed or this.SRVmode
     # print 'LatLon =
     # {}'.format(entry['Flags'] &
     # 1<<21 and True or False)
     # print entry
-    if(entry['Flags'] & 1 << 21 and True or False):
-        if('Latitude' in entry):
-            this.nearloc['Latitude'] = entry['Latitude']
-            this.nearloc['Longitude'] = entry['Longitude']
+    if entry["Flags"] & 1 << 21 and True or False:
+        if "Latitude" in entry:
+            this.nearloc["Latitude"] = entry["Latitude"]
+            this.nearloc["Longitude"] = entry["Longitude"]
     else:
 
-        this.nearloc['Latitude'] = None
-        this.nearloc['Longitude'] = None
+        this.nearloc["Latitude"] = None
+        this.nearloc["Longitude"] = None
     if entry.get("BodyName"):
         this.body_name = entry.get("BodyName")
     else:
         this.body_name = None
     debug(this.body_name)
-    this.cmdr_SQID = Alegiance_get(cmdr, this.cmdr_SQID)
-    # debug(this.cmdr_SQID)
 
-    def cmdr_data(data, is_beta):
-        '''
-        We have new data on our commander
-        '''
-        #debug("def cmdr_data")
-        # CAPIDebug=json.dumps(data,indent=4)
-        # debug(CAPIDebug)
-        this.patrol.cmdr_data(data, is_beta)
+def cmdr_data(data, is_beta):
+    """
+    We have new data on our commander
+    """
+    for mod in context.enabled_modules:
+        mod.on_cmdr_data(data, is_beta)
 
 
-def startup_stats(cmdr):
-    try:
-        this.first_event
-    except:
-        this.first_event = True
 
-        url = "https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
-        url += "&entry.1181808218=" + quote_plus(cmdr)
-        url += "&entry.254549730=" + quote_plus(this.version)
-        url += "&entry.1210213202=" + quote_plus(str(Release.get_auto()))
-
-        legacy.Reporter(url).start()

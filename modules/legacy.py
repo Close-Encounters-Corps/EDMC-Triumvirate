@@ -9,7 +9,10 @@ except:#py2
 import sys
 from  math import sqrt,pow,trunc
 from .debug import debug
-from .debug import debug,error
+from .debug import debug, error
+
+
+URL_GOOGLE = 'https://docs.google.com/forms/d/e'
 
 
 class Reporter(threading.Thread):
@@ -106,6 +109,53 @@ def CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):#сде
                 
         
         Reporter(url).start()
+
+
+def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
+    if entry.get('event') != 'Scan':
+        return
+
+    if "StarType" in entry:
+        url_params = {
+            "entry.422166846": entry.get("BodyName", ""),
+            "entry.371313324": entry.get("StarType", "") + str(entry.get("Subclass", "")) + entry.get("Luminosity"),
+            "entry.770073835": entry.get("StarSystem", ""),
+            "entry.1133676298": str(entry.get("SurfaceTemperature", "")),
+            "entry.786810023": str(entry.get("Age_MY"))
+
+        }
+        url = f'{URL_GOOGLE}/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+        Reporter(url).start()
+
+    if entry.get('ScanType') == "Detailed" and entry.get("Atmosphere"):
+        if "thin" in entry["Atmosphere"] and entry.get("SurfaceGravity", 0) / 10 <= 0.6:
+            url_params = {
+                "entry.347011697": cmdr,
+                "entry.1687350455": entry.get("BodyName", ""),
+                "entry.1816286975": entry.get("PlanetClass", ""),
+                "entry.511521292": entry.get("Atmosphere", ""),
+                "entry.241360196": entry.get("Volcanism", "None"),
+                "entry.2023664263": str(entry.get("SurfaceGravity", 0) / 10).replace('.', ','),
+                "entry.1625198123": str(entry.get("SurfaceTemperature", 0)).replace('.', ','),
+                "entry.464017034": str(entry.get("SurfacePressure", 0)).replace('.', ','),
+                "entry.1546311301": str(entry.get("WasDiscovered", "")),
+                "entry.1533734556": str(entry.get("WasMapped", "")),
+                "entry.1572906861": entry.get("StarSystem", "")
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+            Reporter(url).start()
+
+        if "gas giant" in entry.get("PlanetClass", ""):
+            helium_components = [component for component in entry.get("AtmosphereComposition", []) if
+                                 "Helium" in component.get("Name", "")]
+            if helium_components:
+                url_params = {
+                    "entry.262880086": entry.get("BodyName", ""),
+                    "entry.808713567": str(helium_components[0].get("Percent", 0)).replace('.', ','),
+                    "entry.549950938": entry.get("StarSystem", "")
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+                Reporter(url).start()
 
      
 def AXZone(cmdr, is_beta, system,x,y,z,station, entry, state):#Сделано
