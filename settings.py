@@ -3,10 +3,10 @@ bgs_tasks_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQQZFJ4O0nb3L1W
 edsm_poi_url = "https://www.edsm.net/en/galactic-mapping/json"
 edsm_url = "https://www.edsm.net"
 
-####################
-### CEC SETTINGS ###
-####################
-cec_endpoint = "https://closeencounterscorps.org"
+#####################
+### CEC ENDPOINTS ###
+#####################
+galaxy_url = "https://api-galaxy.closeencounterscorps.org"
 
 ###################
 ### CANONN URLS ###

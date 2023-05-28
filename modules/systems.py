@@ -1,13 +1,12 @@
 ﻿import settings
 from .lib.module import Module
 from .lib.cache import Cache
-from .lib.http import HttpError
-from .lib.context import global_context
-from .lib.cec_api import CecApi
+from .lib.http import WebClient
+from .debug import Debug
 
-
-class SystemsModule(Module):
+class SystemsModule(WebClient, Module):
     def __init__(self):
+        super().__init__(settings.galaxy_url)
         self.cache = Cache(max_size=1024)
         self.cache.start()
 
@@ -26,14 +25,10 @@ class SystemsModule(Module):
                 return self.cache[system]
 
     def fetch_system(self, system):
-        try:
-            data = global_context.by_class(CecApi).fetch(
-                "/v1/system", 
-                require_token=True, 
-                params={"name": system}
-            )
+        resp = self.get("/api/v1/lookup", params={"name": system})
+        if resp.status_code == 200:
+            data = resp.json()
             return data["x"], data["y"], data["z"]
-        except HttpError as err:
-            if err.response.status_code != 404:
-                raise err
-            return None # system not found
+        if resp.status_code != 400:
+            Debug.p(f"fetch_system failed with code {resp.status_code}: {resp.text}")
+        return None

@@ -30,19 +30,16 @@ from modules import (
     journaldata,
     legacy,
     message_label,
-    news,
     nhss,
     patrol,
     release,
-    sos,
-    fleetcarrier
+    sos
 )
 from modules.debug import Debug, debug, error
 from modules.lib import conf as conflib
 from modules.lib import canonn_api
 from modules.lib import context as contextlib
 from modules.lib import journal, thread
-from modules.lib import cec_api
 from modules.player import Player
 from modules.release import Release
 from modules.systems import SystemsModule
@@ -118,7 +115,6 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 4)
     hdreport.HDInspector(frame, cmdr, is_beta, this.client_version, 6)
     nb.Label(frame, text=settings.support_message,).grid(row=8, column=0, sticky="NW")
-    # context.cec_api.draw_settings(frame, cmdr, is_beta, 9)
 
     return frame
 
@@ -131,28 +127,6 @@ def prefs_changed(cmdr, is_beta):
         mod.on_settings_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
     Debug.prefs_changed()
-
-
-def get_allegiance(CMDR, SQ_old):
-    if this.CMDR is None:
-        user = context.cec_api.fetch("/v1/whoami", require_token=True)
-        if user is None and not context.help_page_opened:
-            debug("Token not found, redirecting to help page")
-            url = settings.cec_endpoint + "/help"
-            context.help_page_opened = True
-            webbrowser.open(url)
-            return
-        context.CMDR = CMDR
-        debug("Faction: {}", user["faction"])
-        faction = user["faction"]
-        if faction is not None:
-            context.SQ = faction["shortName"]
-        else:
-            context.SQ = "N/A"
-        context.by_class(patrol.PatrolModule).sqid = context.SQ
-        return context.SQ
-    else:
-        return SQ_old
 
 
 def plugin_start3(plugin_dir):
@@ -209,17 +183,13 @@ def plugin_app(parent):
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.systems_module = SystemsModule()
     this.canonn_rt_api = canonn_api.CanonnRealtimeApi()
-    # this.cec_api = cec_api.CecApi(base_url=settings.cec_endpoint)
     this.modules = [
         release.Release(this.plugin_dir, table, this.version, 1),
         patrol.PatrolModule(table, 2),
-        # news.CECNews(table, 3),
         sos.SosModule(),
         this.systems_module,
         nhss.NHSSModule(),
         clientreport.ClientReportModule(),
-        # this.cec_api,
-        fleetcarrier.FleetCarrierModule(),
         PlatformSender()
     ]
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
@@ -358,9 +328,6 @@ def journal_entry_wrapper(
         station=station,
         data=entry,
         state=state,
-        x=x,
-        y=y,
-        z=z,
         body=body,
         lat=lat,
         lon=lon,
@@ -481,9 +448,6 @@ def dashboard_entry(cmdr, is_beta, entry):
     else:
         this.body_name = None
     debug(this.body_name)
-    # this.cmdr_SQID = get_allegiance(cmdr, this.cmdr_SQID)
-    # debug(this.cmdr_SQID)
-
 
 def cmdr_data(data, is_beta):
     """
