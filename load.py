@@ -154,10 +154,11 @@ def Alegiance_get(CMDR, SQ_old):
             debug("SQ ID IS OK")
             this.CMDR = CMDR
             try:
-                this.patrol.SQID_set(SQ)  # Функция для отправки данных о
+                this.patrol.sqid = SQ  # Функция для отправки данных о
                 # сквадроне в модули, использовать как
                 # шаблон
             except:
+                logger.error("error setting SQID", exc_info=1)
                 pass
             return SQ
         else:
