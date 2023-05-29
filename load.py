@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import csv
 import functools
 import tkinter as tk
 from datetime import datetime
 from urllib.parse import quote_plus
+from contextlib import closing
 import os
 import logging
+import webbrowser
 
 ### third-party модули ###
 import requests
@@ -81,7 +84,7 @@ this.DistFromStarLS = None
 this.SysFactionAllegiance = None  # variable for allegiance of
 # controlling faction
 this.Nag = 0
-# this.cmdr_SQID = None  # variable for allegiance check
+this.cmdr_SQID = None  # variable for allegiance check
 this.CMDR = None
 this.SQ = None
 this.SRVmode, this.Fightermode = False, False
@@ -118,6 +121,55 @@ def prefs_changed(cmdr, is_beta):
         mod.on_settings_changed(cmdr, is_beta)
     this.codexcontrol.prefs_changed(cmdr, is_beta)
     Debug.prefs_changed()
+
+
+def Alegiance_get(CMDR, SQ_old):
+
+    global SQ
+    if CMDR != this.CMDR:
+        debug("Community Check started")
+        url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"
+        with closing(requests.get(url, stream=True)) as r:
+            try:
+                reader = csv.reader(r.content.splitlines(),
+                                    delimiter='\t')  # .decode('utf-8')
+                next(reader)
+            except:
+                reader = csv.reader(r.content.decode(
+                    'utf-8').splitlines(), delimiter='\t')
+                next(reader)
+
+            for row in reader:
+                debug(row)
+                cmdr, squadron, SQID = row
+
+                if cmdr == CMDR:
+                    try:
+                        SQ = SQID
+                        debug("your SQID is " + str(SQ))
+                    except:
+                        error("Set SQID Failed")
+
+        if SQ != None:
+            debug("SQ ID IS OK")
+            this.CMDR = CMDR
+            try:
+                this.patrol.SQID_set(SQ)  # Функция для отправки данных о
+                # сквадроне в модули, использовать как
+                # шаблон
+            except:
+                pass
+            return SQ
+        else:
+            if this.Nag == 0:
+                debug("SQID need to be instaled")
+                url = "https://docs.google.com/forms/d/e/1FAIpQLSeERKxF6DlrQ3bMqFdceycSlBV0kwkzziIhYD0ctDzrytm8ug/viewform?usp=pp_url"
+                url += "&entry.42820869=" + quote_plus(CMDR)
+                this.Nag = this.Nag + 1
+                debug("SQID " + str(url))
+                webbrowser.open(url)
+    else:
+        return SQ_old
 
 
 def plugin_start3(plugin_dir):
@@ -175,9 +227,11 @@ def plugin_app(parent):
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.systems_module = SystemsModule()
     this.canonn_rt_api = canonn_api.CanonnRealtimeApi()
+    rel = release.Release(this.plugin_dir, table, this.version, 1)
+    this.patrol = patrol.PatrolModule(table, 2)
     this.modules = [
-        release.Release(this.plugin_dir, table, this.version, 1),
-        patrol.PatrolModule(table, 2),
+        rel,
+        this.patrol,
         this.systems_module,
         clientreport.ClientReportModule()
     ]
@@ -439,6 +493,7 @@ def dashboard_entry(cmdr, is_beta, entry):
         this.body_name = entry.get("BodyName")
     else:
         this.body_name = None
+    this.cmdr_SQID = Alegiance_get(cmdr, this.cmdr_SQID)
     debug(this.body_name)
 
 def cmdr_data(data, is_beta):
