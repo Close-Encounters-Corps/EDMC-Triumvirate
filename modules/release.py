@@ -101,8 +101,8 @@ class Release(Frame, Module):
 
         self.no_auto = tk.IntVar(value=config.get_int("DisableAutoUpdate"))
         self.rmbackup = tk.StringVar(value=config.get_str("RemoveBackup"))
-        self.no_auto = self.no_auto.get()
-        self.rmbackup = self.rmbackup.get()
+        self.no_auto_val = self.no_auto.get()
+        self.rmbackup_val = self.rmbackup.get()
 
         self.columnconfigure(1, weight=1)
         self.grid(row=gridrow, column=0, sticky="NSEW", columnspan=2)
@@ -130,13 +130,13 @@ class Release(Frame, Module):
     def launch(self):
         self.release_thread = ReleaseThread(self)
         self.release_thread.start()
-        debug(f"RemoveBackup: {self.rmbackup}")
-        if self.no_auto == 0 and self.rmbackup not in (
+        debug(f"RemoveBackup: {self.rmbackup_val}")
+        if self.no_auto_val == 0 and self.rmbackup_val not in (
             "None",
             None,
             ""
         ):
-            delete_dir = self.rmbackup
+            delete_dir = self.rmbackup_val
             debug(f"RemoveBackup {delete_dir}")
             shutil.rmtree(delete_dir)
             # lets not keep trying
@@ -152,10 +152,10 @@ class Release(Frame, Module):
         frame.columnconfigure(2, weight=1)
         frame.grid(row=gridrow, column=0, sticky="NSEW")
         nb.Checkbutton(
-            frame, text="Отключить автообновление", variable=self.no_auto
+            frame, text="Отключить автообновление", variable=self.no_auto_val
         ).grid(row=0, column=0, sticky="NW")
         nb.Checkbutton(
-            frame, text="Хранить бекапы версий", variable=self.rmbackup
+            frame, text="Хранить бекапы версий", variable=self.rmbackup_val
         ).grid(row=0, column=1, sticky="NW")
 
         return frame
@@ -210,7 +210,7 @@ class Release(Frame, Module):
         elif latest_version < self.version:
             self.hyperlink["text"] = f"Тестовая версия {self.version.raw_value}"
             return
-        if self.no_auto.get() == 1:
+        if self.no_auto_val == 1:
             debug("Automatic update disabled.")
             # self.notify()
             return
