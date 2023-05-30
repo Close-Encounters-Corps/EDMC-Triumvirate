@@ -291,7 +291,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
 
     if "Body" in entry:
         this.body = entry["Body"]
-        debug("Body: {}", this.body)
+        logger.debug(f"Body: {this.body}")
 
     if entry["event"] == "JoinedSquadron":
         Squadronsend(cmdr, entry["SquadronName"])

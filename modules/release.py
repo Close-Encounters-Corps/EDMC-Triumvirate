@@ -100,7 +100,7 @@ class Release(Frame, Module):
         self.installed = False
 
         self.no_auto = tk.IntVar(value=config.get_int("DisableAutoUpdate"))
-        self.rmbackup = tk.StringVar(value=config.get_str("RemoveBackup"))
+        self.rmbackup = tk.StringVar(value=config.get_int("RemoveBackup"))
         self.no_auto_val = self.no_auto.get()
         self.rmbackup_val = self.rmbackup.get()
 
@@ -132,12 +132,13 @@ class Release(Frame, Module):
         self.release_thread.start()
         debug(f"RemoveBackup: {self.rmbackup_val}")
         if self.no_auto_val == 0 and self.rmbackup_val not in (
-            "None",
             None,
-            ""
         ):
-            delete_dir = self.rmbackup_val
+            delete_dir = config.get_str("BackupName")
             debug(f"RemoveBackup {delete_dir}")
+            if not delete_dir or not os.path.exists(delete_dir):
+                global_context.log.info("no backups to remove")
+                return
             shutil.rmtree(delete_dir)
             # lets not keep trying
             config.set("RemoveBackup", "None")
@@ -146,7 +147,7 @@ class Release(Frame, Module):
         "Called to get a tk Frame for the settings dialog."
 
         self.no_auto = tk.IntVar(value=config.get_int("DisableAutoUpdate"))
-        self.rmbackup = tk.StringVar(value=config.get_str("RemoveBackup"))
+        self.rmbackup = tk.StringVar(value=config.get_int("RemoveBackup"))
 
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
@@ -233,7 +234,7 @@ class Release(Frame, Module):
         debug("Upgrade completed.")
         self.plugin_dir = new_plugin_dir
         self.installed = True
-        config.set("RemoveBackup", renamed)
+        config.set("BackupName", renamed)
 
 
     @classmethod
