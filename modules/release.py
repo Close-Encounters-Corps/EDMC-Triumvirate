@@ -100,7 +100,15 @@ class Release(Frame, Module):
         self.installed = False
 
         self.no_auto = tk.IntVar(value=config.get_int("DisableAutoUpdate"))
-        self.rmbackup = tk.StringVar(value=config.get_int("RemoveBackup"))
+        remove_backup = None
+        try:
+            remove_backup = config.get_int("RemoveBackup")
+        except ValueError:
+            try:
+                remove_backup = int(config.get_str("RemoveBackup"))
+            except:
+                remove_backup = 0
+        self.rmbackup = tk.IntVar(value=remove_backup)
         self.no_auto_val = self.no_auto.get()
         self.rmbackup_val = self.rmbackup.get()
 
@@ -131,11 +139,9 @@ class Release(Frame, Module):
         self.release_thread = ReleaseThread(self)
         self.release_thread.start()
         debug(f"RemoveBackup: {self.rmbackup_val}")
-        if self.no_auto_val == 0 and self.rmbackup_val not in (
-            None,
-        ):
+        if self.no_auto_val == 0:
             delete_dir = config.get_str("BackupName")
-            debug(f"RemoveBackup {delete_dir}")
+            debug(f"BackupName {delete_dir}")
             if not delete_dir or not os.path.exists(delete_dir):
                 global_context.log.info("no backups to remove")
                 return
