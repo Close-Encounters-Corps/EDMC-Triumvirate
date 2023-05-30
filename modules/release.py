@@ -151,11 +151,12 @@ class Release(Frame, Module):
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
         frame.grid(row=gridrow, column=0, sticky="NSEW")
+        global_context.log.info(f"{self.no_auto_val=}")
         nb.Checkbutton(
-            frame, text="Отключить автообновление", variable=self.no_auto_val
+            frame, text="Отключить автообновление", variable=self.no_auto
         ).grid(row=0, column=0, sticky="NW")
         nb.Checkbutton(
-            frame, text="Хранить бекапы версий", variable=self.rmbackup_val
+            frame, text="Хранить бекапы версий", variable=self.rmbackup
         ).grid(row=0, column=1, sticky="NW")
 
         return frame
