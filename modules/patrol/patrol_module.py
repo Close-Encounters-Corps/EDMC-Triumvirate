@@ -40,7 +40,6 @@ from .edsm import get_edsm_patrol
 from .exclusions import PatrolExclusions
 from .bgs import BGSTasksOverride, new_bgs_patrol
 from .. import legacy
-from ..debug import debug as debug_base, error
 from ..lib.conf import config
 from ..lib.context import global_context
 from ..lib.thread import Thread
@@ -56,7 +55,7 @@ WRAP_LENGTH = 200
 
 
 def debug(msg, *args):
-    debug_base(f"[patrol] {msg}", *args)
+    global_context.log.info(f"[patrol] {msg}", *args)
 
 
 def get_ship_type(key):
@@ -507,14 +506,13 @@ class PatrolModule(Frame, Module):
 
     def getFactionData(self, faction, BGSOSys):
         """
-            We will get Canonn faction data using an undocumented elitebgs api
-            NB: It is possible this could get broken so need to contact CMDR Garud
+            We will get Canonn faction data using elitebgs api
         """
 
         patrol = []
 
-        url = "https://elitebgs.app/frontend/factions?name={}".format(faction)
-        j = requests.get(url).json()
+        url = "https://elitebgs.app/api/ebgs/v5/factions"
+        j = requests.get(url, params={"name": faction}).json()
         if j:
             for bgs in j.get("docs")[0].get("faction_presence"):
                 val = new_bgs_patrol(bgs, faction, BGSOSys)

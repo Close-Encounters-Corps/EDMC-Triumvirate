@@ -60,7 +60,7 @@ def new_bgs_patrol(bgs, faction, override):
         system=system,
         coords=global_context.systems_module.get_system_coords(system),
         instructions=get_bgs_instructions(bgs, faction),
-        url="https://elitebgs.app/system/{}".format(bgs.get("system_id")),
+        url="https://elitebgs.app/systems/{}".format(bgs.get("system_id")),
     )
 
 

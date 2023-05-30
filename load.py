@@ -30,7 +30,7 @@ from modules import (
     patrol,
     release
 )
-from modules.debug import Debug, debug, error
+from modules.debug import Debug
 from modules.lib import canonn_api
 from modules.lib import context as contextlib
 from modules.lib import journal, thread
@@ -127,7 +127,7 @@ def Alegiance_get(CMDR, SQ_old):
 
     global SQ
     if CMDR != this.CMDR:
-        debug("Community Check started")
+        logger.debug("Community Check started")
         url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"
         with closing(requests.get(url, stream=True)) as r:
             try:
@@ -140,18 +140,18 @@ def Alegiance_get(CMDR, SQ_old):
                 next(reader)
 
             for row in reader:
-                debug(row)
+                logger.debug(row)
                 cmdr, squadron, SQID = row
 
                 if cmdr == CMDR:
                     try:
                         SQ = SQID
-                        debug("your SQID is " + str(SQ))
+                        logger.debug(f"your SQID is {SQ}")
                     except:
-                        error("Set SQID Failed")
+                        logger.debug("Set SQID Failed")
 
         if SQ != None:
-            debug("SQ ID IS OK")
+            logger.debug("SQ ID IS OK")
             this.CMDR = CMDR
             try:
                 this.patrol.sqid = SQ  # Функция для отправки данных о
@@ -163,11 +163,11 @@ def Alegiance_get(CMDR, SQ_old):
             return SQ
         else:
             if this.Nag == 0:
-                debug("SQID need to be instaled")
+                logger.debug("SQID need to be instaled")
                 url = "https://docs.google.com/forms/d/e/1FAIpQLSeERKxF6DlrQ3bMqFdceycSlBV0kwkzziIhYD0ctDzrytm8ug/viewform?usp=pp_url"
                 url += "&entry.42820869=" + quote_plus(CMDR)
                 this.Nag = this.Nag + 1
-                debug("SQID " + str(url))
+                logger.debug(f"SQID {url}")
                 webbrowser.open(url)
     else:
         return SQ_old
@@ -182,8 +182,8 @@ def plugin_start3(plugin_dir):
     # префикс логов
     codex.CodexTypes.plugin_start(plugin_dir)
     # в логах пишется с префиксом Triumvirate
-    Debug.p("Plugin (v{}) loaded successfully.".format(this.version))
-    return "Triumvirate-{}".format(this.version)
+    logger.info(f"Plugin (v{this.version}) loaded successfully.")
+    return f"Triumvirate-{this.version}"
 
 
 
@@ -198,7 +198,7 @@ def plugin_stop():
     """
     EDMC is closing
     """
-    debug("Stopping the plugin")
+    logger.debug("Stopping the plugin")
     for mod in context.modules:
         mod.close()
     thread.Thread.stop_all()
@@ -244,7 +244,7 @@ def plugin_app(parent):
 
 def Squadronsend(CMDR, entry):
     if this.SQNag == 0:
-        debug("SQName need to be sended")
+        logger.debug("SQName need to be sended")
         url = "https://docs.google.com/forms/d/e/1FAIpQLScZvs3MB2AK6pPwFoSCpdaarfAeu_P-ineIhtO1mOPgr09q8A/formResponse?usp=pp_url"
         url += "&entry.558317192=" + quote_plus(CMDR)
         url += "&entry.1042067605=" + quote_plus(entry)
@@ -261,22 +261,21 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     if "SystemFaction" in entry:
         """ "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }"""
         SystemFaction = entry.get("SystemFaction")
-        # debug(SystemFaction)
         try:
             this.SysFactionState = SystemFaction["FactionState"]
         except:
             this.SysFactionState = None
-        debug("SysFaction's state is" + str(this.SysFactionState))
+        logger.debug("SysFaction's state is" + str(this.SysFactionState))
 
     if "SystemAllegiance" in entry:
 
         SystemAllegiance = entry.get("SystemAllegiance")
-        debug(SystemAllegiance)
+        logger.debug(SystemAllegiance)
         try:
             this.SysFactionAllegiance = SystemAllegiance
         except:
             this.SysFactionAllegiance = None
-        debug("SysFaction's allegiance is" + str(this.SysFactionAllegiance))
+        logger.debug("SysFaction's allegiance is" + str(this.SysFactionAllegiance))
 
     if "DistFromStarLS" in entry:
         """"DistFromStarLS":144.821411"""
@@ -284,7 +283,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.DistFromStarLS = entry.get("DistFromStarLS")
         except:
             this.DistFromStarLS = None
-        debug("DistFromStarLS=" + str(this.DistFromStarLS))
+        logger.debug("DistFromStarLS=" + str(this.DistFromStarLS))
 
     if entry.get("event") == "FSDJump":
         this.DistFromStarLS = None
@@ -391,10 +390,8 @@ def journal_entry_wrapper(
             # TODO переписать на менеджер контекста?
             try:
                 val = mod.on_chat_message(journal_entry)
-            except Exception as e:
-                error(
-                    f"Error while sending chat message to module {mod}: {e}"
-                )
+            except:
+                logger.error(f"Error while sending chat message to module {mod}", exc_info=1)
             status_message = status_message or val
     else:
         for mod in context.enabled_modules:
@@ -453,7 +450,7 @@ def dashboard_entry(cmdr, is_beta, entry):
         this.plug_start = 1
         this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
     try:
-        debug("Checking fuel consumption {}", this.FuelCount)
+        logger.debug("Checking fuel consumption {}", this.FuelCount)
         if entry.get("Fuel") is not None:
             if this.FuelCount == 10:
                 this.fuel_cons = fuel_consumption(
@@ -495,7 +492,7 @@ def dashboard_entry(cmdr, is_beta, entry):
     else:
         this.body_name = None
     this.cmdr_SQID = Alegiance_get(cmdr, this.cmdr_SQID)
-    debug(this.body_name)
+    logger.debug(this.body_name)
 
 def cmdr_data(data, is_beta):
     """
