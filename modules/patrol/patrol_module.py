@@ -54,13 +54,13 @@ DEFAULT_URL = ""
 WRAP_LENGTH = 200
 
 
-def debug(msg, *args):
-    global_context.log.info(f"[patrol] {msg}", *args)
+def debug(msg):
+    global_context.log.info(f"[patrol] {msg}")
 
 
 def get_ship_type(key):
     key = key.lower()
-    debug("Looking for ship '{}'", key)
+    debug(f"Looking for ship '{key}'")
     name = settings.ships.get(key)
     return name if name else key
 
@@ -476,7 +476,7 @@ class PatrolModule(Frame, Module):
             )
             self.infolink["text"] = self.nearest.get("instructions")
             url = self.nearest.get("url")
-            self.infolink["url"] = self.format_url(url) if url else ""
+            self.infolink["url"] = self.format_url(url) if url and self.latest_entry else ""
 
             self.infolink.grid()
             self.distance.grid()
@@ -635,7 +635,7 @@ class PatrolModule(Frame, Module):
         # exit if the events dont match
 
         event = json.loads(self.nearest.get("event"))
-        debug("event {}".format(event))
+        debug(f"event {event}")
         for key in list(event.keys()):
             if event.get(key):
                 debug(f"event key {key} value {event.get(key)}")
