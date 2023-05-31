@@ -147,13 +147,21 @@ class Release(Frame, Module):
                 return
             shutil.rmtree(delete_dir)
             # lets not keep trying
-            config.set("RemoveBackup", "None")
+            config.set("RemoveBackup", 0)
 
     def draw_settings(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
         self.no_auto = tk.IntVar(value=config.get_int("DisableAutoUpdate"))
-        self.rmbackup = tk.StringVar(value=config.get_int("RemoveBackup"))
+        remove_backup = None
+        try:
+            remove_backup = config.get_int("RemoveBackup")
+        except ValueError:
+            try:
+                remove_backup = int(config.get_str("RemoveBackup"))
+            except:
+                remove_backup = 0
+        self.rmbackup = tk.IntVar(value=remove_backup)
 
         frame = nb.Frame(parent)
         frame.columnconfigure(2, weight=1)
