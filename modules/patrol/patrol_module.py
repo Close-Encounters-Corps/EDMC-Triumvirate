@@ -476,7 +476,7 @@ class PatrolModule(Frame, Module):
             )
             self.infolink["text"] = self.nearest.get("instructions")
             url = self.nearest.get("url")
-            self.infolink["url"] = self.format_url(url) if url and self.latest_entry else ""
+            self.infolink["url"] = self.format_url(url) if url and getattr(self, "latest_entry", None) else ""
 
             self.infolink.grid()
             self.distance.grid()
