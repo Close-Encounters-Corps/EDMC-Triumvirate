@@ -40,7 +40,6 @@ from .edsm import get_edsm_patrol
 from .exclusions import PatrolExclusions
 from .bgs import BGSTasksOverride, new_bgs_patrol
 from .. import legacy
-from ..debug import debug as debug_base, error
 from ..lib.conf import config
 from ..lib.context import global_context
 from ..lib.thread import Thread
@@ -55,13 +54,13 @@ DEFAULT_URL = ""
 WRAP_LENGTH = 200
 
 
-def debug(msg, *args):
-    debug_base(f"[patrol] {msg}", *args)
+def debug(msg):
+    global_context.log.info(f"[patrol] {msg}")
 
 
 def get_ship_type(key):
     key = key.lower()
-    debug("Looking for ship '{}'", key)
+    debug(f"Looking for ship '{key}'")
     name = settings.ships.get(key)
     return name if name else key
 
@@ -92,7 +91,7 @@ class PatrolLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Получение патруля",
+            text="Получение данных Патруля",
             url=DEFAULT_URL,
             popup_copy=True,
             # wraplength=50, # updated
@@ -114,7 +113,7 @@ class InfoLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Получение патруля",
+            text="Получение данных Патруля",
             url=DEFAULT_URL,
             popup_copy=True,
             wraplength=50,  # updated in __configure_event below
@@ -250,11 +249,11 @@ class PatrolModule(Frame, Module):
         frame.columnconfigure(1, weight=1)
         frame.grid(row=gridrow, column=0, sticky="NSEW")
 
-        nb.Label(frame, text="Настройки патруля").grid(row=0, column=0, sticky="NW")
-        nb.Checkbutton(frame, text="Скрыть патруль", variable=self.canonnbtn).grid(
+        nb.Label(frame, text="Настройки Патруля").grid(row=0, column=0, sticky="NW")
+        nb.Checkbutton(frame, text="Скрыть Патруль", variable=self.canonnbtn).grid(
             row=1, column=0, sticky="NW"
         )
-        nb.Checkbutton(frame, text="Скрыть BGS", variable=self.factionbtn).grid(
+        nb.Checkbutton(frame, text="Скрыть информацию BGS", variable=self.factionbtn).grid(
             row=1, column=1, sticky="NW"
         )
         nb.Checkbutton(
@@ -265,7 +264,7 @@ class PatrolModule(Frame, Module):
         ).grid(row=2, column=0, sticky="NW")
         nb.Checkbutton(
             frame,
-            text="Автоматически копировать \nпатруль в буфер обмена",
+            text="Автоматически копировать данные \nПатруля в буфер обмена",
             variable=self.copypatrolbtn,
         ).grid(
             row=3, column=0, sticky="NW",
@@ -477,7 +476,7 @@ class PatrolModule(Frame, Module):
             )
             self.infolink["text"] = self.nearest.get("instructions")
             url = self.nearest.get("url")
-            self.infolink["url"] = self.format_url(url) if url else ""
+            self.infolink["url"] = self.format_url(url) if url and getattr(self, "latest_entry", None) else ""
 
             self.infolink.grid()
             self.distance.grid()
@@ -487,7 +486,7 @@ class PatrolModule(Frame, Module):
 
         else:
             if self.system:
-                self.hyperlink["text"] = "Получение патруля..."
+                self.hyperlink["text"] = "Получение данных Патруля..."
             else:
                 self.hyperlink["text"] = "Ожидание данных о местоположении..."
             self.infolink.grid_remove()
@@ -507,14 +506,13 @@ class PatrolModule(Frame, Module):
 
     def getFactionData(self, faction, BGSOSys):
         """
-            We will get Canonn faction data using an undocumented elitebgs api
-            NB: It is possible this could get broken so need to contact CMDR Garud
+            We will get Canonn faction data using elitebgs api
         """
 
         patrol = []
 
-        url = "https://elitebgs.app/frontend/factions?name={}".format(faction)
-        j = requests.get(url).json()
+        url = "https://elitebgs.app/api/ebgs/v5/factions"
+        j = requests.get(url, params={"name": faction}).json()
         if j:
             for bgs in j.get("docs")[0].get("faction_presence"):
                 val = new_bgs_patrol(bgs, faction, BGSOSys)
@@ -637,7 +635,7 @@ class PatrolModule(Frame, Module):
         # exit if the events dont match
 
         event = json.loads(self.nearest.get("event"))
-        debug("event {}".format(event))
+        debug(f"event {event}")
         for key in list(event.keys()):
             if event.get(key):
                 debug(f"event key {key} value {event.get(key)}")
