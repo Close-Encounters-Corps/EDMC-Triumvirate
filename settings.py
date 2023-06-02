@@ -15,6 +15,7 @@ canonn_live_url = "https://api.canonn.tech"
 canonn_staging_url = "https://api.canonn.tech:2053"
 canonn_dev_url = "https://api.canonn.tech:2083"
 canonn_realtime_url = "https://us-central1-canonn-api-236217.cloudfunctions.net"
+canonn_env = "LIVE"
 
 ships = {  #Некоторые корабли имеют "а" перед названием, потому что этот словарь используется  для подстановки типов в сообщение с учетом женского рода
     "adder": " Adder",
