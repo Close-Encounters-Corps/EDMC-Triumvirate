@@ -91,7 +91,7 @@ class PatrolLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Получение патруля",
+            text="Получение данных Патруля",
             url=DEFAULT_URL,
             popup_copy=True,
             # wraplength=50, # updated
@@ -113,7 +113,7 @@ class InfoLink(HyperlinkLabel):
         HyperlinkLabel.__init__(
             self,
             parent,
-            text="Получение патруля",
+            text="Получение данных Патруля",
             url=DEFAULT_URL,
             popup_copy=True,
             wraplength=50,  # updated in __configure_event below
@@ -249,11 +249,11 @@ class PatrolModule(Frame, Module):
         frame.columnconfigure(1, weight=1)
         frame.grid(row=gridrow, column=0, sticky="NSEW")
 
-        nb.Label(frame, text="Настройки патруля").grid(row=0, column=0, sticky="NW")
-        nb.Checkbutton(frame, text="Скрыть патруль", variable=self.canonnbtn).grid(
+        nb.Label(frame, text="Настройки Патруля").grid(row=0, column=0, sticky="NW")
+        nb.Checkbutton(frame, text="Скрыть Патруль", variable=self.canonnbtn).grid(
             row=1, column=0, sticky="NW"
         )
-        nb.Checkbutton(frame, text="Скрыть BGS", variable=self.factionbtn).grid(
+        nb.Checkbutton(frame, text="Скрыть информацию BGS", variable=self.factionbtn).grid(
             row=1, column=1, sticky="NW"
         )
         nb.Checkbutton(
@@ -264,7 +264,7 @@ class PatrolModule(Frame, Module):
         ).grid(row=2, column=0, sticky="NW")
         nb.Checkbutton(
             frame,
-            text="Автоматически копировать \nпатруль в буфер обмена",
+            text="Автоматически копировать данные \nПатруля в буфер обмена",
             variable=self.copypatrolbtn,
         ).grid(
             row=3, column=0, sticky="NW",
@@ -486,7 +486,7 @@ class PatrolModule(Frame, Module):
 
         else:
             if self.system:
-                self.hyperlink["text"] = "Получение патруля..."
+                self.hyperlink["text"] = "Получение данных Патруля..."
             else:
                 self.hyperlink["text"] = "Ожидание данных о местоположении..."
             self.infolink.grid_remove()

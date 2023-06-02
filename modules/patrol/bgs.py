@@ -90,16 +90,16 @@ def get_bgs_instructions(bgs, faction):
     elif last_updated < 7:
         update_text = ". Последнее обновление данных {} дней назад".format(last_updated)
     elif last_updated > 6:
-        update_text = ". Последнее обновление данных {} дней назад. Пожалуйста прыгните в эту систему что бы обновить данные".format(
+        update_text = ". Последнее обновление данных {} дней назад. Пожалуйста, совершите прыжок в эту систему чтобы обновить данные".format(
             last_updated
         )
 
     if faction == "Close Encounters Corps":
-        contact = "Пожалуйста, свяжитесь с AntonyVern [СЕС]#5904 на сервере СЕС для получения инструкций"
+        contact = "Пожалуйста, обратитесь к администрации СЕС для получения инструкций"
     if faction == "EG Union":
-        contact = "Пожалуйста, свяжитесь с HEúCMuT#1242 на сервере EGP для получения инструкций"
+        contact = "Пожалуйста, свяжитесь с представителями EGP для получения инструкций"
     if faction == "Royal Phoenix Corporation":
-        contact = "Пожалуйста, свяжитесь с Saswitz#9598 на сервере RPSG для получения инструкций"
+        contact = "Пожалуйста, свяжитесь с представителями RPSG для получения инструкций"
     if target:
         retval = "{} Влияние {}%;{}{}".format(
             faction,
@@ -116,7 +116,7 @@ def get_bgs_instructions(bgs, faction):
             update_text,
         )
     if under:
-        retval = "{} Влияние {}%;{} Пожалуйста выполняйте миссии за {}, чтобы увеличить наше влияние {}".format(
+        retval = "{} Влияние {}%;{} Пожалуйста выполняйте миссии за {}, чтобы увеличить влияние фракции {}".format(
             faction,
             Locale.stringFromNumber(float(bgs.get("influence") * 100), 2),
             states,
