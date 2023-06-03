@@ -140,7 +140,6 @@ def Alegiance_get(CMDR, SQ_old):
                 next(reader)
 
             for row in reader:
-                logger.debug(row)
                 cmdr, squadron, SQID = row
 
                 if cmdr == CMDR:
@@ -153,13 +152,9 @@ def Alegiance_get(CMDR, SQ_old):
         if SQ != None:
             logger.debug("SQ ID IS OK")
             this.CMDR = CMDR
-            try:
-                this.patrol.sqid = SQ  # Функция для отправки данных о
-                # сквадроне в модули, использовать как
-                # шаблон
-            except:
-                logger.error("error setting SQID", exc_info=1)
-                pass
+            this.patrol.sqid = SQ  # Функция для отправки данных о
+            # сквадроне в модули, использовать как
+            # шаблон
             return SQ
         else:
             if this.Nag == 0:

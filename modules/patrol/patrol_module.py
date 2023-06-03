@@ -98,8 +98,8 @@ class PatrolLink(HyperlinkLabel):
             # in __configure_event below
             anchor=tk.NW,
         )
-        # self.bind('<Configure>',
-        # self.__configure_event)
+        self.bind('<Configure>',
+        self.__configure_event)
 
     def __configure_event(self, event):
         "Handle resizing."
@@ -203,7 +203,6 @@ class PatrolModule(Frame, Module):
 
         self.excluded = None
 
-        self.patrol_name = None
         self.patrol_list = []
         self.capi_update = False
         self.patrol_count = 0
@@ -221,7 +220,7 @@ class PatrolModule(Frame, Module):
         self.sqid_evt = threading.Event()
         self.update_thread = None
 
-        self.bind("<<PatrolDisplay>>", self.update_desc)
+        self.start_background_thread()
 
     ########################################
     ############# MODULE HOOKS #############
@@ -303,6 +302,12 @@ class PatrolModule(Frame, Module):
         )
 
     def on_journal_entry(self, entry: JournalEntry):
+        try:
+            self._on_journal(entry=entry)
+        except:
+            global_context.log.debug("error in patrol", exc_info=1)
+
+    def _on_journal(self, entry: JournalEntry):
         self.latest_entry = entry
 
         self.start_background_thread()
@@ -317,8 +322,8 @@ class PatrolModule(Frame, Module):
         same_system = (
             nearest_system.upper() == entry.system.upper() if nearest_system else False
         )
-        if self.system != entry.system and event in ("Location", "FSDJump", "StartUp",):
-            debug("Refreshing Patrol ({})", event)
+        if event in {"Location", "FSDJump", "StartUp"}:
+            debug(f"Refreshing Patrol ({event})")
             self.system = entry.system
             if self.nearest and self.CopyPatrolAdr == 1:
                 copyclip(self.nearest.get("system"))
@@ -412,10 +417,6 @@ class PatrolModule(Frame, Module):
         if self.enabled and not self.update_thread:
             self.update_thread = UpdateThread(self)
             self.update_thread.start()
-
-    def update_desc(self, event):
-        self.hyperlink["text"] = "Подгрузка данных {}".format(self.patrol_name)
-        self.hyperlink["url"] = None
 
     def next_patrol(self, event):
         """
