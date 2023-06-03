@@ -114,6 +114,19 @@ def CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):#сде
 def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
     if entry.get('event') != 'Scan':
         return
+    if "gas giant" in entry.get("PlanetClass", "").lower():
+        helium_percentage = 0.0
+        for comp in entry.get("AtmosphereComposition", []):
+            if comp["Name"] == "Helium":
+                helium_percentage = comp["Percent"]
+        url_params = {
+            "entry.262880086": entry.get("BodyName", ""),
+            "entry.808713567": str(helium_percentage).replace('.', ','),
+            "entry.549950938": entry.get("StarSystem", "")
+        }
+        url = f'{URL_GOOGLE}/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+        Reporter(url).start()
+
 
     if "StarType" in entry:
         url_params = {
@@ -144,18 +157,6 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
             }
             url = f'{URL_GOOGLE}/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
             Reporter(url).start()
-
-        if "gas giant" in entry.get("PlanetClass", ""):
-            helium_components = [component for component in entry.get("AtmosphereComposition", []) if
-                                 "Helium" in component.get("Name", "")]
-            if helium_components:
-                url_params = {
-                    "entry.262880086": entry.get("BodyName", ""),
-                    "entry.808713567": str(helium_components[0].get("Percent", 0)).replace('.', ','),
-                    "entry.549950938": entry.get("StarSystem", "")
-                }
-                url = f'{URL_GOOGLE}/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-                Reporter(url).start()
 
      
 def AXZone(cmdr, is_beta, system,x,y,z,station, entry, state):#Сделано
