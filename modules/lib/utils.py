@@ -12,5 +12,4 @@ def get_endpoint(is_beta=False):
     }
     if is_beta:
         return urls[Environment.STAGING]
-    env = global_context.by_class(Release).env or urls.get(environ, canonn_live_url)
-    return urls[env]
+    return urls.get(environ, canonn_live_url)
