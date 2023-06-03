@@ -205,7 +205,7 @@ class Release(Frame, Module):
             else:
                 raise
         data = resp.json()
-        if data["prerelease"]:
+        if data.get("prerelease", False):
             self.env = Environment.STAGING
         else:
             self.env = Environment.LIVE
