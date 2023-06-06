@@ -313,11 +313,6 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     ).start()
 
 def submit_expedition(cmdr, entry: dict):
-    entry.setdefault("TerraformState", "")
-    entry.setdefault("Atmosphere", "")
-    entry.setdefault("AtmosphereType", "")
-    entry.setdefault("Volcanism", "")
-
     resp = http.WebClient(
         settings.cec_url
     ).post("/api/expeditions/v1/scan/submit", json={
