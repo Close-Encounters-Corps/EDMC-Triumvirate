@@ -11,11 +11,6 @@ class WebClient(requests.Session):
         if self.base_url:
             url = self.base_url + url
         resp = super().request(method, url, *args, **kwargs)
-        debug(
-            "Request is OK! ({} {})", 
-            resp.request.method,
-            resp.request.url.split("?")[0]
-        )
         return resp
 
 class HttpError(Exception):

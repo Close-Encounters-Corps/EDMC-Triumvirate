@@ -31,7 +31,7 @@ from modules import (
     release
 )
 from modules.debug import Debug
-from modules.lib import canonn_api
+from modules.lib import canonn_api, http
 from modules.lib import context as contextlib
 from modules.lib import journal, thread
 from modules.player import Player
@@ -253,6 +253,9 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
     # not read for that yet
     startup_stats(cmdr)
 
+    if entry["event"] == "Scan" and entry["ScanType"] in {"Detailed", "AutoScan"}:
+        thread.BasicThread(target=lambda: submit_expedition(cmdr, entry)).start()
+
     if "SystemFaction" in entry:
         """ "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }"""
         SystemFaction = entry.get("SystemFaction")
@@ -308,6 +311,21 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.client_version,
         )
     ).start()
+
+def submit_expedition(cmdr, entry: dict):
+    entry.setdefault("TerraformState", "")
+    entry.setdefault("Atmosphere", "")
+    entry.setdefault("AtmosphereType", "")
+    entry.setdefault("Volcanism", "")
+
+    resp = http.WebClient(
+        settings.cec_url
+    ).post("/api/expeditions/v1/scan/submit", json={
+        "cmdr": cmdr,
+        "log": entry
+    })
+    if not resp.ok:
+        logger.error("Ошибка при запросе к %s:\n%s", resp.request.url, resp.text)
 
 def startup_stats(cmdr):
     try:

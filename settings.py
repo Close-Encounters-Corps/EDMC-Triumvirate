@@ -6,6 +6,7 @@ edsm_url = "https://www.edsm.net"
 #####################
 ### CEC ENDPOINTS ###
 #####################
+cec_url = "https://closeencounterscorps.org"
 galaxy_url = "https://api-galaxy.closeencounterscorps.org"
 
 ###################
