@@ -140,8 +140,31 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
         url = f'{URL_GOOGLE}/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
         Reporter(url).start()
 
-    if entry.get('ScanType') == "Detailed" and entry.get("Atmosphere"):
-        if "thin" in entry["Atmosphere"] and entry.get("SurfaceGravity", 0) / 10 <= 0.6:
+    if entry.get('ScanType') == "Detailed":
+        if entry.get("Type", "") == "Planet":
+            valuable = False
+            if entry.get("Subtype") == "Earth-like world":
+                valuable = True
+
+            if entry.get("Subtype") == "Ammonia world":
+                valuable = True
+
+            if entry.get("Subtype") == "Water world" and entry.get("terraformingState") == "Terraformable":
+                valuable = True
+
+            if valuable:
+                url_params = {
+                    "entry.2022004794": cmdr,
+                    "entry.1225803723": entry.get("BodyName", ""),
+                    "entry.645216132": entry.get("PlanetClass", ""),
+                    "entry.512641942": str(entry.get("WasDiscovered", "")),
+                    "entry.1801392650": str(entry.get("WasMapped", "")),
+                    "entry.1992174852": entry.get("StarSystem", "")
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSdgwzvgxow5ATuB4Gimj6DvDRD3-ub3Yp4UD-nQK4CnZdKV9w/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+                Reporter(url).start()
+
+        if "thin" in entry.get("Atmosphere", "") and entry.get("SurfaceGravity", 0) / 10 <= 0.6:
             url_params = {
                 "entry.347011697": cmdr,
                 "entry.1687350455": entry.get("BodyName", ""),
