@@ -143,13 +143,13 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
     if entry.get('ScanType') == "Detailed":
         if entry.get("Type", "") == "Planet":
             valuable = False
-            if entry.get("PlanetClass") == "Earth-like world":
+            if entry.get("PlanetClass") == "Earthlike body":
                 valuable = True
 
             if entry.get("PlanetClass") == "Ammonia world":
                 valuable = True
 
-            if entry.get("PlanetClass") == "Water world" and entry.get("terraformingState") == "Terraformable":
+            if entry.get("PlanetClass") == "Water world" and entry.get("TerraformState") == "Terraformable":
                 valuable = True
 
             if valuable:
