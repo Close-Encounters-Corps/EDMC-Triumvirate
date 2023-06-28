@@ -151,7 +151,9 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
         if entry.get("PlanetClass") == "Water world" and entry.get("TerraformState") == "Terraformable":
             valuable = True
 
-        if valuable:
+        known = entry.get("WasMapped") or entry.get("WasDiscovered")
+
+        if valuable and not known:
             url_params = {
                 "entry.2022004794": cmdr,
                 "entry.1225803723": entry.get("BodyName", ""),
