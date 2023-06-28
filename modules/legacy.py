@@ -127,6 +127,14 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
         url = f'{URL_GOOGLE}/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
         Reporter(url).start()
 
+        url_params = {
+            "entry.207321892": entry.get("BodyName", ""),
+            "entry.318090096": str(helium_percentage).replace('.', ','),
+            "entry.1828517199": entry.get("StarSystem", "")
+        }
+        url = f'{URL_GOOGLE}/1FAIpQLSeCRZ9GXprtSEUFgUOMR5yBGkqYpdrKAumLkYH6KkPOUq3sIA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+        Reporter(url).start()
+
 
     if "StarType" in entry:
         url_params = {
@@ -139,6 +147,10 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
         }
         url = f'{URL_GOOGLE}/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
         Reporter(url).start()
+
+        url = f'{URL_GOOGLE}/1FAIpQLSeapH5azc-9T0kIZ4vfDBcDlcd8ZfMUBS42DMRXL8fYcBxRtQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+        Reporter(url).start()
+
 
     if entry.get('ScanType') == "Detailed":
         valuable = False
@@ -165,6 +177,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
             url = f'{URL_GOOGLE}/1FAIpQLSdgwzvgxow5ATuB4Gimj6DvDRD3-ub3Yp4UD-nQK4CnZdKV9w/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
             Reporter(url).start()
 
+
         if "thin" in entry.get("Atmosphere", "") and entry.get("SurfaceGravity", 0) / 10 <= 0.6:
             url_params = {
                 "entry.347011697": cmdr,
@@ -183,6 +196,9 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
             Reporter(url).start()
 
      
+            url = f'{URL_GOOGLE}/1FAIpQLSfrZqrZHJ5T0lgpaoUOcLgM0fXmR_t5_vLKvT7J5HDA8mugeg/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+            Reporter(url).start()
+
 def AXZone(cmdr, is_beta, system,x,y,z,station, entry, state):#Сделано
     #{
                                                                   #'timestamp':'2019-01-19T23:22:26Z',
