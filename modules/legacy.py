@@ -178,7 +178,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
             Reporter(url).start()
 
 
-        if "thin" in entry.get("Atmosphere", "") and entry.get("SurfaceGravity", 0) / 10 <= 0.6:
+        if "thin" in entry.get("Atmosphere", "") and entry.get("SurfaceGravity", 0) / 10 <= 0.275:
             url_params = {
                 "entry.347011697": cmdr,
                 "entry.1687350455": entry.get("BodyName", ""),
