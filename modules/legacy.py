@@ -114,7 +114,7 @@ def CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):#сде
 def GusonExpeditions(cmdr, is_beta, system, entry):
     # рекоды: количество тел
     if entry.get('event') == 'FSSDiscoveryScan':
-        if entry.get('Body count') >= 50:
+        if entry.get('BodyCount') >= 50:
             url_params = {
                 "entry.1258689641": cmdr,
                 "entry.1469465131": entry.get("SystemName", ""),
