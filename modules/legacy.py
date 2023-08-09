@@ -129,62 +129,31 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
     
     # рекорды: масса тела
     if "PlanetClass" in entry:
-        planet = entry.get("PlanetClass")
-        match planet:
-            case "Metal rich body":
-                limit = 643
-                planetClass = "MetalRichBody"
-            case "High metal content body":
-                limit = 1258
-                planetClass = "HMCBody"
-            case "Rocky body":
-                limit = 475
-                planetClass = "RockyBody"
-            case "Rocky ice body":
-                limit = 268
-                planetClass = "RockyIceBody"
-            case "Icy body":
-                limit = 1992
-                planetClass = "IcyBody"
-            case "Earthlike body":
-                limit = 6.39
-                planetClass = "EarthlikeBody"
-            case "Water world":
-                limit = 667
-                planetClass = "WaterWorld"
-            case "Water giant":
-                limit = 1864
-                planetClass = "WaterGiant"
-            case "Ammonia world":
-                limit = 1194
-                planetClass = "AmmoniaWorld"
-            case "Gas giant with water based life":
-                limit = 1231
-                planetClass = "WaterLifeGG"
-            case "Gas giant with ammonia based life":
-                limit = 818
-                planetClass = "AmmoniaLifeGG"
-            case "Sudarsky class I gas giant":
-                limit = 819
-                planetClass = "ClassIGG"
-            case "Sudarsky class II gas giant":
-                limit = 1231
-                planetClass = "ClassIIGG"
-            case "Sudarsky class III gas giant":
-                limit = 3112
-                planetClass = "ClassIIIGG"
-            case "Sudarsky class IV gas giant":
-                limit = 4862
-                planetClass = "ClassIVGG"
-            case "Sudarsky class V gas giant":
-                limit = 11757
-                planetClass = "ClassVGG"
-            case "Helium rich gas giant":
-                limit = 4288
-                planetClass = "HeliumRichGG"
-            case "Helium gas giant":
-                limit = 5202
-                planetClass = "HeliumGG"
+        limits = {
+            "Metal rich body":                   {"limit": 643, "planetClass": "MetalRichBody"},
+            "High metal content body":           {"limit": 1258, "planetClass": "HMCBody"},
+            "Rocky body":                        {"limit": 475, "planetClass": "RockyBody"},
+            "Rocky ice body":                    {"limit": 268, "planetClass": "RockyIceBody"},
+            "Icy body":                          {"limit": 1992, "planetClass": "IcyBody"},
+            "Earthlike body":                    {"limit": 6.39, "planetClass": "EarthlikeBody"},
+            "Water world":                       {"limit": 667, "planetClass": "WaterWorld"},
+            "Water giant":                       {"limit": 1864, "planetClass": "WaterGiant"},
+            "Ammonia world":                     {"limit": 1194, "planetClass": "AmmoniaWorld"},
+            "Gas giant with water based life":   {"limit": 1231, "planetClass": "WaterLifeGG"},
+            "Gas giant with ammonia based life": {"limit": 818, "planetClass": "AmmoniaLifeGG"},
+            "Sudarsky class I gas giant":        {"limit": 819, "planetClass": "ClassIGG"},
+            "Sudarsky class II gas giant":       {"limit": 1231, "planetClass": "ClassIIGG"},
+            "Sudarsky class III gas giant":      {"limit": 3112, "planetClass": "ClassIIIGG"},
+            "Sudarsky class IV gas giant":       {"limit": 4862, "planetClass": "ClassIVGG"},
+            "Sudarsky class V gas giant":        {"limit": 11757, "planetClass": "ClassVGG"},
+            "Helium rich gas giant":             {"limit": 4288, "planetClass": "HeliumRichGG"},
+            "Helium gas giant":                  {"limit": 5202, "planetClass": "HeliumGG"},
+        }
+        planet = entry.get("PlanetClass", "")
+        if planet in limits:
+            limit = limits[planet]["limit"]
+            planetClass = limits[planet]["planetClass"]
+
         mass = entry.get("MassEM")
         if mass > limit:
             url_params = {
