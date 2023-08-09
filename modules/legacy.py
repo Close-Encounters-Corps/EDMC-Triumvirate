@@ -241,7 +241,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                 Reporter(url).start()
     
     # рекорды: горячие юпитеры
-    if "gas giant" in entry.get("PlanetClass").lower():
+    if "gas giant" in entry.get("PlanetClass", "").lower():
         if entry.get("SurfaceTemperature") > 9352.83:
             url_params = {
                 "entry.1258689641": cmdr,
