@@ -291,7 +291,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
         Reporter(url).start()
 
     # Картография
-    if entry.get('ScanType') == "Detailed":
+    if entry.get('ScanType') in ("Detailed", "AutoScan"):
         valuable = False
         if entry.get("PlanetClass") == "Earthlike body":
             valuable = True
