@@ -344,11 +344,13 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
             "entry.786810023": str(entry.get("Age_MY"))
 
         }
+        # общая БД
         url = f'{URL_GOOGLE}/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
         Reporter(url).start()
-
-        url = f'{URL_GOOGLE}/1FAIpQLSeapH5azc-9T0kIZ4vfDBcDlcd8ZfMUBS42DMRXL8fYcBxRtQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-        Reporter(url).start()
+        # БД Boepp (экспедиционная)
+        if "Boepp" in entry["BodyName"]:
+            url = f'{URL_GOOGLE}/1FAIpQLSeapH5azc-9T0kIZ4vfDBcDlcd8ZfMUBS42DMRXL8fYcBxRtQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+            Reporter(url).start()
 
 
 def AXZone(cmdr, is_beta, system,x,y,z,station, entry, state):#Сделано
