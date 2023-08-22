@@ -304,7 +304,36 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                 }
                 url = f'{URL_GOOGLE}/1FAIpQLSdgwzvgxow5ATuB4Gimj6DvDRD3-ub3Yp4UD-nQK4CnZdKV9w/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
                 Reporter(url).start()
-                
+
+        # БД атмосферных - планеты
+        if entry["Landable"] == True:
+            if "thin" in entry["Atmosphere"]:
+                if "helium" in entry["Atmosphere"] or "oxygen" in entry["Atmosphere"]:
+                    gravity_limit = 0.6
+                else:
+                    gravity_limit = 0.275
+                if entry["SurfaceGravity"] <= gravity_limit:
+                    url_params = {
+                        "entry.347011697": cmdr,
+                        "entry.1687350455": entry.get("BodyName", ""),
+                        "entry.1816286975": entry.get("PlanetClass", ""),
+                        "entry.511521292": entry.get("Atmosphere", ""),
+                        "entry.241360196": entry.get("Volcanism", "None"),
+                        "entry.2023664263": str(entry.get("SurfaceGravity", 0) / 10).replace('.', ','),
+                        "entry.1625198123": str(entry.get("SurfaceTemperature", 0)).replace('.', ','),
+                        "entry.464017034": str(entry.get("SurfacePressure", 0)).replace('.', ','),
+                        "entry.1546311301": str(entry.get("WasDiscovered", "")),
+                        "entry.1533734556": str(entry.get("WasMapped", "")),
+                        "entry.1572906861": entry.get("StarSystem", "")
+                    }
+                    # общая БД
+                    url = f'{URL_GOOGLE}/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+                    Reporter(url).start()
+                    # БД Boepp (экспедиционная)
+                    if "Boepp" in entry["BodyName"]:
+                        url = f'{URL_GOOGLE}/1FAIpQLSfrZqrZHJ5T0lgpaoUOcLgM0fXmR_t5_vLKvT7J5HDA8mugeg/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+                        Reporter(url).start()
+
     # БД атмосферных - звёзды
     if "StarType" in entry:
         url_params = {
@@ -321,27 +350,6 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
         url = f'{URL_GOOGLE}/1FAIpQLSeapH5azc-9T0kIZ4vfDBcDlcd8ZfMUBS42DMRXL8fYcBxRtQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
         Reporter(url).start()
 
-    # БД атмосферных - планеты
-    if "PlanetClass" in entry:
-        if "thin" in entry.get("Atmosphere", "") and entry.get("SurfaceGravity", 0) / 10 <= 0.6:
-            url_params = {
-                "entry.347011697": cmdr,
-                "entry.1687350455": entry.get("BodyName", ""),
-                "entry.1816286975": entry.get("PlanetClass", ""),
-                "entry.511521292": entry.get("Atmosphere", ""),
-                "entry.241360196": entry.get("Volcanism", "None"),
-                "entry.2023664263": str(entry.get("SurfaceGravity", 0) / 10).replace('.', ','),
-                "entry.1625198123": str(entry.get("SurfaceTemperature", 0)).replace('.', ','),
-                "entry.464017034": str(entry.get("SurfacePressure", 0)).replace('.', ','),
-                "entry.1546311301": str(entry.get("WasDiscovered", "")),
-                "entry.1533734556": str(entry.get("WasMapped", "")),
-                "entry.1572906861": entry.get("StarSystem", "")
-            }
-            url = f'{URL_GOOGLE}/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-            Reporter(url).start()
-
-            url = f'{URL_GOOGLE}/1FAIpQLSfrZqrZHJ5T0lgpaoUOcLgM0fXmR_t5_vLKvT7J5HDA8mugeg/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-            Reporter(url).start()
 
 def AXZone(cmdr, is_beta, system,x,y,z,station, entry, state):#Сделано
     #{
