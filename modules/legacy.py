@@ -283,6 +283,28 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
             url = f'{URL_GOOGLE}/1FAIpQLSc6mPwibfkLDyVklC7bEiJsNOtcE8pE9OS2b9o3FpBDNiaN4g/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
             Reporter(url).start()
 
+        # Картография - только из Boepp
+        if "Boepp" in entry["BodyName"]:
+            valuable = False
+            if entry["PlanetClass"] in ("Earthlike body", "Ammonia world"):
+                valuable = True
+            elif entry["PlanetClass"] == "Water world" and entry["TerraformState"] == "Terraformable":
+                valuable = True
+
+            known = entry.get("WasMapped") or entry.get("WasDiscovered")
+
+            if valuable and not known:
+                url_params = {
+                    "entry.2022004794": cmdr,
+                    "entry.1225803723": entry.get("BodyName", ""),
+                    "entry.645216132": entry.get("PlanetClass", ""),
+                    "entry.512641942": str(entry.get("WasDiscovered", "")),
+                    "entry.1801392650": str(entry.get("WasMapped", "")),
+                    "entry.1992174852": entry.get("StarSystem", "")
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSdgwzvgxow5ATuB4Gimj6DvDRD3-ub3Yp4UD-nQK4CnZdKV9w/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+                Reporter(url).start()
+                
     # БД атмосферных - звёзды
     if "StarType" in entry:
         url_params = {
@@ -299,33 +321,8 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
         url = f'{URL_GOOGLE}/1FAIpQLSeapH5azc-9T0kIZ4vfDBcDlcd8ZfMUBS42DMRXL8fYcBxRtQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
         Reporter(url).start()
 
-    # Картография
-    if entry.get('ScanType') in ("Detailed", "AutoScan"):
-        valuable = False
-        if entry.get("PlanetClass") == "Earthlike body":
-            valuable = True
-
-        if entry.get("PlanetClass") == "Ammonia world":
-            valuable = True
-
-        if entry.get("PlanetClass") == "Water world" and entry.get("TerraformState") == "Terraformable":
-            valuable = True
-
-        known = entry.get("WasMapped") or entry.get("WasDiscovered")
-
-        if valuable and not known:
-            url_params = {
-                "entry.2022004794": cmdr,
-                "entry.1225803723": entry.get("BodyName", ""),
-                "entry.645216132": entry.get("PlanetClass", ""),
-                "entry.512641942": str(entry.get("WasDiscovered", "")),
-                "entry.1801392650": str(entry.get("WasMapped", "")),
-                "entry.1992174852": entry.get("StarSystem", "")
-            }
-            url = f'{URL_GOOGLE}/1FAIpQLSdgwzvgxow5ATuB4Gimj6DvDRD3-ub3Yp4UD-nQK4CnZdKV9w/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-            Reporter(url).start()
-
-        # БД атмосферных - планеты
+    # БД атмосферных - планеты
+    if "PlanetClass" in entry:
         if "thin" in entry.get("Atmosphere", "") and entry.get("SurfaceGravity", 0) / 10 <= 0.6:
             url_params = {
                 "entry.347011697": cmdr,
@@ -343,7 +340,6 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
             url = f'{URL_GOOGLE}/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
             Reporter(url).start()
 
-     
             url = f'{URL_GOOGLE}/1FAIpQLSfrZqrZHJ5T0lgpaoUOcLgM0fXmR_t5_vLKvT7J5HDA8mugeg/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
             Reporter(url).start()
 
