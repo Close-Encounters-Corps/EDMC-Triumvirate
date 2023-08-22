@@ -192,18 +192,6 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                     url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
                     Reporter(url).start()
         
-        # рекорды: орбитальный период
-        if entry.get("OrbitalPeriod") <= 1800:
-            url_params = {
-                "entry.1258689641": cmdr,
-                "entry.1469465131": entry.get("BodyName"),
-                "entry.1583990022": "OrbitalPeriod",
-                "entry.1301773715": entry.get("OrbitalPeriod"),
-            }
-            url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-            Reporter(url).start()
-
-
         if entry.get("Landable") == True:
             # рекорды: температура посадочных
             if entry.get("SurfaceTemperature") > 5115.9:
@@ -247,6 +235,17 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                 url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
                 Reporter(url).start()
 
+    # рекорды: орбитальный период
+    if "OrbitalPeriod" in entry:
+        if entry.get("OrbitalPeriod") <= 1800:
+            url_params = {
+                "entry.1258689641": cmdr,
+                "entry.1469465131": entry.get("BodyName"),
+                "entry.1583990022": "OrbitalPeriod",
+                "entry.1301773715": entry.get("OrbitalPeriod"),
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            Reporter(url).start()
 
     # БД атмосферных - ГГ
     if "PlanetClass" in entry:
