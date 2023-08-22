@@ -247,13 +247,15 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
             url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
             Reporter(url).start()
 
-    # БД атмосферных - ГГ
     if "PlanetClass" in entry:
+        # БД атмосферных и рекорды - ГГ
         if "gas giant" in entry.get("PlanetClass").lower():
             helium_percentage = 0.0
             for comp in entry.get("AtmosphereComposition", []):
                 if comp["Name"] == "Helium":
                     helium_percentage = comp["Percent"]
+
+            # общая БД
             url_params = {
                 "entry.262880086": entry.get("BodyName", ""),
                 "entry.808713567": str(helium_percentage).replace('.', ','),
@@ -262,12 +264,23 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
             url = f'{URL_GOOGLE}/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
             Reporter(url).start()
 
+            # БД Boepp (экспедиционная)
+            if "Boepp" in entry["BodyName"]:
+                url_params = {
+                    "entry.207321892": entry.get("BodyName", ""),
+                    "entry.318090096": str(helium_percentage).replace('.', ','),
+                    "entry.1828517199": entry.get("StarSystem", "")
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSeCRZ9GXprtSEUFgUOMR5yBGkqYpdrKAumLkYH6KkPOUq3sIA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+                Reporter(url).start()
+
+            # рекорды
             url_params = {
-                "entry.207321892": entry.get("BodyName", ""),
-                "entry.318090096": str(helium_percentage).replace('.', ','),
-                "entry.1828517199": entry.get("StarSystem", "")
+                "entry.280367197": entry.get("BodyName", ""),
+                "entry.779566159": str(helium_percentage).replace('.', ','),
+                "entry.1789316283": entry.get("StarSystem", "")
             }
-            url = f'{URL_GOOGLE}/1FAIpQLSeCRZ9GXprtSEUFgUOMR5yBGkqYpdrKAumLkYH6KkPOUq3sIA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+            url = f'{URL_GOOGLE}/1FAIpQLSc6mPwibfkLDyVklC7bEiJsNOtcE8pE9OS2b9o3FpBDNiaN4g/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
             Reporter(url).start()
 
     # БД атмосферных - звёзды
