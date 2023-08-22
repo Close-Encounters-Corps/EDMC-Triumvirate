@@ -127,8 +127,8 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
     if entry.get('event') != 'Scan':
         return
     
-    # рекорды: масса тела
     if "PlanetClass" in entry:
+        # рекорды: масса тела
         limits = {
             "Metal rich body":                   {"limit": 643, "planetClass": "MetalRichBody"},
             "High metal content body":           {"limit": 1258, "planetClass": "HMCBody"},
@@ -164,7 +164,46 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
             url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
             Reporter(url).start()
 
-    if "Landable" in entry:
+        # рекорды: горячие юпитеры
+        if "gas giant" in entry.get("PlanetClass").lower():
+            if entry.get("SurfaceTemperature") > 9352.83:
+                url_params = {
+                    "entry.1258689641": cmdr,
+                    "entry.1469465131": entry.get("BodyName", ""),
+                    "entry.1583990022": "HotJupiter",
+                    "entry.1301773715": str(entry.get("SurfaceTemperature")).replace('.', ','),
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                Reporter(url).start()
+
+        # рекорды: радиус колец
+        if "Rings" in entry:
+            rings = entry.get("Rings")
+            for ring in rings:
+                outerRad = str(ring.get("OuterRad"))
+                outerRad = outerRad[:outerRad.find('.')]
+                if float(outerRad) >= 34732000000:
+                    url_params = {
+                        "entry.1258689641": cmdr,
+                        "entry.1469465131": ring.get("Name"),
+                        "entry.1583990022": "WideRing",
+                        "entry.1301773715": outerRad[:-3],
+                    }
+                    url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                    Reporter(url).start()
+        
+        # рекорды: орбитальный период
+        if entry.get("OrbitalPeriod") <= 1800:
+            url_params = {
+                "entry.1258689641": cmdr,
+                "entry.1469465131": entry.get("BodyName"),
+                "entry.1583990022": "OrbitalPeriod",
+                "entry.1301773715": entry.get("OrbitalPeriod"),
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            Reporter(url).start()
+
+
         if entry.get("Landable") == True:
             # рекорды: температура посадочных
             if entry.get("SurfaceTemperature") > 5115.9:
@@ -207,48 +246,6 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                 }
                 url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
                 Reporter(url).start()
-    
-    # рекорды: горячие юпитеры
-    if "PlanetClass" in entry:
-        if "gas giant" in entry.get("PlanetClass").lower():
-            if entry.get("SurfaceTemperature") > 9352.83:
-                url_params = {
-                    "entry.1258689641": cmdr,
-                    "entry.1469465131": entry.get("BodyName", ""),
-                    "entry.1583990022": "HotJupiter",
-                    "entry.1301773715": str(entry.get("SurfaceTemperature")).replace('.', ','),
-                }
-                url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-                Reporter(url).start()
-
-    # рекорды: радиус колец
-    if "PlanetClass" in entry:
-        if "Rings" in entry:
-            rings = entry.get("Rings")
-            for ring in rings:
-                outerRad = str(ring.get("OuterRad"))
-                outerRad = outerRad[:outerRad.find('.')]
-                if float(outerRad) >= 34732000000:
-                    url_params = {
-                        "entry.1258689641": cmdr,
-                        "entry.1469465131": ring.get("Name"),
-                        "entry.1583990022": "WideRing",
-                        "entry.1301773715": outerRad[:-3],
-                    }
-                    url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-                    Reporter(url).start()
-        
-    # рекорды: орбитальный период
-    if "PlanetClass" in entry:
-        if entry.get("OrbitalPeriod") <= 1800:
-            url_params = {
-                "entry.1258689641": cmdr,
-                "entry.1469465131": entry.get("BodyName"),
-                "entry.1583990022": "OrbitalPeriod",
-                "entry.1301773715": entry.get("OrbitalPeriod"),
-            }
-            url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-            Reporter(url).start()
 
 
     # БД атмосферных - ГГ
