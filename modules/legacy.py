@@ -265,7 +265,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
             Reporter(url).start()
 
             # БД Boepp (экспедиционная)
-            if "Boepp" in entry["BodyName"]:
+            if "Boepp " in entry["BodyName"]:
                 url_params = {
                     "entry.207321892": entry.get("BodyName", ""),
                     "entry.318090096": str(helium_percentage).replace('.', ','),
@@ -284,7 +284,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
             Reporter(url).start()
 
         # Картография - только из Boepp
-        if "Boepp" in entry["BodyName"]:
+        if "Boepp " in entry["BodyName"]:
             valuable = False
             if entry["PlanetClass"] in ("Earthlike body", "Ammonia world"):
                 valuable = True
@@ -330,7 +330,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                     url = f'{URL_GOOGLE}/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
                     Reporter(url).start()
                     # БД Boepp (экспедиционная)
-                    if "Boepp" in entry["BodyName"]:
+                    if "Boepp " in entry["BodyName"]:
                         url = f'{URL_GOOGLE}/1FAIpQLSfrZqrZHJ5T0lgpaoUOcLgM0fXmR_t5_vLKvT7J5HDA8mugeg/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
                         Reporter(url).start()
 
@@ -348,7 +348,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
         url = f'{URL_GOOGLE}/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
         Reporter(url).start()
         # БД Boepp (экспедиционная)
-        if "Boepp" in entry["BodyName"]:
+        if "Boepp " in entry["BodyName"]:
             url = f'{URL_GOOGLE}/1FAIpQLSeapH5azc-9T0kIZ4vfDBcDlcd8ZfMUBS42DMRXL8fYcBxRtQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
             Reporter(url).start()
 
