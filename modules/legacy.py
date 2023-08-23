@@ -312,7 +312,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                     gravity_limit = 0.6
                 else:
                     gravity_limit = 0.275
-                if entry["SurfaceGravity"] <= gravity_limit:
+                if entry["SurfaceGravity"] / 10 <= gravity_limit:
                     url_params = {
                         "entry.347011697": cmdr,
                         "entry.1687350455": entry.get("BodyName", ""),
