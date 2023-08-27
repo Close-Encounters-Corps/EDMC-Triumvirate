@@ -115,7 +115,7 @@ last_body_with_biosignals = ""
 def GusonExpeditions(cmdr, is_beta, system, entry):
     # рекоды: количество тел
     if entry.get('event') == 'FSSDiscoveryScan':
-        if entry.get('BodyCount') >= 50:
+        if entry.get('BodyCount') >= 150:
             url_params = {
                 "entry.1258689641": cmdr,
                 "entry.1469465131": entry.get("SystemName", ""),
