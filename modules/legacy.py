@@ -111,6 +111,7 @@ def CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):#сде
         Reporter(url).start()
 
 
+last_body_with_biosignals = ""
 def GusonExpeditions(cmdr, is_beta, system, entry):
     # рекоды: количество тел
     if entry.get('event') == 'FSSDiscoveryScan':
@@ -123,6 +124,13 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
             }
             url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
             Reporter(url).start()
+
+    # проверка АТ на биосигналы перед отправкой в базу
+    if entry["event"] == "FSSBodySignals":
+        for signal in entry["Signals"]:
+            if signal["Type"] == "$SAA_SignalType_Biological;":
+                global last_body_with_biosignals
+                last_body_with_biosignals = entry["BodyName"]
 
     if entry.get('event') != 'Scan':
         return
@@ -313,26 +321,27 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                 else:
                     gravity_limit = 0.275
                 if entry["SurfaceGravity"] / 10 <= gravity_limit:
-                    url_params = {
-                        "entry.347011697": cmdr,
-                        "entry.1687350455": entry.get("BodyName", ""),
-                        "entry.1816286975": entry.get("PlanetClass", ""),
-                        "entry.511521292": entry.get("Atmosphere", ""),
-                        "entry.241360196": entry.get("Volcanism", "None"),
-                        "entry.2023664263": str(entry.get("SurfaceGravity", 0) / 10).replace('.', ','),
-                        "entry.1625198123": str(entry.get("SurfaceTemperature", 0)).replace('.', ','),
-                        "entry.464017034": str(entry.get("SurfacePressure", 0)).replace('.', ','),
-                        "entry.1546311301": str(entry.get("WasDiscovered", "")),
-                        "entry.1533734556": str(entry.get("WasMapped", "")),
-                        "entry.1572906861": entry.get("StarSystem", "")
-                    }
-                    # общая БД
-                    url = f'{URL_GOOGLE}/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-                    Reporter(url).start()
-                    # БД Boepp (экспедиционная)
-                    if "Boepp " in entry["BodyName"]:
-                        url = f'{URL_GOOGLE}/1FAIpQLSfrZqrZHJ5T0lgpaoUOcLgM0fXmR_t5_vLKvT7J5HDA8mugeg/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+                    if entry["BodyName"] == last_body_with_biosignals:
+                        url_params = {
+                            "entry.347011697": cmdr,
+                            "entry.1687350455": entry.get("BodyName", ""),
+                            "entry.1816286975": entry.get("PlanetClass", ""),
+                            "entry.511521292": entry.get("Atmosphere", ""),
+                            "entry.241360196": entry.get("Volcanism", "None"),
+                            "entry.2023664263": str(entry.get("SurfaceGravity", 0) / 10).replace('.', ','),
+                            "entry.1625198123": str(entry.get("SurfaceTemperature", 0)).replace('.', ','),
+                            "entry.464017034": str(entry.get("SurfacePressure", 0)).replace('.', ','),
+                            "entry.1546311301": str(entry.get("WasDiscovered", "")),
+                            "entry.1533734556": str(entry.get("WasMapped", "")),
+                            "entry.1572906861": entry.get("StarSystem", "")
+                        }
+                        # общая БД
+                        url = f'{URL_GOOGLE}/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
                         Reporter(url).start()
+                        # БД Boepp (экспедиционная)
+                        if "Boepp " in entry["BodyName"]:
+                            url = f'{URL_GOOGLE}/1FAIpQLSfrZqrZHJ5T0lgpaoUOcLgM0fXmR_t5_vLKvT7J5HDA8mugeg/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+                            Reporter(url).start()
 
     # БД атмосферных - звёзды
     if "StarType" in entry:
