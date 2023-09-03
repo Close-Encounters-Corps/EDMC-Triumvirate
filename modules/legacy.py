@@ -5,7 +5,9 @@ try:#py3
     from urllib.parse import quote_plus
 except:#py2
     from urllib import quote_plus
-    
+
+import json
+import os
 import sys
 from  math import sqrt,pow,trunc
 from .debug import debug
@@ -546,6 +548,7 @@ class NHSS(threading.Thread):
 
 
 class BGS():
+    CURRENT_MISSIONS_FILE = f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\currentmissions.trmv"
     def __init__(self):
         self.bgsTasks = {}
 
@@ -554,42 +557,80 @@ class BGS():
         cls.bgsTasks = bgsTask
 
     def TaskCheck(self,cmdr, is_beta, system, station, entry, client):
-        if entry["event"] == "MissionCompleted" or entry["event"] == "SellExplorationData" or entry["event"] == "MultiSellExplorationData" or entry["event"] == "RedeemVoucher":
+        if entry["event"] == "MissionAccepted":
+            mission = {
+                "ID": entry["MissionID"],
+                "type": entry["Name"],
+                "system": system,
+                "faction": entry["Faction"],
+                "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", "") != "" else "",
+                "faction2": entry.get("TargetFaction", ""),
+            }
+            missions_file = open(self.CURRENT_MISSIONS_FILE, "a")
+            missions_file.write(json.dumps(mission) + '\n')
+            missions_file.close()
+
+        if entry["event"] == "MissionCompleted":
+            with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
+                missions_list = missions_file.readlines()
+            with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
+                for line in missions_list:
+                    mission = json.loads(line)
+                    if mission["ID"] != entry["MissionID"]:
+                        missions_file.write(line)
+                    else:
+                        completed_mission = mission
+
+            factions_inf = {}
+            for faction in entry["FactionEffects"]:
+                factions_inf[faction["Faction"]] = len(faction["Influence"][0]["Influence"])
+                if faction["Influence"][0]["Trend"] == "DownBad":
+                    factions_inf[faction["Faction"]] *= -1
             
-            #if system in
-            #self.bgsTasks:
-            url = 'https://docs.google.com/forms/d/e/1FAIpQLSd1HNysgZRf4p0_I_hHxbwWz4N8EFEWtjsVaK9wR3RB66kiTQ/formResponse?usp=pp_url'
-            url+='&entry.2038615400=' + quote_plus(cmdr)
-            url+='&entry.1807008459=' + quote_plus(entry["event"])
-            url+='&entry.569295685=' + quote_plus(str(entry))
-            debug("BGS TESTS " + url)
+            url_params = {
+                    "entry.1506409811": cmdr,
+                    "entry.1546958101": completed_mission["type"],
+                    "entry.450251211": "COMPLETED",
+                    "entry.542793243": completed_mission["system"],
+                    "entry.1404963760": completed_mission["faction"],
+                    "entry.340829640": factions_inf[completed_mission["faction"]],
+                    "entry.2011651184": completed_mission["system2"],
+                    "entry.1354651798": completed_mission["faction2"],
+                    "entry.342000821": factions_inf.get(completed_mission["faction2"], ""),
+                }
+            url = f'{URL_GOOGLE}/1FAIpQLSeWbZYlPoXghs32wKRrICzLCcvBDD7cJCVjjG3QF6l8bYXRUw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
             Reporter(url).start()
 
-        #if "MissionCompleted" in entry or "SellExplorationData" in entry or
-        #"MultiSellExplorationData" in entry or "RedeemVoucher" in entry:
-        #    if system in self.bgsTasks:
-        #        if "MissionCompleted" in entry:
-        #            if factionMatch and 'Reward' in entry:
-        #                url='https://docs.google.com/forms/d/e/1FAIpQLSdA-iypOHxi5L4iaINr57hVJYWaZj9d-rmx_rpLJ8mwPrlccQ/formResponse?usp=pp_url'
-        #                url+='&entry.1574172588='+quote_plus(cmdr)
-        #                if is_beta:
-        #                    beta='Y'
-        #                else:
-        #                    beta='N'
-        #                url+='&entry.1534486210='+quote_plus(beta)
-        #                url+='&entry.451904934='+quote_plus(system)
-        #                if station is not None:
-        #                    url+='&entry.666865209='+quote_plus(station)
-                    
-        #                url+='&entry.310344870='+str(entry['Reward'])
-        #                url+='&entry.706329985='+quote_plus(entry['AwardingFaction'])
-        #                url+='&entry.78713015='+quote_plus(entry['VictimFaction'])
-        #                Reporter(url).start()
-        #        if "SellExplorationData" in entry:
-        #            None
-        #        if "MultiSellExplorationData" in entry:
-        #            None
-        #        if "RedeemVoucher" in entry:
-                   # None
-                #if "ACTION NAME(LOGS)" in entry:
-                #   None
+        if entry["event"] == "MissionFailed":
+            with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
+                missions_list = missions_file.readlines()
+            with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
+                for line in missions_list:
+                    mission = json.loads(line)
+                    if mission["ID"] != entry["MissionID"]:
+                        missions_file.write(line)
+                    else:
+                        failed_mission = mission
+
+            url_params = {
+                    "entry.1506409811": cmdr,
+                    "entry.1546958101": failed_mission["type"],
+                    "entry.450251211": "FAILED",
+                    "entry.542793243": failed_mission["system"],
+                    "entry.1404963760": failed_mission["faction"],
+                    "entry.340829640": -2,
+                    "entry.2011651184": failed_mission["system2"],
+                    "entry.1354651798": failed_mission["faction2"],
+                    "entry.342000821": "???" if failed_mission["system2"] != "" else "",
+                }
+            url = f'{URL_GOOGLE}/1FAIpQLSeWbZYlPoXghs32wKRrICzLCcvBDD7cJCVjjG3QF6l8bYXRUw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            Reporter(url).start()
+
+        if entry["event"] == "MissionAbandoned":
+            with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
+                missions_list = missions_file.readlines()
+            with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
+                for line in missions_list:
+                    mission = json.loads(line)
+                    if mission["ID"] != entry["MissionID"] or mission["type"] == "Mission_HackMegaship":
+                        missions_file.write(line)
