@@ -566,9 +566,8 @@ class BGS():
                 "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", "") != "" else "",
                 "faction2": entry.get("TargetFaction", ""),
             }
-            missions_file = open(self.CURRENT_MISSIONS_FILE, "a")
-            missions_file.write(json.dumps(mission) + '\n')
-            missions_file.close()
+            with open(self.CURRENT_MISSIONS_FILE, "a", encoding="utf8") as missions_file:
+                missions_file.write(json.dumps(mission) + '\n')
 
         if entry["event"] == "MissionCompleted":
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
@@ -580,7 +579,9 @@ class BGS():
                         missions_file.write(line)
                     else:
                         completed_mission = mission
-
+            if not(completed_mission in locals()):
+                return
+            
             factions_inf = {}
             for faction in entry["FactionEffects"]:
                 factions_inf[faction["Faction"]] = len(faction["Influence"][0]["Influence"])
@@ -611,6 +612,8 @@ class BGS():
                         missions_file.write(line)
                     else:
                         failed_mission = mission
+            if not(failed_mission in locals()):
+                return
 
             url_params = {
                     "entry.1506409811": cmdr,
