@@ -572,6 +572,7 @@ class BGS():
         if entry["event"] == "MissionCompleted":
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
                 missions_list = missions_file.readlines()
+            completed_mission = dict()
             with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
                 for line in missions_list:
                     mission = json.loads(line)
@@ -579,7 +580,7 @@ class BGS():
                         missions_file.write(line)
                     else:
                         completed_mission = mission
-            if not(completed_mission in locals()):
+            if completed_mission == {}:
                 return
             
             factions_inf = {}
@@ -605,6 +606,7 @@ class BGS():
         if entry["event"] == "MissionFailed":
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
                 missions_list = missions_file.readlines()
+            failed_mission = dict()
             with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
                 for line in missions_list:
                     mission = json.loads(line)
@@ -612,7 +614,7 @@ class BGS():
                         missions_file.write(line)
                     else:
                         failed_mission = mission
-            if not(failed_mission in locals()):
+            if failed_mission == {}:
                 return
 
             url_params = {
