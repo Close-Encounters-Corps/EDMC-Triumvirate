@@ -557,8 +557,13 @@ class BGS():
         cls.bgsTasks = bgsTask
 
     def TaskCheck(self,cmdr, is_beta, system, station, entry, client):
+        logfile = open(f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\log", "a", encoding="utf8")
+        logfile.write(str(entry) + '\n')
+
         if entry["event"] == "MissionAccepted":
+            logfile.write("\tdetected MissionAccepted\n")
             mission = {
+                "timestamp": entry["timestamp"],
                 "ID": entry["MissionID"],
                 "type": entry["Name"],
                 "system": system,
@@ -566,27 +571,41 @@ class BGS():
                 "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", "") != "" else "",
                 "faction2": entry.get("TargetFaction", ""),
             }
+            logfile.write("\tsaved data: " + str(mission) + '\n')
             with open(self.CURRENT_MISSIONS_FILE, "a", encoding="utf8") as missions_file:
                 missions_file.write(json.dumps(mission) + '\n')
+                logfile.write("\tsaved to currentmissions\n")
 
         if entry["event"] == "MissionCompleted":
+            logfile.write("\tdetected MissionCompleted\n")
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
                 missions_list = missions_file.readlines()
+                logfile.write("\tread currentmissions\n")
             completed_mission = dict()
+            logfile.write("\tcreated empty dict 'completed_mission'\n")
             with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
+                logfile.write("\topened currentmissions for editing\n")
                 for line in missions_list:
                     mission = json.loads(line)
+                    logfile.write("\tmission: " + str(mission) + '\n')
                     if mission["ID"] != entry["MissionID"]:
+                        logfile.write("\tnot what we're looking for, saving to currentmissions\n")
                         missions_file.write(line)
                     else:
+                        logfile.write("\tfound what we're looking for, completed_mission = mission\n")
                         completed_mission = mission
             if completed_mission == {}:
+                logfile.write("\tWARNING: mission not found, exiting\n")
                 return
             
-            factions_inf = {}
+            factions_inf = dict()
+            logfile.write("\tcreated empty dict for influence\n")
             for faction in entry["FactionEffects"]:
+                logfile.write("\tcurrent faction: " + str(faction) + '\n')
                 factions_inf[faction["Faction"]] = len(faction["Influence"][0]["Influence"])
+                logfile.write("\tinfluence written: " + str(factions_inf[faction["Faction"]]) + '\n')
                 if faction["Influence"][0]["Trend"] == "DownBad":
+                    logfile.write("\ttrend 'downbad', changing sign to minus\n")
                     factions_inf[faction["Faction"]] *= -1
             
             url_params = {
@@ -601,20 +620,30 @@ class BGS():
                     "entry.342000821": factions_inf.get(completed_mission["faction2"], ""),
                 }
             url = f'{URL_GOOGLE}/1FAIpQLSeWbZYlPoXghs32wKRrICzLCcvBDD7cJCVjjG3QF6l8bYXRUw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            logfile.write("\tlink: " + url + '\n')
             Reporter(url).start()
+            logfile.write("\tsuccessfully sent to google sheet\n")
 
         if entry["event"] == "MissionFailed":
+            logfile.write("\tdetected MissionFailed\n")
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
                 missions_list = missions_file.readlines()
+                logfile.write("\tread currentmissions\n")
             failed_mission = dict()
+            logfile.write("\tcreated emtpy dict 'failed_mission'\n")
             with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
+                logfile.write("\topened currentmissions for editing\n")
                 for line in missions_list:
                     mission = json.loads(line)
+                    logfile.write("\tmission: " + str(mission) + '\n')
                     if mission["ID"] != entry["MissionID"]:
+                        logfile.write("\tnot what we're looking for, saving to currentmissions\n")
                         missions_file.write(line)
                     else:
+                        logfile.write("\tfound what we're looking for, completed_mission = mission\n")
                         failed_mission = mission
             if failed_mission == {}:
+                logfile.write("\tWARNING: mission not found, exiting\n")
                 return
 
             url_params = {
@@ -626,16 +655,29 @@ class BGS():
                     "entry.340829640": -2,
                     "entry.2011651184": failed_mission["system2"],
                     "entry.1354651798": failed_mission["faction2"],
-                    "entry.342000821": "???" if failed_mission["system2"] != "" else "",
+                    "entry.342000821": "-2" if failed_mission["system2"] != "" else "",
                 }
             url = f'{URL_GOOGLE}/1FAIpQLSeWbZYlPoXghs32wKRrICzLCcvBDD7cJCVjjG3QF6l8bYXRUw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            logfile.write("\tlink: " + url + '\n')
             Reporter(url).start()
+            logfile.write("\tsuccessfully sent to google sheet\n")
 
         if entry["event"] == "MissionAbandoned":
+            logfile.write("\tdetected MissionFailed\n")
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
                 missions_list = missions_file.readlines()
+                logfile.write("\tread currentmissions\n")
             with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
+                logfile.write("\topened currentmissions for editing\n")
                 for line in missions_list:
                     mission = json.loads(line)
-                    if mission["ID"] != entry["MissionID"] or mission["type"] == "Mission_HackMegaship":
+                    logfile.write("\tmission: " + str(mission) + '\n')
+                    if mission["ID"] != entry["MissionID"]:
+                        logfile.write("\tnot id we're searching for. writing to file\n")
                         missions_file.write(line)
+                    elif mission["type"] == "Mission_HackMegaship":
+                        logfile.write("\tid found, but it's megaship - writing to file\n")
+                        missions_file.write(line)
+                    else:
+                        logfile.write("\tfound id, skipping\n")
+        logfile.close()
