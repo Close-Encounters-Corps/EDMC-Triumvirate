@@ -9,6 +9,9 @@ import os
 import logging
 import webbrowser
 
+# для BGS
+from threading import Lock
+
 ### third-party модули ###
 import requests
 
@@ -94,10 +97,10 @@ this.fuel_cons = 0.0
 context.help_page_opened = False
 context.latest_dashboard_entry = None
 
-# ВРЕМЕННО ДЛЯ BGS: ОЧИСТКА ЛОГОВ МОДУЛЯ
+# BGS: создание файла активных миссий
 try:
-    os.remove(f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\log")
-except FileNotFoundError:
+    open(f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\currentmissions.trmv", "x")
+except FileExistsError:
     pass
 
 def plugin_prefs(parent, cmdr, is_beta):
@@ -253,6 +256,7 @@ def Squadronsend(CMDR, entry):
         legacy.Reporter(url).start()
 
 
+bgsthreadlock = Lock()
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     # capture some stats when we launch
     # not read for that yet
@@ -314,6 +318,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.nearloc["Latitude"],
             this.nearloc["Longitude"],
             this.client_version,
+            bgsthreadlock,
         )
     ).start()
 
@@ -364,6 +369,7 @@ def journal_entry_wrapper(
     lat,
     lon,
     client,
+    threadlock
 ):
     """
     Detect journal events
@@ -423,7 +429,7 @@ def journal_entry_wrapper(
     legacy.AXZone(cmdr, is_beta, system, x, y, z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
-    legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
+    legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client, threadlock)
     legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     if status_message is not None:
         this.message_label.text = status_message
