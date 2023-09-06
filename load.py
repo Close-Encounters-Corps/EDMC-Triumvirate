@@ -94,6 +94,11 @@ this.fuel_cons = 0.0
 context.help_page_opened = False
 context.latest_dashboard_entry = None
 
+# ВРЕМЕННО ДЛЯ BGS: ОЧИСТКА ЛОГОВ МОДУЛЯ
+try:
+    os.remove(f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\log")
+except FileNotFoundError:
+    pass
 
 def plugin_prefs(parent, cmdr, is_beta):
     """
