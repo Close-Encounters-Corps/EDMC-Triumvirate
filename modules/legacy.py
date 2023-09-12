@@ -9,6 +9,7 @@ except:#py2
 import json
 import os
 import sys
+import re
 from  math import sqrt,pow,trunc
 from .debug import debug
 from .debug import debug, error
@@ -691,41 +692,42 @@ class BGS():
                         print("\tMISSION_ABANDONED: found id, skipping")
 
         # ВАУЧЕРЫ
-        elif entry["event"] == "RedeemVoucher":
-            print("\tREDEEM_VOUCHER: detected RedeemVoucher")
-            if entry["Type"] != "bounty":
-                print(f"\tREDEEM_VOUCHER: type \"{entry['Type']}\", skipping")
-            else:
-                print("\tREDEEM_VOUCHER: type \"Bounty\"")
-                for faction in entry["Factions"]:
-                    print("\tREDEEM_VOUCHER: current faction: " + str(faction))
-                    url_params = {
-                        "entry.2049800763": cmdr,
-                        "entry.1945972044": "bounty",
-                        "entry.1944054969": system,
-                        "entry.251710042": "",
-                        "entry.284340607": faction["Faction"],
-                        "entry.375559118": faction["Amount"],
-                    }
-                    url = f'{URL_GOOGLE}/1FAIpQLSektTrrVVIJW1gMat7biNwZC0TWb0vLXP5BlXStcv3ep53t1Q/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-                    print("\tREDEEM_VOUCHER: link: " + url)
-                    Reporter(url).start()
-                    print("\tREDEEM_VOUCHER: successfully sent to google sheet")
+        if self.mainfaction != "FleetCarrier":
+            if entry["event"] == "RedeemVoucher":
+                print("\tREDEEM_VOUCHER: detected RedeemVoucher")
+                if entry["Type"] != "bounty":
+                    print(f"\tREDEEM_VOUCHER: type \"{entry['Type']}\", skipping")
+                else:
+                    print("\tREDEEM_VOUCHER: type \"Bounty\"")
+                    for faction in entry["Factions"]:
+                        print("\tREDEEM_VOUCHER: current faction: " + str(faction))
+                        url_params = {
+                            "entry.2049800763": cmdr,
+                            "entry.1945972044": "bounty",
+                            "entry.1944054969": system,
+                            "entry.251710042": "",
+                            "entry.284340607": faction["Faction"],
+                            "entry.375559118": faction["Amount"],
+                        }
+                        url = f'{URL_GOOGLE}/1FAIpQLSektTrrVVIJW1gMat7biNwZC0TWb0vLXP5BlXStcv3ep53t1Q/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                        print("\tREDEEM_VOUCHER: link: " + url)
+                        Reporter(url).start()
+                        print("\tREDEEM_VOUCHER: successfully sent to google sheet")
 
-        # КАРТОГРАФИЯ
-        elif "SellExplorationData" in entry["event"]:
-            print(f"\tSELL_EXP_DATA: detected \"{entry['event']}\"")
-            url_params = {
-                "entry.2049800763": cmdr,
-                "entry.1945972044": "SellExpData",
-                "entry.1944054969": system,
-                "entry.251710042": station,
-                "entry.284340607": self.mainfaction,
-                "entry.375559118": entry["TotalEarnings"],
-            }
-            url = f'{URL_GOOGLE}/1FAIpQLSektTrrVVIJW1gMat7biNwZC0TWb0vLXP5BlXStcv3ep53t1Q/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-            print("\tSELL_EXP_DATA: link: " + url)
-            Reporter(url).start()
-            print("\tSELL_EXP_DATA: successfully sent to google sheet")
+            # КАРТОГРАФИЯ
+            elif "SellExplorationData" in entry["event"]:
+                print(f"\tSELL_EXP_DATA: detected \"{entry['event']}\"")
+                url_params = {
+                    "entry.2049800763": cmdr,
+                    "entry.1945972044": "SellExpData",
+                    "entry.1944054969": system,
+                    "entry.251710042": station,
+                    "entry.284340607": self.mainfaction,
+                    "entry.375559118": entry["TotalEarnings"],
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSektTrrVVIJW1gMat7biNwZC0TWb0vLXP5BlXStcv3ep53t1Q/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                print("\tSELL_EXP_DATA: link: " + url)
+                Reporter(url).start()
+                print("\tSELL_EXP_DATA: successfully sent to google sheet")
 
         threadlock.release()
