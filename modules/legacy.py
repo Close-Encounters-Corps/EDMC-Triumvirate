@@ -691,8 +691,8 @@ class BGS():
                     else:
                         print("\tMISSION_ABANDONED: found id, skipping")
 
-        # ВАУЧЕРЫ
         if self.mainfaction != "FleetCarrier":
+            # ВАУЧЕРЫ
             if entry["event"] == "RedeemVoucher":
                 print("\tREDEEM_VOUCHER: detected RedeemVoucher")
                 if entry["Type"] != "bounty":
