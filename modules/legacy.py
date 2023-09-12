@@ -684,8 +684,8 @@ class BGS():
                     if mission["ID"] != entry["MissionID"]:
                         print("\tMISSION_ABANDONED: not id we're searching for. writing to file")
                         missions_file.write(line)
-                    elif mission["type"] == "Mission_HackMegaship":
-                        print("\tMISSION_ABANDONED: id found, but it's megaship - writing to file")
+                    elif mission["type"] == "Mission_HackMegaship" or mission["type"] == "MISSION_DisableMegaship":
+                        print("\tMISSION_ABANDONED: id found, but it's related to megaships - writing to file")
                         missions_file.write(line)
                     else:
                         print("\tMISSION_ABANDONED: found id, skipping")
