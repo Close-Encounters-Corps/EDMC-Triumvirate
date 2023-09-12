@@ -97,11 +97,13 @@ this.fuel_cons = 0.0
 context.help_page_opened = False
 context.latest_dashboard_entry = None
 
-# BGS: создание файла активных миссий
+# BGS: подготовительные работы
 try:
     open(f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\currentmissions.trmv", "x")
 except FileExistsError:
     pass
+BGS = legacy.BGS()
+BGSTHREADLOCK = Lock()
 
 def plugin_prefs(parent, cmdr, is_beta):
     """
@@ -256,7 +258,6 @@ def Squadronsend(CMDR, entry):
         legacy.Reporter(url).start()
 
 
-bgsthreadlock = Lock()
 def journal_entry(cmdr, is_beta, system, station, entry, state):
     # capture some stats when we launch
     # not read for that yet
@@ -318,7 +319,7 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.nearloc["Latitude"],
             this.nearloc["Longitude"],
             this.client_version,
-            bgsthreadlock,
+            BGSTHREADLOCK,
         )
     ).start()
 
@@ -429,7 +430,7 @@ def journal_entry_wrapper(
     legacy.AXZone(cmdr, is_beta, system, x, y, z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
-    legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client, threadlock)
+    BGS.TaskCheck(cmdr, is_beta, system, station, entry, client, threadlock)
     legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     if status_message is not None:
         this.message_label.text = status_message

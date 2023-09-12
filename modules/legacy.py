@@ -549,6 +549,8 @@ class NHSS(threading.Thread):
 
 class BGS():
     CURRENT_MISSIONS_FILE = f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\currentmissions.trmv"
+    mainfaction = ""
+
     def __init__(self):
         self.bgsTasks = {}
 
@@ -560,6 +562,13 @@ class BGS():
         threadlock.acquire()
         print(str(entry))
 
+        # владеющая станцией фракция - для картографии
+        if entry["event"] == "Docked" or (entry["event"] == "Location" and entry["Docked"] == True):
+            print(f"\tMAIN_FACTION: detected \"{entry['event']}\"")
+            self.mainfaction = entry["StationFaction"]["Name"]
+            print(f"\tMAIN_FACTION: main_faction set to \"{self.mainfaction}\"")
+
+        # МИССИИ
         if entry["event"] == "MissionAccepted":
             print("\tMISSION_ACCEPTED: detected MissionAccepted")
             mission = {
@@ -576,7 +585,7 @@ class BGS():
                 missions_file.write(json.dumps(mission) + '\n')
                 print("\tMISSION_ACCEPTED: saved to currentmissions")
 
-        if entry["event"] == "MissionCompleted":
+        elif entry["event"] == "MissionCompleted":
             print("\tMISSION_COMPLETE: detected MissionCompleted")
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
                 missions_list = missions_file.readlines()
@@ -624,7 +633,7 @@ class BGS():
             Reporter(url).start()
             print("\tMISSION_COMPLETE: successfully sent to google sheet")
 
-        if entry["event"] == "MissionFailed":
+        elif entry["event"] == "MissionFailed":
             print("\tMISSION_FAILED: detected MissionFailed")
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
                 missions_list = missions_file.readlines()
@@ -662,7 +671,7 @@ class BGS():
             Reporter(url).start()
             print("\tMISSION_FAILED: successfully sent to google sheet")
 
-        if entry["event"] == "MissionAbandoned":
+        elif entry["event"] == "MissionAbandoned":
             print("\tMISSION_ABANDONED: detected MissionAbandoned")
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
                 missions_list = missions_file.readlines()
@@ -680,5 +689,43 @@ class BGS():
                         missions_file.write(line)
                     else:
                         print("\tMISSION_ABANDONED: found id, skipping")
+
+        # ВАУЧЕРЫ
+        elif entry["event"] == "RedeemVoucher":
+            print("\tREDEEM_VOUCHER: detected RedeemVoucher")
+            if entry["Type"] != "bounty":
+                print(f"\tREDEEM_VOUCHER: type \"{entry['Type']}\", skipping")
+            else:
+                print("\tREDEEM_VOUCHER: type \"Bounty\"")
+                for faction in entry["Factions"]:
+                    print("\tREDEEM_VOUCHER: current faction: " + str(faction))
+                    url_params = {
+                        "entry.2049800763": cmdr,
+                        "entry.1945972044": "bounty",
+                        "entry.1944054969": system,
+                        "entry.251710042": "",
+                        "entry.284340607": faction["Faction"],
+                        "entry.375559118": faction["Amount"],
+                    }
+                    url = f'{URL_GOOGLE}/1FAIpQLScC4_tIl63ElmalyEiJ-Lu5inZYgtBn9ojEyFhCEkDVdA8KIw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                    print("\tREDEEM_VOUCHER: link: " + url)
+                    Reporter(url).start()
+                    print("\tREDEEM_VOUCHER: successfully sent to google sheet")
+
+        # КАРТОГРАФИЯ
+        elif "SellExplorationData" in entry["event"]:
+            print(f"\tSELL_EXP_DATA: detected \"{entry['event']}\"")
+            url_params = {
+                "entry.2049800763": cmdr,
+                "entry.1945972044": "SellExpData",
+                "entry.1944054969": system,
+                "entry.251710042": station,
+                "entry.284340607": self.mainfaction,
+                "entry.375559118": entry["TotalEarnings"],
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLScC4_tIl63ElmalyEiJ-Lu5inZYgtBn9ojEyFhCEkDVdA8KIw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            print("\tSELL_EXP_DATA: link: " + url)
+            Reporter(url).start()
+            print("\tSELL_EXP_DATA: successfully sent to google sheet")
 
         threadlock.release()
