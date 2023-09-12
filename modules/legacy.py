@@ -628,7 +628,7 @@ class BGS():
                     "entry.1354651798": completed_mission["faction2"],
                     "entry.342000821": factions_inf.get(completed_mission["faction2"], ""),
                 }
-            url = f'{URL_GOOGLE}/1FAIpQLSeWbZYlPoXghs32wKRrICzLCcvBDD7cJCVjjG3QF6l8bYXRUw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            url = f'{URL_GOOGLE}/1FAIpQLScbq22s4C-zGkVPamKZCqismCMfGgQ9hIfJbHznbiKSiIS-iw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
             print("\tMISSION_COMPLETE: link: " + url)
             Reporter(url).start()
             print("\tMISSION_COMPLETE: successfully sent to google sheet")
@@ -666,7 +666,7 @@ class BGS():
                     "entry.1354651798": failed_mission["faction2"],
                     "entry.342000821": "-2" if failed_mission["system2"] != "" else "",
                 }
-            url = f'{URL_GOOGLE}/1FAIpQLSeWbZYlPoXghs32wKRrICzLCcvBDD7cJCVjjG3QF6l8bYXRUw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            url = f'{URL_GOOGLE}/1FAIpQLScbq22s4C-zGkVPamKZCqismCMfGgQ9hIfJbHznbiKSiIS-iw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
             print("\tMISSION_FAILED: link: " + url)
             Reporter(url).start()
             print("\tMISSION_FAILED: successfully sent to google sheet")
@@ -707,7 +707,7 @@ class BGS():
                         "entry.284340607": faction["Faction"],
                         "entry.375559118": faction["Amount"],
                     }
-                    url = f'{URL_GOOGLE}/1FAIpQLScC4_tIl63ElmalyEiJ-Lu5inZYgtBn9ojEyFhCEkDVdA8KIw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                    url = f'{URL_GOOGLE}/1FAIpQLSektTrrVVIJW1gMat7biNwZC0TWb0vLXP5BlXStcv3ep53t1Q/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
                     print("\tREDEEM_VOUCHER: link: " + url)
                     Reporter(url).start()
                     print("\tREDEEM_VOUCHER: successfully sent to google sheet")
@@ -723,7 +723,7 @@ class BGS():
                 "entry.284340607": self.mainfaction,
                 "entry.375559118": entry["TotalEarnings"],
             }
-            url = f'{URL_GOOGLE}/1FAIpQLScC4_tIl63ElmalyEiJ-Lu5inZYgtBn9ojEyFhCEkDVdA8KIw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            url = f'{URL_GOOGLE}/1FAIpQLSektTrrVVIJW1gMat7biNwZC0TWb0vLXP5BlXStcv3ep53t1Q/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
             print("\tSELL_EXP_DATA: link: " + url)
             Reporter(url).start()
             print("\tSELL_EXP_DATA: successfully sent to google sheet")
