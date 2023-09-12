@@ -563,7 +563,7 @@ class BGS():
         threadlock.acquire()
         print(str(entry))
 
-        # владеющая станцией фракция - для картографии
+        # владеющая станцией фракция
         if entry["event"] == "Docked" or (entry["event"] == "Location" and entry["Docked"] == True):
             print(f"\tMAIN_FACTION: detected \"{entry['event']}\"")
             self.mainfaction = entry["StationFaction"]["Name"]
