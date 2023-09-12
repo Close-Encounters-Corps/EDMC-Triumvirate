@@ -9,7 +9,6 @@ except:#py2
 import json
 import os
 import sys
-import re
 from  math import sqrt,pow,trunc
 from .debug import debug
 from .debug import debug, error
