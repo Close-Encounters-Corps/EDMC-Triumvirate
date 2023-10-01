@@ -610,6 +610,15 @@ class BGS():
             print("\tMISSION_COMPLETE: created empty dict for influence")
             for faction in entry["FactionEffects"]:
                 print("\tMISSION_COMPLETE: current faction: " + str(faction))
+                # на случай, если вторая фракция не прописана в ивенте
+                if faction["Faction"] == "":
+                    print("\tMISSION_COMPLETE: WARNING: second faction is empty")
+                    if completed_mission["faction2"] == "":     # её нет и в MissionAccepted: игнорируем
+                        print("\tMISSION_COMPLETE: second faction not found in MissionAccepted, ignoring")
+                        continue
+                    else:                                       # она есть в MissionAccepted: копируем оттуда
+                        print("\tMISSION_COMPLETE: second faction found in MissionAccepted, copying")
+                        faction["Faction"] = completed_mission["faction2"]
                 factions_inf[faction["Faction"]] = len(faction["Influence"][0]["Influence"])
                 print("\tMISSION_COMPLETE: influence written: " + str(factions_inf[faction["Faction"]]))
                 if faction["Influence"][0]["Trend"] == "DownBad":
