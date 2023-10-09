@@ -430,7 +430,15 @@ def journal_entry_wrapper(
     legacy.AXZone(cmdr, is_beta, system, x, y, z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
-    BGS.TaskCheck(cmdr, is_beta, system, station, entry, client, threadlock)
+    try:
+        BGS.TaskCheck(cmdr, is_beta, system, station, entry, client, threadlock)
+    except UnicodeEncodeError:
+        print(f"\tUNICODE ERROR. timestamp: {entry['timestamp']}, event: {entry['event']}")
+        if ("Mission" not in entry["event"] and entry["event"] != "RedeemVoucher"):
+            print("\tWe wouldn't need this for BGS anyway.")
+        else:
+            print("\tTHIS IS RELATED TO BGS.")
+        threadlock.release()
     legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     if status_message is not None:
         this.message_label.text = status_message
