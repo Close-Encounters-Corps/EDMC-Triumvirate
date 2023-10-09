@@ -605,6 +605,8 @@ class BGS():
                         completed_mission = mission
             if completed_mission == {}:
                 print("\tMISSION_COMPLETE: WARNING: mission not found, exiting")
+                threadlock.release()
+                return
             
             factions_inf = dict()
             print("\tMISSION_COMPLETE: created empty dict for influence")
@@ -661,6 +663,8 @@ class BGS():
                         failed_mission = mission
             if failed_mission == {}:
                 print("\tMISSION_FAILED: WARNING: mission not found, exiting")
+                threadlock.release()
+                return
 
             url_params = {
                     "entry.1839270329": cmdr,
