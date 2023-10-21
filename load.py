@@ -432,12 +432,8 @@ def journal_entry_wrapper(
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
     try:
         BGS.TaskCheck(cmdr, is_beta, system, station, entry, client, threadlock)
-    except UnicodeEncodeError:
-        print(f"\tUNICODE ERROR. timestamp: {entry['timestamp']}, event: {entry['event']}")
-        if ("Mission" not in entry["event"] and entry["event"] != "RedeemVoucher"):
-            print("\tWe wouldn't need this for BGS anyway.")
-        else:
-            print("\tTHIS IS RELATED TO BGS.")
+    except Exception as ex:
+        print(f"\tERROR: {type(ex).__name__} occured. Args: {ex.args}")
         threadlock.release()
     legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     if status_message is not None:

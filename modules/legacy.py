@@ -9,7 +9,6 @@ except:#py2
 import json
 import os
 import sys
-import urllib
 from  math import sqrt,pow,trunc
 from .debug import debug
 from .debug import debug, error
@@ -623,17 +622,17 @@ class BGS():
                     factions_inf[faction["Faction"]] *= -1
             
             url_params = {
-                    "entry.1839270329": urllib.parse.quote(cmdr, safe=''),
-                    "entry.1889332006": urllib.parse.quote(completed_mission["type"], safe=''),
+                    "entry.1839270329": cmdr,
+                    "entry.1889332006": completed_mission["type"],
                     "entry.350771392": "COMPLETED",
-                    "entry.592164382": urllib.parse.quote(completed_mission["system"], safe=''),
-                    "entry.1812690212": urllib.parse.quote(completed_mission["faction"], safe=''),
-                    "entry.179254259": urllib.parse.quote(factions_inf[completed_mission["faction"]], safe=''),
-                    "entry.739461351": urllib.parse.quote(completed_mission["system2"], safe=''),
-                    "entry.887402348": urllib.parse.quote(completed_mission["faction2"], safe=''),
-                    "entry.1755429366": urllib.parse.quote(factions_inf.get(completed_mission["faction2"], ""), safe=''),
+                    "entry.592164382": completed_mission["system"],
+                    "entry.1812690212": completed_mission["faction"],
+                    "entry.179254259": factions_inf[completed_mission["faction"]],
+                    "entry.739461351": completed_mission["system2"],
+                    "entry.887402348": completed_mission["faction2"],
+                    "entry.1755429366": factions_inf.get(completed_mission["faction2"], ""),
                 }
-            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
             print("\tMISSION_COMPLETE: link: " + url)
             Reporter(url).start()
             print("\tMISSION_COMPLETE: successfully sent to google sheet")
@@ -662,17 +661,17 @@ class BGS():
                 return
 
             url_params = {
-                    "entry.1839270329": urllib.parse.quote(cmdr, safe=''),
-                    "entry.1889332006": urllib.parse.quote(failed_mission["type"], safe=''),
+                    "entry.1839270329": cmdr,
+                    "entry.1889332006": failed_mission["type"],
                     "entry.350771392": "FAILED",
-                    "entry.592164382": urllib.parse.quote(failed_mission["system"], safe=''),
-                    "entry.1812690212": urllib.parse.quote(failed_mission["faction"], safe=''),
+                    "entry.592164382": failed_mission["system"],
+                    "entry.1812690212": failed_mission["faction"],
                     "entry.179254259": -2,
-                    "entry.739461351": urllib.parse.quote(failed_mission["system2"], safe=''),
-                    "entry.887402348": urllib.parse.quote(failed_mission["faction2"], safe=''),
+                    "entry.739461351": failed_mission["system2"],
+                    "entry.887402348": failed_mission["faction2"],
                     "entry.1755429366": "-2" if failed_mission["system2"] != "" else "",
                 }
-            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
             print("\tMISSION_FAILED: link: " + url)
             Reporter(url).start()
             print("\tMISSION_FAILED: successfully sent to google sheet")
@@ -708,14 +707,14 @@ class BGS():
                         for faction in entry["Factions"]:
                             print("\tREDEEM_VOUCHER: current faction: " + str(faction))
                             url_params = {
-                                "entry.503143076": urllib.parse.quote(cmdr, safe=''),
+                                "entry.503143076": cmdr,
                                 "entry.1108939645": "bounty",
-                                "entry.127349896": urllib.parse.quote(system, safe=''),
+                                "entry.127349896": system,
                                 "entry.442800983": "",
-                                "entry.48514656": urllib.parse.quote(faction["Faction"], safe=''),
+                                "entry.48514656": faction["Faction"],
                                 "entry.351553038": faction["Amount"],
                             }
-                            url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                            url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
                             print("\tREDEEM_VOUCHER: link: " + url)
                             Reporter(url).start()
                             print("\tREDEEM_VOUCHER: successfully sent to google sheet")
@@ -724,14 +723,14 @@ class BGS():
             elif "SellExplorationData" in entry["event"]:
                 print(f"\tSELL_EXP_DATA: detected \"{entry['event']}\"")
                 url_params = {
-                    "entry.503143076": urllib.parse.quote(cmdr, safe=''),
+                    "entry.503143076": cmdr,
                     "entry.1108939645": "SellExpData",
-                    "entry.127349896": urllib.parse.quote(system, safe=''),
-                    "entry.442800983": urllib.parse.quote(station, safe=''),
-                    "entry.48514656": urllib.parse.quote(self.mainfaction, safe=''),
+                    "entry.127349896": system,
+                    "entry.442800983": station,
+                    "entry.48514656": self.mainfaction,
                     "entry.351553038": entry["TotalEarnings"],
                 }
-                url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
                 print("\tSELL_EXP_DATA: link: " + url)
                 Reporter(url).start()
                 print("\tSELL_EXP_DATA: successfully sent to google sheet")
