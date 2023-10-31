@@ -10,9 +10,7 @@ import json
 import os
 import sys
 from  math import sqrt,pow,trunc
-from .debug import debug
 from .debug import debug, error
-
 
 URL_GOOGLE = 'https://docs.google.com/forms/d/e'
 
@@ -554,17 +552,17 @@ class BGS():
 
     def TaskCheck(self,cmdr, is_beta, system, station, entry, client, threadlock):
         threadlock.acquire()
-        print(str(entry))
+        debug(str(entry))
 
         # владеющая станцией фракция
         if entry["event"] == "Docked" or (entry["event"] == "Location" and entry["Docked"] == True):
-            print(f"\tMAIN_FACTION: detected \"{entry['event']}\"")
+            debug(f"MAIN_FACTION: detected \"{entry['event']}\"")
             self.mainfaction = entry["StationFaction"]["Name"]
-            print(f"\tMAIN_FACTION: main_faction set to \"{self.mainfaction}\"")
+            debug(f"MAIN_FACTION: main_faction set to \"{self.mainfaction}\"")
 
         # МИССИИ
         if entry["event"] == "MissionAccepted":
-            print("\tMISSION_ACCEPTED: detected MissionAccepted")
+            debug("MISSION_ACCEPTED: detected MissionAccepted")
             mission = {
                 "timestamp": entry["timestamp"],
                 "ID": entry["MissionID"],
@@ -574,51 +572,51 @@ class BGS():
                 "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", "") != "" else "",
                 "faction2": entry.get("TargetFaction", ""),
             }
-            print("\tMISSION_ACCEPTED: saved data: " + str(mission))
+            debug("MISSION_ACCEPTED: saved data: " + str(mission))
             with open(self.CURRENT_MISSIONS_FILE, "a", encoding="utf8") as missions_file:
                 missions_file.write(json.dumps(mission) + '\n')
-                print("\tMISSION_ACCEPTED: saved to currentmissions")
+                debug("MISSION_ACCEPTED: saved to currentmissions")
 
         elif entry["event"] == "MissionCompleted":
-            print("\tMISSION_COMPLETE: detected MissionCompleted")
+            debug("MISSION_COMPLETE: detected MissionCompleted")
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
                 missions_list = missions_file.readlines()
-                print("\tMISSION_COMPLETE: read currentmissions")
+                debug("MISSION_COMPLETE: read currentmissions")
             completed_mission = dict()
-            print("\tMISSION_COMPLETE: created empty dict 'completed_mission'")
+            debug("MISSION_COMPLETE: created empty dict 'completed_mission'")
             with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
-                print("\tMISSION_COMPLETE: opened currentmissions for editing")
+                debug("MISSION_COMPLETE: opened currentmissions for editing")
                 for line in missions_list:
                     mission = json.loads(line)
-                    print("\tMISSION_COMPLETE: mission: " + str(mission))
+                    debug("MISSION_COMPLETE: mission: " + str(mission))
                     if mission["ID"] != entry["MissionID"]:
-                        print("\tMISSION_COMPLETE: not what we're looking for, saving to currentmissions")
+                        debug("MISSION_COMPLETE: not what we're looking for, saving to currentmissions")
                         missions_file.write(line)
                     else:
-                        print("\tMISSION_COMPLETE: found what we're looking for, completed_mission = mission")
+                        debug("MISSION_COMPLETE: found what we're looking for, completed_mission = mission")
                         completed_mission = mission
             if completed_mission == {}:
-                print("\tMISSION_COMPLETE: WARNING: mission not found, exiting")
+                debug("MISSION_COMPLETE: WARNING: mission not found, exiting")
                 threadlock.release()
                 return
             
             factions_inf = dict()
-            print("\tMISSION_COMPLETE: created empty dict for influence")
+            debug("MISSION_COMPLETE: created empty dict for influence")
             for faction in entry["FactionEffects"]:
-                print("\tMISSION_COMPLETE: current faction: " + str(faction))
+                debug("MISSION_COMPLETE: current faction: " + str(faction))
                 # на случай, если вторая фракция не прописана в ивенте
                 if faction["Faction"] == "":
-                    print("\tMISSION_COMPLETE: WARNING: second faction is empty")
+                    debug("MISSION_COMPLETE: WARNING: second faction is empty")
                     if completed_mission["faction2"] == "":     # её нет и в MissionAccepted: игнорируем
-                        print("\tMISSION_COMPLETE: second faction not found in MissionAccepted, ignoring")
+                        debug("MISSION_COMPLETE: second faction not found in MissionAccepted, ignoring")
                         continue
                     else:                                       # она есть в MissionAccepted: копируем оттуда
-                        print("\tMISSION_COMPLETE: second faction found in MissionAccepted, copying")
+                        debug("MISSION_COMPLETE: second faction found in MissionAccepted, copying")
                         faction["Faction"] = completed_mission["faction2"]
                 factions_inf[faction["Faction"]] = len(faction["Influence"][0]["Influence"])
-                print("\tMISSION_COMPLETE: influence written: " + str(factions_inf[faction["Faction"]]))
+                debug("MISSION_COMPLETE: influence written: " + str(factions_inf[faction["Faction"]]))
                 if faction["Influence"][0]["Trend"] == "DownBad":
-                    print("\tMISSION_COMPLETE: trend 'downbad', changing sign to minus")
+                    debug("MISSION_COMPLETE: trend 'downbad', changing sign to minus")
                     factions_inf[faction["Faction"]] *= -1
             
             url_params = {
@@ -633,30 +631,30 @@ class BGS():
                     "entry.1755429366": factions_inf.get(completed_mission["faction2"], ""),
                 }
             url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-            print("\tMISSION_COMPLETE: link: " + url)
+            debug("MISSION_COMPLETE: link: " + url)
             Reporter(url).start()
-            print("\tMISSION_COMPLETE: successfully sent to google sheet")
+            debug("MISSION_COMPLETE: successfully sent to google sheet")
 
         elif entry["event"] == "MissionFailed":
-            print("\tMISSION_FAILED: detected MissionFailed")
+            debug("MISSION_FAILED: detected MissionFailed")
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
                 missions_list = missions_file.readlines()
-                print("\tMISSION_FAILED: read currentmissions")
+                debug("MISSION_FAILED: read currentmissions")
             failed_mission = dict()
-            print("\tMISSION_FAILED: created emtpy dict 'failed_mission'")
+            debug("MISSION_FAILED: created emtpy dict 'failed_mission'")
             with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
-                print("\tMISSION_FAILED: opened currentmissions for editing")
+                debug("MISSION_FAILED: opened currentmissions for editing")
                 for line in missions_list:
                     mission = json.loads(line)
-                    print("\tMISSION_FAILED: mission: " + str(mission))
+                    debug("MISSION_FAILED: mission: " + str(mission))
                     if mission["ID"] != entry["MissionID"]:
-                        print("\tMISSION_FAILED: not what we're looking for, saving to currentmissions")
+                        debug("MISSION_FAILED: not what we're looking for, saving to currentmissions")
                         missions_file.write(line)
                     else:
-                        print("\tMISSION_FAILED: found what we're looking for, completed_mission = mission")
+                        debug("MISSION_FAILED: found what we're looking for, completed_mission = mission")
                         failed_mission = mission
             if failed_mission == {}:
-                print("\tMISSION_FAILED: WARNING: mission not found, exiting")
+                debug("MISSION_FAILED: WARNING: mission not found, exiting")
                 threadlock.release()
                 return
 
@@ -672,40 +670,40 @@ class BGS():
                     "entry.1755429366": "-2" if failed_mission["system2"] != "" else "",
                 }
             url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-            print("\tMISSION_FAILED: link: " + url)
+            debug("MISSION_FAILED: link: " + url)
             Reporter(url).start()
-            print("\tMISSION_FAILED: successfully sent to google sheet")
+            debug("MISSION_FAILED: successfully sent to google sheet")
 
         elif entry["event"] == "MissionAbandoned":
-            print("\tMISSION_ABANDONED: detected MissionAbandoned")
+            debug("MISSION_ABANDONED: detected MissionAbandoned")
             with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
                 missions_list = missions_file.readlines()
-                print("\tMISSION_ABANDONED: read currentmissions")
+                debug("MISSION_ABANDONED: read currentmissions")
             with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
-                print("\tMISSION_ABANDONED: opened currentmissions for editing")
+                debug("MISSION_ABANDONED: opened currentmissions for editing")
                 for line in missions_list:
                     mission = json.loads(line)
-                    print("\tMISSION_ABANDONED: mission: " + str(mission))
+                    debug("MISSION_ABANDONED: mission: " + str(mission))
                     if mission["ID"] != entry["MissionID"]:
-                        print("\tMISSION_ABANDONED: not id we're searching for. writing to file")
+                        debug("MISSION_ABANDONED: not id we're searching for. writing to file")
                         missions_file.write(line)
                     elif mission["type"] == "Mission_HackMegaship" or mission["type"] == "MISSION_DisableMegaship":
-                        print("\tMISSION_ABANDONED: id found, but it's related to megaships - writing to file")
+                        debug("MISSION_ABANDONED: id found, but it's related to megaships - writing to file")
                         missions_file.write(line)
                     else:
-                        print("\tMISSION_ABANDONED: found id, skipping")
+                        debug("MISSION_ABANDONED: found id, skipping")
 
         if self.mainfaction != "FleetCarrier":
             # ВАУЧЕРЫ
             if entry["event"] == "RedeemVoucher":
                 if "BrokerPercentage" not in entry:
-                    print("\tREDEEM_VOUCHER: detected RedeemVoucher")
+                    debug("REDEEM_VOUCHER: detected RedeemVoucher")
                     if entry["Type"] != "bounty":
-                        print(f"\tREDEEM_VOUCHER: type \"{entry['Type']}\", skipping")
+                        debug(f"REDEEM_VOUCHER: type \"{entry['Type']}\", skipping")
                     else:
-                        print("\tREDEEM_VOUCHER: type \"Bounty\"")
+                        debug("REDEEM_VOUCHER: type \"Bounty\"")
                         for faction in entry["Factions"]:
-                            print("\tREDEEM_VOUCHER: current faction: " + str(faction))
+                            debug("REDEEM_VOUCHER: current faction: " + str(faction))
                             url_params = {
                                 "entry.503143076": cmdr,
                                 "entry.1108939645": "bounty",
@@ -715,13 +713,13 @@ class BGS():
                                 "entry.351553038": faction["Amount"],
                             }
                             url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-                            print("\tREDEEM_VOUCHER: link: " + url)
+                            debug("REDEEM_VOUCHER: link: " + url)
                             Reporter(url).start()
-                            print("\tREDEEM_VOUCHER: successfully sent to google sheet")
+                            debug("REDEEM_VOUCHER: successfully sent to google sheet")
 
             # КАРТОГРАФИЯ
             elif "SellExplorationData" in entry["event"]:
-                print(f"\tSELL_EXP_DATA: detected \"{entry['event']}\"")
+                debug(f"SELL_EXP_DATA: detected \"{entry['event']}\"")
                 url_params = {
                     "entry.503143076": cmdr,
                     "entry.1108939645": "SellExpData",
@@ -731,8 +729,8 @@ class BGS():
                     "entry.351553038": entry["TotalEarnings"],
                 }
                 url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-                print("\tSELL_EXP_DATA: link: " + url)
+                debug("SELL_EXP_DATA: link: " + url)
                 Reporter(url).start()
-                print("\tSELL_EXP_DATA: successfully sent to google sheet")
+                debug("SELL_EXP_DATA: successfully sent to google sheet")
 
         threadlock.release()
