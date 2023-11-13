@@ -111,23 +111,170 @@ def CodexEntry(cmdr, is_beta, system, x,y,z, entry, body,lat,lon,client):#сде
         Reporter(url).start()
 
 
-def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
+def GusonExpeditions(cmdr, is_beta, system, entry):
+    # рекоды: количество тел
+    if entry.get('event') == 'FSSDiscoveryScan':
+        if entry.get('BodyCount') >= 50:
+            url_params = {
+                "entry.1258689641": cmdr,
+                "entry.1469465131": entry.get("SystemName", ""),
+                "entry.1583990022": "BodyCount",
+                "entry.1301773715": entry.get("BodyCount", ""),
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            Reporter(url).start()
+
     if entry.get('event') != 'Scan':
         return
-    if "gas giant" in entry.get("PlanetClass", "").lower():
-        helium_percentage = 0.0
-        for comp in entry.get("AtmosphereComposition", []):
-            if comp["Name"] == "Helium":
-                helium_percentage = comp["Percent"]
-        url_params = {
-            "entry.262880086": entry.get("BodyName", ""),
-            "entry.808713567": str(helium_percentage).replace('.', ','),
-            "entry.549950938": entry.get("StarSystem", "")
+    
+    # рекорды: масса тела
+    if "PlanetClass" in entry:
+        limits = {
+            "Metal rich body":                   {"limit": 643, "planetClass": "MetalRichBody"},
+            "High metal content body":           {"limit": 1258, "planetClass": "HMCBody"},
+            "Rocky body":                        {"limit": 475, "planetClass": "RockyBody"},
+            "Rocky ice body":                    {"limit": 268, "planetClass": "RockyIceBody"},
+            "Icy body":                          {"limit": 1992, "planetClass": "IcyBody"},
+            "Earthlike body":                    {"limit": 6.39, "planetClass": "EarthlikeBody"},
+            "Water world":                       {"limit": 667, "planetClass": "WaterWorld"},
+            "Water giant":                       {"limit": 1864, "planetClass": "WaterGiant"},
+            "Ammonia world":                     {"limit": 1194, "planetClass": "AmmoniaWorld"},
+            "Gas giant with water based life":   {"limit": 1231, "planetClass": "WaterLifeGG"},
+            "Gas giant with ammonia based life": {"limit": 818, "planetClass": "AmmoniaLifeGG"},
+            "Sudarsky class I gas giant":        {"limit": 819, "planetClass": "ClassIGG"},
+            "Sudarsky class II gas giant":       {"limit": 1231, "planetClass": "ClassIIGG"},
+            "Sudarsky class III gas giant":      {"limit": 3112, "planetClass": "ClassIIIGG"},
+            "Sudarsky class IV gas giant":       {"limit": 4862, "planetClass": "ClassIVGG"},
+            "Sudarsky class V gas giant":        {"limit": 11757, "planetClass": "ClassVGG"},
+            "Helium rich gas giant":             {"limit": 4288, "planetClass": "HeliumRichGG"},
+            "Helium gas giant":                  {"limit": 5202, "planetClass": "HeliumGG"},
         }
-        url = f'{URL_GOOGLE}/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-        Reporter(url).start()
+        planet = entry.get("PlanetClass")
+        limit = limits[planet]["limit"]
+        planetClass = limits[planet]["planetClass"]
+        
+        mass = entry.get("MassEM")
+        if mass > limit:
+            url_params = {
+                "entry.1258689641": cmdr,
+                "entry.1469465131": entry.get("BodyName", ""),
+                "entry.1583990022": f'HighMass{planetClass}',
+                "entry.1301773715": str(mass).replace('.', ','),
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            Reporter(url).start()
+
+    if "Landable" in entry:
+        if entry.get("Landable") == True:
+            # рекорды: температура посадочных
+            if entry.get("SurfaceTemperature") > 5115.9:
+                url_params = {
+                    "entry.1258689641": cmdr,
+                    "entry.1469465131": entry.get("BodyName", ""),
+                    "entry.1583990022": "HighTemperature",
+                    "entry.1301773715": entry.get("SurfaceTemperature"),
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                Reporter(url).start()
+
+            # рекорды: радиус посадочных
+            if entry.get("Radius") / 1000 > 25444:
+                url_params = {
+                    "entry.1258689641": cmdr,
+                    "entry.1469465131": entry.get("BodyName", ""),
+                    "entry.1583990022": "HugeRadius",
+                    "entry.1301773715": str(entry.get("Radius")).replace('.', ','),
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                Reporter(url).start()
+            elif entry.get("Radius") <= 138000:
+                url_params = {
+                    "entry.1258689641": cmdr,
+                    "entry.1469465131": entry.get("BodyName", ""),
+                    "entry.1583990022": "TinyRadius",
+                    "entry.1301773715": str(entry.get("Radius") / 1000).replace('.', ','),
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                Reporter(url).start()
+            
+            # рекорды: гравитация посадочных
+            if entry.get("SurfaceGravity") / 10 > 7.51:
+                url_params = {
+                    "entry.1258689641": cmdr,
+                    "entry.1469465131": entry.get("BodyName", ""),
+                    "entry.1583990022": "HighGravity",
+                    "entry.1301773715": str(entry.get("SurfaceGravity") / 10).replace('.', ','),
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                Reporter(url).start()
+    
+    # рекорды: горячие юпитеры
+    if "PlanetClass" in entry:
+        if "gas giant" in entry.get("PlanetClass").lower():
+            if entry.get("SurfaceTemperature") > 9352.83:
+                url_params = {
+                    "entry.1258689641": cmdr,
+                    "entry.1469465131": entry.get("BodyName", ""),
+                    "entry.1583990022": "HotJupiter",
+                    "entry.1301773715": str(entry.get("SurfaceTemperature")).replace('.', ','),
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                Reporter(url).start()
+
+    # рекорды: радиус колец
+    if "PlanetClass" in entry:
+        if "Rings" in entry:
+            rings = entry.get("Rings")
+            for ring in rings:
+                outerRad = str(ring.get("OuterRad"))
+                outerRad = outerRad[:outerRad.find('.')]
+                if float(outerRad) >= 34732000000:
+                    url_params = {
+                        "entry.1258689641": cmdr,
+                        "entry.1469465131": ring.get("Name"),
+                        "entry.1583990022": "WideRing",
+                        "entry.1301773715": outerRad[:-3],
+                    }
+                    url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+                    Reporter(url).start()
+        
+    # рекорды: орбитальный период
+    if "PlanetClass" in entry:
+        if entry.get("OrbitalPeriod") <= 1800:
+            url_params = {
+                "entry.1258689641": cmdr,
+                "entry.1469465131": entry.get("BodyName"),
+                "entry.1583990022": "OrbitalPeriod",
+                "entry.1301773715": entry.get("OrbitalPeriod"),
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
+            Reporter(url).start()
 
 
+    # БД атмосферных - ГГ
+    if "PlanetClass" in entry:
+        if "gas giant" in entry.get("PlanetClass").lower():
+            helium_percentage = 0.0
+            for comp in entry.get("AtmosphereComposition", []):
+                if comp["Name"] == "Helium":
+                    helium_percentage = comp["Percent"]
+            url_params = {
+                "entry.262880086": entry.get("BodyName", ""),
+                "entry.808713567": str(helium_percentage).replace('.', ','),
+                "entry.549950938": entry.get("StarSystem", "")
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+            Reporter(url).start()
+
+            url_params = {
+                "entry.207321892": entry.get("BodyName", ""),
+                "entry.318090096": str(helium_percentage).replace('.', ','),
+                "entry.1828517199": entry.get("StarSystem", "")
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLSeCRZ9GXprtSEUFgUOMR5yBGkqYpdrKAumLkYH6KkPOUq3sIA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+            Reporter(url).start()
+
+    # БД атмосферных - звёзды
     if "StarType" in entry:
         url_params = {
             "entry.422166846": entry.get("BodyName", ""),
@@ -140,8 +287,37 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
         url = f'{URL_GOOGLE}/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
         Reporter(url).start()
 
-    if entry.get('ScanType') == "Detailed" and entry.get("Atmosphere"):
-        if "thin" in entry["Atmosphere"] and entry.get("SurfaceGravity", 0) / 10 <= 0.6:
+        url = f'{URL_GOOGLE}/1FAIpQLSeapH5azc-9T0kIZ4vfDBcDlcd8ZfMUBS42DMRXL8fYcBxRtQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+        Reporter(url).start()
+
+    # Картография
+    if entry.get('ScanType') in ("Detailed", "AutoScan"):
+        valuable = False
+        if entry.get("PlanetClass") == "Earthlike body":
+            valuable = True
+
+        if entry.get("PlanetClass") == "Ammonia world":
+            valuable = True
+
+        if entry.get("PlanetClass") == "Water world" and entry.get("TerraformState") == "Terraformable":
+            valuable = True
+
+        known = entry.get("WasMapped") or entry.get("WasDiscovered")
+
+        if valuable and not known:
+            url_params = {
+                "entry.2022004794": cmdr,
+                "entry.1225803723": entry.get("BodyName", ""),
+                "entry.645216132": entry.get("PlanetClass", ""),
+                "entry.512641942": str(entry.get("WasDiscovered", "")),
+                "entry.1801392650": str(entry.get("WasMapped", "")),
+                "entry.1992174852": entry.get("StarSystem", "")
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLSdgwzvgxow5ATuB4Gimj6DvDRD3-ub3Yp4UD-nQK4CnZdKV9w/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+            Reporter(url).start()
+
+        # БД атмосферных - планеты
+        if "thin" in entry.get("Atmosphere", "") and entry.get("SurfaceGravity", 0) / 10 <= 0.6:
             url_params = {
                 "entry.347011697": cmdr,
                 "entry.1687350455": entry.get("BodyName", ""),
@@ -159,6 +335,9 @@ def GusonExpeditions(cmdr, is_beta, system, entry):  # Сделано
             Reporter(url).start()
 
      
+            url = f'{URL_GOOGLE}/1FAIpQLSfrZqrZHJ5T0lgpaoUOcLgM0fXmR_t5_vLKvT7J5HDA8mugeg/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
+            Reporter(url).start()
+
 def AXZone(cmdr, is_beta, system,x,y,z,station, entry, state):#Сделано
     #{
                                                                   #'timestamp':'2019-01-19T23:22:26Z',
