@@ -5,12 +5,10 @@ import tkinter as tk
 from datetime import datetime
 from urllib.parse import quote_plus
 from contextlib import closing
+from threading import Lock
 import os
 import logging
 import webbrowser
-
-# для BGS
-from threading import Lock
 
 ### third-party модули ###
 import requests
@@ -103,7 +101,6 @@ try:
 except FileExistsError:
     pass
 BGS = legacy.BGS()
-BGSTHREADLOCK = Lock()
 
 def plugin_prefs(parent, cmdr, is_beta):
     """
@@ -204,6 +201,8 @@ def plugin_stop():
     EDMC is closing
     """
     logger.debug("Stopping the plugin")
+    global BGS
+    del BGS
     for mod in context.modules:
         mod.close()
     thread.Thread.stop_all()
@@ -319,7 +318,6 @@ def journal_entry(cmdr, is_beta, system, station, entry, state):
             this.nearloc["Latitude"],
             this.nearloc["Longitude"],
             this.client_version,
-            BGSTHREADLOCK,
         )
     ).start()
 
@@ -369,8 +367,7 @@ def journal_entry_wrapper(
     body,
     lat,
     lon,
-    client,
-    threadlock
+    client
 ):
     """
     Detect journal events
@@ -431,10 +428,10 @@ def journal_entry_wrapper(
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
     try:
-        BGS.TaskCheck(cmdr, is_beta, system, station, entry, client, threadlock)
+        BGS.TaskCheck(cmdr, is_beta, system, station, entry, client)
     except Exception as ex:
-        print(f"\tERROR: {type(ex).__name__} occured. Args: {ex.args}")
-        threadlock.release()
+        logger.error(f"{type(ex).__name__} occured. Args: {ex.args}")
+        BGS.threadlock.release()
     legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     if status_message is not None:
         this.message_label.text = status_message

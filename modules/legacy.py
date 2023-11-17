@@ -11,6 +11,7 @@ import os
 import sys
 from  math import sqrt,pow,trunc
 from .debug import debug, error
+from datetime import datetime, timezone
 
 URL_GOOGLE = 'https://docs.google.com/forms/d/e'
 
@@ -549,9 +550,10 @@ class BGS():
     def __init__(self):
         self.CURRENT_MISSIONS_FILE = f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\currentmissions.trmv"
         self.mainfaction = ""
+        self.threadlock = threading.Lock()
 
-    def TaskCheck(self,cmdr, is_beta, system, station, entry, client, threadlock):
-        threadlock.acquire()
+    def TaskCheck(self,cmdr, is_beta, system, station, entry, client):
+        self.threadlock.acquire()
         debug(str(entry))
 
         # владеющая станцией фракция
@@ -566,6 +568,7 @@ class BGS():
             mission = {
                 "timestamp": entry["timestamp"],
                 "ID": entry["MissionID"],
+                "expires": entry["Expiry"],
                 "type": entry["Name"],
                 "system": system,
                 "faction": entry["Faction"],
@@ -597,7 +600,7 @@ class BGS():
                         completed_mission = mission
             if completed_mission == {}:
                 debug("MISSION_COMPLETE: WARNING: mission not found, exiting")
-                threadlock.release()
+                self.threadlock.release()
                 return
             
             factions_inf = dict()
@@ -655,7 +658,7 @@ class BGS():
                         failed_mission = mission
             if failed_mission == {}:
                 debug("MISSION_FAILED: WARNING: mission not found, exiting")
-                threadlock.release()
+                self.threadlock.release()
                 return
 
             url_params = {
@@ -733,4 +736,35 @@ class BGS():
                 Reporter(url).start()
                 debug("SELL_EXP_DATA: successfully sent to google sheet")
 
-        threadlock.release()
+        self.threadlock.release()
+
+    def __del__(self):
+        self.threadlock.acquire()
+        # Очистка файла миссий от устаревших, чей результат выполнения не был "пойман"
+        debug("Clearing missions file from old entries")
+        missionslist = []
+        with open(self.CURRENT_MISSIONS_FILE, 'r', encoding='utf8') as missionsfile:
+            count = 0
+            for line in missionsfile:
+                missionslist.append(line)
+                count += 1
+            debug(f"Missions read: {count}")
+        with open(self.CURRENT_MISSIONS_FILE, 'w', encoding='utf8') as missionsfile:
+            now = datetime.now(tz=timezone.utc)
+            count = 0
+            for line in missionslist:
+                mission = json.loads(line)
+                try:
+                    expires = datetime.strptime(mission["expires"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+                except KeyError:
+                    debug(f"Mission {mission['ID']} is written in old format and doesn't have 'expires' field, adding back to file.")
+                    missionsfile.write(line)
+                    count += 1
+                else:
+                    if expires > now:
+                        missionsfile.write(line)
+                        count += 1
+                    else:
+                        debug(f"Mission {mission['ID']} expired.")
+            debug(f"Missions written: {count}")
+        self.threadlock.release()
