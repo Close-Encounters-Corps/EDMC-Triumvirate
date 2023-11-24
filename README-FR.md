@@ -105,6 +105,6 @@ EDMC-Triumvirate utilise des données provenant de [Canonn API V2](https://docs.
 
 EDMC-Triumvirate basé sur [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), avec la permission des développeurs initiaux.
 
-Tous les contenus sont protégés par le droit d'auteur ©️ 2016-2023 Close Encounters Corps, Triumvirate. KAZAK0V, AntonyVern, Osmium, Art-py. Tous droits réservés.
+Tous les contenus sont protégés par le droit d'auteur ©️ 2016-2024 Close Encounters Corps, Triumvirate. KAZAK0V, AntonyVern, Osmium, Art-py. Tous droits réservés.
 
 Logo - Антон Верницкий aka AntonyVern/Automatic system
