@@ -568,7 +568,7 @@ class BGS():
             mission = {
                 "timestamp": entry["timestamp"],
                 "ID": entry["MissionID"],
-                "expires": entry["Expiry"],
+                "expires": entry.get("Expiry", ""),
                 "type": entry["Name"],
                 "system": system,
                 "faction": entry["Faction"],
