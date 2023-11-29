@@ -546,197 +546,223 @@ class NHSS(threading.Thread):
  #self.entry.get("Name_Localised").encode('utf8'))
 
 
+
 class BGS():
     def __init__(self):
         self.CURRENT_MISSIONS_FILE = f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\currentmissions.trmv"
         self.mainfaction = ""
         self.threadlock = threading.Lock()
 
-    def TaskCheck(self,cmdr, is_beta, system, station, entry, client):
+    def TaskCheck(self, cmdr, is_beta, system, station, entry, client):
         self.threadlock.acquire()
-        debug(str(entry))
+        event = entry["event"]
 
-        # владеющая станцией фракция
-        if entry["event"] == "Docked" or (entry["event"] == "Location" and entry["Docked"] == True):
-            debug(f"MAIN_FACTION: detected \"{entry['event']}\"")
-            self.mainfaction = entry["StationFaction"]["Name"]
-            debug(f"MAIN_FACTION: main_faction set to \"{self.mainfaction}\"")
-
-        # МИССИИ
-        if entry["event"] == "MissionAccepted":
-            debug("MISSION_ACCEPTED: detected MissionAccepted")
-            mission = {
-                "timestamp": entry["timestamp"],
-                "ID": entry["MissionID"],
-                "expires": entry.get("Expiry", ""),
-                "type": entry["Name"],
-                "system": system,
-                "faction": entry["Faction"],
-                "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", "") != "" else "",
-                "faction2": entry.get("TargetFaction", ""),
-            }
-            debug("MISSION_ACCEPTED: saved data: " + str(mission))
-            with open(self.CURRENT_MISSIONS_FILE, "a", encoding="utf8") as missions_file:
-                missions_file.write(json.dumps(mission) + '\n')
-                debug("MISSION_ACCEPTED: saved to currentmissions")
-
-        elif entry["event"] == "MissionCompleted":
-            debug("MISSION_COMPLETE: detected MissionCompleted")
-            with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
-                missions_list = missions_file.readlines()
-                debug("MISSION_COMPLETE: read currentmissions")
-            completed_mission = dict()
-            debug("MISSION_COMPLETE: created empty dict 'completed_mission'")
-            with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
-                debug("MISSION_COMPLETE: opened currentmissions for editing")
-                for line in missions_list:
-                    mission = json.loads(line)
-                    debug("MISSION_COMPLETE: mission: " + str(mission))
-                    if mission["ID"] != entry["MissionID"]:
-                        debug("MISSION_COMPLETE: not what we're looking for, saving to currentmissions")
-                        missions_file.write(line)
-                    else:
-                        debug("MISSION_COMPLETE: found what we're looking for, completed_mission = mission")
-                        completed_mission = mission
-            if completed_mission == {}:
-                debug("MISSION_COMPLETE: WARNING: mission not found, exiting")
-                self.threadlock.release()
-                return
-            
-            factions_inf = dict()
-            debug("MISSION_COMPLETE: created empty dict for influence")
-            for faction in entry["FactionEffects"]:
-                debug("MISSION_COMPLETE: current faction: " + str(faction))
-                # на случай, если вторая фракция не прописана в ивенте
-                if faction["Faction"] == "":
-                    debug("MISSION_COMPLETE: WARNING: second faction is empty")
-                    if completed_mission["faction2"] == "":     # её нет и в MissionAccepted: игнорируем
-                        debug("MISSION_COMPLETE: second faction not found in MissionAccepted, ignoring")
-                        continue
-                    else:                                       # она есть в MissionAccepted: копируем оттуда
-                        debug("MISSION_COMPLETE: second faction found in MissionAccepted, copying")
-                        faction["Faction"] = completed_mission["faction2"]
-                factions_inf[faction["Faction"]] = len(faction["Influence"][0]["Influence"])
-                debug("MISSION_COMPLETE: influence written: " + str(factions_inf[faction["Faction"]]))
-                if faction["Influence"][0]["Trend"] == "DownBad":
-                    debug("MISSION_COMPLETE: trend 'downbad', changing sign to minus")
-                    factions_inf[faction["Faction"]] *= -1
-            
-            url_params = {
-                    "entry.1839270329": cmdr,
-                    "entry.1889332006": completed_mission["type"],
-                    "entry.350771392": "COMPLETED",
-                    "entry.592164382": completed_mission["system"],
-                    "entry.1812690212": completed_mission["faction"],
-                    "entry.179254259": factions_inf[completed_mission["faction"]],
-                    "entry.739461351": completed_mission["system2"],
-                    "entry.887402348": completed_mission["faction2"],
-                    "entry.1755429366": factions_inf.get(completed_mission["faction2"], ""),
-                }
-            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-            debug("MISSION_COMPLETE: link: " + url)
-            Reporter(url).start()
-            debug("MISSION_COMPLETE: successfully sent to google sheet")
-
-        elif entry["event"] == "MissionFailed":
-            debug("MISSION_FAILED: detected MissionFailed")
-            with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
-                missions_list = missions_file.readlines()
-                debug("MISSION_FAILED: read currentmissions")
-            failed_mission = dict()
-            debug("MISSION_FAILED: created emtpy dict 'failed_mission'")
-            with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
-                debug("MISSION_FAILED: opened currentmissions for editing")
-                for line in missions_list:
-                    mission = json.loads(line)
-                    debug("MISSION_FAILED: mission: " + str(mission))
-                    if mission["ID"] != entry["MissionID"]:
-                        debug("MISSION_FAILED: not what we're looking for, saving to currentmissions")
-                        missions_file.write(line)
-                    else:
-                        debug("MISSION_FAILED: found what we're looking for, completed_mission = mission")
-                        failed_mission = mission
-            if failed_mission == {}:
-                debug("MISSION_FAILED: WARNING: mission not found, exiting")
-                self.threadlock.release()
-                return
-
-            url_params = {
-                    "entry.1839270329": cmdr,
-                    "entry.1889332006": failed_mission["type"],
-                    "entry.350771392": "FAILED",
-                    "entry.592164382": failed_mission["system"],
-                    "entry.1812690212": failed_mission["faction"],
-                    "entry.179254259": -2,
-                    "entry.739461351": failed_mission["system2"],
-                    "entry.887402348": failed_mission["faction2"],
-                    "entry.1755429366": "-2" if failed_mission["system2"] != "" else "",
-                }
-            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-            debug("MISSION_FAILED: link: " + url)
-            Reporter(url).start()
-            debug("MISSION_FAILED: successfully sent to google sheet")
-
-        elif entry["event"] == "MissionAbandoned":
-            debug("MISSION_ABANDONED: detected MissionAbandoned")
-            with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
-                missions_list = missions_file.readlines()
-                debug("MISSION_ABANDONED: read currentmissions")
-            with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
-                debug("MISSION_ABANDONED: opened currentmissions for editing")
-                for line in missions_list:
-                    mission = json.loads(line)
-                    debug("MISSION_ABANDONED: mission: " + str(mission))
-                    if mission["ID"] != entry["MissionID"]:
-                        debug("MISSION_ABANDONED: not id we're searching for. writing to file")
-                        missions_file.write(line)
-                    elif mission["type"] == "Mission_HackMegaship" or mission["type"] == "MISSION_DisableMegaship":
-                        debug("MISSION_ABANDONED: id found, but it's related to megaships - writing to file")
-                        missions_file.write(line)
-                    else:
-                        debug("MISSION_ABANDONED: found id, skipping")
-
-        if self.mainfaction != "FleetCarrier":
-            # ВАУЧЕРЫ
-            if entry["event"] == "RedeemVoucher":
-                if "BrokerPercentage" not in entry:
-                    debug("REDEEM_VOUCHER: detected RedeemVoucher")
-                    if entry["Type"] != "bounty":
-                        debug(f"REDEEM_VOUCHER: type \"{entry['Type']}\", skipping")
-                    else:
-                        debug("REDEEM_VOUCHER: type \"Bounty\"")
-                        for faction in entry["Factions"]:
-                            debug("REDEEM_VOUCHER: current faction: " + str(faction))
-                            url_params = {
-                                "entry.503143076": cmdr,
-                                "entry.1108939645": "bounty",
-                                "entry.127349896": system,
-                                "entry.442800983": "",
-                                "entry.48514656": faction["Faction"],
-                                "entry.351553038": faction["Amount"],
-                            }
-                            url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-                            debug("REDEEM_VOUCHER: link: " + url)
-                            Reporter(url).start()
-                            debug("REDEEM_VOUCHER: successfully sent to google sheet")
-
-            # КАРТОГРАФИЯ
-            elif "SellExplorationData" in entry["event"]:
-                debug(f"SELL_EXP_DATA: detected \"{entry['event']}\"")
-                url_params = {
-                    "entry.503143076": cmdr,
-                    "entry.1108939645": "SellExpData",
-                    "entry.127349896": system,
-                    "entry.442800983": station,
-                    "entry.48514656": self.mainfaction,
-                    "entry.351553038": entry["TotalEarnings"],
-                }
-                url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-                debug("SELL_EXP_DATA: link: " + url)
-                Reporter(url).start()
-                debug("SELL_EXP_DATA: successfully sent to google sheet")
-
+        # стыковка/вход в игру на станции
+        if event == "Docked" or (event == "Location" and entry["Docked"] == True):
+            self.__setFaction(entry)
+        # принятие миссии
+        elif event == "MissionAccepted":
+            self.__missionAccepted(entry, system)
+        # сдача миссии
+        elif event == "MissionCompleted":
+            self.__missionCompleted(entry, cmdr)
+        # провал миссии
+        elif event == "MissionFailed":
+            self.__missionFailed(entry, cmdr)
+        # отказ от миссии
+        elif event == "MissionAbandoned":
+            self.__missionAbandoned(entry)
+        # ваучеры
+        elif event == "RedeemVoucher":
+            self.__redeemVoucher(entry, cmdr, system)
+        elif "SellExplorationData" in event:
+            self.__explorationData(entry, cmdr, system, station)
+        
         self.threadlock.release()
+
+    def __setFaction(self, entry):
+        debug(f"MAIN_FACTION: detected \"{entry['event']}\"")
+        self.mainfaction = entry["StationFaction"]["Name"]
+        debug(f"MAIN_FACTION: main_faction set to \"{self.mainfaction}\"")
+
+
+    def __missionAccepted(self, entry, system):
+        debug("MISSION_ACCEPTED: detected MissionAccepted")
+        mission = {
+            "timestamp": entry["timestamp"],
+            "ID": entry["MissionID"],
+            "expires": entry.get("Expiry", ""),
+            "type": entry["Name"],
+            "system": system,
+            "faction": entry["Faction"],
+            "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", "") != "" else "",
+            "faction2": entry.get("TargetFaction", ""),
+        }
+        debug("MISSION_ACCEPTED: saved data: " + str(mission))
+        with open(self.CURRENT_MISSIONS_FILE, "a", encoding="utf8") as missions_file:
+            missions_file.write(json.dumps(mission) + '\n')
+            debug("MISSION_ACCEPTED: saved to currentmissions")
+
+
+    def __missionCompleted(self, entry, cmdr):
+        debug("MISSION_COMPLETE: detected MissionCompleted")
+        with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
+            missions_list = missions_file.readlines()
+            debug("MISSION_COMPLETE: read currentmissions")
+        completed_mission = dict()
+        debug("MISSION_COMPLETE: created empty dict 'completed_mission'")
+        with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
+            debug("MISSION_COMPLETE: opened currentmissions for editing")
+            for line in missions_list:
+                mission = json.loads(line)
+                debug("MISSION_COMPLETE: mission: " + str(mission))
+                if mission["ID"] != entry["MissionID"]:
+                    debug("MISSION_COMPLETE: not what we're looking for, saving to currentmissions")
+                    missions_file.write(line)
+                else:
+                    debug("MISSION_COMPLETE: found what we're looking for, completed_mission = mission")
+                    completed_mission = mission
+        if completed_mission == {}:
+            debug("MISSION_COMPLETE: WARNING: mission not found, exiting")
+            self.threadlock.release()
+            return
+        
+        factions_inf = dict()
+        debug("MISSION_COMPLETE: created empty dict for influence")
+        for faction in entry["FactionEffects"]:
+            debug("MISSION_COMPLETE: current faction: " + str(faction))
+            # на случай, если вторая фракция не прописана в ивенте
+            if faction["Faction"] == "":
+                debug("MISSION_COMPLETE: WARNING: second faction is empty")
+                if completed_mission["faction2"] == "":     # её нет и в MissionAccepted: игнорируем
+                    debug("MISSION_COMPLETE: second faction not found in MissionAccepted, ignoring")
+                    continue
+                else:                                       # она есть в MissionAccepted: копируем оттуда
+                    debug("MISSION_COMPLETE: second faction found in MissionAccepted, copying")
+                    faction["Faction"] = completed_mission["faction2"]
+            factions_inf[faction["Faction"]] = len(faction["Influence"][0]["Influence"])
+            debug("MISSION_COMPLETE: influence written: " + str(factions_inf[faction["Faction"]]))
+            if faction["Influence"][0]["Trend"] == "DownBad":
+                debug("MISSION_COMPLETE: trend 'downbad', changing sign to minus")
+                factions_inf[faction["Faction"]] *= -1
+        
+        url_params = {
+                "entry.1839270329": cmdr,
+                "entry.1889332006": completed_mission["type"],
+                "entry.350771392": "COMPLETED",
+                "entry.592164382": completed_mission["system"],
+                "entry.1812690212": completed_mission["faction"],
+                "entry.179254259": factions_inf[completed_mission["faction"]],
+                "entry.739461351": completed_mission["system2"],
+                "entry.887402348": completed_mission["faction2"],
+                "entry.1755429366": factions_inf.get(completed_mission["faction2"], ""),
+            }
+        url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
+        debug("MISSION_COMPLETE: link: " + url)
+        Reporter(url).start()
+        debug("MISSION_COMPLETE: successfully sent to google sheet")
+
+
+    def __missionFailed(self, entry, cmdr):
+        debug("MISSION_FAILED: detected MissionFailed")
+        with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
+            missions_list = missions_file.readlines()
+            debug("MISSION_FAILED: read currentmissions")
+        failed_mission = dict()
+        debug("MISSION_FAILED: created emtpy dict 'failed_mission'")
+        with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
+            debug("MISSION_FAILED: opened currentmissions for editing")
+            for line in missions_list:
+                mission = json.loads(line)
+                debug("MISSION_FAILED: mission: " + str(mission))
+                if mission["ID"] != entry["MissionID"]:
+                    debug("MISSION_FAILED: not what we're looking for, saving to currentmissions")
+                    missions_file.write(line)
+                else:
+                    debug("MISSION_FAILED: found what we're looking for, completed_mission = mission")
+                    failed_mission = mission
+        if failed_mission == {}:
+            debug("MISSION_FAILED: WARNING: mission not found, exiting")
+            self.threadlock.release()
+            return
+
+        url_params = {
+                "entry.1839270329": cmdr,
+                "entry.1889332006": failed_mission["type"],
+                "entry.350771392": "FAILED",
+                "entry.592164382": failed_mission["system"],
+                "entry.1812690212": failed_mission["faction"],
+                "entry.179254259": -2,
+                "entry.739461351": failed_mission["system2"],
+                "entry.887402348": failed_mission["faction2"],
+                "entry.1755429366": "-2" if failed_mission["system2"] != "" else "",
+            }
+        url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
+        debug("MISSION_FAILED: link: " + url)
+        Reporter(url).start()
+        debug("MISSION_FAILED: successfully sent to google sheet")
+
+
+    def __missionAbandoned(self, entry):
+        debug("MISSION_ABANDONED: detected MissionAbandoned")
+        with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
+            missions_list = missions_file.readlines()
+            debug("MISSION_ABANDONED: read currentmissions")
+        with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
+            debug("MISSION_ABANDONED: opened currentmissions for editing")
+            for line in missions_list:
+                mission = json.loads(line)
+                debug("MISSION_ABANDONED: mission: " + str(mission))
+                if mission["ID"] != entry["MissionID"]:
+                    debug("MISSION_ABANDONED: not id we're searching for. writing to file")
+                    missions_file.write(line)
+                elif mission["type"] == "Mission_HackMegaship" or mission["type"] == "MISSION_DisableMegaship":
+                    debug("MISSION_ABANDONED: id found, but it's related to megaships - writing to file")
+                    missions_file.write(line)
+                else:
+                    debug("MISSION_ABANDONED: found id, skipping")
+
+
+    def __redeemVoucher(self, entry, cmdr, system):
+        if self.mainfaction != "FleetCarrier":
+            if "BrokerPercentage" not in entry:                 # игнорируем юристов
+                debug("REDEEM_VOUCHER: detected RedeemVoucher")
+                if entry["Type"] != "bounty":
+                    debug(f"REDEEM_VOUCHER: type \"{entry['Type']}\", skipping")
+                else:
+                    debug("REDEEM_VOUCHER: type \"Bounty\"")
+                    for faction in entry["Factions"]:
+                        debug("REDEEM_VOUCHER: current faction: " + str(faction))
+                        url_params = {
+                            "entry.503143076": cmdr,
+                            "entry.1108939645": "bounty",
+                            "entry.127349896": system,
+                            "entry.442800983": "",
+                            "entry.48514656": faction["Faction"],
+                            "entry.351553038": faction["Amount"],
+                        }
+                        url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
+                        debug("REDEEM_VOUCHER: link: " + url)
+                        Reporter(url).start()
+                        debug("REDEEM_VOUCHER: successfully sent to google sheet")
+
+
+    def __explorationData(self, entry, cmdr, system, station):
+        if self.mainfaction != "FleetCarrier":
+            debug(f"SELL_EXP_DATA: detected \"{entry['event']}\"")
+            url_params = {
+                "entry.503143076": cmdr,
+                "entry.1108939645": "SellExpData",
+                "entry.127349896": system,
+                "entry.442800983": station,
+                "entry.48514656": self.mainfaction,
+                "entry.351553038": entry["TotalEarnings"],
+            }
+            url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
+            debug("SELL_EXP_DATA: link: " + url)
+            Reporter(url).start()
+            debug("SELL_EXP_DATA: successfully sent to google sheet")
+
 
     def __del__(self):
         self.threadlock.acquire()
