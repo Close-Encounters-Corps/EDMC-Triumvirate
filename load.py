@@ -470,7 +470,7 @@ def dashboard_entry(cmdr, is_beta, entry):
         this.plug_start = 1
         this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
     try:
-        logger.debug(f"Checking fuel consumption {this.FuelCount}")
+        # logger.debug(f"Checking fuel consumption {this.FuelCount}")
         if entry.get("Fuel") is not None:
             if this.FuelCount == 10:
                 this.fuel_cons = fuel_consumption(
@@ -512,7 +512,7 @@ def dashboard_entry(cmdr, is_beta, entry):
     else:
         this.body_name = None
     this.cmdr_SQID = Alegiance_get(cmdr, this.cmdr_SQID)
-    logger.debug(this.body_name)
+    # logger.debug(this.body_name)
 
 def cmdr_data(data, is_beta):
     """
