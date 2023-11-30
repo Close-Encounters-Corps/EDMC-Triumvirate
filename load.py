@@ -427,11 +427,7 @@ def journal_entry_wrapper(
     legacy.AXZone(cmdr, is_beta, system, x, y, z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
-    try:
-        BGS.TaskCheck(cmdr, is_beta, system, station, entry, client)
-    except Exception as ex:
-        logger.error(f"{type(ex).__name__} occured. Args: {ex.args}")
-        BGS.threadlock.release()
+    BGS.TaskCheck(cmdr, is_beta, system, station, entry, client)
     legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     if status_message is not None:
         this.message_label.text = status_message

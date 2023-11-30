@@ -1,6 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 import threading
 import requests
+import traceback
 try:#py3
     from urllib.parse import quote_plus
 except:#py2
@@ -555,29 +556,32 @@ class BGS():
 
     def TaskCheck(self, cmdr, is_beta, system, station, entry, client):
         self.threadlock.acquire()
-        event = entry["event"]
-
-        # стыковка/вход в игру на станции
-        if event == "Docked" or (event == "Location" and entry["Docked"] == True):
-            self.__setFaction(entry)
-        # принятие миссии
-        elif event == "MissionAccepted":
-            self.__missionAccepted(entry, system)
-        # сдача миссии
-        elif event == "MissionCompleted":
-            self.__missionCompleted(entry, cmdr)
-        # провал миссии
-        elif event == "MissionFailed":
-            self.__missionFailed(entry, cmdr)
-        # отказ от миссии
-        elif event == "MissionAbandoned":
-            self.__missionAbandoned(entry)
-        # ваучеры
-        elif event == "RedeemVoucher":
-            self.__redeemVoucher(entry, cmdr, system)
-        elif "SellExplorationData" in event:
-            self.__explorationData(entry, cmdr, system, station)
+        try:
+            event = entry["event"]
+            # стыковка/вход в игру на станции
+            if event == "Docked" or (event == "Location" and entry["Docked"] == True):
+                self.__setFaction(entry)
+            # принятие миссии
+            elif event == "MissionAccepted":
+                self.__missionAccepted(entry, system)
+            # сдача миссии
+            elif event == "MissionCompleted":
+                self.__missionCompleted(entry, cmdr)
+            # провал миссии
+            elif event == "MissionFailed":
+                self.__missionFailed(entry, cmdr)
+            # отказ от миссии
+            elif event == "MissionAbandoned":
+                self.__missionAbandoned(entry)
+            # ваучеры
+            elif event == "RedeemVoucher":
+                self.__redeemVoucher(entry, cmdr, system)
+            # картография
+            elif "SellExplorationData" in event:
+                self.__explorationData(entry, cmdr, system, station)
         
+        except:
+            error(traceback.format_exc())
         self.threadlock.release()
 
     def __setFaction(self, entry):
