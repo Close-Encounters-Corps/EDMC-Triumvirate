@@ -101,6 +101,7 @@ try:
 except FileExistsError:
     pass
 BGS = legacy.BGS()
+CZ_TRACKER = legacy.CZ_Tracker()
 
 def plugin_prefs(parent, cmdr, is_beta):
     """
@@ -428,6 +429,7 @@ def journal_entry_wrapper(
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
     BGS.TaskCheck(cmdr, is_beta, system, station, entry, client)
+    CZ_TRACKER.check_event(cmdr, system, entry)
     legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     if status_message is not None:
         this.message_label.text = status_message
