@@ -920,7 +920,7 @@ class CZ_Tracker():
     def __end_conflict(self, entry = None):
         try:
             allegience = entry["From"][19:-1]
-        except KeyError:
+        except TypeError:
             allegience = None
 
         if allegience != None:
