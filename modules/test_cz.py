@@ -4,7 +4,6 @@ import threading
 import traceback
 import json
 
-import tkinter as tk
 from tkinter.messagebox import askyesnocancel
 from urllib.parse import quote_plus
 
@@ -192,7 +191,7 @@ class CZ_Tracker():
                 # принадлежность победителя не совпадает с единственной известной => это 100% вторая фракция
                 else:
                     debug(f"END_CONFLICT: known allegience DOES NOT coincide with the winner's one, asking user for confirmation")
-                    confirmation = self.__confirm_known(without_allegience)
+                    confirmation = self.__confirm_known(without_allegience['name'])
                     debug(f"END_CONFLICT: got response \"{confirmation}\"")
                     if confirmation == True:
                         debug(f"END_CONFLICT: calling SEND_RESULTS with {without_allegience} as the winner")
@@ -211,7 +210,7 @@ class CZ_Tracker():
                 for faction in self.cz_info["factions"]:
                     if faction["allegience"] == allegience:
                         debug(f"END_CONFLICT: {faction['name']} is most likely the winner, asking user for confirmation")
-                        confirmation = self.__confirm_known(faction["name"])
+                        confirmation = self.__confirm_known(faction['name'])
                         debug(f"END_CONFLICT: got response \"{confirmation}\"")
                         if confirmation == True:
                             debug(f"END_CONFLICT: calling SEND_RESULTS with {faction['name']} as the winner")
@@ -239,7 +238,7 @@ class CZ_Tracker():
         self.threadlock.acquire()
 
 
-    def __confirm_known(self, winner):
+    def __confirm_known(self, winner: str):
         message = str("Зафиксировано окончание зоны конфликта.\n" +
             "Подтвердите правильность полученных данных:\n" +
             f"Напряжённость конфликта: {self.cz_info['intensity']}\n" +
@@ -264,13 +263,13 @@ class CZ_Tracker():
             f"Выберите \"Да\" в случае, если победила сторона, на которой вы сражались."
         )
         return askyesnocancel("Завершение зоны конфликта", message)
-    
+
 
     def __send_result(self, winner = None, confirmed = False):
         debug("SEND_RESULT: forming response")
         url_params = {
-                "entry.276599870": self.cz_info["time_start"],
-                "entry.107026375": self.cz_info["time_finish"],
+                "entry.276599870": self.cz_info["time_start"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.107026375": self.cz_info["time_finish"].strftime("%d.%m.%Y %H:%M:%M"),
                 "entry.856417302": self.cmdr,
                 "entry.1329741081": self.system,
                 "entry.2083736029": "Space",
