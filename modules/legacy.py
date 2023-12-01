@@ -1095,7 +1095,7 @@ class CZ_Tracker():
         debug(f"SEND_LOGS: created list of logfiles, {len(logs)} items inside")
         
         # сжимаем в зип
-        zipfile_name = "temp_archive.zip"
+        zipfile_name = os.path.join(temp_folder, "temp_archive.zip")
         with zipfile.ZipFile(zipfile_name, "w") as zipf:
             for file in logs:
                 zipf.write(file, arcname=os.path.basename(file))
