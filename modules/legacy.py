@@ -10,6 +10,7 @@ except:#py2
 import json
 import os
 import sys
+import zipfile
 from  math import sqrt,pow,trunc
 from .debug import debug, error
 from datetime import datetime, timezone
@@ -910,9 +911,9 @@ class CZ_Tracker():
             self.end_messages.append(timestamp)
             debug("PATROL_MESSAGE: time added to the deque")
             try:
-                if (self.end_messages[4] - self.end_messages[0]).seconds <= 5:
-                    debug("PATROL_MESSAGE: detected 5 messages in 5 seconds, calling END_CONFLICT")
-                    self.__end_conflict()
+                if (self.end_messages[4] - self.end_messages[0]).seconds <= 10:
+                    debug("PATROL_MESSAGE: detected 5 messages in 10 seconds, calling END_CONFLICT")
+                    self.__end_conflict(entry)
             except TypeError:       # если сообщений <5, [4] будет None
                 pass
 
@@ -1063,10 +1064,60 @@ class CZ_Tracker():
                 "entry.2083736029": "Space",
                 "entry.1314212673": self.cz_info["intensity"],
                 "entry.1076602401": winner if winner != None else "[UNKNOWN]",
-                "entry.1746398448": "logs",
+                "entry.1746398448": self.__post_logs(),
                 "entry.1916160623": "Yes" if confirmed else "No"
             }
         url = f'{URL_GOOGLE}/1FAIpQLScfYudjfdwa2c7Y1pEQpyoERuB-kbYvX-J7vLWB8J-JtsngBg/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
         debug("SEND_RESULT: link: " + url)
         Reporter(url).start()
         debug("SEND_RESULT: successfully sent to google sheet")
+
+
+    # в теории - это временно
+    def __post_logs(self) -> str:
+        temp_folder = os.path.join(os.path.expanduser('~'), "AppData\\Local\\Temp")
+        game_logs_folder = os.path.join(os.path.expanduser('~'), "Saved Games\\Frontier Developments\\Elite Dangerous")
+
+        # добываем игровой логфайл текущей сессии
+        latest = ""
+        for filename in os.listdir(game_logs_folder):
+            if "Journal" in filename:
+                if filename > latest:
+                    latest = filename
+
+        # список необходимых файлов
+        logs = []
+        logs.append(os.path.join(temp_folder, "EDMarketConnector.log"))
+        logs.append(os.path.join(game_logs_folder, latest))
+        for root, _, files in os.walk(os.path.join(temp_folder, "EDMarketConnector")):
+            for file in files:
+                logs.append(os.path.join(root, file))
+        debug(f"SEND_LOGS: created list of logfiles, {len(logs)} items inside")
+        
+        # сжимаем в зип
+        zipfile_name = "temp_archive.zip"
+        with zipfile.ZipFile(zipfile_name, "w") as zipf:
+            for file in logs:
+                zipf.write(file, arcname=os.path.basename(file))
+        debug("SEND_LOGS: created temp .zip")
+
+        # читаем содержимое
+        with open(zipfile_name, "rb") as zipf:
+            content = zipf.read()
+
+        # отправляем
+        debug("SEND_LOGS: sending .zip on remote server")
+        server = requests.get("https://api.gofile.io/getServer").json()["data"]["server"]
+        api_url = f"https://{server}.gofile.io/uploadFile"
+        file = {f"{self.cmdr}-{datetime.now().utcnow().strftime('%d%m%Y%H%M%S')}.zip": content}
+        response = requests.post(api_url, files=file)
+        debug(f"SEND_LOGS: status code: {response.status_code}")
+
+        # удаляем зипку
+        os.remove(zipfile_name)
+        debug(f"SEND_LOGS: deleted temp .zip")
+        
+        if response.json()["status"] == "ok":
+            return response.json()["data"]["downloadPage"]
+        else:
+            return f"ERROR: code {str(response.status_code)}"
