@@ -833,7 +833,7 @@ class CZ_Tracker():
                 elif event in ("Shutdown", "SupercruiseEntry", "FSDJump", "Died") or (event == "Music" and entry["MusicTrack"] == "MainMenu"):
                     self.__end_conflict()
 
-        except:
+        except: 
             error(traceback.format_exc())
         self.threadlock.release()
     
@@ -858,23 +858,23 @@ class CZ_Tracker():
     def __ship_scan(self, entry):
         debug("SHIP_SCAN: detected \"ShipTargeted\" with scan stage 3")
         if "$ShipName_Military" in entry["PilotName"]:
-            debug(f"SHIP_SCAN: military ship, faction \"{entry['Faction']}\", allegience - {entry['PilotName'][19:-1]}")
+            debug(f"SHIP_SCAN: military ship, faction \"{entry['Faction']}\", allegiance - {entry['PilotName'][19:-1]}")
             for faction in self.cz_info["factions"]:
                 if faction["name"] == entry["Faction"]:
-                    debug("SHIP_SCAN: faction already in the list, checking allegience")
-                    if faction["allegience"] == None:
-                        faction["allegience"] = entry["PilotName"][19:-1]
-                        debug("SHIP_SCAN: allegience added to the faction info")
+                    debug("SHIP_SCAN: faction already in the list, checking allegiance")
+                    if faction["allegiance"] == None:
+                        faction["allegiance"] = entry["PilotName"][19:-1]
+                        debug("SHIP_SCAN: allegiance added to the faction info")
                     else:
-                        debug("SHIP_SCAN: allegience already in the list")
+                        debug("SHIP_SCAN: allegiance already in the list")
                     return
 
             debug("SHIP_SCAN: faction not in the list, adding")
             faction_name = entry["Faction"]
-            faction_allegience = entry["PilotName"][19:-1]
+            faction_allegiance = entry["PilotName"][19:-1]
             self.cz_info["factions"].append({
                 "name": faction_name,
-                "allegience": faction_allegience,
+                "allegiance": faction_allegiance,
             })
         else:
             debug("SHIP_SCAN: not a military ship")
@@ -895,10 +895,10 @@ class CZ_Tracker():
                     found = True
                     break
             if not found:
-                debug("KILL: it is not, adding (allegience = None)")
+                debug("KILL: it is not, adding (allegiance = None)")
                 self.cz_info["factions"].append({
                     "name": faction,
-                    "allegience": None,
+                    "allegiance": None,
                 })
         
     
@@ -920,18 +920,18 @@ class CZ_Tracker():
     
     def __end_conflict(self, entry = None):
         try:
-            allegience = entry["From"][19:-1]
+            allegiance = entry["From"][19:-1]
         except TypeError:
-            allegience = None
+            allegiance = None
 
-        if allegience != None:
+        if allegiance != None:
             self.cz_info["time_finish"] = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
             debug("END_CONFLICT: time_finish set, proceeding to calculate the result")
             factions = [faction for faction in self.cz_info["factions"]]
 
             # если принадлежность одинакова: спрашиваем игрока, отсылаем с учётом его выбора
-            if factions[0]["allegience"] == factions[1]["allegience"]:
-                debug(f"END_CONFLICT: allegience is the same ({factions[0]['allegience']}), asking user for confirmation")
+            if factions[0]["allegiance"] == factions[1]["allegiance"]:
+                debug(f"END_CONFLICT: allegiance is the same ({factions[0]['allegiance']}), asking user for confirmation")
                 confirmation = self.__confirm_unknown()
                 debug(f"END_CONFLICT: got response \"{confirmation}\"")
                 if confirmation == True:
@@ -951,14 +951,14 @@ class CZ_Tracker():
                     self.__send_result()
             
             # одна из принадлежностей не установлена:
-            elif None in (factions[0]["allegience"], factions[1]["allegience"]):
-                debug(f"END_CONFLICT: allegience of one of the factions is unknown")
-                with_allegience, without_allegience = (factions[0], factions[1]) if factions[0]["allegience"] is not None else (factions[1], factions[0])
+            elif None in (factions[0]["allegiance"], factions[1]["allegiance"]):
+                debug(f"END_CONFLICT: allegiance of one of the factions is unknown")
+                with_allegiance, without_allegiance = (factions[0], factions[1]) if factions[0]["allegiance"] is not None else (factions[1], factions[0])
 
                 # принадлежность победителя совпадает с единственной известной: мы не уверены, что победили не вторые.
                 # уточняем у игрока, отсылаем с учётом его выбора
-                if with_allegience["allegience"] == allegience:
-                    debug(f"END_CONFLICT: known allegience coincides with the winner's one, asking user for confirmation")
+                if with_allegiance["allegiance"] == allegiance:
+                    debug(f"END_CONFLICT: known allegiance coincides with the winner's one, asking user for confirmation")
                     confirmation = self.__confirm_unknown()
                     debug(f"END_CONFLICT: got response \"{confirmation}\"")
                     if confirmation == True:
@@ -979,25 +979,25 @@ class CZ_Tracker():
 
                 # принадлежность победителя не совпадает с единственной известной => это 100% вторая фракция
                 else:
-                    debug(f"END_CONFLICT: known allegience DOES NOT coincide with the winner's one, asking user for confirmation")
-                    confirmation = self.__confirm_known(without_allegience['name'])
+                    debug(f"END_CONFLICT: known allegiance DOES NOT coincide with the winner's one, asking user for confirmation")
+                    confirmation = self.__confirm_known(without_allegiance['name'])
                     debug(f"END_CONFLICT: got response \"{confirmation}\"")
                     if confirmation == True:
-                        debug(f"END_CONFLICT: calling SEND_RESULTS with {without_allegience} as the winner")
-                        self.__send_result(without_allegience, True)
+                        debug(f"END_CONFLICT: calling SEND_RESULTS with {without_allegiance['name']} as the winner")
+                        self.__send_result(without_allegiance['name'], True)
                     elif confirmation == False:
-                        debug(f"END_CONFLICT: calling SEND_RESULTS with {with_allegience} as the winner")
-                        self.__send_result(with_allegience, True)
+                        debug(f"END_CONFLICT: calling SEND_RESULTS with {with_allegiance['name']} as the winner")
+                        self.__send_result(with_allegiance['name'], True)
                     # на случай "отмены"
                     else:
-                        debug(f"END_CONFLICT: calling SEND_RESULT with {without_allegience} as the winner, but not confirmed")
-                        self.__send_result(without_allegience, False)
+                        debug(f"END_CONFLICT: calling SEND_RESULT with {without_allegiance['name']} as the winner, but not confirmed")
+                        self.__send_result(without_allegiance['name'], False)
             
             # обе принадлежности установлены, они разные, понять, кто победил, не составляет труда
             else:
-                debug("END_CONFLICT: both allegiences are known")
+                debug("END_CONFLICT: both allegiances are known")
                 for faction in self.cz_info["factions"]:
-                    if faction["allegience"] == allegience:
+                    if faction["allegiance"] == allegiance:
                         debug(f"END_CONFLICT: {faction['name']} is most likely the winner, asking user for confirmation")
                         confirmation = self.__confirm_known(faction['name'])
                         debug(f"END_CONFLICT: got response \"{confirmation}\"")
