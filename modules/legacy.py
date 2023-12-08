@@ -804,6 +804,7 @@ class BGS():
 
 
 
+# TODO: ПЕРЕПИСАТЬ УВЕДОМЛЕНИЕ НА КАСТОМНОЕ (инфа, выберите победителя: фракция1/фракция2/отмена)
 class CZ_Tracker():
     def __init__(self):
         self.threadlock = threading.Lock()
@@ -819,18 +820,21 @@ class CZ_Tracker():
             event = entry["event"]
             # вход в зону конфликта
             if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
-                self.__start_conflict(cmdr, system, entry)
+                self.__start_conflict(entry)
             if self.in_conflict == True:
                 # для определения сторон конфликта
                 if event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
                     self.__ship_scan(entry)
                 elif event == "FactionKillBond":
                     self.__kill(entry)
-                # для определения победителя
+                # завершение кз: отслеживание "патрульных" сообщений
                 elif event == "ReceiveText":
                     self.__patrol_message(entry)
-                # досрочный выход из кз: завершение игры, круиз, прыжок, смерть, выход в меню
-                elif event in ("Shutdown", "SupercruiseEntry", "FSDJump", "Died") or (event == "Music" and entry["MusicTrack"] == "MainMenu"):
+                # завершение кз: прыжок/выход в круиз
+                elif event in ("SupercruiseEntry", "FSDJump"):
+                    self.__instance_exit()
+                # досрочный выход из кз: завершение игры, смерть, выход в меню
+                elif event in ("Shutdown", "Died") or (event == "Music" and entry["MusicTrack"] == "MainMenu"):
                     self.__end_conflict()
 
         except: 
@@ -838,16 +842,14 @@ class CZ_Tracker():
         self.threadlock.release()
     
 
-    def __start_conflict(self, cmdr, system, entry):
+    def __start_conflict(self, entry):
         debug("START_CONFLICT: detected entering a conflict zone")
         self.in_conflict = True
-        self.cmdr = cmdr
-        self.system = system
         self.cz_info = {
             "intensity": entry["Type"][19:entry["Type"].find(":")],
             "factions": [],
-            "win_messages_count": 0,
             "player_fights_for": None,
+            "kills": 0,
             "time_start": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
             "time_finish": None
         }
@@ -915,19 +917,23 @@ class CZ_Tracker():
             try:
                 if (self.end_messages[4] - self.end_messages[0]).seconds <= 15:
                     debug("PATROL_MESSAGE: detected 5 messages in 15 seconds, calling END_CONFLICT")
-                    self.__end_conflict(entry)
+                    self.__end_conflict(entry["From"][19:-1])
             except TypeError:       # если сообщений <5, [4] будет None
                 pass
 
     
-    def __end_conflict(self, entry = None):
-        try:
-            allegiance = entry["From"][19:-1]
-        except TypeError:
-            allegiance = None
+    def __instance_exit(self):
+        if self.cz_info["kills"] >= 5:
+            for faction in self.cz_info["factions"]:
+                if faction["name"] == self.cz_info["player_fights_for"]:
+                    self.__end_conflict(faction["allegiance"])
+                    return
+        self.__end_conflict()
 
+
+    def __end_conflict(self, allegiance = None):
         if allegiance != None:
-            self.cz_info["time_finish"] = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+            self.cz_info["time_finish"] = datetime.utcnow()
             debug("END_CONFLICT: time_finish set, proceeding to calculate the result")
             factions = [faction for faction in self.cz_info["factions"]]
 
