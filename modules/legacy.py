@@ -903,16 +903,18 @@ class CZ_Tracker():
         
     
     def __patrol_message(self, entry):
-        # логика следующая: получаем 5 "патрулирующих" сообщений за 5 секунд - 
-        # считаем конфликт завершённым
-        if "$Military_Passthrough" in entry["Message"]:
+        # Логика следующая: получаем 5 "патрулирующих" сообщений за 15 секунд - 
+        # считаем конфликт завершённым.
+        # По имени фильтруем, чтобы случайно не поймать последним такое сообщение, например, от спецкрыла
+        # и сломать определение принадлежности победителя.
+        if "$Military_Passthrough" in entry["Message"] and "$ShipName_Military" in entry["From"]:
             debug("PATROL_MESSAGE: detected \"$Military_Passthrough\" message")
             timestamp = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
             self.end_messages.append(timestamp)
             debug("PATROL_MESSAGE: time added to the deque")
             try:
-                if (self.end_messages[4] - self.end_messages[0]).seconds <= 10:
-                    debug("PATROL_MESSAGE: detected 5 messages in 10 seconds, calling END_CONFLICT")
+                if (self.end_messages[4] - self.end_messages[0]).seconds <= 15:
+                    debug("PATROL_MESSAGE: detected 5 messages in 15 seconds, calling END_CONFLICT")
                     self.__end_conflict(entry)
             except TypeError:       # если сообщений <5, [4] будет None
                 pass
@@ -1054,7 +1056,7 @@ class CZ_Tracker():
         return askyesnocancel("Завершение зоны конфликта", message)
 
 
-    def __send_result(self, winner = None, confirmed = False):
+    def __send_result(self, winner: str = None, confirmed = False):
         debug("SEND_RESULT: forming response")
         url_params = {
                 "entry.276599870": self.cz_info["time_start"].strftime("%d.%m.%Y %H:%M:%M"),
@@ -1109,7 +1111,7 @@ class CZ_Tracker():
         debug("SEND_LOGS: sending .zip on remote server")
         server = requests.get("https://api.gofile.io/getServer").json()["data"]["server"]
         api_url = f"https://{server}.gofile.io/uploadFile"
-        file = {f"{self.cmdr}-{datetime.now().utcnow().strftime('%d%m%Y%H%M%S')}.zip": content}
+        file = {f"{self.cmdr}-{datetime.utcnow().strftime('%d%m%Y%H%M%S')}.zip": content}
         response = requests.post(api_url, files=file)
         debug(f"SEND_LOGS: status code: {response.status_code}")
 
