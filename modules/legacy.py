@@ -935,7 +935,7 @@ class CZ_Tracker():
                     # Переписывать его ещё раз мне влом, поэтому будет небольшое дублирование кода. Зато без лишних ветвлений.
                     self.cz_info["time_finish"] = datetime.utcnow()
                     presumed_winner = faction["name"]
-                    user_choice = self.__ask_user(factions, presumed_winner)
+                    user_choice = self.__ask_user(self.context, factions, presumed_winner)
                     if user_choice != None:
                         actual_winner = factions[user_choice]["name"]
                         debug(f"INSTANCE_EXIT: actual_winner set to {actual_winner}, calling SEND_RESULT")
@@ -983,7 +983,7 @@ class CZ_Tracker():
 
             # запрашиваем подтверждение полученных данных у игрока
             debug("END_CONFLICT: asking the user for the actual winner")
-            user_choice = self.__ask_user(factions, presumed_winner)
+            user_choice = self.__ask_user(self.context, factions, presumed_winner)
             if user_choice != None:
                 actual_winner = factions[user_choice]["name"]
                 debug(f"END_CONFLICT: actual_winner set to {actual_winner}, calling SEND_RESULT")
@@ -1003,11 +1003,11 @@ class CZ_Tracker():
         del self.cz_info, self.end_messages
 
 
-    def __ask_user(self, factions, winner: str = None) -> int:
+    def __ask_user(self, context, factions, winner: str = None) -> int:
         class CustomDialog(simpledialog.Dialog):
-            def __init__(self, text, factions):
+            def __init__(self, context, text, factions):
                 self.text = text
-                self.parent = self.context.parent
+                self.parent = context.parent
                 self.factions = factions
                 super().__init__(parent=self.parent, title="Результаты КЗ")
 
@@ -1045,7 +1045,7 @@ class CZ_Tracker():
                 f"Вы сражались на стороне: {self.cz_info['player_fights_for']}\n\n" +
                 f"Выберите победившую фракцию."
         )
-        return CustomDialog(message, factions).result
+        return CustomDialog(context, message, factions).result
 
 
     def __send_result(self, presumed: str, actual: str):
