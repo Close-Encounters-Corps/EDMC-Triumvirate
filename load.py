@@ -95,13 +95,15 @@ this.fuel_cons = 0.0
 context.help_page_opened = False
 context.latest_dashboard_entry = None
 
+
 # BGS: подготовительные работы
 try:
     open(f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\currentmissions.trmv", "x")
 except FileExistsError:
     pass
 BGS = legacy.BGS()
-CZ_TRACKER = legacy.CZ_Tracker()
+CZ_TRACKER = legacy.CZ_Tracker(context)
+
 
 def plugin_prefs(parent, cmdr, is_beta):
     """
@@ -518,6 +520,3 @@ def cmdr_data(data, is_beta):
     """
     for mod in context.enabled_modules:
         mod.on_cmdr_data(data, is_beta)
-
-
-

@@ -1,21 +1,18 @@
 ﻿# -*- coding: utf-8 -*-
-import threading
-import requests
-import traceback
+import threading, requests, traceback, json, os, sys, zipfile
+import tkinter as tk
+
+from  math import sqrt, pow
+from .debug import debug, error
+from datetime import datetime, timezone
+from tkinter import simpledialog
+from collections import deque
+
 try:#py3
     from urllib.parse import quote_plus
 except:#py2
     from urllib import quote_plus
 
-import json
-import os
-import sys
-import zipfile
-from  math import sqrt,pow,trunc
-from .debug import debug, error
-from datetime import datetime, timezone
-from tkinter.messagebox import askyesnocancel
-from collections import deque
 
 URL_GOOGLE = 'https://docs.google.com/forms/d/e'
 
@@ -804,11 +801,11 @@ class BGS():
 
 
 
-# TODO: ПЕРЕПИСАТЬ УВЕДОМЛЕНИЕ НА КАСТОМНОЕ (инфа, выберите победителя: фракция1/фракция2/отмена)
 class CZ_Tracker():
-    def __init__(self):
+    def __init__(self, context):
         self.threadlock = threading.Lock()
         self.in_conflict = False
+        self.context = context      # нужно для уведомлений
 
 
     def check_event(self, cmdr, system, entry):
@@ -936,146 +933,115 @@ class CZ_Tracker():
             self.cz_info["time_finish"] = datetime.utcnow()
             debug("END_CONFLICT: time_finish set, proceeding to calculate the result")
             factions = [faction for faction in self.cz_info["factions"]]
+            presumed_winner = None
 
-            # если принадлежность одинакова: спрашиваем игрока, отсылаем с учётом его выбора
+            # одинаковая принадлежность; победителя не установить
             if factions[0]["allegiance"] == factions[1]["allegiance"]:
-                debug(f"END_CONFLICT: allegiance is the same ({factions[0]['allegiance']}), asking user for confirmation")
-                confirmation = self.__confirm_unknown()
-                debug(f"END_CONFLICT: got response \"{confirmation}\"")
-                if confirmation == True:
-                    debug(f"END_CONFLICT: calling SEND_RESULT with {self.cz_info['player_fights_for']} as the winner")
-                    self.__send_result(self.cz_info["player_fights_for"], True)
-                elif confirmation == False:
-                    enemy = None
-                    for faction in self.cz_info["factions"]:
-                        if faction["name"] != self.cz_info["player_fights_for"]:
-                            enemy = faction["name"]
-                            break
-                    debug(f"END_CONFLICT: calling SEND_RESULT with {enemy} as the winner")
-                    self.__send_result(enemy, True)
-                # на случай "отмены"
-                else:
-                    debug("END_CONFLICT: calling SEND_RESULT with no arguments")
-                    self.__send_result()
+                debug("END_CONFLICT: allegiance of both factions is the same")
             
-            # одна из принадлежностей не установлена:
+            # у одной из фракций не определена принадлежность
             elif None in (factions[0]["allegiance"], factions[1]["allegiance"]):
-                debug(f"END_CONFLICT: allegiance of one of the factions is unknown")
-                with_allegiance, without_allegiance = (factions[0], factions[1]) if factions[0]["allegiance"] is not None else (factions[1], factions[0])
-
-                # принадлежность победителя совпадает с единственной известной: мы не уверены, что победили не вторые.
-                # уточняем у игрока, отсылаем с учётом его выбора
-                if with_allegiance["allegiance"] == allegiance:
-                    debug(f"END_CONFLICT: known allegiance coincides with the winner's one, asking user for confirmation")
-                    confirmation = self.__confirm_unknown()
-                    debug(f"END_CONFLICT: got response \"{confirmation}\"")
-                    if confirmation == True:
-                        debug(f"END_CONFLICT: calling SEND_RESULT with {self.cz_info['player_fights_for']} as the winner")
-                        self.__send_result(self.cz_info["player_fights_for"], True)
-                    elif confirmation == False:
-                        enemy = None
-                        for faction in self.cz_info["factions"]:
-                            if faction["name"] != self.cz_info["player_fights_for"]:
-                                enemy = faction["name"]
-                                break
-                        debug(f"END_CONFLICT: calling SEND_RESULT with {enemy} as the winner")
-                        self.__send_result(enemy, True)
-                    # на случай "отмены"
-                    else:
-                        debug("END_CONFLICT: calling SEND_RESULT with no arguments")
-                        self.__send_result()
-
-                # принадлежность победителя не совпадает с единственной известной => это 100% вторая фракция
+                debug("END_CONFLICT: allegiance of one of the factions in unknown")
+                with_al, without_al = (factions[0], factions[1]) if factions[1]["allegiance"] == None else (factions[1], factions[0])
+                if with_al["allegiance"] != allegiance:
+                    # принадлежность победителя не совпадает с единственной известной: это точно вторые
+                    presumed_winner = without_al["name"]
+                    debug(f"END_CONFLICT: winner's allegiance DOES NOT match the known one. presumed_winner set to {presumed_winner}")
                 else:
-                    debug(f"END_CONFLICT: known allegiance DOES NOT coincide with the winner's one, asking user for confirmation")
-                    confirmation = self.__confirm_known(without_allegiance['name'])
-                    debug(f"END_CONFLICT: got response \"{confirmation}\"")
-                    if confirmation == True:
-                        debug(f"END_CONFLICT: calling SEND_RESULTS with {without_allegiance['name']} as the winner")
-                        self.__send_result(without_allegiance['name'], True)
-                    elif confirmation == False:
-                        debug(f"END_CONFLICT: calling SEND_RESULTS with {with_allegiance['name']} as the winner")
-                        self.__send_result(with_allegiance['name'], True)
-                    # на случай "отмены"
-                    else:
-                        debug(f"END_CONFLICT: calling SEND_RESULT with {without_allegiance['name']} as the winner, but not confirmed")
-                        self.__send_result(without_allegiance['name'], False)
+                    # принадлежность победителя совпадает с единственной известной: мы не уверены, что победили не вторые
+                    debug("END_CONFLICT: winner's allegiance matches the known one")
+                    pass
             
-            # обе принадлежности установлены, они разные, понять, кто победил, не составляет труда
+            # у обеих фракций известны принадлежности, они разные: можно установить, кто победил
             else:
-                debug("END_CONFLICT: both allegiances are known")
-                for faction in self.cz_info["factions"]:
-                    if faction["allegiance"] == allegiance:
-                        debug(f"END_CONFLICT: {faction['name']} is most likely the winner, asking user for confirmation")
-                        confirmation = self.__confirm_known(faction['name'])
-                        debug(f"END_CONFLICT: got response \"{confirmation}\"")
-                        if confirmation == True:
-                            debug(f"END_CONFLICT: calling SEND_RESULTS with {faction['name']} as the winner")
-                            self.__send_result(faction["name"], True)
-                            break
-                        elif confirmation == False:
-                            enemy = None
-                            for another in self.cz_info["factions"]:
-                                if another["name"] != faction["name"]:
-                                    enemy = another["name"]
-                                    break
-                            debug(f"END_CONFLICT: calling SEND_RESULTS with {enemy} as the winner")
-                            self.__send_result(enemy, True)
-                            break
-                        # на случай "отмены"
-                        else:
-                            debug(f"END_CONFLICT: calling SEND_RESULT with {faction['name']} as the winner, but not confirmed")
-                            self.__send_result(faction["name"], False)
-                            break
+                debug("END_CONFLICT: allegiances of both factions are different, determining the winner")
+                for faction in factions:
+                    if faction["allegience"] == allegiance:
+                        presumed_winner = faction["name"]
+                        debug(f"END_CONFLICT: presumed_winner set to {presumed_winner}")
+                        break
 
-            debug("END_CONFLICT: resetting CZ_Tracker")
+            # запрашиваем подтверждение полученных данных у игрока
+            debug("END_CONFLICT: asking the user for the actual winner")
+            user_choice = self.__ask_user(factions, presumed_winner)
+            if user_choice != None:
+                actual_winner = factions[user_choice]["name"]
+                debug(f"END_CONFLICT: actual_winner set to {actual_winner}, calling SEND_RESULT")
+                self.__send_result(presumed_winner, actual_winner)
+            else:
+                # ложное срабатываение: кз не была завершена
+                debug("END_CONFLICT: user said that the conflict wasn\'t finished")
+                pass
+
+        # это был досрочный выход из кз
         else:
-            debug("END_CONFLICT: detected premature leaving, CZ_Tracker is reset")
-        self.__init__()
-        self.threadlock.acquire()
+            debug("END_CONFLICT: detected premature leaving")
+        
+        # сбрасываем инфу о кз
+        debug("END_CONFLICT: resetting CZ_Tracker")
+        self.in_conflict = False
+        del self.cz_info, self.end_messages
 
 
-    def __confirm_known(self, winner: str):
+    def __ask_user(self, factions, winner: str = None) -> int:
+        class CustomDialog(simpledialog.Dialog):
+            def __init__(self, text, factions):
+                self.text = text
+                self.parent = self.context.parent
+                self.factions = factions
+                super().__init__(parent=self.parent, title="Результаты КЗ")
+
+            def body(self, root):
+                tk.Label(root, text=self.text, justify="left", padx=5, pady=5).pack()
+
+            def buttonbox(self):
+                box = tk.Frame(self)
+                box.grid_columnconfigure(0, weight=1, uniform="group1")
+                box.grid_columnconfigure(1, weight=1, uniform="group1")
+                tk.Button(box, text=self.factions[0]["name"], command=self.__yes).grid(row=0, column=0, sticky="nsew")
+                tk.Button(box, text=self.factions[1]["name"], command=self.__no).grid(row=0, column=1, sticky="nsew")
+                tk.Button(box, text="Никто (досрочный выход из зоны конфликта)", command=self.__cancel).grid(row=1, column=0, columnspan=2, sticky="nsew")
+                box.pack(fill="both", expand=True)
+            
+            def __yes(self):
+                self.result = 0
+                self.destroy()
+
+            def __no(self):
+                self.result = 1
+                self.destroy()
+
+            def __cancel(self):
+                self.result = -1
+                self.destroy()
+        
         message = str("Зафиксировано окончание зоны конфликта.\n" +
-            "Подтвердите правильность полученных данных:\n" +
-            f"Напряжённость конфликта: {self.cz_info['intensity']}\n" +
-            "Участвующие фракции:\n" +
-            f"  - {self.cz_info['factions'][0]['name']}\n" +
-            f"  - {self.cz_info['factions'][1]['name']}\n" +
-            f"Фракция-победитель: {winner}"
+                "Подтвердите правильность полученных данных:\n\n" +
+                f"Напряжённость конфликта: {self.cz_info['intensity']}\n" +
+                "Участвующие фракции:\n" +
+                f"  - {self.cz_info['factions'][0]['name']}\n" +
+                f"  - {self.cz_info['factions'][1]['name']}\n" +
+                f"Предполагаемый победитель: {winner if winner != None else 'НЕ ОПРЕДЕЛЁН'}"
+                f"Вы сражались на стороне: {self.cz_info['player_fights_for']}\n\n" +
+                f"Выберите победившую фракцию."
         )
-        return askyesnocancel("Завершение зоны конфликта", message)
-    
-
-    def __confirm_unknown(self):
-        message = str("Зафиксировано окончание зоны конфликта.\n" +
-            "Подтвердите правильность полученных данных:\n" +
-            f"Время конфликта: {self.cz_info['time_start'].time()}-{self.cz_info['time_finish'].time()}\n" +
-            f"Напряжённость конфликта: {self.cz_info['intensity']}\n" +
-            "Участвующие фракции:\n" +
-            f"  - {self.cz_info['factions'][0]['name']}\n" +
-            f"  - {self.cz_info['factions'][1]['name']}\n" +
-            "Фракция-победитель: НЕ ОПРЕДЕЛЕНА\n" +
-            f"Вы сражались на стороне: {self.cz_info['player_fights_for']}\n\n" +
-            f"Выберите \"Да\" в случае, если победила сторона, на которой вы сражались."
-        )
-        return askyesnocancel("Завершение зоны конфликта", message)
+        return CustomDialog(message, factions).result
 
 
-    def __send_result(self, winner: str = None, confirmed = False):
+    def __send_result(self, presumed: str, actual: str):
         debug("SEND_RESULT: forming response")
         url_params = {
-                "entry.276599870": self.cz_info["time_start"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.107026375": self.cz_info["time_finish"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.856417302": self.cmdr,
-                "entry.1329741081": self.system,
-                "entry.2083736029": "Space",
-                "entry.1314212673": self.cz_info["intensity"],
-                "entry.1076602401": winner if winner != None else "[UNKNOWN]",
-                "entry.1746398448": self.__post_logs(),
-                "entry.1916160623": "Yes" if confirmed else "No"
+                "entry.751150409": self.cz_info["time_start"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.1063245051": self.cz_info["time_finish"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.852296360": self.cmdr,
+                "entry.1155279269": self.system,
+                "entry.375584019": "Space",
+                "entry.2072671672": self.cz_info["intensity"],
+                "entry.427971639": presumed if presumed != None else "[UNKNOWN]",
+                "entry.88896896": actual,
+                "entry.1405864887": self.__post_logs(),
             }
-        url = f'{URL_GOOGLE}/1FAIpQLScfYudjfdwa2c7Y1pEQpyoERuB-kbYvX-J7vLWB8J-JtsngBg/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
+        url = f'{URL_GOOGLE}/1FAIpQLScoReLyHUXj-zyM4cwi6yBw3mYWK-NUSIYrEHAAPR0L9aOmxw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
         debug("SEND_RESULT: link: " + url)
         Reporter(url).start()
         debug("SEND_RESULT: successfully sent to google sheet")
