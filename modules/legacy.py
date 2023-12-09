@@ -5,7 +5,7 @@ import tkinter as tk
 from  math import sqrt, pow
 from .debug import debug, error
 from datetime import datetime, timezone
-from tkinter import simpledialog
+from tkinter import Toplevel
 from collections import deque
 
 try:#py3
@@ -802,10 +802,9 @@ class BGS():
 
 
 class CZ_Tracker():
-    def __init__(self, context):
+    def __init__(self):
         self.threadlock = threading.Lock()
         self.in_conflict = False
-        self.context = context      # нужно для уведомлений
 
 
     def check_event(self, cmdr, system, entry):
@@ -935,7 +934,7 @@ class CZ_Tracker():
                     # Переписывать его ещё раз мне влом, поэтому будет небольшое дублирование кода. Зато без лишних ветвлений.
                     self.cz_info["time_finish"] = datetime.utcnow()
                     presumed_winner = faction["name"]
-                    user_choice = self.__ask_user(self.context, factions, presumed_winner)
+                    user_choice = self.__ask_user(factions, presumed_winner)
                     if user_choice != None:
                         actual_winner = factions[user_choice]["name"]
                         debug(f"INSTANCE_EXIT: actual_winner set to {actual_winner}, calling SEND_RESULT")
@@ -983,7 +982,7 @@ class CZ_Tracker():
 
             # запрашиваем подтверждение полученных данных у игрока
             debug("END_CONFLICT: asking the user for the actual winner")
-            user_choice = self.__ask_user(self.context, factions, presumed_winner)
+            user_choice = self.__ask_user(factions, presumed_winner)
             if user_choice != None:
                 actual_winner = factions[user_choice]["name"]
                 debug(f"END_CONFLICT: actual_winner set to {actual_winner}, calling SEND_RESULT")
@@ -1003,31 +1002,51 @@ class CZ_Tracker():
         del self.cz_info, self.end_messages
 
 
-    def __ask_user(self, context, factions, winner: str = None) -> int:
-        class CustomDialog(simpledialog.Dialog):
-            def __init__(self, context, text, factions):
-                self.text = text
-                self.parent = context.parent
-                self.factions = factions
-                super().__init__(parent=self.parent, title="Результаты КЗ")
+    def __ask_user(self, factions, winner: str = None) -> int:
+        class Notification(Toplevel):
+            def __init__(self, text, factions):
+                super().__init__()
+                self.title("Завершение зоны конфликта")
+                self.geometry("400x255")
+                self.resizable(False, False)
 
-            def body(self, root):
-                tk.Label(root, text=self.text, justify="left", padx=5, pady=5).pack()
+                tk.Label(self, text=text, justify="left").pack(anchor="nw")
 
-            def buttonbox(self):
-                box = tk.Frame(self)
-                box.grid_columnconfigure(0, weight=1, uniform="group1")
-                box.grid_columnconfigure(1, weight=1, uniform="group1")
-                tk.Button(box, text=self.factions[0]["name"], command=self.__yes).grid(row=0, column=0, sticky="nsew")
-                tk.Button(box, text=self.factions[1]["name"], command=self.__no).grid(row=0, column=1, sticky="nsew")
-                tk.Button(box, text="Никто (досрочный выход из зоны конфликта)", command=self.__cancel).grid(row=1, column=0, columnspan=2, sticky="nsew")
-                box.pack(fill="both", expand=True)
+                bottombox = tk.Frame(self)
+                bottombox.grid_columnconfigure(0, weight=1, uniform="group1")
+                bottombox.grid_columnconfigure(1, weight=1, uniform="group1")
+
+                tk.Button(
+                    bottombox,
+                    text=factions[0]["name"],
+                    padx=5, pady=3,
+                    bd=3,
+                    command=self.__first
+                    ).grid(row=0, column=0, sticky="nsew")
+                
+                tk.Button(
+                    bottombox,
+                    text=factions[1]["name"],
+                    padx=5, pady=3,
+                    bd=3,
+                    command=self.__second
+                    ).grid(row=0, column=1, sticky="nsew")
+                
+                tk.Button(
+                    bottombox,
+                    text="Никто (досрочный выход из зоны конфликта)",
+                    padx=5, pady=3,
+                    bd=3,
+                    command=self.__cancel
+                    ).grid(row=1, column=0, columnspan=2, sticky="nsew")
+                
+                bottombox.pack(side="bottom")
             
-            def __yes(self):
+            def __first(self):
                 self.result = 0
                 self.destroy()
 
-            def __no(self):
+            def __second(self):
                 self.result = 1
                 self.destroy()
 
@@ -1045,7 +1064,9 @@ class CZ_Tracker():
                 f"Вы сражались на стороне: {self.cz_info['player_fights_for']}\n\n" +
                 f"Выберите победившую фракцию."
         )
-        return CustomDialog(context, message, factions).result
+        notif = Notification(message, factions)
+        notif.wait_window()
+        return notif.result
 
 
     def __send_result(self, presumed: str, actual: str):

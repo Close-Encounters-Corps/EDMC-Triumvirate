@@ -102,7 +102,7 @@ try:
 except FileExistsError:
     pass
 BGS = legacy.BGS()
-CZ_TRACKER = legacy.CZ_Tracker(context)
+CZ_TRACKER = legacy.CZ_Tracker()
 
 
 def plugin_prefs(parent, cmdr, is_beta):
