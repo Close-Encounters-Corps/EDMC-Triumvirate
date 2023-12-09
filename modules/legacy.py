@@ -922,12 +922,31 @@ class CZ_Tracker():
 
     
     def __instance_exit(self):
-        if self.cz_info["kills"] >= 5:
-            for faction in self.cz_info["factions"]:
+        debug("INSTANCE_EXIT: detected jump/cruise entry")
+        if self.cz_info["kills"] < 5:
+            self.__end_conflict()
+        else:
+            debug(f"INSTANCE_EXIT: player killed {self.cz_info['kills']} enemies, possible victory")
+            factions = [faction for faction in self.cz_info["factions"]]
+            for faction in factions:
                 if faction["name"] == self.cz_info["player_fights_for"]:
-                    self.__end_conflict(faction["allegiance"])
-                    return
-        self.__end_conflict()
+                    # Поскольку нам может быть неизвестна принадлежность фракции, за которую воевал игрок,
+                    # вызывать END_CONFLICT в текущем его виде нельзя - а то он посчитает это преждевременным выходом из кз.
+                    # Переписывать его ещё раз мне влом, поэтому будет небольшое дублирование кода. Зато без лишних ветвлений.
+                    self.cz_info["time_finish"] = datetime.utcnow()
+                    presumed_winner = faction["name"]
+                    user_choice = self.__ask_user(factions, presumed_winner)
+                    if user_choice != None:
+                        actual_winner = factions[user_choice]["name"]
+                        debug(f"INSTANCE_EXIT: actual_winner set to {actual_winner}, calling SEND_RESULT")
+                        self.__send_result(presumed_winner, actual_winner)
+                    else:
+                        # ложное срабатываение: кз не была завершена
+                        debug("INSTANCE_EXIT: user said that the conflict wasn\'t finished")
+            # сбрасываем инфу о кз
+            debug("INSTANCE_EXIT: resetting CZ_Tracker")
+            self.in_conflict = False
+            del self.cz_info, self.end_messages
 
 
     def __end_conflict(self, allegiance = None):
@@ -952,7 +971,6 @@ class CZ_Tracker():
                 else:
                     # принадлежность победителя совпадает с единственной известной: мы не уверены, что победили не вторые
                     debug("END_CONFLICT: winner's allegiance matches the known one")
-                    pass
             
             # у обеих фракций известны принадлежности, они разные: можно установить, кто победил
             else:
