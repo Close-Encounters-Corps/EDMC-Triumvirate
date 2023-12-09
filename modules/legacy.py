@@ -1007,7 +1007,7 @@ class CZ_Tracker():
             def __init__(self, text, factions):
                 super().__init__()
                 self.title("Завершение зоны конфликта")
-                self.geometry("400x255")
+                self.geometry("400x245")
                 self.resizable(False, False)
 
                 tk.Label(self, text=text, justify="left").pack(anchor="nw")
@@ -1040,7 +1040,7 @@ class CZ_Tracker():
                     command=self.__cancel
                     ).grid(row=1, column=0, columnspan=2, sticky="nsew")
                 
-                bottombox.pack(side="bottom")
+                bottombox.pack(expand=True, fill="x", anchor="s")
             
             def __first(self):
                 self.result = 0
