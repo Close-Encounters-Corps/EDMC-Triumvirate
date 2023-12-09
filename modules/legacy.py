@@ -881,6 +881,8 @@ class CZ_Tracker():
 
     def __kill(self, entry):
         debug(f"KILL: detected \"FactionKillBond\", awarding \"{entry['AwardingFaction']}\", victim \"{entry['VictimFaction']}\"")
+        self.cz_info["kills"] += 1
+        debug(f"KILL: kills counter: {self.cz_info['kills']}")
         if self.cz_info["player_fights_for"] == None:
             self.cz_info["player_fights_for"] = entry["AwardingFaction"]
             debug(f"KILL: \"player_fights_for\" was None, now set to \"{entry['AwardingFaction']}\"")
