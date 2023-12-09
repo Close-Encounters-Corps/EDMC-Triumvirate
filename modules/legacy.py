@@ -1041,7 +1041,7 @@ class CZ_Tracker():
                 "Участвующие фракции:\n" +
                 f"  - {self.cz_info['factions'][0]['name']}\n" +
                 f"  - {self.cz_info['factions'][1]['name']}\n" +
-                f"Предполагаемый победитель: {winner if winner != None else 'НЕ ОПРЕДЕЛЁН'}"
+                f"Предполагаемый победитель: {winner if winner != None else 'НЕ ОПРЕДЕЛЁН'}\n"
                 f"Вы сражались на стороне: {self.cz_info['player_fights_for']}\n\n" +
                 f"Выберите победившую фракцию."
         )
