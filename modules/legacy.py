@@ -1110,34 +1110,33 @@ class CZ_Tracker():
         debug(f"SEND_LOGS: created list of logfiles, {len(logs)} items inside")
         
         # сжимаем в зип
-        zipfile_name = os.path.join(temp_folder, "temp_archive.zip")
-        with zipfile.ZipFile(zipfile_name, "w") as zipf:
+        zip = os.path.join(temp_folder, f"{self.cmdr}-{datetime.utcnow().strftime('%d%m%Y_%H%M%S')}.zip")
+        with zipfile.ZipFile(zip, "w") as zipf:
             for file in logs:
                 zipf.write(file, arcname=os.path.basename(file))
         debug("SEND_LOGS: created temp .zip")
-
-        # читаем содержимое
-        with open(zipfile_name, "rb") as zipf:
-            content = zipf.read()
 
         # отправляем
         debug("SEND_LOGS: sending .zip on remote server")
         server = requests.get("https://api.gofile.io/getServer").json()["data"]["server"]
         api_url = f"https://{server}.gofile.io/uploadFile"
-        file = {f"{self.cmdr}-{datetime.utcnow().strftime('%d%m%Y%H%M%S')}.zip": content}
+        with open(zip, 'rb') as content:
+            file = {"file": content.read()}
 
         for i in range(10):
             try:
                 response = requests.post(api_url, files=file)
             except requests.exceptions.RequestException as e:
-                debug(f"SEND_LOGS: failed to send logs, exception \"{e}\" occured (attempt {i+1})")
+                error(f"SEND_LOGS: failed to send logs, exception \"{e}\" occured (attempt {i+1})")
             else:
                 debug(f"SEND_LOGS: status code: {response.status_code} (attempt {i+1})")
                 if response.status_code == 200:
                     break
+            if i == 9:
+                error(f"SEND_LOGS: 10 FAILED ATTEMPTS OF POSTING LOGFILES. Latest response: {response}")
 
         # удаляем зипку
-        os.remove(zipfile_name)
+        os.remove(zip)
         debug(f"SEND_LOGS: deleted temp .zip")
 
         if response.status_code == 200:
