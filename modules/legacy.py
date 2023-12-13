@@ -1125,14 +1125,22 @@ class CZ_Tracker():
         server = requests.get("https://api.gofile.io/getServer").json()["data"]["server"]
         api_url = f"https://{server}.gofile.io/uploadFile"
         file = {f"{self.cmdr}-{datetime.utcnow().strftime('%d%m%Y%H%M%S')}.zip": content}
-        response = requests.post(api_url, files=file)
-        debug(f"SEND_LOGS: status code: {response.status_code}")
+
+        for i in range(10):
+            try:
+                response = requests.post(api_url, files=file)
+            except requests.exceptions.RequestException as e:
+                debug(f"SEND_LOGS: failed to send logs, exception \"{e}\" occured (attempt {i+1})")
+            else:
+                debug(f"SEND_LOGS: status code: {response.status_code} (attempt {i+1})")
+                if response.status_code == 200:
+                    break
 
         # удаляем зипку
         os.remove(zipfile_name)
         debug(f"SEND_LOGS: deleted temp .zip")
-        
-        if response.json()["status"] == "ok":
+
+        if response.status_code == 200:
             return response.json()["data"]["downloadPage"]
         else:
-            return f"ERROR: code {str(response.status_code)}"
+            return "[FAILED TO SEND LOGS TO REMOTE SERVER]"
