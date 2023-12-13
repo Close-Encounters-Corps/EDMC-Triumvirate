@@ -975,7 +975,7 @@ class CZ_Tracker():
             else:
                 debug("END_CONFLICT: allegiances of both factions are different, determining the winner")
                 for faction in factions:
-                    if faction["allegience"] == allegiance:
+                    if faction["allegiance"] == allegiance:
                         presumed_winner = faction["name"]
                         debug(f"END_CONFLICT: presumed_winner set to {presumed_winner}")
                         break
