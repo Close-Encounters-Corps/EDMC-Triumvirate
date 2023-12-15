@@ -980,17 +980,22 @@ class CZ_Tracker():
                         debug(f"END_CONFLICT: presumed_winner set to {presumed_winner}")
                         break
 
-            # запрашиваем подтверждение полученных данных у игрока
-            debug("END_CONFLICT: asking the user for the actual winner")
-            user_choice = self.__ask_user(factions, presumed_winner)
-            if user_choice != None:
-                actual_winner = factions[user_choice]["name"]
-                debug(f"END_CONFLICT: actual_winner set to {actual_winner}, calling SEND_RESULT")
-                self.__send_result(presumed_winner, actual_winner)
+            if presumed_winner != self.cz_info["player_fights_for"]:
+                # что-то не сходится: запрашиваем подтверждение полученных данных у игрока
+                debug("END_CONFLICT: unexpected/unknown presumed winner, asking the user for the actual winner")
+                user_choice = self.__ask_user(factions, presumed_winner)
+                if user_choice != None:
+                    actual_winner = factions[user_choice]["name"]
+                    debug(f"END_CONFLICT: actual_winner set to {actual_winner}, calling SEND_RESULT")
+                    self.__send_result(presumed_winner, actual_winner)
+                else:
+                    # ложное срабатываение: кз не была завершена
+                    debug("END_CONFLICT: user said that the conflict wasn\'t finished")
+                    pass
             else:
-                # ложное срабатываение: кз не была завершена
-                debug("END_CONFLICT: user said that the conflict wasn\'t finished")
-                pass
+                # мы вполне уверены, что определили всё правильно
+                debug("END_CONFLICT: presumed winner is the faction the player was fighting for, calling SEND_RESULT")
+                self.__send_result(presumed_winner, presumed_winner)
 
         # это был досрочный выход из кз
         else:
