@@ -1138,8 +1138,8 @@ class CZ_Tracker():
                 debug(f"SEND_LOGS: status code: {response.status_code} (attempt {i+1})")
                 if response.status_code == 200:
                     break
-            if i == 9:
-                error(f"SEND_LOGS: 10 FAILED ATTEMPTS OF POSTING LOGFILES. Latest response: {response}")
+        else:
+            error(f"SEND_LOGS: 10 FAILED ATTEMPTS OF POSTING LOGFILES. Latest response: {response}")
 
         # удаляем зипку
         os.remove(zip)
