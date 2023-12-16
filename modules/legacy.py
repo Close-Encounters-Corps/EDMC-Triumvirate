@@ -5,7 +5,6 @@ import tkinter as tk
 from  math import sqrt, pow
 from .debug import debug, error
 from datetime import datetime, timezone
-from tkinter import Toplevel
 from collections import deque
 
 try:#py3
@@ -849,6 +848,8 @@ class CZ_Tracker():
             "time_start": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
             "time_finish": None
         }
+        if self.cz_info["intensity"] == "Med":
+            self.cz_info["intensity"] = "Medium"
         self.end_messages = deque(5*[None], 5)
         debug("START_CONFLICT: CZ_Tracker prepared")
 
@@ -1008,7 +1009,7 @@ class CZ_Tracker():
 
 
     def __ask_user(self, factions, winner: str = None) -> int:
-        class Notification(Toplevel):
+        class Notification(tk.Tk):
             def __init__(self, text, factions):
                 super().__init__()
                 self.title("Завершение зоны конфликта")
