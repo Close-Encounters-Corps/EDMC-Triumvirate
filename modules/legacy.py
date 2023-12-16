@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-import threading, requests, traceback, json, os, sys, zipfile
+import threading, requests, traceback, json, os, sys, zipfile, tempfile
 import tkinter as tk
 
 from  math import sqrt, pow
@@ -1096,7 +1096,7 @@ class CZ_Tracker():
 
     # в теории - это временно
     def __post_logs(self) -> str:
-        temp_folder = os.path.join(os.path.expanduser('~'), "AppData\\Local\\Temp")
+        temp_folder = tempfile.gettempdir()
         game_logs_folder = os.path.join(os.path.expanduser('~'), "Saved Games\\Frontier Developments\\Elite Dangerous")
 
         # добываем игровой логфайл текущей сессии
