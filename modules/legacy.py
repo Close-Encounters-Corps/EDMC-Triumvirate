@@ -935,14 +935,22 @@ class CZ_Tracker():
                     # Переписывать его ещё раз мне влом, поэтому будет небольшое дублирование кода. Зато без лишних ветвлений.
                     self.cz_info["time_finish"] = datetime.utcnow()
                     presumed_winner = faction["name"]
-                    user_choice = self.__ask_user(factions, presumed_winner)
-                    if user_choice != None:
-                        actual_winner = factions[user_choice]["name"]
-                        debug(f"INSTANCE_EXIT: actual_winner set to {actual_winner}, calling SEND_RESULT")
-                        self.__send_result(presumed_winner, actual_winner)
+                    if presumed_winner != self.cz_info["player_fights_for"]:
+                        # что-то не сходится: запрашиваем подтверждение полученных данных у игрока
+                        debug("INSTANCE_EXIT: unexpected/unknown presumed winner, asking the user for the actual winner")
+                        user_choice = self.__ask_user(factions, presumed_winner)
+                        if user_choice != None:
+                            actual_winner = factions[user_choice]["name"]
+                            debug(f"INSTANCE_EXIT: actual_winner set to {actual_winner}, calling SEND_RESULT")
+                            self.__send_result(presumed_winner, actual_winner)
+                        else:
+                            # ложное срабатываение: кз не была завершена
+                            debug("INSTANCE_EXIT: user said that the conflict wasn\'t finished")
+                            pass
                     else:
-                        # ложное срабатываение: кз не была завершена
-                        debug("INSTANCE_EXIT: user said that the conflict wasn\'t finished")
+                        # мы вполне уверены, что определили всё правильно
+                        debug("INSTANCE_EXIT: presumed winner is the faction the player was fighting for, calling SEND_RESULT")
+                        self.__send_result(presumed_winner, presumed_winner)
             # сбрасываем инфу о кз
             debug("INSTANCE_EXIT: resetting CZ_Tracker")
             self.in_conflict = False
