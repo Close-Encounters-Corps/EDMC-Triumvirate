@@ -6,6 +6,7 @@ from  math import sqrt, pow
 from .debug import debug, error
 from datetime import datetime, timezone
 from collections import deque
+from tkinter import font
 
 try:#py3
     from urllib.parse import quote_plus
@@ -1020,11 +1021,24 @@ class CZ_Tracker():
         class Notification(tk.Tk):
             def __init__(self, text, factions):
                 super().__init__()
+
+                # Это отвратительное решение, но пусть будет так.
+                # 1x - разрешение экрана 1920х1080. При меньшем размере экрана - всё равно используем 1x.
+                # При большем - считаем разницу с FHD, соответственно увеличиваем все размеры.
+                screen_width = self.winfo_screenwidth()
+                if screen_width <= 1920:
+                    zoom_factor = 1
+                else:
+                    zoom_factor = screen_width / 1920
+
+                width = int(400*zoom_factor)
+                height = int(250*zoom_factor)
+                self.geometry(f"{width}x{height}")
                 self.title("Завершение зоны конфликта")
-                self.geometry("400x245")
                 self.resizable(False, False)
 
-                tk.Label(self, text=text, justify="left").pack(anchor="nw")
+                default_font = font.nametofont("TkDefaultFont").actual()["family"]
+                tk.Label(self, text=text, justify="left", font=(default_font, int(9*zoom_factor))).pack(anchor="nw")
 
                 bottombox = tk.Frame(self)
                 bottombox.grid_columnconfigure(0, weight=1, uniform="group1")
@@ -1033,29 +1047,35 @@ class CZ_Tracker():
                 tk.Button(
                     bottombox,
                     text=factions[0]["name"],
-                    padx=5, pady=3,
-                    bd=3,
+                    font=(default_font, int(9*zoom_factor)),
+                    padx=int(5*zoom_factor),
+                    pady=int(3*zoom_factor),
+                    bd=int(3*zoom_factor),
                     command=self.__first
                     ).grid(row=0, column=0, sticky="nsew")
                 
                 tk.Button(
                     bottombox,
                     text=factions[1]["name"],
-                    padx=5, pady=3,
-                    bd=3,
+                    font=(default_font, int(9*zoom_factor)),
+                    padx=int(5*zoom_factor),
+                    pady=int(3*zoom_factor),
+                    bd=int(3*zoom_factor),
                     command=self.__second
                     ).grid(row=0, column=1, sticky="nsew")
                 
                 tk.Button(
                     bottombox,
                     text="Никто (досрочный выход из зоны конфликта)",
-                    padx=5, pady=3,
-                    bd=3,
+                    font=(default_font, int(9*zoom_factor)),
+                    padx=int(5*zoom_factor),
+                    pady=int(3*zoom_factor),
+                    bd=int(3*zoom_factor),
                     command=self.__cancel
                     ).grid(row=1, column=0, columnspan=2, sticky="nsew")
                 
                 bottombox.pack(expand=True, fill="x", anchor="s")
-            
+
             def __first(self):
                 self.result = 0
                 self.destroy()
