@@ -809,14 +809,11 @@ class CZ_Tracker():
 
     def check_event(self, cmdr, system, entry):
         self.threadlock.acquire()
-        self.cmdr = cmdr
-        self.system = system
-
         try:
             event = entry["event"]
             # вход в зону конфликта
             if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
-                self.__start_conflict(entry)
+                self.__start_conflict(entry, cmdr, system)
             if self.in_conflict == True:
                 # для определения сторон конфликта
                 if event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
@@ -838,7 +835,7 @@ class CZ_Tracker():
         self.threadlock.release()
     
 
-    def __start_conflict(self, entry):
+    def __start_conflict(self, entry, cmdr, system):
         debug("START_CONFLICT: detected entering a conflict zone")
         self.in_conflict = True
         self.cz_info = {
@@ -852,6 +849,9 @@ class CZ_Tracker():
         if self.cz_info["intensity"] == "Med":
             self.cz_info["intensity"] = "Medium"
         self.end_messages = deque(5*[None], 5)
+        self.cmdr = cmdr
+        self.system = system
+        debug(f"START_CONFLICT: cmdr set to {cmdr}, system set to {system}")
         debug("START_CONFLICT: CZ_Tracker prepared")
 
 
