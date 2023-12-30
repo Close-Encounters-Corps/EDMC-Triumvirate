@@ -1031,13 +1031,13 @@ class CZ_Tracker():
                 super().__init__()
 
                 # Это отвратительное решение, но пусть будет так.
-                # 1x - разрешение экрана 1920х1080. При меньшем размере экрана - всё равно используем 1x.
-                # При большем - считаем разницу с FHD, соответственно увеличиваем все размеры.
-                screen_width = self.winfo_screenwidth()
-                if screen_width <= 1920:
+                # 1x - высота экрана 1080пкс. При меньшем размере экрана - всё равно используем 1x.
+                # При большем - считаем разницу с 1080, соответственно увеличиваем все размеры.
+                screen_height = self.winfo_screenheight()
+                if screen_height <= 1080:
                     zoom_factor = 1
                 else:
-                    zoom_factor = screen_width / 1920
+                    zoom_factor = screen_height / 1080
 
                 width = int(400*zoom_factor)
                 height = int(250*zoom_factor)
