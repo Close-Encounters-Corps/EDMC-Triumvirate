@@ -20,4 +20,5 @@
 /settings_local.py
 .vscode
 /EDMC-Triumvirate.pyproj.user
+test.py
 /modules/test.py

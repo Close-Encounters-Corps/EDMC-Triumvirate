@@ -80,7 +80,7 @@ class CanonnJournal(Emitter):
                 for exc in r.json():
                     tempexcludes[exc["eventName"]] = True
                 CanonnJournal.exclusions = tempexcludes
-                debug("Jouurnal excludes got")
+                debug("Journal excludes got")
             else:
                 error("{}/excludeevents".format(url))
 
