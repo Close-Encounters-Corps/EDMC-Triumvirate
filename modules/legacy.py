@@ -556,41 +556,45 @@ class NHSS(threading.Thread):
 
 
 
-class BGS():
+class BGS:
     def __init__(self):
         self.CURRENT_MISSIONS_FILE = f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\currentmissions.trmv"
         self.mainfaction = ""
         self.threadlock = threading.Lock()
 
-    def TaskCheck(self, cmdr, is_beta, system, station, entry, client):
-        self.threadlock.acquire()
-        try:
-            event = entry["event"]
-            # стыковка/вход в игру на станции
-            if event == "Docked" or (event == "Location" and entry["Docked"] == True):
-                self.__setFaction(entry)
-            # принятие миссии
-            elif event == "MissionAccepted":
-                self.__missionAccepted(entry, system)
-            # сдача миссии
-            elif event == "MissionCompleted":
-                self.__missionCompleted(entry, cmdr)
-            # провал миссии
-            elif event == "MissionFailed":
-                self.__missionFailed(entry, cmdr)
-            # отказ от миссии
-            elif event == "MissionAbandoned":
-                self.__missionAbandoned(entry)
-            # ваучеры
-            elif event == "RedeemVoucher":
-                self.__redeemVoucher(entry, cmdr, system)
-            # картография
-            elif "SellExplorationData" in event:
-                self.__explorationData(entry, cmdr, system, station)
-        
-        except:
-            error(traceback.format_exc())
-        self.threadlock.release()
+    def set_systems(self, systems: list):
+        self.systems = systems
+
+    def check_event(self, cmdr, system, station, entry):
+        if hasattr(self, "systems"):
+            self.threadlock.acquire()
+            try:
+                event = entry["event"]
+                # стыковка/вход в игру на станции
+                if event == "Docked" or (event == "Location" and entry["Docked"] == True):
+                    self.__setFaction(entry)
+                # принятие миссии
+                elif event == "MissionAccepted":
+                    self.__missionAccepted(entry, system)
+                # сдача миссии
+                elif event == "MissionCompleted":
+                    self.__missionCompleted(entry, cmdr)
+                # провал миссии
+                elif event == "MissionFailed":
+                    self.__missionFailed(entry, cmdr)
+                # отказ от миссии
+                elif event == "MissionAbandoned":
+                    self.__missionAbandoned(entry)
+                # ваучеры
+                elif event == "RedeemVoucher":
+                    self.__redeemVoucher(entry, cmdr, system)
+                # картография
+                elif "SellExplorationData" in event:
+                    self.__explorationData(entry, cmdr, system, station)
+            
+            except:
+                error(traceback.format_exc())
+            self.threadlock.release()
 
     def __setFaction(self, entry):
         debug(f"MAIN_FACTION: detected \"{entry['event']}\"")
@@ -600,20 +604,23 @@ class BGS():
 
     def __missionAccepted(self, entry, system):
         debug("MISSION_ACCEPTED: detected MissionAccepted")
-        mission = {
-            "timestamp": entry["timestamp"],
-            "ID": entry["MissionID"],
-            "expires": entry.get("Expiry", ""),
-            "type": entry["Name"],
-            "system": system,
-            "faction": entry["Faction"],
-            "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", "") != "" else "",
-            "faction2": entry.get("TargetFaction", ""),
-        }
-        debug("MISSION_ACCEPTED: saved data: " + str(mission))
-        with open(self.CURRENT_MISSIONS_FILE, "a", encoding="utf8") as missions_file:
-            missions_file.write(json.dumps(mission) + '\n')
-            debug("MISSION_ACCEPTED: saved to currentmissions")
+        if system in self.systems or entry.get("DestinationSystem", "") in self.systems:
+            mission = {
+                "timestamp": entry["timestamp"],
+                "ID": entry["MissionID"],
+                "expires": entry.get("Expiry", ""),
+                "type": entry["Name"],
+                "system": system,
+                "faction": entry["Faction"],
+                "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", "") != "" else "",
+                "faction2": entry.get("TargetFaction", ""),
+            }
+            debug("MISSION_ACCEPTED: saved data: " + str(mission))
+            with open(self.CURRENT_MISSIONS_FILE, "a", encoding="utf8") as missions_file:
+                missions_file.write(json.dumps(mission) + '\n')
+                debug("MISSION_ACCEPTED: saved to currentmissions")
+        else:
+            debug("MISSION_ACCEPTED: we are not interested in this system, skipping")
 
 
     def __missionCompleted(self, entry, cmdr):
@@ -636,7 +643,6 @@ class BGS():
                     completed_mission = mission
         if completed_mission == {}:
             debug("MISSION_COMPLETE: WARNING: mission not found, exiting")
-            self.threadlock.release()
             return
         
         factions_inf = dict()
@@ -695,7 +701,6 @@ class BGS():
                     failed_mission = mission
         if failed_mission == {}:
             debug("MISSION_FAILED: WARNING: mission not found, exiting")
-            self.threadlock.release()
             return
 
         url_params = {
@@ -739,41 +744,47 @@ class BGS():
         if self.mainfaction != "FleetCarrier":
             if "BrokerPercentage" not in entry:                 # игнорируем юристов
                 debug("REDEEM_VOUCHER: detected RedeemVoucher")
-                if entry["Type"] != "bounty":
-                    debug(f"REDEEM_VOUCHER: type \"{entry['Type']}\", skipping")
+                if system not in self.systems:
+                    debug("REDEEM_VOUCHER: we are not interested in this system, skipping")
                 else:
-                    debug("REDEEM_VOUCHER: type \"Bounty\"")
-                    for faction in entry["Factions"]:
-                        debug("REDEEM_VOUCHER: current faction: " + str(faction))
-                        url_params = {
-                            "entry.503143076": cmdr,
-                            "entry.1108939645": "bounty",
-                            "entry.127349896": system,
-                            "entry.442800983": "",
-                            "entry.48514656": faction["Faction"],
-                            "entry.351553038": faction["Amount"],
-                        }
-                        url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-                        debug("REDEEM_VOUCHER: link: " + url)
-                        Reporter(url).start()
-                        debug("REDEEM_VOUCHER: successfully sent to google sheet")
+                    if entry["Type"] != "bounty":
+                        debug(f"REDEEM_VOUCHER: type \"{entry['Type']}\", skipping")
+                    else:
+                        debug("REDEEM_VOUCHER: type \"Bounty\"")
+                        for faction in entry["Factions"]:
+                            debug("REDEEM_VOUCHER: current faction: " + str(faction))
+                            url_params = {
+                                "entry.503143076": cmdr,
+                                "entry.1108939645": "bounty",
+                                "entry.127349896": system,
+                                "entry.442800983": "",
+                                "entry.48514656": faction["Faction"],
+                                "entry.351553038": faction["Amount"],
+                            }
+                            url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
+                            debug("REDEEM_VOUCHER: link: " + url)
+                            Reporter(url).start()
+                            debug("REDEEM_VOUCHER: successfully sent to google sheet")
 
 
     def __explorationData(self, entry, cmdr, system, station):
         if self.mainfaction != "FleetCarrier":
             debug(f"SELL_EXP_DATA: detected \"{entry['event']}\"")
-            url_params = {
-                "entry.503143076": cmdr,
-                "entry.1108939645": "SellExpData",
-                "entry.127349896": system,
-                "entry.442800983": station,
-                "entry.48514656": self.mainfaction,
-                "entry.351553038": entry["TotalEarnings"],
-            }
-            url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-            debug("SELL_EXP_DATA: link: " + url)
-            Reporter(url).start()
-            debug("SELL_EXP_DATA: successfully sent to google sheet")
+            if system not in self.systems:
+                debug("SELL_EXP_DATA: we are not interested in this system, skipping")
+            else:
+                url_params = {
+                    "entry.503143076": cmdr,
+                    "entry.1108939645": "SellExpData",
+                    "entry.127349896": system,
+                    "entry.442800983": station,
+                    "entry.48514656": self.mainfaction,
+                    "entry.351553038": entry["TotalEarnings"],
+                }
+                url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
+                debug("SELL_EXP_DATA: link: " + url)
+                Reporter(url).start()
+                debug("SELL_EXP_DATA: successfully sent to google sheet")
 
 
     def __del__(self):
@@ -820,38 +831,43 @@ class BGS():
 
 
 
-class CZ_Tracker():
+class CZ_Tracker:
     def __init__(self):
         self.threadlock = threading.Lock()
         self.in_conflict = False
+        self.systems = []
+
+    def set_systems(self, systems: list):
+        self.systems = systems
 
 
     def check_event(self, cmdr, system, entry):
-        self.threadlock.acquire()
-        try:
-            event = entry["event"]
-            # вход в зону конфликта
-            if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
-                self.__start_conflict(entry, cmdr, system)
-            if self.in_conflict == True:
-                # для определения сторон конфликта
-                if event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
-                    self.__ship_scan(entry)
-                elif event == "FactionKillBond":
-                    self.__kill(entry)
-                # завершение кз: отслеживание "патрульных" сообщений
-                elif event == "ReceiveText":
-                    self.__patrol_message(entry)
-                # завершение кз: прыжок/выход в круиз
-                elif event in ("SupercruiseEntry", "FSDJump"):
-                    self.__instance_exit()
-                # досрочный выход из кз: завершение игры, смерть, выход в меню
-                elif event in ("Shutdown", "Died") or (event == "Music" and entry["MusicTrack"] == "MainMenu"):
-                    self.__end_conflict()
+        if system in self.systems:
+            self.threadlock.acquire()
+            try:
+                event = entry["event"]
+                # вход в зону конфликта
+                if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
+                    self.__start_conflict(entry, cmdr, system)
+                if self.in_conflict == True:
+                    # для определения сторон конфликта
+                    if event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
+                        self.__ship_scan(entry)
+                    elif event == "FactionKillBond":
+                        self.__kill(entry)
+                    # завершение кз: отслеживание "патрульных" сообщений
+                    elif event == "ReceiveText":
+                        self.__patrol_message(entry)
+                    # завершение кз: прыжок/выход в круиз
+                    elif event in ("SupercruiseEntry", "FSDJump"):
+                        self.__instance_exit()
+                    # досрочный выход из кз: завершение игры, смерть, выход в меню
+                    elif event in ("Shutdown", "Died") or (event == "Music" and entry["MusicTrack"] == "MainMenu"):
+                        self.__end_conflict()
 
-        except: 
-            error(traceback.format_exc())
-        self.threadlock.release()
+            except: 
+                error(traceback.format_exc())
+            self.threadlock.release()
     
 
     def __start_conflict(self, entry, cmdr, system):
