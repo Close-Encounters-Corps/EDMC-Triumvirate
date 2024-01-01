@@ -5,6 +5,7 @@ import tkinter as tk
 from datetime import datetime
 from urllib.parse import quote_plus
 from contextlib import closing
+from threading import Lock
 import os
 import logging
 import webbrowser
@@ -95,6 +96,15 @@ context.help_page_opened = False
 context.latest_dashboard_entry = None
 
 
+# BGS: подготовительные работы
+try:
+    open(f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\currentmissions.trmv", "x")
+except FileExistsError:
+    pass
+BGS = legacy.BGS()
+CZ_TRACKER = legacy.CZ_Tracker()
+
+
 def plugin_prefs(parent, cmdr, is_beta):
     """
     Return a TK Frame for adding to the EDMC settings dialog.
@@ -176,6 +186,18 @@ def plugin_start3(plugin_dir):
     this.plugin_dir = plugin_dir
     # префикс логов
     codex.CodexTypes.plugin_start(plugin_dir)
+
+    # получаем список систем для БГС
+    response = requests.get("https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140")
+    systems = []
+    if response.status_code == 200:
+        systems = str(response.json()["files"]["systems"]["content"]).split('\n')
+        logger.debug(f"Got list of systems to track: {systems}")
+        BGS.set_systems(systems)
+        CZ_TRACKER.set_systems(systems)
+    else:
+        logger.error(f"Failed to get list of systems for tracking, response code {response.status_code}")
+
     # в логах пишется с префиксом Triumvirate
     logger.info(f"Plugin (v{this.version}) loaded successfully.")
     return f"Triumvirate-{this.version}"
@@ -194,6 +216,8 @@ def plugin_stop():
     EDMC is closing
     """
     logger.debug("Stopping the plugin")
+    global BGS
+    del BGS
     for mod in context.modules:
         mod.close()
     thread.Thread.stop_all()
@@ -358,7 +382,7 @@ def journal_entry_wrapper(
     body,
     lat,
     lon,
-    client,
+    client
 ):
     """
     Detect journal events
@@ -418,7 +442,8 @@ def journal_entry_wrapper(
     legacy.AXZone(cmdr, is_beta, system, x, y, z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
-    legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
+    BGS.check_event(cmdr, system, station, entry)
+    CZ_TRACKER.check_event(cmdr, system, entry)
     legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     if status_message is not None:
         this.message_label.text = status_message
@@ -457,7 +482,7 @@ def dashboard_entry(cmdr, is_beta, entry):
         this.plug_start = 1
         this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
     try:
-        logger.debug(f"Checking fuel consumption {this.FuelCount}")
+        # logger.debug(f"Checking fuel consumption {this.FuelCount}")
         if entry.get("Fuel") is not None:
             if this.FuelCount == 10:
                 this.fuel_cons = fuel_consumption(
@@ -499,7 +524,7 @@ def dashboard_entry(cmdr, is_beta, entry):
     else:
         this.body_name = None
     this.cmdr_SQID = Alegiance_get(cmdr, this.cmdr_SQID)
-    logger.debug(this.body_name)
+    # logger.debug(this.body_name)
 
 def cmdr_data(data, is_beta):
     """
@@ -507,6 +532,3 @@ def cmdr_data(data, is_beta):
     """
     for mod in context.enabled_modules:
         mod.on_cmdr_data(data, is_beta)
-
-
-

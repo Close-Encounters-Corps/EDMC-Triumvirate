@@ -10,6 +10,8 @@ import threading
 import requests
 import sys
 import json
+import re
+import modules.emitter
 from modules.emitter import Emitter
 from urllib.parse import quote_plus
 import urllib.parse as urlparse
@@ -120,15 +122,14 @@ class fssEmitter(Emitter):
 
         FSSSignalDiscovered=(self.entry.get("event") == "FSSSignalDiscovered")
         USS=("$USS" in self.entry.get("SignalName"))
-        FleetCarrier=(self.entry.get("SignalName_Localised")[-4] == '-')
         isStation=(self.entry.get("IsStation"))
-        FleetCarrier = (self.entry.get("SignalName_Localised")[-4] == '-' and isStation)
+        FleetCarrier = ((re.match("[A-Z0-9]{3}-[A-Z0-0]{3}$", self.entry["SignalName"]) is not None) and isStation)
         life_event=("$Fixed_Event_Life" in self.entry.get("SignalName"))
         excluded=fssEmitter.excludefss.get(self.entry.get("SignalName"))
 
         # don't bother sending USS
         if FSSSignalDiscovered and not USS and not FleetCarrier:
-            canonn.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postFSSSignal",
+            modules.emitter.post("https://europe-west1-canonn-api-236217.cloudfunctions.net/postFSSSignal",
                         {
                             "signalname": self.entry.get("SignalName"),
                             "signalNameLocalised": self.entry.get("SignalName_Localised"),
