@@ -777,34 +777,45 @@ class BGS():
 
 
     def __del__(self):
-        self.threadlock.acquire()
-        # Очистка файла миссий от устаревших, чей результат выполнения не был "пойман"
-        debug("Clearing missions file from old entries")
-        missionslist = []
-        with open(self.CURRENT_MISSIONS_FILE, 'r', encoding='utf8') as missionsfile:
-            count = 0
-            for line in missionsfile:
-                missionslist.append(line)
-                count += 1
-            debug(f"Missions read: {count}")
-        with open(self.CURRENT_MISSIONS_FILE, 'w', encoding='utf8') as missionsfile:
-            now = datetime.now(tz=timezone.utc)
-            count = 0
-            for line in missionslist:
-                mission = json.loads(line)
-                try:
-                    expires = datetime.strptime(mission["expires"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-                except KeyError:
-                    debug(f"Mission {mission['ID']} is written in old format and doesn't have 'expires' field, adding back to file.")
-                    missionsfile.write(line)
+        try:
+            self.threadlock.acquire()
+            # Очистка файла миссий от устаревших, чей результат выполнения не был "пойман"
+            debug("Clearing missions file from old entries")
+            missionslist = []
+            with open(self.CURRENT_MISSIONS_FILE, 'r', encoding='utf8') as missionsfile:
+                count = 0
+                for line in missionsfile:
+                    missionslist.append(line)
                     count += 1
-                else:
-                    if expires > now:
+                debug(f"Lines read: {count}")
+            with open(self.CURRENT_MISSIONS_FILE, 'w', encoding='utf8') as missionsfile:
+                now = datetime.utcnow()
+                saved = ignored = 0
+                for line in missionslist:
+                    try:
+                        mission = json.loads(line)
+                        if mission["type"] in ("Mission_HackMegaship", "MISSION_DisableMegaship"):
+                            debug(f"Mission {mission['ID']} is related to megaships and doesn't have the 'expires' field.")
+                            missionsfile.write(line)
+                            saved += 1
+                            continue
+                        else:
+                            expires = datetime.strptime(mission["expires"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+                    except json.JSONDecodeError:
+                        ignored += 1
+                    except KeyError:
+                        debug(f"Mission {mission['ID']} is written in the old format and doesn't have the 'expires' field.")
                         missionsfile.write(line)
-                        count += 1
+                        saved += 1
                     else:
-                        debug(f"Mission {mission['ID']} expired.")
-            debug(f"Missions written: {count}")
+                        if expires > now:
+                            missionsfile.write(line)
+                            saved += 1
+                        else:
+                            debug(f"Mission {mission['ID']} expired.")
+            debug(f"Missions saved: {saved}, lines skipped: {ignored} (not valid json strings).")
+        except:
+            error(traceback.format_exc())
         self.threadlock.release()
 
 
@@ -1029,7 +1040,6 @@ class CZ_Tracker():
         class Notification(tk.Tk):
             def __init__(self, text, factions):
                 super().__init__()
-
                 # Это отвратительное решение, но пусть будет так.
                 # 1x - высота экрана 1080пкс. При меньшем размере экрана - всё равно используем 1x.
                 # При большем - считаем разницу с 1080, соответственно увеличиваем все размеры.
@@ -1039,7 +1049,7 @@ class CZ_Tracker():
                 else:
                     zoom_factor = screen_height / 1080
 
-                width = int(400*zoom_factor)
+                width = int(450*zoom_factor)
                 height = int(250*zoom_factor)
                 self.geometry(f"{width}x{height}")
                 self.title("Завершение зоны конфликта")

@@ -224,8 +224,8 @@ class Release(Frame, Module):
             self.grid_remove()
             return
         elif latest_version < self.version:
-            self.hyperlink["text"] = f"Тестовая версия {self.version.raw_value}.bgs29 + cz29"
-            debug("PLUGIN VERSION: 1.9.2 + post-exp + bgs29 + cz29")
+            self.hyperlink["text"] = f"Тестовая версия {self.version.raw_value}.bgs30 + cz30"
+            debug("PLUGIN VERSION: 1.9.2 + post-exp + bgs30 + cz30")
             return
         if self.no_auto_val == 1:
             debug("Automatic update disabled.")
