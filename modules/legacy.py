@@ -849,10 +849,12 @@ class CZ_Tracker:
                 if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
                     self.instance = Space_CZ_tracker(self, entry, cmdr, system)
                     self.in_conflict = True
+                    self.conflict_type = "Space"
                 # запись в Frontline Solutions на пешую кз
                 elif event == "BookDropship" and entry["Retreat"] == False:
                     self.instance = Foot_CZ_tracker(self, entry, cmdr, system)
                     self.in_conflict = True
+                    self.conflict_type = "Foot"
                 # если конфликт уже начат, перекидываем обработку ивента на класс его типа
                 elif self.in_conflict == True:
                     self.instance.process_entry(entry)
@@ -940,17 +942,18 @@ class CZ_Tracker:
     def _send_result(self, presumed: str, actual: str):
         debug("SEND_RESULT: forming response")
         url_params = {
-                "entry.751150409": self.cz_info["time_start"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.1063245051": self.cz_info["time_finish"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.852296360": self.cmdr,
-                "entry.1155279269": self.system,
-                "entry.375584019": "Space",
-                "entry.2072671672": self.cz_info["intensity"],
-                "entry.427971639": presumed if presumed != None else "[UNKNOWN]",
-                "entry.88896896": actual,
-                "entry.1405864887": self._post_logs(),
+                "entry.1230568805": self.cz_info["time_start"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.288262122": self.cz_info["time_finish"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.1311116543": self.cmdr,
+                "entry.338648635": self.system,
+                "entry.598281": self.conflict_type,
+                "entry.425131010": self.cz_info.get("Location", ""),
+                "entry.1721323758": self.cz_info.get("Intensity", ""),
+                "entry.703400232": presumed if presumed != None else "[UNKNOWN]",
+                "entry.362734975": actual,
+                "entry.1588781896": self._post_logs(),
             }
-        url = f'{URL_GOOGLE}/1FAIpQLScoReLyHUXj-zyM4cwi6yBw3mYWK-NUSIYrEHAAPR0L9aOmxw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
+        url = f'{URL_GOOGLE}/1FAIpQLSdA6u9GTM1yWJ55g9sCYb8Mv4sFs6iiZPhiVR_F6dTeIsYX9g/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
         debug("SEND_RESULT: link: " + url)
         Reporter(url).start()
         debug("SEND_RESULT: successfully sent to google sheet")
@@ -1014,6 +1017,7 @@ class CZ_Tracker:
     # этот метод вызывается наследниками при завершении кз
     def _reset(self):
         self.instance = None
+        self.conflict_type = None
         self.in_conflict = False
         debug("RESET: CZ_Tracker returned to the initial state")
         
@@ -1218,5 +1222,5 @@ class Space_CZ_tracker(CZ_Tracker):
 
 class Foot_CZ_tracker():
     def __init__(self, parent, cmdr, system, entry):
-        debug("FOOT_CZ_TRACKER: detected BookDropship event, but this tracker isn't implemented yet. Resetting CZ_Tracker...")
+        debug("FOOT_CZ_TRACKER: detected BookDropship event, but this tracker hasn't been implemented yet. Resetting CZ_Tracker...")
         parent._reset()
