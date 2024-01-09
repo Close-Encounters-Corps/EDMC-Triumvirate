@@ -837,7 +837,7 @@ class CZ_Tracker:
         self.in_conflict = False
         self.systems = []
 
-    def set_systems(self, systems: dict):
+    def set_systems(self, systems: list):
         self.systems = systems
 
     def process_entry(self, cmdr, system, entry):
@@ -849,12 +849,10 @@ class CZ_Tracker:
                 if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
                     self.instance = Space_CZ_tracker(self, entry, cmdr, system)
                     self.in_conflict = True
-                    self.conflict_type = "Space"
                 # запись в Frontline Solutions на пешую кз
                 elif event == "BookDropship" and entry["Retreat"] == False:
                     self.instance = Foot_CZ_tracker(self, entry, cmdr, system)
                     self.in_conflict = True
-                    self.conflict_type = "Foot"
                 # если конфликт уже начат, перекидываем обработку ивента на класс его типа
                 elif self.in_conflict == True:
                     self.instance.process_entry(entry)
@@ -946,9 +944,9 @@ class CZ_Tracker:
                 "entry.288262122": self.cz_info["time_finish"].strftime("%d.%m.%Y %H:%M:%M"),
                 "entry.1311116543": self.cmdr,
                 "entry.338648635": self.system,
-                "entry.598281": self.conflict_type,
-                "entry.425131010": self.cz_info.get("Location", ""),
-                "entry.1721323758": self.cz_info.get("Intensity", ""),
+                "entry.598281": self.cz_info["conflict_type"],
+                "entry.425131010": self.cz_info.get("location", ""),
+                "entry.1721323758": self.cz_info.get("intensity", ""),
                 "entry.703400232": presumed if presumed != None else "[UNKNOWN]",
                 "entry.362734975": actual,
                 "entry.1588781896": self._post_logs(),
@@ -1017,7 +1015,6 @@ class CZ_Tracker:
     # этот метод вызывается наследниками при завершении кз
     def _reset(self):
         self.instance = None
-        self.conflict_type = None
         self.in_conflict = False
         debug("RESET: CZ_Tracker returned to the initial state")
         
@@ -1029,6 +1026,7 @@ class Space_CZ_tracker(CZ_Tracker):
         self.cmdr = cmdr
         self.system = system
         self.cz_info = {
+            "conflict_type": "space",
             "intensity": entry["Type"][19:entry["Type"].find(":")],
             "factions": [],
             "player_fights_for": None,
@@ -1142,7 +1140,7 @@ class Space_CZ_tracker(CZ_Tracker):
                     # Вероятно, в будущем это поведение будет изменено в сторону угадывания,
                     # но сейчас нужно собрать больше статистики, чтобы это угадывание правильно реализовать.
                     user_choice = self._ask_user(factions, presumed_winner)
-                    if user_choice != None:
+                    if user_choice != -1:
                         actual_winner = factions[user_choice]["name"]
                         debug(f"INSTANCE_EXIT: actual_winner set to {actual_winner}, calling SEND_RESULT")
                         self._send_result(presumed_winner, actual_winner)
@@ -1188,7 +1186,7 @@ class Space_CZ_tracker(CZ_Tracker):
                 # что-то не сходится: запрашиваем подтверждение полученных данных у игрока
                 debug("END_CONFLICT: unexpected/unknown presumed winner, asking the user for the actual winner")
                 user_choice = self._ask_user(factions, presumed_winner)
-                if user_choice != None:
+                if user_choice != -1:
                     actual_winner = factions[user_choice]["name"]
                     debug(f"END_CONFLICT: actual_winner set to {actual_winner}, calling SEND_RESULT")
                     self._send_result(presumed_winner, actual_winner)
@@ -1220,7 +1218,79 @@ class Space_CZ_tracker(CZ_Tracker):
         return super()._ask_user(message, factions)
     
 
-class Foot_CZ_tracker():
-    def __init__(self, parent, cmdr, system, entry):
-        debug("FOOT_CZ_TRACKER: detected BookDropship event, but this tracker hasn't been implemented yet. Resetting CZ_Tracker...")
-        parent._reset()
+class Foot_CZ_tracker(CZ_Tracker):
+    def __init__(self, parent, entry, cmdr, system):
+        self.parent = parent
+        debug("FOOT_CZ_TRACKER: detected booking a dropship to a foot conflict")
+        self.cmdr = cmdr
+        self.system = system
+        self.cz_info = {
+            "conflict_type": "Foot",
+            "location": entry["DestinationLocation"],
+            "factions": [],
+            "player_fights_for": None,
+            "kills": 0,
+            "time_start": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
+            "time_finish": None
+        }
+        debug(f"FOOT_CZ_TRACKER: cmdr set to {cmdr}, system set to {system}, location set to {self.cz_info['location']}")
+        debug("FOOT_CZ_TRACKER: Foot_CZ_Tracker prepared")
+
+    def process_entry(self, entry):
+        event = entry["event"]
+        if event == "FactionKillBond":
+            self._kill(entry)
+        elif event == "CancelDropship" or event == "BookDropship" and entry["Retreat"] == True:
+            self._end_conflict()
+
+    def _kill(self, entry):
+        debug(f"KILL: detected \"FactionKillBond\", awarding \"{entry['AwardingFaction']}\", victim \"{entry['VictimFaction']}\"")
+        self.cz_info["kills"] += 1
+        debug(f"KILL: kills counter: {self.cz_info['kills']}")
+        if self.cz_info["player_fights_for"] == None:
+            self.cz_info["player_fights_for"] = entry["AwardingFaction"]
+            debug(f"KILL: \"player_fights_for\" was None, now set to \"{entry['AwardingFaction']}\"")
+        
+        for faction in (entry["AwardingFaction"], entry["VictimFaction"]):
+            debug(f"KILL: checking if \"{faction}\" is in the list")
+            found = False
+            for saved_faction in self.cz_info["factions"]:
+                if saved_faction["name"] == faction:
+                    debug("KILL: it is")
+                    found = True
+                    break
+            if not found:
+                debug("KILL: it is not, adding to the list")
+                self.cz_info["factions"].append({"name": faction})
+
+    def _end_conflict(self, premature = False):
+        if not premature and self.cz_info["kills"] >= 20:
+            self.cz_info["time_finish"] = datetime.utcnow()
+            debug("END_CONFLICT: time_finish set, proceeding to calculate the result")
+            factions = [faction for faction in self.cz_info["factions"]]
+            presumed_winner = self.cz_info["player_fights_for"]
+            debug(f"END_CONFLICT: presumed_winner set to {presumed_winner}, asking the user for the actual result")
+            user_choice = self._ask_user(factions, presumed_winner)
+            if user_choice != -1:
+                actual_winner = factions[user_choice]["name"]
+                debug(f"END_CONFLICT: actual_winner set to {actual_winner}, calling SEND_RESULT")
+                self._send_result(presumed_winner, actual_winner)
+            else:
+                debug("END_CONFLICT: user said that the conflict wasn\'t finished")
+                pass # досрочный выход
+        else:
+            debug("END_CONFLICT: detected premature leaving")
+        self.parent._reset()
+
+    def _ask_user(self, factions: dict, winner: str = None) -> int:
+        message = str("Зафиксировано окончание зоны конфликта.\n" +
+                "Подтвердите правильность полученных данных:\n\n" +
+                f"Место конфликта: {self.system}, {self.cz_info['location']}\n" +
+                "Участвующие фракции:\n" +
+                f"  - {self.cz_info['factions'][0]['name']}\n" +
+                f"  - {self.cz_info['factions'][1]['name']}\n" +
+                f"Предполагаемый победитель: {winner if winner != None else 'НЕ ОПРЕДЕЛЁН'}\n"
+                f"Вы сражались на стороне: {self.cz_info['player_fights_for']}\n\n" +
+                f"Выберите победившую фракцию."
+        )
+        return self.parent._ask_user(message, factions)

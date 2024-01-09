@@ -443,7 +443,7 @@ def journal_entry_wrapper(
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
     BGS.check_event(cmdr, system, station, entry)
-    CZ_TRACKER.check_event(cmdr, system, entry)
+    CZ_TRACKER.process_entry(cmdr, system, entry)
     legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     if status_message is not None:
         this.message_label.text = status_message
