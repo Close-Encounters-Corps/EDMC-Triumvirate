@@ -1026,7 +1026,7 @@ class Space_CZ_tracker(CZ_Tracker):
         self.cmdr = cmdr
         self.system = system
         self.cz_info = {
-            "conflict_type": "space",
+            "conflict_type": "Space",
             "intensity": entry["Type"][19:entry["Type"].find(":")],
             "factions": [],
             "player_fights_for": None,
