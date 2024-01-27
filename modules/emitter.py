@@ -26,7 +26,7 @@ class postJson(threading.Thread):
             error(r.json())
         else:
             debug("emitter.post success")
-            debug(json.dumps(r.json(), indent=4))
+            #debug(json.dumps(r.json(), indent=4))
 
 
 def post(url, payload):

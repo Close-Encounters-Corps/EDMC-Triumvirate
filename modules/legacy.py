@@ -7,6 +7,7 @@ from .debug import debug, error
 from datetime import datetime, timezone
 from collections import deque
 from tkinter import font
+from .lib.conf import config
 
 try:#py3
     from urllib.parse import quote_plus
@@ -835,109 +836,137 @@ class CZ_Tracker:
     def __init__(self):
         self.threadlock = threading.Lock()
         self.in_conflict = False
+        self.safe = False       # на случай, если плагин запускается посреди игры, и мы не знаем режим
         self.systems = []
 
     def set_systems(self, systems: list):
         self.systems = systems
 
 
-    def check_event(self, cmdr, system, entry):
+    def process_entry(self, cmdr, system, entry):
+        # проверка режима игры
+        if entry["event"] == "LoadGame":
+            self.safe = entry["GameMode"] != "Open"
+            debug("CZ_Tracker: safe set to {!r}", self.safe)
+
         if system in self.systems:
             self.threadlock.acquire()
             try:
                 event = entry["event"]
-                # вход в зону конфликта
-                if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
-                    self.__start_conflict(entry, cmdr, system)
-                if self.in_conflict == True:
-                    # для определения сторон конфликта
-                    if event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
-                        self.__ship_scan(entry)
-                    elif event == "FactionKillBond":
+                if self.in_conflict == False:
+                    # начало конфликта (космос)
+                    if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
+                        self.__start_conflict(cmdr, system, entry, "Space")
+
+                    # начало конфликта (ноги)
+                    elif (event == "ApproachSettlement"
+                          and entry["StationFaction"].get("FactionState", "") == "War"
+                          and "dock" not in entry["StationServices"]):
+                        self.__start_conflict(cmdr, system, entry, "Foot")
+
+                else:       # in_conflict == True
+                    # убийство
+                    if event == "FactionKillBond":
                         self.__kill(entry)
-                    # завершение кз: отслеживание "патрульных" сообщений
+
+                    # сканирование корабля
+                    elif event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
+                        self.__ship_scan(entry)
+                    
+                    # отслеживание сообщений, потенциальное завершение конфликта
                     elif event == "ReceiveText":
                         self.__patrol_message(entry)
-                    # завершение кз: прыжок/выход в круиз
-                    elif event in ("SupercruiseEntry", "FSDJump"):
-                        self.__instance_exit()
-                    # досрочный выход из кз: завершение игры, смерть, выход в меню
-                    elif event in ("Shutdown", "Died") or (event == "Music" and entry["MusicTrack"] == "MainMenu"):
+
+                    # завершение конфликта: прыжок
+                    elif event == "StartJump":
                         self.__end_conflict()
 
-            except: 
+                    # завершение конфликта: возврат на шаттле (ноги)
+                    elif event == "BookDropship" and entry["Retreat"] == True:
+                        self.__end_conflict()
+
+                    # досрочный выход
+                    elif event in ("Shutdown", "Died", "CancelDropship") or event == "Music" and entry["MusicTrack"] == "MainMenu":
+                        self.__reset()
+
+            except:
                 error(traceback.format_exc())
             self.threadlock.release()
-    
 
-    def __start_conflict(self, entry, cmdr, system):
-        debug("START_CONFLICT: detected entering a conflict zone")
+        
+    def __start_conflict(self, cmdr, system, entry, c_type):
+        debug("CZ_Tracker: detected entering a conflict zone, {!r} type.", c_type)
         self.in_conflict = True
-        self.cz_info = {
-            "intensity": entry["Type"][19:entry["Type"].find(":")],
-            "factions": [],
-            "player_fights_for": None,
-            "kills": 0,
-            "time_start": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
-            "time_finish": None
-        }
-        if self.cz_info["intensity"] == "Med":
-            self.cz_info["intensity"] = "Medium"
         self.end_messages = deque(5*[None], 5)
-        self.cmdr = cmdr
-        self.system = system
-        debug(f"START_CONFLICT: cmdr set to {cmdr}, system set to {system}")
-        debug("START_CONFLICT: CZ_Tracker prepared")
 
+        if c_type == "Space":
+            self.info = {
+                "cmdr": cmdr,
+                "system": system,
+                "conflict_type": "Space",
+                "allegiances": {},
+                "player_fights_for": None,
+                "kills": 0,
+                "kills_limit": 5,
+                "start_time": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
+                "end_time": None
+            }
 
-    def __ship_scan(self, entry):
-        debug("SHIP_SCAN: detected \"ShipTargeted\" with scan stage 3")
-        if "$ShipName_Military" in entry["PilotName"]:
-            debug(f"SHIP_SCAN: military ship, faction \"{entry['Faction']}\", allegiance - {entry['PilotName'][19:-1]}")
-            for faction in self.cz_info["factions"]:
-                if faction["name"] == entry["Faction"]:
-                    debug("SHIP_SCAN: faction already in the list, checking allegiance")
-                    if faction["allegiance"] == None:
-                        faction["allegiance"] = entry["PilotName"][19:-1]
-                        debug("SHIP_SCAN: allegiance added to the faction info")
-                    else:
-                        debug("SHIP_SCAN: allegiance already in the list")
-                    return
+            intensity = entry["Type"]
+            intensity = intensity[19:intensity.find(":")]
+            if intensity == "Med":
+                intensity = "Medium"
+            self.info["intensity"] = intensity
 
-            debug("SHIP_SCAN: faction not in the list, adding")
-            faction_name = entry["Faction"]
-            faction_allegiance = entry["PilotName"][19:-1]
-            self.cz_info["factions"].append({
-                "name": faction_name,
-                "allegiance": faction_allegiance,
-            })
-        else:
-            debug("SHIP_SCAN: not a military ship")
-            
+            match intensity:
+                case "Low":     self.info["weight"] = 0.25
+                case "Medium":  self.info["weight"] = 0.5
+                case "High":    self.info["weight"] = 1
+
+        else:       # c_type == "Foot"
+            self.info = {
+                "cmdr": cmdr,
+                "system": system,
+                "conflict_type": "Foot",
+                "allegiances": {},
+                "player_fights_for": None,
+                "kills": 0,
+                "kills_limit": 20,
+                "start_time": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
+                "end_time": None,
+            }
+
+            location = entry.get("DestinationLocation", None)   # если через фронтлайн
+            if not location:
+                location = entry["Name"]                        # если прилетели сами
+            self.info["location"] = location
+        debug("CZ_Tracker prepared.")
+
 
     def __kill(self, entry):
-        debug(f"KILL: detected \"FactionKillBond\", awarding \"{entry['AwardingFaction']}\", victim \"{entry['VictimFaction']}\"")
-        self.cz_info["kills"] += 1
-        debug(f"KILL: kills counter: {self.cz_info['kills']}")
-        if self.cz_info["player_fights_for"] == None:
-            self.cz_info["player_fights_for"] = entry["AwardingFaction"]
-            debug(f"KILL: \"player_fights_for\" was None, now set to \"{entry['AwardingFaction']}\"")
-        
-        for faction in (entry["AwardingFaction"], entry["VictimFaction"]):
-            debug(f"KILL: checking if \"{faction}\" is in the list")
-            found = False
-            for saved_faction in self.cz_info["factions"]:
-                if saved_faction["name"] == faction:
-                    debug("KILL: it is")
-                    found = True
-                    break
-            if not found:
-                debug("KILL: it is not, adding (allegiance = None)")
-                self.cz_info["factions"].append({
-                    "name": faction,
-                    "allegiance": None,
-                })
-        
+        if not self.info["player_fights_for"]:
+            self.info["player_fights_for"] = entry["AwardingFaction"]
+
+        for conflict_side in (entry["AwardingFaction"], entry["VictimFaction"]):
+            if conflict_side not in self.info["allegiances"]:
+                self.info["allegiances"][conflict_side] = None
+                debug("CZ_Tracker: faction {!r} added to the list.", conflict_side)
+
+        self.info["kills"] += 1
+        debug("CZ_Tracker: detected FactionKillBond, awarding {!r}, victim {!r}. {} kills.",
+              entry["AwardingFaction"],
+              entry["VictimFaction"],
+              self.info["kills"])
+    
+
+    def __ship_scan(self, entry):
+        if "$ShipName_Military" in entry["PilotName"]:
+            conflict_side = entry["Faction"]
+            allegiance = entry["PilotName"][19:-1]
+            if conflict_side not in self.info["allegiances"]:
+                self.info["allegiances"][conflict_side] = allegiance
+                debug("CZ_Tracker: detected military ship scan. Faction {!r} added to the list, allegiance {!r}.", conflict_side, allegiance)
+
     
     def __patrol_message(self, entry):
         # Логика следующая: получаем 5 "патрулирующих" сообщений за 15 секунд - 
@@ -945,116 +974,70 @@ class CZ_Tracker:
         # По имени фильтруем, чтобы случайно не поймать последним такое сообщение, например, от спецкрыла
         # и сломать определение принадлежности победителя.
         if "$Military_Passthrough" in entry["Message"] and "$ShipName_Military" in entry["From"]:
-            debug("PATROL_MESSAGE: detected \"$Military_Passthrough\" message")
+            debug("CZ_Tracker: detected patrol message sent by a {} ship.", entry["From"][19:-1])
             timestamp = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
             self.end_messages.append(timestamp)
-            debug("PATROL_MESSAGE: time added to the deque")
-            try:
+            if self.end_messages[0] != None:
                 if (self.end_messages[4] - self.end_messages[0]).seconds <= 15:
-                    debug("PATROL_MESSAGE: detected 5 messages in 15 seconds, calling END_CONFLICT")
+                    debug("CZ_Tracker: got 5 patrol messages in 15 seconds, calling END_CONFLICT.")
                     self.__end_conflict(entry["From"][19:-1])
-            except TypeError:       # если сообщений <5, [4] будет None
-                pass
-
-    
-    def __instance_exit(self):
-        debug("INSTANCE_EXIT: detected jump/cruise entry")
-        if self.cz_info["kills"] < 5:
-            self.__end_conflict()
-        else:
-            debug(f"INSTANCE_EXIT: player killed {self.cz_info['kills']} enemies, possible victory")
-            factions = [faction for faction in self.cz_info["factions"]]
-            for faction in factions:
-                if faction["name"] == self.cz_info["player_fights_for"]:
-                    # Поскольку нам может быть неизвестна принадлежность фракции, за которую воевал игрок,
-                    # вызывать END_CONFLICT в текущем его виде нельзя - а то он посчитает это преждевременным выходом из кз.
-                    # Переписывать его ещё раз мне влом, поэтому будет небольшое дублирование кода. Зато без лишних ветвлений.
-                    self.cz_info["time_finish"] = datetime.utcnow()
-                    presumed_winner = faction["name"]
-                    if presumed_winner != self.cz_info["player_fights_for"]:
-                        # что-то не сходится: запрашиваем подтверждение полученных данных у игрока
-                        debug("INSTANCE_EXIT: unexpected/unknown presumed winner, asking the user for the actual winner")
-                        user_choice = self.__ask_user(factions, presumed_winner)
-                        if user_choice != None:
-                            actual_winner = factions[user_choice]["name"]
-                            debug(f"INSTANCE_EXIT: actual_winner set to {actual_winner}, calling SEND_RESULT")
-                            self.__send_result(presumed_winner, actual_winner)
-                        else:
-                            # ложное срабатываение: кз не была завершена
-                            debug("INSTANCE_EXIT: user said that the conflict wasn\'t finished")
-                            pass
-                    else:
-                        # мы вполне уверены, что определили всё правильно
-                        debug("INSTANCE_EXIT: presumed winner is the faction the player was fighting for, calling SEND_RESULT")
-                        self.__send_result(presumed_winner, presumed_winner)
-            # сбрасываем инфу о кз
-            debug("INSTANCE_EXIT: resetting CZ_Tracker")
-            self.in_conflict = False
-            del self.cz_info, self.end_messages
 
 
-    def __end_conflict(self, allegiance = None):
-        if allegiance != None:
-            self.cz_info["time_finish"] = datetime.utcnow()
-            debug("END_CONFLICT: time_finish set, proceeding to calculate the result")
-            factions = [faction for faction in self.cz_info["factions"]]
-            presumed_winner = None
+    def __end_conflict(self, winners_allegiance: str | None = None):
+        debug("CZ_Tracker: END_CONFLICT called, calculating the result.")
+        self.info["end_time"] = datetime.utcnow()
+        factions_list = list(self.info["allegiances"].items())
+        presumed_winner = "[UNKNOWN]"
 
-            # одинаковая принадлежность; победителя не установить
-            if factions[0]["allegiance"] == factions[1]["allegiance"]:
-                debug("END_CONFLICT: allegiance of both factions is the same")
-            
-            # у одной из фракций не определена принадлежность
-            elif None in (factions[0]["allegiance"], factions[1]["allegiance"]):
-                debug("END_CONFLICT: allegiance of one of the factions in unknown")
-                with_al, without_al = (factions[0], factions[1]) if factions[1]["allegiance"] == None else (factions[1], factions[0])
-                if with_al["allegiance"] != allegiance:
-                    # принадлежность победителя не совпадает с единственной известной: это точно вторые
-                    presumed_winner = without_al["name"]
-                    debug(f"END_CONFLICT: winner's allegiance DOES NOT match the known one. presumed_winner set to {presumed_winner}")
+        if winners_allegiance and self.safe:        # если мы получили принадлежность из патрулирующих сообщений и не в опене
+            '''
+            Что дальше вообще происходит. Объяснение в первую очередь для меня самого, потому что через неделю забуду ведь.
+            Если принадлежность обеих фракций одинаковая - победителя не установить. Игнорируем этот вариант.
+            Если принадлежность разная, есть 2 варианта:
+            1 - принадлежность обеих фракций известна. Всё просто, тупо сравниваем их с принадлежностью победителя.
+            2 - у одной из фракций принадлежность неизвестна. Тут чуть сложнее:
+                а) если единственная известная принадлежность совпадает с принадлежностью победителя - мы не можем быть уверены,
+                   что у второй фракции принадлежность отличается. Предсказание невозможно.
+                б) единственная известная принадлежность не совпадает с принадлежностью победителя - тогда это точно вторые.
+            '''
+            if factions_list[0][1] != factions_list[1][1]:
+                if None not in (factions_list[0][1], factions_list[1][1]):
+                    for index, faction in enumerate(factions_list):
+                        if faction[1] == winners_allegiance:
+                            presumed_winner = factions_list[index][0]
                 else:
-                    # принадлежность победителя совпадает с единственной известной: мы не уверены, что победили не вторые
-                    debug("END_CONFLICT: winner's allegiance matches the known one")
-            
-            # у обеих фракций известны принадлежности, они разные: можно установить, кто победил
-            else:
-                debug("END_CONFLICT: allegiances of both factions are different, determining the winner")
-                for faction in factions:
-                    if faction["allegiance"] == allegiance:
-                        presumed_winner = faction["name"]
-                        debug(f"END_CONFLICT: presumed_winner set to {presumed_winner}")
-                        break
+                    for index, faction in enumerate(factions_list):
+                        if faction[1] != None and faction[1] != winners_allegiance:
+                            presumed_winner = factions_list[index-1][0]         # index-1 будет либо 0, либо -1, что при двух фракциях == 1
 
-            if presumed_winner != self.cz_info["player_fights_for"]:
-                # что-то не сходится: запрашиваем подтверждение полученных данных у игрока
-                debug("END_CONFLICT: unexpected/unknown presumed winner, asking the user for the actual winner")
-                user_choice = self.__ask_user(factions, presumed_winner)
-                if user_choice != None:
-                    actual_winner = factions[user_choice]["name"]
-                    debug(f"END_CONFLICT: actual_winner set to {actual_winner}, calling SEND_RESULT")
-                    self.__send_result(presumed_winner, actual_winner)
-                else:
-                    # ложное срабатываение: кз не была завершена
-                    debug("END_CONFLICT: user said that the conflict wasn\'t finished")
-                    pass
-            else:
-                # мы вполне уверены, что определили всё правильно
-                debug("END_CONFLICT: presumed winner is the faction the player was fighting for, calling SEND_RESULT")
-                self.__send_result(presumed_winner, presumed_winner)
+        elif self.info["kills"] < self.info["kills_limit"]:
+            debug("CZ_Tracker: not enough kills ({}/{}), resetting.", self.info["kills"], self.info["kills_limit"])
+            self.__reset()
+            return
 
-        # это был досрочный выход из кз
-        else:
-            debug("END_CONFLICT: detected premature leaving")
+        if not self.safe:
+            debug("CZ_Tracker: we're (probably) in the Open, winner's prediction disabled.")
         
-        # сбрасываем инфу о кз
-        debug("END_CONFLICT: resetting CZ_Tracker")
-        self.in_conflict = False
-        del self.cz_info, self.end_messages
+        debug("CZ_Tracker: presumed winner set to {!r}.", presumed_winner)
+        if presumed_winner != self.info["player_fights_for"]:
+            debug("CZ_Tracker: presumed winner isn't the player's side, asking for confirmation.")
+            index = self.__ask_user(presumed_winner)
+            if index == -1:         # игрок отменил выбор
+                self.__reset()
+                return
+            else:
+                actual_winner = factions_list[index][0]
+        else:
+            actual_winner = presumed_winner
+        debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
+
+        self.__send_results(presumed_winner, actual_winner)
+        self.__reset()
 
 
-    def __ask_user(self, factions, winner: str = None) -> int:
+    def __ask_user(self, presumed_winner) -> int:
         class Notification(tk.Tk):
-            def __init__(self, text, factions):
+            def __init__(self, text: str, factions: list):
                 super().__init__()
                 # Это отвратительное решение, но пусть будет так.
                 # 1x - высота экрана 1080пкс. При меньшем размере экрана - всё равно используем 1x.
@@ -1065,11 +1048,9 @@ class CZ_Tracker:
                 else:
                     zoom_factor = screen_height / 1080
 
-                width = int(450*zoom_factor)
-                height = int(250*zoom_factor)
-                self.geometry(f"{width}x{height}")
                 self.title("Завершение зоны конфликта")
                 self.resizable(False, False)
+                self.geometry(config.get_str("CZ.Notification.position"))
 
                 default_font = font.nametofont("TkDefaultFont").actual()["family"]
                 tk.Label(self, text=text, justify="left", font=(default_font, int(9*zoom_factor))).pack(anchor="nw")
@@ -1080,7 +1061,7 @@ class CZ_Tracker:
 
                 tk.Button(
                     bottombox,
-                    text=factions[0]["name"],
+                    text=factions[0],
                     font=(default_font, int(9*zoom_factor)),
                     padx=int(5*zoom_factor),
                     pady=int(3*zoom_factor),
@@ -1090,7 +1071,7 @@ class CZ_Tracker:
                 
                 tk.Button(
                     bottombox,
-                    text=factions[1]["name"],
+                    text=factions[1],
                     font=(default_font, int(9*zoom_factor)),
                     padx=int(5*zoom_factor),
                     pady=int(3*zoom_factor),
@@ -1112,51 +1093,77 @@ class CZ_Tracker:
 
             def __first(self):
                 self.result = 0
+                config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
                 self.destroy()
 
             def __second(self):
                 self.result = 1
+                config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
                 self.destroy()
 
             def __cancel(self):
                 self.result = -1
+                config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
                 self.destroy()
         
-        message = str("Зафиксировано окончание зоны конфликта.\n" +
-                "Подтвердите правильность полученных данных:\n\n" +
-                f"Напряжённость конфликта: {self.cz_info['intensity']}\n" +
-                "Участвующие фракции:\n" +
-                f"  - {self.cz_info['factions'][0]['name']}\n" +
-                f"  - {self.cz_info['factions'][1]['name']}\n" +
-                f"Предполагаемый победитель: {winner if winner != None else 'НЕ ОПРЕДЕЛЁН'}\n"
-                f"Вы сражались на стороне: {self.cz_info['player_fights_for']}\n\n" +
-                f"Выберите победившую фракцию."
+        factions = [faction for faction, _ in self.info["allegiances"].items()]
+        message = str(
+            "Зафиксировано окончание зоны конфликта.\n" +
+            "Подтвердите правильность полученных данных:\n\n" +
+            "Система: {}\n".format(self.info["system"]) +
+            ("Напряжённость: {}\n".format(self.info["intensity"]) if self.info["conflict_type"] == "Space" else "") +
+            ("Поселение: {}\n".format(self.info["location"]) if self.info["conflict_type"] == "Foot" else "") +
+            "Участвующие фракции:\n" +
+            "  - {}\n".format(factions[0]) +
+            "  - {}\n".format(factions[1]) +
+            "Предполагаемый победитель: {}\n".format(presumed_winner if presumed_winner != "[UNKNOWN]" else "НЕ ОПРЕДЕЛЁН") +
+            "Вы сражались на стороне: {}\n\n".format(self.info["player_fights_for"]) +
+            "Выберите победившую фракцию."
         )
         notif = Notification(message, factions)
         notif.wait_window()
         return notif.result
+    
 
-
-    def __send_result(self, presumed: str, actual: str):
-        debug("SEND_RESULT: forming response")
+    def __send_results(self, presumed: str, actual: str):
         url_params = {
-                "entry.751150409": self.cz_info["time_start"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.1063245051": self.cz_info["time_finish"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.852296360": self.cmdr,
-                "entry.1155279269": self.system,
-                "entry.375584019": "Space",
-                "entry.2072671672": self.cz_info["intensity"],
-                "entry.427971639": presumed if presumed != None else "[UNKNOWN]",
-                "entry.88896896": actual,
-                "entry.1405864887": self.__post_logs(),
+                "entry.1230568805": self.info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.288262122": self.info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.1311116543": self.info["cmdr"],
+                "entry.338648635": self.info["system"],
+                "entry.598281": self.info["conflict_type"],
+                "entry.425131010": self.info.get("location", ""),
+                "entry.1721323758": self.info.get("intensity", ""),
+                "entry.608932195": self.info.get("weight", ""),
+                "entry.703400232": presumed,
+                "entry.362734975": actual,
+                "entry.1588781896": self.__post_logs(),
             }
-        url = f'{URL_GOOGLE}/1FAIpQLScoReLyHUXj-zyM4cwi6yBw3mYWK-NUSIYrEHAAPR0L9aOmxw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-        debug("SEND_RESULT: link: " + url)
+        url = f'{URL_GOOGLE}/1FAIpQLSdA6u9GTM1yWJ55g9sCYb8Mv4sFs6iiZPhiVR_F6dTeIsYX9g/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
+        debug("CZ_Tracker: url: {!r}", url)
         Reporter(url).start()
-        debug("SEND_RESULT: successfully sent to google sheet")
+    
 
+    def __send_results(self, presumed: str, actual: str):
+        url_params = {
+                "entry.1230568805": self.info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.288262122": self.info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.1311116543": self.info["cmdr"],
+                "entry.338648635": self.info["system"],
+                "entry.598281": self.info["conflict_type"],
+                "entry.425131010": self.info.get("location", ""),
+                "entry.1721323758": self.info.get("intensity", ""),
+                "entry.608932195": self.info.get("weight", ""),
+                "entry.703400232": presumed,
+                "entry.362734975": actual,
+                "entry.1588781896": self.__post_logs(),
+            }
+        url = f'{URL_GOOGLE}/1FAIpQLSdA6u9GTM1yWJ55g9sCYb8Mv4sFs6iiZPhiVR_F6dTeIsYX9g/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
+        debug("CZ_Tracker: url: {!r}", url)
+        Reporter(url).start()
 
-    # в теории - это временно
+    
+    # в теории - это временно. отправка логов на удалённый сервер для возможности их анализа.
     def __post_logs(self) -> str:
         temp_folder = tempfile.gettempdir()
         game_logs_folder = os.path.join(os.path.expanduser('~'), "Saved Games\\Frontier Developments\\Elite Dangerous")
@@ -1178,7 +1185,7 @@ class CZ_Tracker:
         debug(f"SEND_LOGS: created list of logfiles, {len(logs)} items inside")
         
         # сжимаем в зип
-        zip = os.path.join(temp_folder, f"{self.cmdr}-{datetime.utcnow().strftime('%d%m%Y_%H%M%S')}.zip")
+        zip = os.path.join(temp_folder, f"{self.info['cmdr']}-{datetime.utcnow().strftime('%d%m%Y_%H%M%S')}.zip")
         with zipfile.ZipFile(zip, "w") as zipf:
             for file in logs:
                 zipf.write(file, arcname=os.path.basename(file))
@@ -1196,6 +1203,7 @@ class CZ_Tracker:
                 response = requests.post(api_url, files=file)
             except requests.exceptions.RequestException as e:
                 error(f"SEND_LOGS: failed to send logs, exception \"{e}\" occured (attempt {i+1})")
+                break
             else:
                 debug(f"SEND_LOGS: status code: {response.status_code} (attempt {i+1})")
                 if response.status_code == 200:
@@ -1211,3 +1219,9 @@ class CZ_Tracker:
             return response.json()["data"]["downloadPage"]
         else:
             return "[FAILED TO SEND LOGS TO REMOTE SERVER]"
+
+    def __reset(self):
+        self.in_conflict = False
+        self.info = None
+        self.end_messages = None
+        debug("CZ_Tracker was resetted to the initial state.")
