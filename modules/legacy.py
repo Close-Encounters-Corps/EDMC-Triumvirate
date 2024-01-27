@@ -864,7 +864,7 @@ class CZ_Tracker:
                           and "dock" not in entry["StationServices"]):
                         self.__start_conflict(cmdr, system, entry, "Foot")
 
-                else:       # in_conflict == True
+                else:
                     # убийство
                     if event == "FactionKillBond":
                         self.__kill(entry)
@@ -886,7 +886,8 @@ class CZ_Tracker:
                         self.__end_conflict()
 
                     # досрочный выход
-                    elif event in ("Shutdown", "Died", "CancelDropship") or event == "Music" and entry["MusicTrack"] == "MainMenu":
+                    elif (event in ("Shutdown", "Died", "CancelDropship")
+                          or event == "Music" and entry["MusicTrack"] == "MainMenu"):
                         self.__reset()
 
             except:
@@ -911,19 +912,13 @@ class CZ_Tracker:
                 "start_time": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
                 "end_time": None
             }
-
             intensity = entry["Type"]
             intensity = intensity[19:intensity.find(":")]
             if intensity == "Med":
                 intensity = "Medium"
             self.info["intensity"] = intensity
 
-            match intensity:
-                case "Low":     self.info["weight"] = 0.25
-                case "Medium":  self.info["weight"] = 0.5
-                case "High":    self.info["weight"] = 1
-
-        else:       # c_type == "Foot"
+        elif c_type == "Foot":
             self.info = {
                 "cmdr": cmdr,
                 "system": system,
@@ -935,11 +930,8 @@ class CZ_Tracker:
                 "start_time": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
                 "end_time": None,
             }
+            self.info["location"] = entry["Name"]
 
-            location = entry.get("DestinationLocation", None)   # если через фронтлайн
-            if not location:
-                location = entry["Name"]                        # если прилетели сами
-            self.info["location"] = location
         debug("CZ_Tracker prepared.")
 
 
@@ -1134,26 +1126,6 @@ class CZ_Tracker:
                 "entry.598281": self.info["conflict_type"],
                 "entry.425131010": self.info.get("location", ""),
                 "entry.1721323758": self.info.get("intensity", ""),
-                "entry.608932195": self.info.get("weight", ""),
-                "entry.703400232": presumed,
-                "entry.362734975": actual,
-                "entry.1588781896": self.__post_logs(),
-            }
-        url = f'{URL_GOOGLE}/1FAIpQLSdA6u9GTM1yWJ55g9sCYb8Mv4sFs6iiZPhiVR_F6dTeIsYX9g/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-        debug("CZ_Tracker: url: {!r}", url)
-        Reporter(url).start()
-    
-
-    def __send_results(self, presumed: str, actual: str):
-        url_params = {
-                "entry.1230568805": self.info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.288262122": self.info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.1311116543": self.info["cmdr"],
-                "entry.338648635": self.info["system"],
-                "entry.598281": self.info["conflict_type"],
-                "entry.425131010": self.info.get("location", ""),
-                "entry.1721323758": self.info.get("intensity", ""),
-                "entry.608932195": self.info.get("weight", ""),
                 "entry.703400232": presumed,
                 "entry.362734975": actual,
                 "entry.1588781896": self.__post_logs(),
