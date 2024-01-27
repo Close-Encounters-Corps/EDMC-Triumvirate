@@ -5,7 +5,6 @@ import tkinter as tk
 from datetime import datetime
 from urllib.parse import quote_plus
 from contextlib import closing
-from threading import Lock
 import os
 import logging
 import webbrowser
@@ -134,7 +133,6 @@ def prefs_changed(cmdr, is_beta):
 
 
 def Alegiance_get(CMDR, SQ_old):
-
     global SQ
     if CMDR != this.CMDR:
         logger.debug("Community Check started")
@@ -188,6 +186,7 @@ def plugin_start3(plugin_dir):
     codex.CodexTypes.plugin_start(plugin_dir)
 
     # получаем список систем для БГС
+    # TODO: переписать в отдельный поток с повторением при неудаче
     response = requests.get("https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140")
     systems = []
     if response.status_code == 200:
