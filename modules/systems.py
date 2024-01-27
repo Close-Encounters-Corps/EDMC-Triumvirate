@@ -30,5 +30,5 @@ class SystemsModule(WebClient, Module):
             data = resp.json()
             return data["x"], data["y"], data["z"]
         if resp.status_code != 400:
-            Debug.p(f"fetch_system failed with code {resp.status_code}: {resp.text}")
+            Debug.p(f"fetch_system failed with code {resp.status_code}")
         return None

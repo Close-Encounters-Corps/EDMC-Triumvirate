@@ -68,7 +68,7 @@ class CanonnJournal(Emitter):
         # future, no ETA yet pending
         # CAPIv2 changes
         if not CanonnJournal.exclusions:
-            debug("getting journal excludes")
+            #debug("getting journal excludes")
             tempexcludes = {}
             r = requests.get("{}/excludeevents?_limit=1000".format(url))
 
@@ -80,7 +80,7 @@ class CanonnJournal(Emitter):
                 for exc in r.json():
                     tempexcludes[exc["eventName"]] = True
                 CanonnJournal.exclusions = tempexcludes
-                debug("Journal excludes got")
+                #debug("Journal excludes got")
             else:
                 error("{}/excludeevents".format(url))
 

@@ -464,10 +464,11 @@ class CodexTypes(Frame):
 
     def visualise(self):
 
-        debug("visualise")
+        #debug("visualise")
         # we may want to try again if the data hasn't been fetched yet
         if CodexTypes.waiting:
-            debug("Still waiting");
+            #debug("Still waiting");
+            pass
         else:
 
             self.set_image("Geology", False)
@@ -487,14 +488,14 @@ class CodexTypes(Frame):
                 self.grid()
                 self.visible()
                 for r in self.poidata:
-                    debug(r)
+                    #debug(r)
                     self.set_image(r.get("hud_category"), True)
             else:
                 self.grid()
                 self.grid_remove()
 
     def journal_entry(self, cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client):
-        debug("CodeTypes journal_entry")
+        #debug("CodeTypes journal_entry")
 
         if entry.get("event") == "StartJump" and entry.get("JumpType") == "Hyperspace":
             # go fetch some data.It will 
@@ -646,7 +647,7 @@ class CodexTypes(Frame):
 
         # we can do this on every event can't we
         self.visualise()
-        debug(json.dumps(self.poidata))
+        #debug(json.dumps(self.poidata))
 
     @classmethod
     def plugin_start(cls, plugin_dir):
