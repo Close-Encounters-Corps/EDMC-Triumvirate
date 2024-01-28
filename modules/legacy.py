@@ -581,6 +581,7 @@ class BGS:
             response = requests.get(url)
             if response.status_code == 200:
                 self.systems = str(response.json()["files"]["systems"]["content"]).split('\n')
+                debug("[BGS.init] Got list of systems to track.")
                 return
             self.thread.sleep(10)
 
