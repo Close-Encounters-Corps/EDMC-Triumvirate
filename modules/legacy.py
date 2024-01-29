@@ -569,6 +569,8 @@ class BGS:
         self.missions_tracker = BGS.Missions_Tracker()
         self.cz_tracker = BGS.CZ_Tracker()
         self.threadlock = threading.Lock()
+        
+        self.systems = []
         self.thread = BasicThread(
             target=self.__get_list_of_systems,
             name="BGS systems list loader"
@@ -576,9 +578,8 @@ class BGS:
 
     def __get_list_of_systems(self):
         url = "https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140"
-        systems = []
         attempt = 1
-        while not systems:
+        while True:
             response = requests.get(url)
             if response.status_code == 200:
                 self.systems = str(response.json()["files"]["systems"]["content"]).split('\n')
