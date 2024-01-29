@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-import threading, requests, traceback, json, os, sys, zipfile, tempfile
+import threading, requests, traceback, json, os, sys, zipfile, tempfile, sqlite3
 import tkinter as tk
 
 from  math import sqrt, pow
@@ -577,35 +577,106 @@ class BGS:
     def __get_list_of_systems(self):
         url = "https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140"
         systems = []
+        attempt = 1
         while not systems:
             response = requests.get(url)
             if response.status_code == 200:
                 self.systems = str(response.json()["files"]["systems"]["content"]).split('\n')
                 debug("[BGS.init] Got list of systems to track.")
                 return
+            error("[BGS.init] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempt)
             self.thread.sleep(10)
 
     def process_entry(self, cmdr, system, station, entry):
         if system in self.systems:
-            self.threadlock.acquire()
-            try:
-                self.missions_tracker.process_entry(cmdr, system, station, entry)
-                self.cz_tracker.process_entry(cmdr, system, entry)
-            except:
-                error(traceback.format_exc())
-            self.threadlock.release()
+            with self.threadlock:
+                try:
+                    self.missions_tracker.process_entry(cmdr, system, station, entry)
+                    self.cz_tracker.process_entry(cmdr, system, entry)
+                except:
+                    error(traceback.format_exc())
 
+    def stop(self):
+        with self.threadlock:
+            self.missions_tracker.stop()
 
 
     class Missions_Tracker:
+        _instance = None
+        def __new__(cls):
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                return cls._instance
+            raise RuntimeError("not allowed, use BGS module instead")
+        
         def __init__(self):
-            self.missions_file = f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\currentmissions.trmv"
-            self.mainfaction = ""
-            try:
-                open(self.missions_file, "x")
-            except FileExistsError:
-                pass
+            # БД будет храниться в EDMC-Triumvirate/data
+            path = os.path.normpath(os.path.dirname(__file__) + "\\..\\data")
+            self.db = sqlite3.connect(path + "\\missions.db", check_same_thread=False)
+            self.__query("CREATE TABLE IF NOT EXISTS missions (id, payload)")
+            self.main_faction = ""
 
+        def stop(self):
+            self.__prune_expired()
+            self.db.close()
+
+        # Методы работы с БД:
+        def __query(self, query:str, *args):
+            cur = self.db.cursor()
+            cur.execute(query, args)
+            self.db.commit()
+            result = cur.fetchall()
+            cur.close()
+            return result
+        
+        """
+        def __db_insert(self, query: str, *args):
+            if query[0:6].capitalize() != "INSERT":
+                raise ValueError("must be INSERT operation")
+            cur = self.db.cursor()
+            cur.execute(query, args)
+            self.db.commit()
+            cur.close()
+
+        def __db_delete(self, query: str, *args):
+            if query[0:6].capitalize() != "DELETE":
+                raise ValueError("must be DELETE operation")
+            cur = self.db.cursor()
+            cur.execute(query, args)
+            self.db.commit()
+            cur.close()
+
+        def __db_select(self, query: str, *args):
+            if query[0:6].capitalize() != "SELECT":
+                raise ValueError("must be SELECT operation")
+            cur = self.db.cursor()
+            cur.execute(query, args)
+            result = cur.fetchall()
+            cur.close()
+            return result
+        """
+        
+        def __prune_expired(self):
+            debug("[BGS.prune_expired] Clearing the database from expired missions.")
+            expired_missions = []
+            now = datetime.utcnow()
+            cur = self.db.cursor()
+            cur.execute("SELECT id, payload FROM missions")
+            for id, payload in cur.fetchall():
+                mission = json.loads(payload)
+                if "Megaship" not in mission["type"]:
+                    expires = datetime.strptime(mission["expires"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+                    if expires <= now:
+                        expired_missions.append(id)
+            cur.close()
+            cur = self.db.cursor()
+            for id in expired_missions:
+                cur.execute("DELETE FROM missions WHERE id = ?", (id,))
+                debug("[BGS.prune_expired] Mission {} was deleted.", id)
+            cur.close()
+            self.db.commit()
+
+        # Методы обработки логов:
 
         def process_entry(self, cmdr, system, station, entry):
             event = entry["event"]
@@ -630,244 +701,152 @@ class BGS:
             # картография
             elif "SellExplorationData" in event:
                 self.__exploration_data(entry, cmdr, system, station)
-
+            
 
         def __set_faction(self, entry):
-            debug(f"MAIN_FACTION: detected \"{entry['event']}\"")
-            self.mainfaction = entry["StationFaction"]["Name"]
-            debug(f"MAIN_FACTION: main_faction set to \"{self.mainfaction}\"")
+            self.main_faction = entry["StationFaction"]["Name"]
+            debug("[BGS.set_faction]: detected {!r}, main_faction set to {!r}", entry["event"], self.main_faction)
 
 
         def __mission_accepted(self, entry, system):
-            debug("MISSION_ACCEPTED: detected MissionAccepted")
-            if system in self.systems or entry.get("DestinationSystem", "") in self.systems:
-                mission = {
-                    "timestamp": entry["timestamp"],
-                    "ID": entry["MissionID"],
-                    "expires": entry.get("Expiry", ""),
-                    "type": entry["Name"],
-                    "system": system,
-                    "faction": entry["Faction"],
-                    "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", "") != "" else "",
-                    "faction2": entry.get("TargetFaction", ""),
-                }
-                debug("MISSION_ACCEPTED: saved data: " + str(mission))
-                with open(self.missions_file, "a", encoding="utf8") as missions_file:
-                    missions_file.write(json.dumps(mission) + '\n')
-                    debug("MISSION_ACCEPTED: saved to currentmissions")
-            else:
-                debug("MISSION_ACCEPTED: we are not interested in this system, skipping")
+            mission = {
+                "timestamp": entry["timestamp"],
+                "ID": entry["MissionID"],
+                "expires": entry.get("Expiry", ""),
+                "type": entry["Name"],
+                "system": system,
+                "faction": entry["Faction"],
+                "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", None) else "",
+                "faction2": entry.get("TargetFaction", ""),
+            }
+            self.__query("INSERT INTO missions (id, payload) VALUES (?, ?)", mission["ID"], json.dumps(mission))
+            debug("[BGS.mission_accepted] Mission {!r} was accepted and saved to the database.", mission["ID"])
 
 
         def __mission_completed(self, entry, cmdr):
-            debug("MISSION_COMPLETE: detected MissionCompleted")
-            with open(self.missions_file, "r", encoding="utf8") as missions_file:
-                missions_list = missions_file.readlines()
-                debug("MISSION_COMPLETE: read currentmissions")
-            completed_mission = dict()
-            debug("MISSION_COMPLETE: created empty dict 'completed_mission'")
-            with open(self.missions_file, "w", encoding="utf8") as missions_file:
-                debug("MISSION_COMPLETE: opened currentmissions for editing")
-                for line in missions_list:
-                    mission = json.loads(line)
-                    debug("MISSION_COMPLETE: mission: " + str(mission))
-                    if mission["ID"] != entry["MissionID"]:
-                        debug("MISSION_COMPLETE: not what we're looking for, saving to currentmissions")
-                        missions_file.write(line)
-                    else:
-                        debug("MISSION_COMPLETE: found what we're looking for, completed_mission = mission")
-                        completed_mission = mission
-            if completed_mission == {}:
-                debug("MISSION_COMPLETE: WARNING: mission not found, exiting")
+            mission_id = entry["MissionID"]
+            result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
+            if result is None:
+                debug("[BGS.mission_completed] Mission {!r} was completed, but not found in the database.", mission_id)
                 return
+            self.__query("DELETE FROM missions WHERE id = ?", mission_id)
+            debug("[BGS.mission_completed] Mission {!r} was completed and deleted from the database.", mission_id)
+
+            mission = json.loads(result)
+            inf_changes = dict()
+            for item in entry["FactionEffects"]:
+                # Название второй фракции может быть не прописано в MissionCompleted.
+                # Если оно было в MissionAccepted, копируем оттуда.
+                if item["Faction"] == "" and mission["faction2"] != "":
+                    item["Faction"] = mission["faction2"]
+                # inf_changes = { faction (str): influence_change (int) }
+                inf_changes[item["Faction"]] = len(item["Influence"][0]["Influence"])
+                if item["Influence"][0]["Trend"] == "DownBad":
+                    inf_changes[item["Faction"]] *= -1
             
-            factions_inf = dict()
-            debug("MISSION_COMPLETE: created empty dict for influence")
-            for faction in entry["FactionEffects"]:
-                debug("MISSION_COMPLETE: current faction: " + str(faction))
-                # на случай, если вторая фракция не прописана в ивенте
-                if faction["Faction"] == "":
-                    debug("MISSION_COMPLETE: WARNING: second faction is empty")
-                    if completed_mission["faction2"] == "":     # её нет и в MissionAccepted: игнорируем
-                        debug("MISSION_COMPLETE: second faction not found in MissionAccepted, ignoring")
-                        continue
-                    else:                                       # она есть в MissionAccepted: копируем оттуда
-                        debug("MISSION_COMPLETE: second faction found in MissionAccepted, copying")
-                        faction["Faction"] = completed_mission["faction2"]
-                factions_inf[faction["Faction"]] = len(faction["Influence"][0]["Influence"])
-                debug("MISSION_COMPLETE: influence written: " + str(factions_inf[faction["Faction"]]))
-                if faction["Influence"][0]["Trend"] == "DownBad":
-                    debug("MISSION_COMPLETE: trend 'downbad', changing sign to minus")
-                    factions_inf[faction["Faction"]] *= -1
-            
+            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse'
             url_params = {
-                    "entry.1839270329": cmdr,
-                    "entry.1889332006": completed_mission["type"],
-                    "entry.350771392": "COMPLETED",
-                    "entry.592164382": completed_mission["system"],
-                    "entry.1812690212": completed_mission["faction"],
-                    "entry.179254259": factions_inf[completed_mission["faction"]],
-                    "entry.739461351": completed_mission["system2"],
-                    "entry.887402348": completed_mission["faction2"],
-                    "entry.1755429366": factions_inf.get(completed_mission["faction2"], ""),
-                }
-            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-            debug("MISSION_COMPLETE: link: " + url)
-            Reporter(url).start()
-            debug("MISSION_COMPLETE: successfully sent to google sheet")
+                "entry.1839270329": cmdr,
+                "entry.1889332006": mission["type"],
+                "entry.350771392": "COMPLETED",
+                "entry.592164382": mission["system"],
+                "entry.1812690212": mission["faction"],
+                "entry.179254259": inf_changes[mission["faction"]],
+                "entry.739461351": mission["system2"],
+                "entry.887402348": mission["faction2"],
+                "entry.1755429366": inf_changes.get(mission["faction2"], ""),
+                "usp": "pp_url",
+            }
+            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
         def __mission_failed(self, entry, cmdr):
-            debug("MISSION_FAILED: detected MissionFailed")
-            with open(self.missions_file, "r", encoding="utf8") as missions_file:
-                missions_list = missions_file.readlines()
-                debug("MISSION_FAILED: read currentmissions")
-            failed_mission = dict()
-            debug("MISSION_FAILED: created emtpy dict 'failed_mission'")
-            with open(self.missions_file, "w", encoding="utf8") as missions_file:
-                debug("MISSION_FAILED: opened currentmissions for editing")
-                for line in missions_list:
-                    mission = json.loads(line)
-                    debug("MISSION_FAILED: mission: " + str(mission))
-                    if mission["ID"] != entry["MissionID"]:
-                        debug("MISSION_FAILED: not what we're looking for, saving to currentmissions")
-                        missions_file.write(line)
-                    else:
-                        debug("MISSION_FAILED: found what we're looking for, completed_mission = mission")
-                        failed_mission = mission
-            if failed_mission == {}:
-                debug("MISSION_FAILED: WARNING: mission not found, exiting")
+            mission_id = entry["MissionID"]
+            result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
+            if result is None:
+                debug("[BGS.mission_failed] Mission {!r} was failed, but not found in the database.", mission_id)
                 return
+            self.__query("DELETE FROM missions WHERE id = ?", mission_id)
+            debug("[BGS.mission_failed] Mission {!r} was failed and deleted from the database.", mission_id)
 
+            failed_mission = json.loads(result)
+            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse'
             url_params = {
-                    "entry.1839270329": cmdr,
-                    "entry.1889332006": failed_mission["type"],
-                    "entry.350771392": "FAILED",
-                    "entry.592164382": failed_mission["system"],
-                    "entry.1812690212": failed_mission["faction"],
-                    "entry.179254259": -2,
-                    "entry.739461351": failed_mission["system2"],
-                    "entry.887402348": failed_mission["faction2"],
-                    "entry.1755429366": "-2" if failed_mission["system2"] != "" else "",
-                }
-            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-            debug("MISSION_FAILED: link: " + url)
-            Reporter(url).start()
-            debug("MISSION_FAILED: successfully sent to google sheet")
+                "entry.1839270329": cmdr,
+                "entry.1889332006": failed_mission["type"],
+                "entry.350771392": "FAILED",
+                "entry.592164382": failed_mission["system"],
+                "entry.1812690212": failed_mission["faction"],
+                "entry.179254259": -2,
+                "entry.739461351": failed_mission["system2"],
+                "entry.887402348": failed_mission["faction2"],
+                "entry.1755429366": "-2" if failed_mission["system2"] != "" else "",
+                "usp": "pp_url",
+            }
+            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
         def __mission_abandoned(self, entry):
-            debug("MISSION_ABANDONED: detected MissionAbandoned")
-            with open(self.missions_file, "r", encoding="utf8") as missions_file:
-                missions_list = missions_file.readlines()
-                debug("MISSION_ABANDONED: read currentmissions")
-            with open(self.missions_file, "w", encoding="utf8") as missions_file:
-                debug("MISSION_ABANDONED: opened currentmissions for editing")
-                for line in missions_list:
-                    mission = json.loads(line)
-                    debug("MISSION_ABANDONED: mission: " + str(mission))
-                    if mission["ID"] != entry["MissionID"]:
-                        debug("MISSION_ABANDONED: not id we're searching for. writing to file")
-                        missions_file.write(line)
-                    elif mission["type"] == "Mission_HackMegaship" or mission["type"] == "MISSION_DisableMegaship":
-                        debug("MISSION_ABANDONED: id found, but it's related to megaships - writing to file")
-                        missions_file.write(line)
-                    else:
-                        debug("MISSION_ABANDONED: found id, skipping")
+            mission_id = entry["MissionID"]
+            result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
+            if result is None:
+                debug("[BGS.mission_abandoned] Mission {!r} was abandoned, but not found in the database.", mission_id)
+                return
+            
+            mission = json.loads(result)
+            if "Megaship" not in mission["type"]:
+                self.__query("DELETE FROM missions WHERE id = ?", mission_id)
+                debug("[BGS.mission_abandoned] Mission {!r} was abandoned and deleted from the database.", mission_id)
 
 
         def __redeem_voucher(self, entry, cmdr, system):
-            if self.mainfaction != "FleetCarrier":
-                if "BrokerPercentage" not in entry:                 # игнорируем юристов
-                    debug("REDEEM_VOUCHER: detected RedeemVoucher")
-                    if system not in self.systems:
-                        debug("REDEEM_VOUCHER: we are not interested in this system, skipping")
-                    else:
-                        if entry["Type"] != "bounty":
-                            debug(f"REDEEM_VOUCHER: type \"{entry['Type']}\", skipping")
-                        else:
-                            debug("REDEEM_VOUCHER: type \"Bounty\"")
-                            for faction in entry["Factions"]:
-                                debug("REDEEM_VOUCHER: current faction: " + str(faction))
-                                url_params = {
-                                    "entry.503143076": cmdr,
-                                    "entry.1108939645": "bounty",
-                                    "entry.127349896": system,
-                                    "entry.442800983": "",
-                                    "entry.48514656": faction["Faction"],
-                                    "entry.351553038": faction["Amount"],
-                                }
-                                url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-                                debug("REDEEM_VOUCHER: link: " + url)
-                                Reporter(url).start()
-                                debug("REDEEM_VOUCHER: successfully sent to google sheet")
+            # Игнорируем флитаки, юристов и лишние типы выплат.
+            if self.main_faction == "FleetCarrier" or "BrokerPercentage" in entry or entry["Type"] != "bounty":
+                return
+            
+            debug("[BGS.redeem_voucher] Redeeming vouchers:")
+            for faction in entry["Factions"]:
+                debug("[BGS.redeem_voucher] Faction {!r}, amount: {}", faction["Faction"], faction["Amount"])
+                url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse'
+                url_params = {
+                    "entry.503143076": cmdr,
+                    "entry.1108939645": "bounty",
+                    "entry.127349896": system,
+                    "entry.442800983": "",
+                    "entry.48514656": faction["Faction"],
+                    "entry.351553038": faction["Amount"],
+                    "usp": "pp_url",
+                }
+                BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
         def __exploration_data(self, entry, cmdr, system, station):
-            if self.mainfaction != "FleetCarrier":
-                debug(f"SELL_EXP_DATA: detected \"{entry['event']}\"")
-                if system not in self.systems:
-                    debug("SELL_EXP_DATA: we are not interested in this system, skipping")
-                else:
-                    url_params = {
-                        "entry.503143076": cmdr,
-                        "entry.1108939645": "SellExpData",
-                        "entry.127349896": system,
-                        "entry.442800983": station,
-                        "entry.48514656": self.mainfaction,
-                        "entry.351553038": entry["TotalEarnings"],
-                    }
-                    url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-                    debug("SELL_EXP_DATA: link: " + url)
-                    Reporter(url).start()
-                    debug("SELL_EXP_DATA: successfully sent to google sheet")
-
-
-        def __del__(self):
-            try:
-                self.threadlock.acquire()
-                # Очистка файла миссий от устаревших, чей результат выполнения не был "пойман"
-                debug("Clearing missions file from old entries")
-                missionslist = []
-                with open(self.missions_file, 'r', encoding='utf8') as missionsfile:
-                    count = 0
-                    for line in missionsfile:
-                        missionslist.append(line)
-                        count += 1
-                    debug(f"Lines read: {count}")
-                with open(self.missions_file, 'w', encoding='utf8') as missionsfile:
-                    now = datetime.utcnow()
-                    saved = ignored = 0
-                    for line in missionslist:
-                        try:
-                            mission = json.loads(line)
-                            if mission["type"] in ("Mission_HackMegaship", "MISSION_DisableMegaship"):
-                                debug(f"Mission {mission['ID']} is related to megaships and doesn't have the 'expires' field.")
-                                missionsfile.write(line)
-                                saved += 1
-                                continue
-                            else:
-                                expires = datetime.strptime(mission["expires"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-                        except json.JSONDecodeError:
-                            ignored += 1
-                        except KeyError:
-                            debug(f"Mission {mission['ID']} is written in the old format and doesn't have the 'expires' field.")
-                            missionsfile.write(line)
-                            saved += 1
-                        else:
-                            if expires > now:
-                                missionsfile.write(line)
-                                saved += 1
-                            else:
-                                debug(f"Mission {mission['ID']} expired.")
-                debug(f"Missions saved: {saved}, lines skipped: {ignored} (not valid json strings).")
-            except:
-                error(traceback.format_exc())
-            self.threadlock.release()
+            if self.main_faction != "FleetCarrier":
+                url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse'
+                url_params = {
+                    "entry.503143076": cmdr,
+                    "entry.1108939645": "SellExpData",
+                    "entry.127349896": system,
+                    "entry.442800983": station,
+                    "entry.48514656": self.main_faction,
+                    "entry.351553038": entry["TotalEarnings"],
+                    "usp": "pp_url"
+                }
+                debug("[BGS.exploration_data]: Sold exploration data for {} credits, station's owner: {!r}",
+                    entry["TotalEarnings"],
+                    self.main_faction)
+                BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
 
     class CZ_Tracker:
+        _instance = None
+        def __new__(cls):
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                return cls._instance
+            raise RuntimeError("not allowed, use BGS module instead")
+        
         def __init__(self):
             self.in_conflict = False
             self.safe = False       # на случай, если плагин запускается посреди игры, и мы не знаем режим

@@ -193,7 +193,7 @@ def plugin_stop():
     EDMC is closing
     """
     logger.debug("Stopping the plugin")
-    del legacy.bgs.missions_tracker
+    legacy.bgs.stop()
     for mod in context.modules:
         mod.close()
     thread.Thread.stop_all()
