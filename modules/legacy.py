@@ -1115,6 +1115,7 @@ class BGS:
         
 
         def __send_results(self, presumed: str, actual: str):
+            url = f'{URL_GOOGLE}/1FAIpQLSdA6u9GTM1yWJ55g9sCYb8Mv4sFs6iiZPhiVR_F6dTeIsYX9g/formResponse'
             url_params = {
                     "entry.1230568805": self.info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
                     "entry.288262122": self.info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
@@ -1126,10 +1127,9 @@ class BGS:
                     "entry.703400232": presumed,
                     "entry.362734975": actual,
                     "entry.1588781896": self.__post_logs(),
+                    "usp": "pp_url",
                 }
-            url = f'{URL_GOOGLE}/1FAIpQLSdA6u9GTM1yWJ55g9sCYb8Mv4sFs6iiZPhiVR_F6dTeIsYX9g/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-            debug("CZ_Tracker: url: {!r}", url)
-            Reporter(url).start()
+            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
         
         # в теории - это временно. отправка логов на удалённый сервер для возможности их анализа.
@@ -1187,7 +1187,7 @@ class BGS:
             if response.status_code == 200:
                 return response.json()["data"]["downloadPage"]
             else:
-                return "[FAILED TO SEND LOGS TO REMOTE SERVER]"
+                return "[SENDING FAILED]"
 
         def __reset(self):
             self.in_conflict = False
