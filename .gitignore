@@ -3,6 +3,7 @@
 *.patrol
 /*.bat
 /data/EDMC-Canonn.patrol
+/data/missions.db
 /EDMC.log
 /.venv
 /venv

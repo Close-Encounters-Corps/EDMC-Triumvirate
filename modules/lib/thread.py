@@ -48,7 +48,7 @@ class Thread(BasicThread):
             # перехватываем ThreadExit, чтобы он не попадал в лог
         except ThreadExit:
             pass
-        debug("Thread {} shutted down", self.name)
+        debug("Thread {!r} shutted down", self.name)
 
     def do_run(self):
         raise NotImplementedError()

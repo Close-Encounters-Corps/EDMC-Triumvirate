@@ -2,13 +2,14 @@
 import threading, requests, traceback, json, os, sys, zipfile, tempfile, sqlite3
 import tkinter as tk
 
-from  math import sqrt, pow
+from math import sqrt, pow
 from datetime import datetime, timezone
 from collections import deque
 from tkinter import font
 from .debug import debug, error
 from .lib.conf import config
-from .lib.thread import BasicThread
+from .lib.thread import Thread
+from .player import Player
 
 try:#py3
     from urllib.parse import quote_plus
@@ -569,25 +570,26 @@ class BGS:
         self.missions_tracker = BGS.Missions_Tracker()
         self.cz_tracker = BGS.CZ_Tracker()
         self.threadlock = threading.Lock()
-        
         self.systems = []
-        self.thread = BasicThread(
-            target=self.__get_list_of_systems,
-            name="BGS systems list loader"
-        ).start()
+        BGS.Systems_Updater().run()
 
-    def __get_list_of_systems(self):
-        url = "https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140"
-        attempt = 1
-        while True:
-            response = requests.get(url)
-            if response.status_code == 200:
-                self.systems = str(response.json()["files"]["systems"]["content"]).split('\n')
-                debug("[BGS.init] Got list of systems to track.")
-                return
-            error("[BGS.init] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempt)
-            self.thread.sleep(10)
+    class Systems_Updater(Thread):
+        def __init__(self):
+            super().__init__(name="BGS systems list updater")
 
+        def do_run(self):
+            url = "https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140"
+            attempts = 0
+            while True:
+                attempts += 1
+                response = requests.get(url)
+                if response.status_code == 200:
+                    self.systems = str(response.json()["files"]["systems"]["content"]).split('\n')
+                    debug("[BGS.init] Got list of systems to track.")
+                    return
+                error("[BGS.init] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempts)
+                self.thread.sleep(10)
+    
     def process_entry(self, cmdr, system, station, entry):
         if system in self.systems:
             with self.threadlock:
@@ -717,7 +719,7 @@ class BGS:
                 "type": entry["Name"],
                 "system": system,
                 "faction": entry["Faction"],
-                "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", None) else "",
+                "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction") else "",
                 "faction2": entry.get("TargetFaction", ""),
             }
             self.__query("INSERT INTO missions (id, payload) VALUES (?, ?)", mission["ID"], json.dumps(mission))
@@ -758,7 +760,7 @@ class BGS:
                 "entry.1755429366": inf_changes.get(mission["faction2"], ""),
                 "usp": "pp_url",
             }
-            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+            Thread(target=lambda: requests.get(url, params=url_params)).start()
 
 
         def __mission_failed(self, entry, cmdr):
@@ -784,7 +786,7 @@ class BGS:
                 "entry.1755429366": "-2" if failed_mission["system2"] != "" else "",
                 "usp": "pp_url",
             }
-            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+            Thread(target=lambda: requests.get(url, params=url_params)).start()
 
 
         def __mission_abandoned(self, entry):
@@ -818,7 +820,7 @@ class BGS:
                     "entry.351553038": faction["Amount"],
                     "usp": "pp_url",
                 }
-                BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+                Thread(target=lambda: requests.get(url, params=url_params)).start()
 
 
         def __exploration_data(self, entry, cmdr, system, station):
@@ -836,8 +838,7 @@ class BGS:
                 debug("[BGS.exploration_data]: Sold exploration data for {} credits, station's owner: {!r}",
                     entry["TotalEarnings"],
                     self.main_faction)
-                BasicThread(target=lambda: requests.get(url, params=url_params)).start()
-
+                Thread(target=lambda: requests.get(url, params=url_params)).start()
 
 
     class CZ_Tracker:
@@ -1028,6 +1029,7 @@ class BGS:
             class Notification(tk.Tk):
                 def __init__(self, text: str, factions: list):
                     super().__init__()
+                    Player(os.path.normpath(os.path.dirname(__file__) + "\\.."), ["sounds/cz_notification.wav"]).run()
                     # Это отвратительное решение, но пусть будет так.
                     # 1x - высота экрана 1080пкс. При меньшем размере экрана - всё равно используем 1x.
                     # При большем - считаем разницу с 1080, соответственно увеличиваем все размеры.
@@ -1129,7 +1131,7 @@ class BGS:
                     "entry.1588781896": self.__post_logs(),
                     "usp": "pp_url",
                 }
-            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+            Thread(target=lambda: requests.get(url, params=url_params)).start()
 
         
         # в теории - это временно. отправка логов на удалённый сервер для возможности их анализа.
