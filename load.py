@@ -172,6 +172,7 @@ def plugin_start3(plugin_dir):
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
     Debug.setup(logger)
+    legacy.BGS.setup()
     this.plugin_dir = plugin_dir
     # префикс логов
     codex.CodexTypes.plugin_start(plugin_dir)
@@ -193,7 +194,7 @@ def plugin_stop():
     EDMC is closing
     """
     logger.debug("Stopping the plugin")
-    legacy.bgs.stop()
+    legacy.BGS.stop()
     for mod in context.modules:
         mod.close()
     thread.Thread.stop_all()
@@ -418,7 +419,7 @@ def journal_entry_wrapper(
     legacy.AXZone(cmdr, is_beta, system, x, y, z, station, entry, state)
     legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
     legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
-    legacy.bgs.process_entry(cmdr, system, station, entry)
+    legacy.BGS.journal_entry(cmdr, system, station, entry)
     legacy.GusonExpeditions(cmdr, is_beta, system, entry)
     if status_message is not None:
         this.message_label.text = status_message

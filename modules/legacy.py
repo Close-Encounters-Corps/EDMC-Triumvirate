@@ -3,12 +3,12 @@ import threading, requests, traceback, json, os, sys, zipfile, tempfile, sqlite3
 import tkinter as tk
 
 from math import sqrt, pow
-from datetime import datetime, timezone
+from datetime import datetime
 from collections import deque
 from tkinter import font
 from .debug import debug, error
 from .lib.conf import config
-from .lib.thread import Thread
+from .lib.thread import Thread, BasicThread
 from .player import Player
 
 try:#py3
@@ -560,23 +560,21 @@ class NHSS(threading.Thread):
 
 
 class BGS:
-    _instance = None
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-    
-    def __init__(self):
-        self.missions_tracker = BGS.Missions_Tracker()
-        self.cz_tracker = BGS.CZ_Tracker()
-        self.threadlock = threading.Lock()
-        self.systems = []
-        BGS.Systems_Updater().run()
+    _missions_tracker = None
+    _cz_tracker = None
+    _threadlock = threading.Lock()
+    _systems = list()
+
+    @classmethod
+    def setup(cls):
+        BGS._missions_tracker = BGS.Missions_Tracker()
+        BGS._cz_tracker = BGS.CZ_Tracker()
+        BGS.Systems_Updater(BGS._systems).start()
 
     class Systems_Updater(Thread):
-        def __init__(self):
+        def __init__(self, systems_list: list):
             super().__init__(name="BGS systems list updater")
-
+            self.systems_list = systems_list
         def do_run(self):
             url = "https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140"
             attempts = 0
@@ -584,32 +582,32 @@ class BGS:
                 attempts += 1
                 response = requests.get(url)
                 if response.status_code == 200:
-                    self.systems = str(response.json()["files"]["systems"]["content"]).split('\n')
-                    debug("[BGS.init] Got list of systems to track.")
+                    self.systems_list.clear()
+                    self.systems_list += str(response.json()["files"]["systems"]["content"]).split('\n')
+                    debug("[BGS.setup] Got list of systems to track.")
                     return
-                error("[BGS.init] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempts)
+                error("[BGS.setup] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempts)
                 self.thread.sleep(10)
-    
-    def process_entry(self, cmdr, system, station, entry):
-        if system in self.systems:
-            with self.threadlock:
-                try:
-                    self.missions_tracker.process_entry(cmdr, system, station, entry)
-                    self.cz_tracker.process_entry(cmdr, system, entry)
-                except:
-                    error(traceback.format_exc())
 
-    def stop(self):
-        with self.threadlock:
-            self.missions_tracker.stop()
+    @classmethod
+    def journal_entry(cls, cmdr, system, station, entry):
+        with cls._threadlock:
+            try:
+                cls._missions_tracker.process_entry(cmdr, system, station, entry)
+                cls._cz_tracker.process_entry(cmdr, system, entry)
+            except:
+                error(traceback.format_exc())
+
+    @classmethod
+    def stop(cls):
+        with cls._threadlock:
+            cls._missions_tracker.stop()
 
 
     class Missions_Tracker:
-        _instance = None
         def __new__(cls):
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-                return cls._instance
+            if BGS._missions_tracker is None:
+                return super().__new__(cls)
             raise RuntimeError("not allowed, use BGS module instead")
         
         def __init__(self):
@@ -622,62 +620,37 @@ class BGS:
         def stop(self):
             self.__prune_expired()
             self.db.close()
-
-        # Методы работы с БД:
-        def __query(self, query:str, *args):
-            cur = self.db.cursor()
-            cur.execute(query, args)
-            self.db.commit()
-            result = cur.fetchall()
-            cur.close()
-            return result
         
-        """
-        def __db_insert(self, query: str, *args):
-            if query[0:6].capitalize() != "INSERT":
-                raise ValueError("must be INSERT operation")
+        def __query(self, query: str, *args, fetchall: bool = False):
             cur = self.db.cursor()
+            query = query.strip()
+            q_type = query[:query.find(' ')].upper()
             cur.execute(query, args)
-            self.db.commit()
+            if q_type == "SELECT":
+                if fetchall:
+                    result = cur.fetchall()
+                else:
+                    result = cur.fetchone()
+            else:
+                self.db.commit()
             cur.close()
-
-        def __db_delete(self, query: str, *args):
-            if query[0:6].capitalize() != "DELETE":
-                raise ValueError("must be DELETE operation")
-            cur = self.db.cursor()
-            cur.execute(query, args)
-            self.db.commit()
-            cur.close()
-
-        def __db_select(self, query: str, *args):
-            if query[0:6].capitalize() != "SELECT":
-                raise ValueError("must be SELECT operation")
-            cur = self.db.cursor()
-            cur.execute(query, args)
-            result = cur.fetchall()
-            cur.close()
-            return result
-        """
+            return result if q_type == "SELECT" else None
         
         def __prune_expired(self):
             debug("[BGS.prune_expired] Clearing the database from expired missions.")
             expired_missions = []
             now = datetime.utcnow()
-            cur = self.db.cursor()
-            cur.execute("SELECT id, payload FROM missions")
-            for id, payload in cur.fetchall():
+            missions_list = self.__query("SELECT id, payload FROM missions", fetchall=True)
+            for id, payload in missions_list:
                 mission = json.loads(payload)
                 if "Megaship" not in mission["type"]:
-                    expires = datetime.strptime(mission["expires"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+                    expires = datetime.strptime(mission["expires"], "%Y-%m-%dT%H:%M:%SZ")
                     if expires <= now:
                         expired_missions.append(id)
-            cur.close()
-            cur = self.db.cursor()
             for id in expired_missions:
-                cur.execute("DELETE FROM missions WHERE id = ?", (id,))
+                self.__query("DELETE FROM missions WHERE id = ?", id)
                 debug("[BGS.prune_expired] Mission {} was deleted.", id)
-            cur.close()
-            self.db.commit()
+            debug("[BGS.prune_expired] Done.")
 
         # Методы обработки логов:
 
@@ -687,7 +660,7 @@ class BGS:
             if event == "Docked" or (event == "Location" and entry["Docked"] == True):
                 self.__set_faction(entry)
             # принятие миссии
-            elif event == "MissionAccepted":
+            elif event == "MissionAccepted" and system in BGS._systems:
                 self.__mission_accepted(entry, system)
             # сдача миссии
             elif event == "MissionCompleted":
@@ -735,7 +708,7 @@ class BGS:
             self.__query("DELETE FROM missions WHERE id = ?", mission_id)
             debug("[BGS.mission_completed] Mission {!r} was completed and deleted from the database.", mission_id)
 
-            mission = json.loads(result)
+            mission = json.loads(result[0])
             inf_changes = dict()
             for item in entry["FactionEffects"]:
                 # Название второй фракции может быть не прописано в MissionCompleted.
@@ -760,11 +733,12 @@ class BGS:
                 "entry.1755429366": inf_changes.get(mission["faction2"], ""),
                 "usp": "pp_url",
             }
-            Thread(target=lambda: requests.get(url, params=url_params)).start()
+            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
         def __mission_failed(self, entry, cmdr):
             mission_id = entry["MissionID"]
+            debug("MISSION FAILED {}", mission_id)
             result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
             if result is None:
                 debug("[BGS.mission_failed] Mission {!r} was failed, but not found in the database.", mission_id)
@@ -772,7 +746,7 @@ class BGS:
             self.__query("DELETE FROM missions WHERE id = ?", mission_id)
             debug("[BGS.mission_failed] Mission {!r} was failed and deleted from the database.", mission_id)
 
-            failed_mission = json.loads(result)
+            failed_mission = json.loads(result[0])
             url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse'
             url_params = {
                 "entry.1839270329": cmdr,
@@ -786,17 +760,18 @@ class BGS:
                 "entry.1755429366": "-2" if failed_mission["system2"] != "" else "",
                 "usp": "pp_url",
             }
-            Thread(target=lambda: requests.get(url, params=url_params)).start()
+            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
         def __mission_abandoned(self, entry):
             mission_id = entry["MissionID"]
+            debug("MISSION ABANDONED {}", mission_id)
             result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
             if result is None:
                 debug("[BGS.mission_abandoned] Mission {!r} was abandoned, but not found in the database.", mission_id)
                 return
             
-            mission = json.loads(result)
+            mission = json.loads(result[0])
             if "Megaship" not in mission["type"]:
                 self.__query("DELETE FROM missions WHERE id = ?", mission_id)
                 debug("[BGS.mission_abandoned] Mission {!r} was abandoned and deleted from the database.", mission_id)
@@ -820,7 +795,7 @@ class BGS:
                     "entry.351553038": faction["Amount"],
                     "usp": "pp_url",
                 }
-                Thread(target=lambda: requests.get(url, params=url_params)).start()
+                BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
         def __exploration_data(self, entry, cmdr, system, station):
@@ -838,15 +813,13 @@ class BGS:
                 debug("[BGS.exploration_data]: Sold exploration data for {} credits, station's owner: {!r}",
                     entry["TotalEarnings"],
                     self.main_faction)
-                Thread(target=lambda: requests.get(url, params=url_params)).start()
+                BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
     class CZ_Tracker:
-        _instance = None
         def __new__(cls):
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-                return cls._instance
+            if BGS._cz_tracker is None:
+                return super().__new__(cls)
             raise RuntimeError("not allowed, use BGS module instead")
         
         def __init__(self):
@@ -861,36 +834,37 @@ class BGS:
                 self.safe = entry["GameMode"] != "Open"
                 debug("CZ_Tracker: safe set to {!r}", self.safe)
                 return
-
-            if self.in_conflict == False:
-                # начало конфликта (космос)
-                if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
-                    self.__start_conflict(cmdr, system, entry, "Space")
-                # начало конфликта (ноги)
-                elif (event == "ApproachSettlement"
-                    and entry["StationFaction"].get("FactionState", "") == "War"
-                    and "dock" not in entry["StationServices"]):
-                    self.__start_conflict(cmdr, system, entry, "Foot")
-            else:
-                # убийство
-                if event == "FactionKillBond":
-                    self.__kill(entry)
-                # сканирование корабля
-                elif event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
-                    self.__ship_scan(entry)
-                # отслеживание сообщений, потенциальное завершение конфликта
-                elif event == "ReceiveText":
-                    self.__patrol_message(entry)
-                # завершение конфликта: прыжок
-                elif event == "StartJump":
-                    self.__end_conflict()
-                # завершение конфликта: возврат на шаттле (ноги)
-                elif event == "BookDropship" and entry["Retreat"] == True:
-                    self.__end_conflict()
-                # досрочный выход
-                elif (event in ("Shutdown", "Died", "CancelDropship")
-                    or event == "Music" and entry["MusicTrack"] == "MainMenu"):
-                    self.__reset()
+            
+            if system in BGS._systems:
+                if self.in_conflict == False:
+                    # начало конфликта (космос)
+                    if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
+                        self.__start_conflict(cmdr, system, entry, "Space")
+                    # начало конфликта (ноги)
+                    elif (event == "ApproachSettlement"
+                        and entry["StationFaction"].get("FactionState", "") == "War"
+                        and "dock" not in entry["StationServices"]):
+                        self.__start_conflict(cmdr, system, entry, "Foot")
+                else:
+                    # убийство
+                    if event == "FactionKillBond":
+                        self.__kill(entry)
+                    # сканирование корабля
+                    elif event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
+                        self.__ship_scan(entry)
+                    # отслеживание сообщений, потенциальное завершение конфликта
+                    elif event == "ReceiveText":
+                        self.__patrol_message(entry)
+                    # завершение конфликта: прыжок
+                    elif event == "StartJump":
+                        self.__end_conflict()
+                    # завершение конфликта: возврат на шаттле (ноги)
+                    elif event == "BookDropship" and entry["Retreat"] == True:
+                        self.__end_conflict()
+                    # досрочный выход
+                    elif (event in ("Shutdown", "Died", "CancelDropship") or
+                          event == "Music" and entry["MusicTrack"] == "MainMenu"):
+                        self.__reset()
 
             
         def __start_conflict(self, cmdr, system, entry, c_type):
@@ -1029,7 +1003,7 @@ class BGS:
             class Notification(tk.Tk):
                 def __init__(self, text: str, factions: list):
                     super().__init__()
-                    Player(os.path.normpath(os.path.dirname(__file__) + "\\.."), ["sounds/cz_notification.wav"]).run()
+                    Player(os.path.normpath(os.path.dirname(__file__) + "\\.."), ["sounds/cz_notification.wav"]).start()
                     # Это отвратительное решение, но пусть будет так.
                     # 1x - высота экрана 1080пкс. При меньшем размере экрана - всё равно используем 1x.
                     # При большем - считаем разницу с 1080, соответственно увеличиваем все размеры.
@@ -1131,7 +1105,7 @@ class BGS:
                     "entry.1588781896": self.__post_logs(),
                     "usp": "pp_url",
                 }
-            Thread(target=lambda: requests.get(url, params=url_params)).start()
+            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
         
         # в теории - это временно. отправка логов на удалённый сервер для возможности их анализа.
@@ -1196,5 +1170,3 @@ class BGS:
             self.info = None
             self.end_messages = None
             debug("CZ_Tracker was resetted to the initial state.")
-
-bgs = BGS()
