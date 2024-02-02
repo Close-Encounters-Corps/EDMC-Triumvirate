@@ -889,12 +889,18 @@ class BGS:
                 if intensity == "Med":
                     intensity = "Medium"
                 self.info["intensity"] = intensity
+                match intensity:
+                    case "Low":     self.info["weight"] = 0.25
+                    case "Medium":  self.info["weight"] = 0.5
+                    case "High":    self.info["weight"] = 1
 
             elif c_type == "Foot":
                 self.info = {
                     "cmdr": cmdr,
                     "system": system,
                     "conflict_type": "Foot",
+                    "location": entry["Name"],
+                    "weight": 0.25,
                     "allegiances": {},
                     "player_fights_for": None,
                     "kills": 0,
@@ -902,7 +908,6 @@ class BGS:
                     "start_time": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
                     "end_time": None,
                 }
-                self.info["location"] = entry["Name"]
 
             debug("CZ_Tracker prepared.")
 
@@ -1100,70 +1105,13 @@ class BGS:
                     "entry.598281": self.info["conflict_type"],
                     "entry.425131010": self.info.get("location", ""),
                     "entry.1721323758": self.info.get("intensity", ""),
+                    "entry.1369317060": self.info["weight"],
                     "entry.703400232": presumed,
                     "entry.362734975": actual,
-                    "entry.1588781896": self.__post_logs(),
                     "usp": "pp_url",
                 }
             BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
-        
-        # в теории - это временно. отправка логов на удалённый сервер для возможности их анализа.
-        def __post_logs(self) -> str:
-            temp_folder = tempfile.gettempdir()
-            game_logs_folder = os.path.join(os.path.expanduser('~'), "Saved Games\\Frontier Developments\\Elite Dangerous")
-
-            # добываем игровой логфайл текущей сессии
-            latest = ""
-            for filename in os.listdir(game_logs_folder):
-                if "Journal" in filename:
-                    if filename > latest:
-                        latest = filename
-
-            # список необходимых файлов
-            logs = []
-            logs.append(os.path.join(temp_folder, "EDMarketConnector.log"))
-            logs.append(os.path.join(game_logs_folder, latest))
-            for root, _, files in os.walk(os.path.join(temp_folder, "EDMarketConnector")):
-                for file in files:
-                    logs.append(os.path.join(root, file))
-            debug(f"SEND_LOGS: created list of logfiles, {len(logs)} items inside")
-            
-            # сжимаем в зип
-            zip = os.path.join(temp_folder, f"{self.info['cmdr']}-{datetime.utcnow().strftime('%d%m%Y_%H%M%S')}.zip")
-            with zipfile.ZipFile(zip, "w") as zipf:
-                for file in logs:
-                    zipf.write(file, arcname=os.path.basename(file))
-            debug("SEND_LOGS: created temp .zip")
-
-            # отправляем
-            debug("SEND_LOGS: sending .zip on remote server")
-            server = requests.get("https://api.gofile.io/getServer").json()["data"]["server"]
-            api_url = f"https://{server}.gofile.io/uploadFile"
-            with open(zip, 'rb') as content:
-                file = {"file": content.read()}
-
-            for i in range(10):
-                try:
-                    response = requests.post(api_url, files=file)
-                except requests.exceptions.RequestException as e:
-                    error(f"SEND_LOGS: failed to send logs, exception \"{e}\" occured (attempt {i+1})")
-                    break
-                else:
-                    debug(f"SEND_LOGS: status code: {response.status_code} (attempt {i+1})")
-                    if response.status_code == 200:
-                        break
-            else:
-                error(f"SEND_LOGS: 10 FAILED ATTEMPTS OF POSTING LOGFILES. Latest response: {response}")
-
-            # удаляем зипку
-            os.remove(zip)
-            debug(f"SEND_LOGS: deleted temp .zip")
-
-            if response.status_code == 200:
-                return response.json()["data"]["downloadPage"]
-            else:
-                return "[SENDING FAILED]"
 
         def __reset(self):
             self.in_conflict = False
