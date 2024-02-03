@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-import threading, requests, traceback, json, os, sys, zipfile, tempfile, sqlite3
+import threading, requests, traceback, json, os, sys, sqlite3
 import tkinter as tk
 
 from math import sqrt, pow
@@ -1096,18 +1096,18 @@ class BGS:
         
 
         def __send_results(self, presumed: str, actual: str):
-            url = f'{URL_GOOGLE}/1FAIpQLSdA6u9GTM1yWJ55g9sCYb8Mv4sFs6iiZPhiVR_F6dTeIsYX9g/formResponse'
+            url = f'{URL_GOOGLE}/1FAIpQLSddtVQ6ai9uByWiZgXK_xSzwDEB17UzDvMqjSx1NJxwprhkvQ/formResponse'
             url_params = {
-                    "entry.1230568805": self.info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                    "entry.288262122": self.info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                    "entry.1311116543": self.info["cmdr"],
-                    "entry.338648635": self.info["system"],
-                    "entry.598281": self.info["conflict_type"],
-                    "entry.425131010": self.info.get("location", ""),
-                    "entry.1721323758": self.info.get("intensity", ""),
-                    "entry.1369317060": self.info["weight"],
-                    "entry.703400232": presumed,
-                    "entry.362734975": actual,
+                    "entry.1602235775": self.info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                    "entry.493215024": self.info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                    "entry.546796530": self.info["cmdr"],
+                    "entry.1927752700": self.info["system"],
+                    "entry.608797654": self.info["conflict_type"],
+                    "entry.1376410536": self.info.get("location", ""),
+                    "entry.1838705071": self.info.get("intensity", ""),
+                    "entry.179687579": self.info["weight"],
+                    "entry.1782663879": presumed,
+                    "entry.197233273": actual,
                     "usp": "pp_url",
                 }
             BasicThread(target=lambda: requests.get(url, params=url_params)).start()
