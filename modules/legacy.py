@@ -1,13 +1,15 @@
 ﻿# -*- coding: utf-8 -*-
-import threading, requests, traceback, json, os, sys, zipfile, tempfile
+import threading, requests, traceback, json, os, sys, sqlite3
 import tkinter as tk
 
-from  math import sqrt, pow
-from .debug import debug, error
-from datetime import datetime, timezone
+from math import sqrt, pow
+from datetime import datetime
 from collections import deque
 from tkinter import font
+from .debug import debug, error
 from .lib.conf import config
+from .lib.thread import Thread, BasicThread
+from .player import Player
 
 try:#py3
     from urllib.parse import quote_plus
@@ -558,54 +560,131 @@ class NHSS(threading.Thread):
 
 
 class BGS:
-    def __init__(self):
-        self.CURRENT_MISSIONS_FILE = f"{os.path.expanduser('~')}\\AppData\\Local\\EDMarketConnector\\currentmissions.trmv"
-        self.mainfaction = ""
-        self.threadlock = threading.Lock()
+    _missions_tracker = None
+    _cz_tracker = None
+    _threadlock = threading.Lock()
+    _systems = list()
 
-    def set_systems(self, systems: list):
-        self.systems = systems
+    @classmethod
+    def setup(cls):
+        BGS._missions_tracker = BGS.Missions_Tracker()
+        BGS._cz_tracker = BGS.CZ_Tracker()
+        BGS.Systems_Updater(BGS._systems).start()
 
-    def check_event(self, cmdr, system, station, entry):
-        if hasattr(self, "systems"):
-            self.threadlock.acquire()
+    class Systems_Updater(Thread):
+        def __init__(self, systems_list: list):
+            super().__init__(name="BGS systems list updater")
+            self.systems_list = systems_list
+        def do_run(self):
+            url = "https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140"
+            attempts = 0
+            while True:
+                attempts += 1
+                response = requests.get(url)
+                if response.status_code == 200:
+                    self.systems_list.clear()
+                    self.systems_list += str(response.json()["files"]["systems"]["content"]).split('\n')
+                    debug("[BGS.setup] Got list of systems to track.")
+                    return
+                error("[BGS.setup] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempts)
+                self.thread.sleep(10)
+
+    @classmethod
+    def journal_entry(cls, cmdr, system, station, entry):
+        with cls._threadlock:
             try:
-                event = entry["event"]
-                # стыковка/вход в игру на станции
-                if event == "Docked" or (event == "Location" and entry["Docked"] == True):
-                    self.__setFaction(entry)
-                # принятие миссии
-                elif event == "MissionAccepted":
-                    self.__missionAccepted(entry, system)
-                # сдача миссии
-                elif event == "MissionCompleted":
-                    self.__missionCompleted(entry, cmdr)
-                # провал миссии
-                elif event == "MissionFailed":
-                    self.__missionFailed(entry, cmdr)
-                # отказ от миссии
-                elif event == "MissionAbandoned":
-                    self.__missionAbandoned(entry)
-                # ваучеры
-                elif event == "RedeemVoucher":
-                    self.__redeemVoucher(entry, cmdr, system)
-                # картография
-                elif "SellExplorationData" in event:
-                    self.__explorationData(entry, cmdr, system, station)
-            
+                cls._missions_tracker.process_entry(cmdr, system, station, entry)
+                cls._cz_tracker.process_entry(cmdr, system, entry)
             except:
                 error(traceback.format_exc())
-            self.threadlock.release()
 
-    def __setFaction(self, entry):
-        debug(f"MAIN_FACTION: detected \"{entry['event']}\"")
-        self.mainfaction = entry["StationFaction"]["Name"]
-        debug(f"MAIN_FACTION: main_faction set to \"{self.mainfaction}\"")
+    @classmethod
+    def stop(cls):
+        with cls._threadlock:
+            cls._missions_tracker.stop()
 
 
-    def __missionAccepted(self, entry, system):
-        debug("MISSION_ACCEPTED: detected MissionAccepted")
-        if system in self.systems or entry.get("DestinationSystem", "") in self.systems:
+    class Missions_Tracker:
+        def __new__(cls):
+            if BGS._missions_tracker is None:
+                return super().__new__(cls)
+            raise RuntimeError("not allowed, use BGS module instead")
+        
+        def __init__(self):
+            # БД будет храниться в EDMC-Triumvirate/data
+            path = os.path.normpath(os.path.dirname(__file__) + "\\..\\data")
+            self.db = sqlite3.connect(path + "\\missions.db", check_same_thread=False)
+            self.__query("CREATE TABLE IF NOT EXISTS missions (id, payload)")
+            self.main_faction = ""
+
+        def stop(self):
+            self.__prune_expired()
+            self.db.close()
+        
+        def __query(self, query: str, *args, fetchall: bool = False):
+            cur = self.db.cursor()
+            query = query.strip()
+            q_type = query[:query.find(' ')].upper()
+            cur.execute(query, args)
+            if q_type == "SELECT":
+                if fetchall:
+                    result = cur.fetchall()
+                else:
+                    result = cur.fetchone()
+            else:
+                self.db.commit()
+            cur.close()
+            return result if q_type == "SELECT" else None
+        
+        def __prune_expired(self):
+            debug("[BGS.prune_expired] Clearing the database from expired missions.")
+            expired_missions = []
+            now = datetime.utcnow()
+            missions_list = self.__query("SELECT id, payload FROM missions", fetchall=True)
+            for id, payload in missions_list:
+                mission = json.loads(payload)
+                if "Megaship" not in mission["type"]:
+                    expires = datetime.strptime(mission["expires"], "%Y-%m-%dT%H:%M:%SZ")
+                    if expires <= now:
+                        expired_missions.append(id)
+            for id in expired_missions:
+                self.__query("DELETE FROM missions WHERE id = ?", id)
+                debug("[BGS.prune_expired] Mission {} was deleted.", id)
+            debug("[BGS.prune_expired] Done.")
+
+        # Методы обработки логов:
+
+        def process_entry(self, cmdr, system, station, entry):
+            event = entry["event"]
+            # стыковка/вход в игру на станции
+            if event == "Docked" or (event == "Location" and entry["Docked"] == True):
+                self.__set_faction(entry)
+            # принятие миссии
+            elif event == "MissionAccepted" and system in BGS._systems:
+                self.__mission_accepted(entry, system)
+            # сдача миссии
+            elif event == "MissionCompleted":
+                self.__mission_completed(entry, cmdr)
+            # провал миссии
+            elif event == "MissionFailed":
+                self.__mission_failed(entry, cmdr)
+            # отказ от миссии
+            elif event == "MissionAbandoned":
+                self.__mission_abandoned(entry)
+            # ваучеры
+            elif event == "RedeemVoucher":
+                self.__redeem_voucher(entry, cmdr, system)
+            # картография
+            elif "SellExplorationData" in event:
+                self.__exploration_data(entry, cmdr, system, station)
+            
+
+        def __set_faction(self, entry):
+            self.main_faction = entry["StationFaction"]["Name"]
+            debug("[BGS.set_faction]: detected {!r}, main_faction set to {!r}", entry["event"], self.main_faction)
+
+
+        def __mission_accepted(self, entry, system):
             mission = {
                 "timestamp": entry["timestamp"],
                 "ID": entry["MissionID"],
@@ -613,98 +692,63 @@ class BGS:
                 "type": entry["Name"],
                 "system": system,
                 "faction": entry["Faction"],
-                "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction", "") != "" else "",
+                "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction") else "",
                 "faction2": entry.get("TargetFaction", ""),
             }
-            debug("MISSION_ACCEPTED: saved data: " + str(mission))
-            with open(self.CURRENT_MISSIONS_FILE, "a", encoding="utf8") as missions_file:
-                missions_file.write(json.dumps(mission) + '\n')
-                debug("MISSION_ACCEPTED: saved to currentmissions")
-        else:
-            debug("MISSION_ACCEPTED: we are not interested in this system, skipping")
+            self.__query("INSERT INTO missions (id, payload) VALUES (?, ?)", mission["ID"], json.dumps(mission))
+            debug("[BGS.mission_accepted] Mission {!r} was accepted and saved to the database.", mission["ID"])
 
 
-    def __missionCompleted(self, entry, cmdr):
-        debug("MISSION_COMPLETE: detected MissionCompleted")
-        with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
-            missions_list = missions_file.readlines()
-            debug("MISSION_COMPLETE: read currentmissions")
-        completed_mission = dict()
-        debug("MISSION_COMPLETE: created empty dict 'completed_mission'")
-        with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
-            debug("MISSION_COMPLETE: opened currentmissions for editing")
-            for line in missions_list:
-                mission = json.loads(line)
-                debug("MISSION_COMPLETE: mission: " + str(mission))
-                if mission["ID"] != entry["MissionID"]:
-                    debug("MISSION_COMPLETE: not what we're looking for, saving to currentmissions")
-                    missions_file.write(line)
-                else:
-                    debug("MISSION_COMPLETE: found what we're looking for, completed_mission = mission")
-                    completed_mission = mission
-        if completed_mission == {}:
-            debug("MISSION_COMPLETE: WARNING: mission not found, exiting")
-            return
-        
-        factions_inf = dict()
-        debug("MISSION_COMPLETE: created empty dict for influence")
-        for faction in entry["FactionEffects"]:
-            debug("MISSION_COMPLETE: current faction: " + str(faction))
-            # на случай, если вторая фракция не прописана в ивенте
-            if faction["Faction"] == "":
-                debug("MISSION_COMPLETE: WARNING: second faction is empty")
-                if completed_mission["faction2"] == "":     # её нет и в MissionAccepted: игнорируем
-                    debug("MISSION_COMPLETE: second faction not found in MissionAccepted, ignoring")
-                    continue
-                else:                                       # она есть в MissionAccepted: копируем оттуда
-                    debug("MISSION_COMPLETE: second faction found in MissionAccepted, copying")
-                    faction["Faction"] = completed_mission["faction2"]
-            factions_inf[faction["Faction"]] = len(faction["Influence"][0]["Influence"])
-            debug("MISSION_COMPLETE: influence written: " + str(factions_inf[faction["Faction"]]))
-            if faction["Influence"][0]["Trend"] == "DownBad":
-                debug("MISSION_COMPLETE: trend 'downbad', changing sign to minus")
-                factions_inf[faction["Faction"]] *= -1
-        
-        url_params = {
+        def __mission_completed(self, entry, cmdr):
+            mission_id = entry["MissionID"]
+            result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
+            if result is None:
+                debug("[BGS.mission_completed] Mission {!r} was completed, but not found in the database.", mission_id)
+                return
+            self.__query("DELETE FROM missions WHERE id = ?", mission_id)
+            debug("[BGS.mission_completed] Mission {!r} was completed and deleted from the database.", mission_id)
+
+            mission = json.loads(result[0])
+            inf_changes = dict()
+            for item in entry["FactionEffects"]:
+                # Название второй фракции может быть не прописано в MissionCompleted.
+                # Если оно было в MissionAccepted, копируем оттуда.
+                if item["Faction"] == "" and mission["faction2"] != "":
+                    item["Faction"] = mission["faction2"]
+                # inf_changes = { faction (str): influence_change (int) }
+                inf_changes[item["Faction"]] = len(item["Influence"][0]["Influence"])
+                if item["Influence"][0]["Trend"] == "DownBad":
+                    inf_changes[item["Faction"]] *= -1
+            
+            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse'
+            url_params = {
                 "entry.1839270329": cmdr,
-                "entry.1889332006": completed_mission["type"],
+                "entry.1889332006": mission["type"],
                 "entry.350771392": "COMPLETED",
-                "entry.592164382": completed_mission["system"],
-                "entry.1812690212": completed_mission["faction"],
-                "entry.179254259": factions_inf[completed_mission["faction"]],
-                "entry.739461351": completed_mission["system2"],
-                "entry.887402348": completed_mission["faction2"],
-                "entry.1755429366": factions_inf.get(completed_mission["faction2"], ""),
+                "entry.592164382": mission["system"],
+                "entry.1812690212": mission["faction"],
+                "entry.179254259": inf_changes[mission["faction"]],
+                "entry.739461351": mission["system2"],
+                "entry.887402348": mission["faction2"],
+                "entry.1755429366": inf_changes.get(mission["faction2"], ""),
+                "usp": "pp_url",
             }
-        url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-        debug("MISSION_COMPLETE: link: " + url)
-        Reporter(url).start()
-        debug("MISSION_COMPLETE: successfully sent to google sheet")
+            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
-    def __missionFailed(self, entry, cmdr):
-        debug("MISSION_FAILED: detected MissionFailed")
-        with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
-            missions_list = missions_file.readlines()
-            debug("MISSION_FAILED: read currentmissions")
-        failed_mission = dict()
-        debug("MISSION_FAILED: created emtpy dict 'failed_mission'")
-        with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
-            debug("MISSION_FAILED: opened currentmissions for editing")
-            for line in missions_list:
-                mission = json.loads(line)
-                debug("MISSION_FAILED: mission: " + str(mission))
-                if mission["ID"] != entry["MissionID"]:
-                    debug("MISSION_FAILED: not what we're looking for, saving to currentmissions")
-                    missions_file.write(line)
-                else:
-                    debug("MISSION_FAILED: found what we're looking for, completed_mission = mission")
-                    failed_mission = mission
-        if failed_mission == {}:
-            debug("MISSION_FAILED: WARNING: mission not found, exiting")
-            return
+        def __mission_failed(self, entry, cmdr):
+            mission_id = entry["MissionID"]
+            debug("MISSION FAILED {}", mission_id)
+            result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
+            if result is None:
+                debug("[BGS.mission_failed] Mission {!r} was failed, but not found in the database.", mission_id)
+                return
+            self.__query("DELETE FROM missions WHERE id = ?", mission_id)
+            debug("[BGS.mission_failed] Mission {!r} was failed and deleted from the database.", mission_id)
 
-        url_params = {
+            failed_mission = json.loads(result[0])
+            url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse'
+            url_params = {
                 "entry.1839270329": cmdr,
                 "entry.1889332006": failed_mission["type"],
                 "entry.350771392": "FAILED",
@@ -714,486 +758,363 @@ class BGS:
                 "entry.739461351": failed_mission["system2"],
                 "entry.887402348": failed_mission["faction2"],
                 "entry.1755429366": "-2" if failed_mission["system2"] != "" else "",
+                "usp": "pp_url",
             }
-        url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-        debug("MISSION_FAILED: link: " + url)
-        Reporter(url).start()
-        debug("MISSION_FAILED: successfully sent to google sheet")
+            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
-    def __missionAbandoned(self, entry):
-        debug("MISSION_ABANDONED: detected MissionAbandoned")
-        with open(self.CURRENT_MISSIONS_FILE, "r", encoding="utf8") as missions_file:
-            missions_list = missions_file.readlines()
-            debug("MISSION_ABANDONED: read currentmissions")
-        with open(self.CURRENT_MISSIONS_FILE, "w", encoding="utf8") as missions_file:
-            debug("MISSION_ABANDONED: opened currentmissions for editing")
-            for line in missions_list:
-                mission = json.loads(line)
-                debug("MISSION_ABANDONED: mission: " + str(mission))
-                if mission["ID"] != entry["MissionID"]:
-                    debug("MISSION_ABANDONED: not id we're searching for. writing to file")
-                    missions_file.write(line)
-                elif mission["type"] == "Mission_HackMegaship" or mission["type"] == "MISSION_DisableMegaship":
-                    debug("MISSION_ABANDONED: id found, but it's related to megaships - writing to file")
-                    missions_file.write(line)
-                else:
-                    debug("MISSION_ABANDONED: found id, skipping")
+        def __mission_abandoned(self, entry):
+            mission_id = entry["MissionID"]
+            debug("MISSION ABANDONED {}", mission_id)
+            result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
+            if result is None:
+                debug("[BGS.mission_abandoned] Mission {!r} was abandoned, but not found in the database.", mission_id)
+                return
+            
+            mission = json.loads(result[0])
+            if "Megaship" not in mission["type"]:
+                self.__query("DELETE FROM missions WHERE id = ?", mission_id)
+                debug("[BGS.mission_abandoned] Mission {!r} was abandoned and deleted from the database.", mission_id)
 
 
-    def __redeemVoucher(self, entry, cmdr, system):
-        if self.mainfaction != "FleetCarrier":
-            if "BrokerPercentage" not in entry:                 # игнорируем юристов
-                debug("REDEEM_VOUCHER: detected RedeemVoucher")
-                if system not in self.systems:
-                    debug("REDEEM_VOUCHER: we are not interested in this system, skipping")
-                else:
-                    if entry["Type"] != "bounty":
-                        debug(f"REDEEM_VOUCHER: type \"{entry['Type']}\", skipping")
-                    else:
-                        debug("REDEEM_VOUCHER: type \"Bounty\"")
-                        for faction in entry["Factions"]:
-                            debug("REDEEM_VOUCHER: current faction: " + str(faction))
-                            url_params = {
-                                "entry.503143076": cmdr,
-                                "entry.1108939645": "bounty",
-                                "entry.127349896": system,
-                                "entry.442800983": "",
-                                "entry.48514656": faction["Faction"],
-                                "entry.351553038": faction["Amount"],
-                            }
-                            url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-                            debug("REDEEM_VOUCHER: link: " + url)
-                            Reporter(url).start()
-                            debug("REDEEM_VOUCHER: successfully sent to google sheet")
+        def __redeem_voucher(self, entry, cmdr, system):
+            # Игнорируем флитаки, юристов и лишние типы выплат.
+            if self.main_faction == "FleetCarrier" or "BrokerPercentage" in entry or entry["Type"] != "bounty":
+                return
+            
+            debug("[BGS.redeem_voucher] Redeeming vouchers:")
+            for faction in entry["Factions"]:
+                debug("[BGS.redeem_voucher] Faction {!r}, amount: {}", faction["Faction"], faction["Amount"])
+                url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse'
+                url_params = {
+                    "entry.503143076": cmdr,
+                    "entry.1108939645": "bounty",
+                    "entry.127349896": system,
+                    "entry.442800983": "",
+                    "entry.48514656": faction["Faction"],
+                    "entry.351553038": faction["Amount"],
+                    "usp": "pp_url",
+                }
+                BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
-    def __explorationData(self, entry, cmdr, system, station):
-        if self.mainfaction != "FleetCarrier":
-            debug(f"SELL_EXP_DATA: detected \"{entry['event']}\"")
-            if system not in self.systems:
-                debug("SELL_EXP_DATA: we are not interested in this system, skipping")
-            else:
+        def __exploration_data(self, entry, cmdr, system, station):
+            if self.main_faction != "FleetCarrier":
+                url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse'
                 url_params = {
                     "entry.503143076": cmdr,
                     "entry.1108939645": "SellExpData",
                     "entry.127349896": system,
                     "entry.442800983": station,
-                    "entry.48514656": self.mainfaction,
+                    "entry.48514656": self.main_faction,
                     "entry.351553038": entry["TotalEarnings"],
+                    "usp": "pp_url"
                 }
-                url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-                debug("SELL_EXP_DATA: link: " + url)
-                Reporter(url).start()
-                debug("SELL_EXP_DATA: successfully sent to google sheet")
+                debug("[BGS.exploration_data]: Sold exploration data for {} credits, station's owner: {!r}",
+                    entry["TotalEarnings"],
+                    self.main_faction)
+                BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
-    def __del__(self):
-        try:
-            self.threadlock.acquire()
-            # Очистка файла миссий от устаревших, чей результат выполнения не был "пойман"
-            debug("Clearing missions file from old entries")
-            missionslist = []
-            with open(self.CURRENT_MISSIONS_FILE, 'r', encoding='utf8') as missionsfile:
-                count = 0
-                for line in missionsfile:
-                    missionslist.append(line)
-                    count += 1
-                debug(f"Lines read: {count}")
-            with open(self.CURRENT_MISSIONS_FILE, 'w', encoding='utf8') as missionsfile:
-                now = datetime.utcnow()
-                saved = ignored = 0
-                for line in missionslist:
-                    try:
-                        mission = json.loads(line)
-                        if mission["type"] in ("Mission_HackMegaship", "MISSION_DisableMegaship"):
-                            debug(f"Mission {mission['ID']} is related to megaships and doesn't have the 'expires' field.")
-                            missionsfile.write(line)
-                            saved += 1
-                            continue
-                        else:
-                            expires = datetime.strptime(mission["expires"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-                    except json.JSONDecodeError:
-                        ignored += 1
-                    except KeyError:
-                        debug(f"Mission {mission['ID']} is written in the old format and doesn't have the 'expires' field.")
-                        missionsfile.write(line)
-                        saved += 1
-                    else:
-                        if expires > now:
-                            missionsfile.write(line)
-                            saved += 1
-                        else:
-                            debug(f"Mission {mission['ID']} expired.")
-            debug(f"Missions saved: {saved}, lines skipped: {ignored} (not valid json strings).")
-        except:
-            error(traceback.format_exc())
-        self.threadlock.release()
+    class CZ_Tracker:
+        def __new__(cls):
+            if BGS._cz_tracker is None:
+                return super().__new__(cls)
+            raise RuntimeError("not allowed, use BGS module instead")
+        
+        def __init__(self):
+            self.in_conflict = False
+            self.safe = False       # на случай, если плагин запускается посреди игры, и мы не знаем режим
 
 
-
-class CZ_Tracker:
-    def __init__(self):
-        self.threadlock = threading.Lock()
-        self.in_conflict = False
-        self.safe = False       # на случай, если плагин запускается посреди игры, и мы не знаем режим
-        self.systems = []
-
-    def set_systems(self, systems: list):
-        self.systems = systems
-
-
-    def process_entry(self, cmdr, system, entry):
-        # проверка режима игры
-        if entry["event"] == "LoadGame":
-            self.safe = entry["GameMode"] != "Open"
-            debug("CZ_Tracker: safe set to {!r}", self.safe)
-
-        if system in self.systems:
-            self.threadlock.acquire()
-            try:
-                event = entry["event"]
+        def process_entry(self, cmdr, system, entry):
+            event = entry["event"]
+            # проверка режима игры
+            if event == "LoadGame":
+                self.safe = entry["GameMode"] != "Open"
+                debug("CZ_Tracker: safe set to {!r}", self.safe)
+                return
+            
+            if system in BGS._systems:
                 if self.in_conflict == False:
                     # начало конфликта (космос)
                     if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
                         self.__start_conflict(cmdr, system, entry, "Space")
-
                     # начало конфликта (ноги)
                     elif (event == "ApproachSettlement"
-                          and entry["StationFaction"].get("FactionState", "") == "War"
-                          and "dock" not in entry["StationServices"]):
+                        and entry["StationFaction"].get("FactionState", "") == "War"
+                        and "dock" not in entry["StationServices"]):
                         self.__start_conflict(cmdr, system, entry, "Foot")
-
                 else:
                     # убийство
                     if event == "FactionKillBond":
                         self.__kill(entry)
-
                     # сканирование корабля
                     elif event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
                         self.__ship_scan(entry)
-                    
                     # отслеживание сообщений, потенциальное завершение конфликта
                     elif event == "ReceiveText":
                         self.__patrol_message(entry)
-
                     # завершение конфликта: прыжок
                     elif event == "StartJump":
                         self.__end_conflict()
-
                     # завершение конфликта: возврат на шаттле (ноги)
                     elif event == "BookDropship" and entry["Retreat"] == True:
                         self.__end_conflict()
-
                     # досрочный выход
-                    elif (event in ("Shutdown", "Died", "CancelDropship")
-                          or event == "Music" and entry["MusicTrack"] == "MainMenu"):
+                    elif (event in ("Shutdown", "Died", "CancelDropship") or
+                          event == "Music" and entry["MusicTrack"] == "MainMenu"):
                         self.__reset()
 
-            except:
-                error(traceback.format_exc())
-            self.threadlock.release()
+            
+        def __start_conflict(self, cmdr, system, entry, c_type):
+            debug("CZ_Tracker: detected entering a conflict zone, {!r} type.", c_type)
+            self.in_conflict = True
+            self.end_messages = deque(5*[None], 5)
+
+            if c_type == "Space":
+                self.info = {
+                    "cmdr": cmdr,
+                    "system": system,
+                    "conflict_type": "Space",
+                    "allegiances": {},
+                    "player_fights_for": None,
+                    "kills": 0,
+                    "kills_limit": 5,
+                    "start_time": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
+                    "end_time": None
+                }
+                intensity = entry["Type"]
+                intensity = intensity[19:intensity.find(":")]
+                if intensity == "Med":
+                    intensity = "Medium"
+                self.info["intensity"] = intensity
+                match intensity:
+                    case "Low":     self.info["weight"] = 0.25
+                    case "Medium":  self.info["weight"] = 0.5
+                    case "High":    self.info["weight"] = 1
+
+            elif c_type == "Foot":
+                self.info = {
+                    "cmdr": cmdr,
+                    "system": system,
+                    "conflict_type": "Foot",
+                    "location": entry["Name"],
+                    "weight": 0.25,
+                    "allegiances": {},
+                    "player_fights_for": None,
+                    "kills": 0,
+                    "kills_limit": 20,
+                    "start_time": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
+                    "end_time": None,
+                }
+
+            debug("CZ_Tracker prepared.")
+
+
+        def __kill(self, entry):
+            if not self.info["player_fights_for"]:
+                self.info["player_fights_for"] = entry["AwardingFaction"]
+
+            for conflict_side in (entry["AwardingFaction"], entry["VictimFaction"]):
+                if conflict_side not in self.info["allegiances"]:
+                    self.info["allegiances"][conflict_side] = None
+                    debug("CZ_Tracker: faction {!r} added to the list.", conflict_side)
+
+            self.info["kills"] += 1
+            debug("CZ_Tracker: detected FactionKillBond, awarding {!r}, victim {!r}. {} kills.",
+                entry["AwardingFaction"],
+                entry["VictimFaction"],
+                self.info["kills"])
+        
+
+        def __ship_scan(self, entry):
+            if "$ShipName_Military" in entry["PilotName"]:
+                conflict_side = entry["Faction"]
+                allegiance = entry["PilotName"][19:-1]
+                if conflict_side not in self.info["allegiances"]:
+                    self.info["allegiances"][conflict_side] = allegiance
+                    debug("CZ_Tracker: detected military ship scan. Faction {!r} added to the list, allegiance {!r}.", conflict_side, allegiance)
 
         
-    def __start_conflict(self, cmdr, system, entry, c_type):
-        debug("CZ_Tracker: detected entering a conflict zone, {!r} type.", c_type)
-        self.in_conflict = True
-        self.end_messages = deque(5*[None], 5)
-
-        if c_type == "Space":
-            self.info = {
-                "cmdr": cmdr,
-                "system": system,
-                "conflict_type": "Space",
-                "allegiances": {},
-                "player_fights_for": None,
-                "kills": 0,
-                "kills_limit": 5,
-                "start_time": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
-                "end_time": None
-            }
-            intensity = entry["Type"]
-            intensity = intensity[19:intensity.find(":")]
-            if intensity == "Med":
-                intensity = "Medium"
-            self.info["intensity"] = intensity
-
-        elif c_type == "Foot":
-            self.info = {
-                "cmdr": cmdr,
-                "system": system,
-                "conflict_type": "Foot",
-                "allegiances": {},
-                "player_fights_for": None,
-                "kills": 0,
-                "kills_limit": 20,
-                "start_time": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
-                "end_time": None,
-            }
-            self.info["location"] = entry["Name"]
-
-        debug("CZ_Tracker prepared.")
+        def __patrol_message(self, entry):
+            # Логика следующая: получаем 5 "патрулирующих" сообщений за 15 секунд - 
+            # считаем конфликт завершённым.
+            # По имени фильтруем, чтобы случайно не поймать последним такое сообщение, например, от спецкрыла
+            # и сломать определение принадлежности победителя.
+            if "$Military_Passthrough" in entry["Message"] and "$ShipName_Military" in entry["From"]:
+                debug("CZ_Tracker: detected patrol message sent by a {} ship.", entry["From"][19:-1])
+                timestamp = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+                self.end_messages.append(timestamp)
+                if self.end_messages[0] != None:
+                    if (self.end_messages[4] - self.end_messages[0]).seconds <= 15:
+                        debug("CZ_Tracker: got 5 patrol messages in 15 seconds, calling END_CONFLICT.")
+                        self.__end_conflict(entry["From"][19:-1])
 
 
-    def __kill(self, entry):
-        if not self.info["player_fights_for"]:
-            self.info["player_fights_for"] = entry["AwardingFaction"]
+        def __end_conflict(self, winners_allegiance: str | None = None):
+            debug("CZ_Tracker: END_CONFLICT called, calculating the result.")
+            self.info["end_time"] = datetime.utcnow()
+            factions_list = list(self.info["allegiances"].items())
+            presumed_winner = "[UNKNOWN]"
 
-        for conflict_side in (entry["AwardingFaction"], entry["VictimFaction"]):
-            if conflict_side not in self.info["allegiances"]:
-                self.info["allegiances"][conflict_side] = None
-                debug("CZ_Tracker: faction {!r} added to the list.", conflict_side)
+            if winners_allegiance and self.safe:        # если мы получили принадлежность из патрулирующих сообщений и не в опене
+                '''
+                Что дальше вообще происходит. Объяснение в первую очередь для меня самого, потому что через неделю забуду ведь.
+                Если принадлежность обеих фракций одинаковая - победителя не установить. Игнорируем этот вариант.
+                Если принадлежность разная, есть 2 варианта:
+                1 - принадлежность обеих фракций известна. Всё просто, тупо сравниваем их с принадлежностью победителя.
+                2 - у одной из фракций принадлежность неизвестна. Тут чуть сложнее:
+                    а) если единственная известная принадлежность совпадает с принадлежностью победителя - мы не можем быть уверены,
+                    что у второй фракции принадлежность отличается. Предсказание невозможно.
+                    б) единственная известная принадлежность не совпадает с принадлежностью победителя - тогда это точно вторые.
+                '''
+                if factions_list[0][1] != factions_list[1][1]:
+                    if None not in (factions_list[0][1], factions_list[1][1]):
+                        for index, faction in enumerate(factions_list):
+                            if faction[1] == winners_allegiance:
+                                presumed_winner = factions_list[index][0]
+                    else:
+                        for index, faction in enumerate(factions_list):
+                            if faction[1] != None and faction[1] != winners_allegiance:
+                                presumed_winner = factions_list[index-1][0]         # index-1 будет либо 0, либо -1, что при двух фракциях == 1
 
-        self.info["kills"] += 1
-        debug("CZ_Tracker: detected FactionKillBond, awarding {!r}, victim {!r}. {} kills.",
-              entry["AwardingFaction"],
-              entry["VictimFaction"],
-              self.info["kills"])
-    
-
-    def __ship_scan(self, entry):
-        if "$ShipName_Military" in entry["PilotName"]:
-            conflict_side = entry["Faction"]
-            allegiance = entry["PilotName"][19:-1]
-            if conflict_side not in self.info["allegiances"]:
-                self.info["allegiances"][conflict_side] = allegiance
-                debug("CZ_Tracker: detected military ship scan. Faction {!r} added to the list, allegiance {!r}.", conflict_side, allegiance)
-
-    
-    def __patrol_message(self, entry):
-        # Логика следующая: получаем 5 "патрулирующих" сообщений за 15 секунд - 
-        # считаем конфликт завершённым.
-        # По имени фильтруем, чтобы случайно не поймать последним такое сообщение, например, от спецкрыла
-        # и сломать определение принадлежности победителя.
-        if "$Military_Passthrough" in entry["Message"] and "$ShipName_Military" in entry["From"]:
-            debug("CZ_Tracker: detected patrol message sent by a {} ship.", entry["From"][19:-1])
-            timestamp = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
-            self.end_messages.append(timestamp)
-            if self.end_messages[0] != None:
-                if (self.end_messages[4] - self.end_messages[0]).seconds <= 15:
-                    debug("CZ_Tracker: got 5 patrol messages in 15 seconds, calling END_CONFLICT.")
-                    self.__end_conflict(entry["From"][19:-1])
-
-
-    def __end_conflict(self, winners_allegiance: str | None = None):
-        debug("CZ_Tracker: END_CONFLICT called, calculating the result.")
-        self.info["end_time"] = datetime.utcnow()
-        factions_list = list(self.info["allegiances"].items())
-        presumed_winner = "[UNKNOWN]"
-
-        if winners_allegiance and self.safe:        # если мы получили принадлежность из патрулирующих сообщений и не в опене
-            '''
-            Что дальше вообще происходит. Объяснение в первую очередь для меня самого, потому что через неделю забуду ведь.
-            Если принадлежность обеих фракций одинаковая - победителя не установить. Игнорируем этот вариант.
-            Если принадлежность разная, есть 2 варианта:
-            1 - принадлежность обеих фракций известна. Всё просто, тупо сравниваем их с принадлежностью победителя.
-            2 - у одной из фракций принадлежность неизвестна. Тут чуть сложнее:
-                а) если единственная известная принадлежность совпадает с принадлежностью победителя - мы не можем быть уверены,
-                   что у второй фракции принадлежность отличается. Предсказание невозможно.
-                б) единственная известная принадлежность не совпадает с принадлежностью победителя - тогда это точно вторые.
-            '''
-            if factions_list[0][1] != factions_list[1][1]:
-                if None not in (factions_list[0][1], factions_list[1][1]):
-                    for index, faction in enumerate(factions_list):
-                        if faction[1] == winners_allegiance:
-                            presumed_winner = factions_list[index][0]
-                else:
-                    for index, faction in enumerate(factions_list):
-                        if faction[1] != None and faction[1] != winners_allegiance:
-                            presumed_winner = factions_list[index-1][0]         # index-1 будет либо 0, либо -1, что при двух фракциях == 1
-
-        elif self.info["kills"] < self.info["kills_limit"]:
-            debug("CZ_Tracker: not enough kills ({}/{}), resetting.", self.info["kills"], self.info["kills_limit"])
-            self.__reset()
-            return
-
-        if not self.safe:
-            debug("CZ_Tracker: we're (probably) in the Open, winner's prediction disabled.")
-        
-        debug("CZ_Tracker: presumed winner set to {!r}.", presumed_winner)
-        if presumed_winner != self.info["player_fights_for"]:
-            debug("CZ_Tracker: presumed winner isn't the player's side, asking for confirmation.")
-            index = self.__ask_user(presumed_winner)
-            if index == -1:         # игрок отменил выбор
+            elif self.info["kills"] < self.info["kills_limit"]:
+                debug("CZ_Tracker: not enough kills ({}/{}), resetting.", self.info["kills"], self.info["kills_limit"])
                 self.__reset()
                 return
-            else:
-                actual_winner = factions_list[index][0]
-        else:
-            actual_winner = presumed_winner
-        debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
 
-        self.__send_results(presumed_winner, actual_winner)
-        self.__reset()
-
-
-    def __ask_user(self, presumed_winner) -> int:
-        class Notification(tk.Tk):
-            def __init__(self, text: str, factions: list):
-                super().__init__()
-                # Это отвратительное решение, но пусть будет так.
-                # 1x - высота экрана 1080пкс. При меньшем размере экрана - всё равно используем 1x.
-                # При большем - считаем разницу с 1080, соответственно увеличиваем все размеры.
-                screen_height = self.winfo_screenheight()
-                if screen_height <= 1080:
-                    zoom_factor = 1
+            if not self.safe:
+                debug("CZ_Tracker: we're (probably) in the Open, winner's prediction disabled.")
+            
+            debug("CZ_Tracker: presumed winner set to {!r}.", presumed_winner)
+            if presumed_winner != self.info["player_fights_for"]:
+                debug("CZ_Tracker: presumed winner isn't the player's side, asking for confirmation.")
+                index = self.__ask_user(presumed_winner)
+                if index == -1:         # игрок отменил выбор
+                    self.__reset()
+                    return
                 else:
-                    zoom_factor = screen_height / 1080
-
-                self.title("Завершение зоны конфликта")
-                self.resizable(False, False)
-                self.geometry(config.get_str("CZ.Notification.position"))
-
-                default_font = font.nametofont("TkDefaultFont").actual()["family"]
-                tk.Label(self, text=text, justify="left", font=(default_font, int(9*zoom_factor))).pack(anchor="nw")
-
-                bottombox = tk.Frame(self)
-                bottombox.grid_columnconfigure(0, weight=1, uniform="group1")
-                bottombox.grid_columnconfigure(1, weight=1, uniform="group1")
-
-                tk.Button(
-                    bottombox,
-                    text=factions[0],
-                    font=(default_font, int(9*zoom_factor)),
-                    padx=int(5*zoom_factor),
-                    pady=int(3*zoom_factor),
-                    bd=int(3*zoom_factor),
-                    command=self.__first
-                    ).grid(row=0, column=0, sticky="nsew")
-                
-                tk.Button(
-                    bottombox,
-                    text=factions[1],
-                    font=(default_font, int(9*zoom_factor)),
-                    padx=int(5*zoom_factor),
-                    pady=int(3*zoom_factor),
-                    bd=int(3*zoom_factor),
-                    command=self.__second
-                    ).grid(row=0, column=1, sticky="nsew")
-                
-                tk.Button(
-                    bottombox,
-                    text="Никто (досрочный выход из зоны конфликта)",
-                    font=(default_font, int(9*zoom_factor)),
-                    padx=int(5*zoom_factor),
-                    pady=int(3*zoom_factor),
-                    bd=int(3*zoom_factor),
-                    command=self.__cancel
-                    ).grid(row=1, column=0, columnspan=2, sticky="nsew")
-                
-                bottombox.pack(expand=True, fill="x", anchor="s")
-
-            def __first(self):
-                self.result = 0
-                config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
-                self.destroy()
-
-            def __second(self):
-                self.result = 1
-                config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
-                self.destroy()
-
-            def __cancel(self):
-                self.result = -1
-                config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
-                self.destroy()
-        
-        factions = [faction for faction, _ in self.info["allegiances"].items()]
-        message = str(
-            "Зафиксировано окончание зоны конфликта.\n" +
-            "Подтвердите правильность полученных данных:\n\n" +
-            "Система: {}\n".format(self.info["system"]) +
-            ("Напряжённость: {}\n".format(self.info["intensity"]) if self.info["conflict_type"] == "Space" else "") +
-            ("Поселение: {}\n".format(self.info["location"]) if self.info["conflict_type"] == "Foot" else "") +
-            "Участвующие фракции:\n" +
-            "  - {}\n".format(factions[0]) +
-            "  - {}\n".format(factions[1]) +
-            "Предполагаемый победитель: {}\n".format(presumed_winner if presumed_winner != "[UNKNOWN]" else "НЕ ОПРЕДЕЛЁН") +
-            "Вы сражались на стороне: {}\n\n".format(self.info["player_fights_for"]) +
-            "Выберите победившую фракцию."
-        )
-        notif = Notification(message, factions)
-        notif.wait_window()
-        return notif.result
-    
-
-    def __send_results(self, presumed: str, actual: str):
-        url_params = {
-                "entry.1230568805": self.info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.288262122": self.info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.1311116543": self.info["cmdr"],
-                "entry.338648635": self.info["system"],
-                "entry.598281": self.info["conflict_type"],
-                "entry.425131010": self.info.get("location", ""),
-                "entry.1721323758": self.info.get("intensity", ""),
-                "entry.703400232": presumed,
-                "entry.362734975": actual,
-                "entry.1588781896": self.__post_logs(),
-            }
-        url = f'{URL_GOOGLE}/1FAIpQLSdA6u9GTM1yWJ55g9sCYb8Mv4sFs6iiZPhiVR_F6dTeIsYX9g/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(str(v), safe=str())}" for k, v in url_params.items()])}'
-        debug("CZ_Tracker: url: {!r}", url)
-        Reporter(url).start()
-
-    
-    # в теории - это временно. отправка логов на удалённый сервер для возможности их анализа.
-    def __post_logs(self) -> str:
-        temp_folder = tempfile.gettempdir()
-        game_logs_folder = os.path.join(os.path.expanduser('~'), "Saved Games\\Frontier Developments\\Elite Dangerous")
-
-        # добываем игровой логфайл текущей сессии
-        latest = ""
-        for filename in os.listdir(game_logs_folder):
-            if "Journal" in filename:
-                if filename > latest:
-                    latest = filename
-
-        # список необходимых файлов
-        logs = []
-        logs.append(os.path.join(temp_folder, "EDMarketConnector.log"))
-        logs.append(os.path.join(game_logs_folder, latest))
-        for root, _, files in os.walk(os.path.join(temp_folder, "EDMarketConnector")):
-            for file in files:
-                logs.append(os.path.join(root, file))
-        debug(f"SEND_LOGS: created list of logfiles, {len(logs)} items inside")
-        
-        # сжимаем в зип
-        zip = os.path.join(temp_folder, f"{self.info['cmdr']}-{datetime.utcnow().strftime('%d%m%Y_%H%M%S')}.zip")
-        with zipfile.ZipFile(zip, "w") as zipf:
-            for file in logs:
-                zipf.write(file, arcname=os.path.basename(file))
-        debug("SEND_LOGS: created temp .zip")
-
-        # отправляем
-        debug("SEND_LOGS: sending .zip on remote server")
-        server = requests.get("https://api.gofile.io/getServer").json()["data"]["server"]
-        api_url = f"https://{server}.gofile.io/uploadFile"
-        with open(zip, 'rb') as content:
-            file = {"file": content.read()}
-
-        for i in range(10):
-            try:
-                response = requests.post(api_url, files=file)
-            except requests.exceptions.RequestException as e:
-                error(f"SEND_LOGS: failed to send logs, exception \"{e}\" occured (attempt {i+1})")
-                break
+                    actual_winner = factions_list[index][0]
             else:
-                debug(f"SEND_LOGS: status code: {response.status_code} (attempt {i+1})")
-                if response.status_code == 200:
-                    break
-        else:
-            error(f"SEND_LOGS: 10 FAILED ATTEMPTS OF POSTING LOGFILES. Latest response: {response}")
+                actual_winner = presumed_winner
+            debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
 
-        # удаляем зипку
-        os.remove(zip)
-        debug(f"SEND_LOGS: deleted temp .zip")
+            self.__send_results(presumed_winner, actual_winner)
+            self.__reset()
 
-        if response.status_code == 200:
-            return response.json()["data"]["downloadPage"]
-        else:
-            return "[FAILED TO SEND LOGS TO REMOTE SERVER]"
 
-    def __reset(self):
-        self.in_conflict = False
-        self.info = None
-        self.end_messages = None
-        debug("CZ_Tracker was resetted to the initial state.")
+        def __ask_user(self, presumed_winner) -> int:
+            class Notification(tk.Tk):
+                def __init__(self, text: str, factions: list):
+                    super().__init__()
+                    Player(os.path.normpath(os.path.dirname(__file__) + "\\.."), ["sounds/cz_notification.wav"]).start()
+                    # Это отвратительное решение, но пусть будет так.
+                    # 1x - высота экрана 1080пкс. При меньшем размере экрана - всё равно используем 1x.
+                    # При большем - считаем разницу с 1080, соответственно увеличиваем все размеры.
+                    screen_height = self.winfo_screenheight()
+                    if screen_height <= 1080:
+                        zoom_factor = 1
+                    else:
+                        zoom_factor = screen_height / 1080
+
+                    self.title("Завершение зоны конфликта")
+                    self.resizable(False, False)
+                    self.geometry(config.get_str("CZ.Notification.position"))
+
+                    default_font = font.nametofont("TkDefaultFont").actual()["family"]
+                    tk.Label(self, text=text, justify="left", font=(default_font, int(9*zoom_factor))).pack(anchor="nw")
+
+                    bottombox = tk.Frame(self)
+                    bottombox.grid_columnconfigure(0, weight=1, uniform="group1")
+                    bottombox.grid_columnconfigure(1, weight=1, uniform="group1")
+
+                    tk.Button(
+                        bottombox,
+                        text=factions[0],
+                        font=(default_font, int(9*zoom_factor)),
+                        padx=int(5*zoom_factor),
+                        pady=int(3*zoom_factor),
+                        bd=int(3*zoom_factor),
+                        command=self.__first
+                        ).grid(row=0, column=0, sticky="nsew")
+                    
+                    tk.Button(
+                        bottombox,
+                        text=factions[1],
+                        font=(default_font, int(9*zoom_factor)),
+                        padx=int(5*zoom_factor),
+                        pady=int(3*zoom_factor),
+                        bd=int(3*zoom_factor),
+                        command=self.__second
+                        ).grid(row=0, column=1, sticky="nsew")
+                    
+                    tk.Button(
+                        bottombox,
+                        text="Никто (досрочный выход из зоны конфликта)",
+                        font=(default_font, int(9*zoom_factor)),
+                        padx=int(5*zoom_factor),
+                        pady=int(3*zoom_factor),
+                        bd=int(3*zoom_factor),
+                        command=self.__cancel
+                        ).grid(row=1, column=0, columnspan=2, sticky="nsew")
+                    
+                    bottombox.pack(expand=True, fill="x", anchor="s")
+
+                def __first(self):
+                    self.result = 0
+                    config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
+                    self.destroy()
+
+                def __second(self):
+                    self.result = 1
+                    config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
+                    self.destroy()
+
+                def __cancel(self):
+                    self.result = -1
+                    config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
+                    self.destroy()
+            
+            factions = [faction for faction, _ in self.info["allegiances"].items()]
+            message = str(
+                "Зафиксировано окончание зоны конфликта.\n" +
+                "Подтвердите правильность полученных данных:\n\n" +
+                "Система: {}\n".format(self.info["system"]) +
+                ("Напряжённость: {}\n".format(self.info["intensity"]) if self.info["conflict_type"] == "Space" else "") +
+                ("Поселение: {}\n".format(self.info["location"]) if self.info["conflict_type"] == "Foot" else "") +
+                "Участвующие фракции:\n" +
+                "  - {}\n".format(factions[0]) +
+                "  - {}\n".format(factions[1]) +
+                "Предполагаемый победитель: {}\n".format(presumed_winner if presumed_winner != "[UNKNOWN]" else "НЕ ОПРЕДЕЛЁН") +
+                "Вы сражались на стороне: {}\n\n".format(self.info["player_fights_for"]) +
+                "Выберите победившую фракцию."
+            )
+            notif = Notification(message, factions)
+            notif.wait_window()
+            return notif.result
+        
+
+        def __send_results(self, presumed: str, actual: str):
+            url = f'{URL_GOOGLE}/1FAIpQLSddtVQ6ai9uByWiZgXK_xSzwDEB17UzDvMqjSx1NJxwprhkvQ/formResponse'
+            url_params = {
+                    "entry.1602235775": self.info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                    "entry.493215024": self.info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                    "entry.546796530": self.info["cmdr"],
+                    "entry.1927752700": self.info["system"],
+                    "entry.608797654": self.info["conflict_type"],
+                    "entry.1376410536": self.info.get("location", ""),
+                    "entry.1838705071": self.info.get("intensity", ""),
+                    "entry.179687579": str(self.info["weight"]).replace('.', ','),
+                    "entry.1782663879": presumed,
+                    "entry.197233273": actual,
+                    "usp": "pp_url",
+                }
+            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+
+
+        def __reset(self):
+            self.in_conflict = False
+            self.info = None
+            self.end_messages = None
+            debug("CZ_Tracker was resetted to the initial state.")

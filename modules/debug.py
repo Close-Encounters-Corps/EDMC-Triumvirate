@@ -21,8 +21,11 @@ class Debug:
         cls.log = log
 
     @classmethod
-    def p(cls, value):
-        cls.log.info(value)
+    def info(cls, value, *args):
+        if cls.log.level <= logging.INFO:
+            if args:
+                value = value.format(*args)
+            cls.log.info(value)
 
     @classmethod
     def debug(cls, value, *args):
@@ -30,6 +33,13 @@ class Debug:
             if args:
                 value = value.format(*args)
             cls.log.debug(value)
+
+    @classmethod
+    def error(cls, value, *args):
+        if cls.log.level <= logging.ERROR:
+            if args:
+                value = value.format(*args)
+            cls.log.error(value)
 
     @classmethod
     def plugin_prefs(cls, parent, cmdr, is_beta, gridrow):
@@ -58,5 +68,5 @@ def debug(value, *args):
     Debug.debug(value, *args)
 
 
-def error(value):
-    Debug.p(value)
+def error(value, *args):
+    Debug.error(value, *args)
