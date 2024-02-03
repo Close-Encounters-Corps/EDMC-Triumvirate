@@ -1105,7 +1105,7 @@ class BGS:
                     "entry.608797654": self.info["conflict_type"],
                     "entry.1376410536": self.info.get("location", ""),
                     "entry.1838705071": self.info.get("intensity", ""),
-                    "entry.179687579": self.info["weight"],
+                    "entry.179687579": str(self.info["weight"]).replace('.', ','),
                     "entry.1782663879": presumed,
                     "entry.197233273": actual,
                     "usp": "pp_url",
