@@ -779,7 +779,9 @@ class BGS:
 
         def __redeem_voucher(self, entry, cmdr, system):
             # Игнорируем флитаки, юристов и лишние типы выплат.
-            if self.main_faction == "FleetCarrier" or "BrokerPercentage" in entry or entry["Type"] != "bounty":
+            if (self.main_faction == "FleetCarrier"
+                    or "BrokerPercentage" in entry
+                    or entry["Type"] not in ("bounty", "CombatBond")):
                 return
             
             debug("[BGS.redeem_voucher] Redeeming vouchers:")
@@ -788,7 +790,7 @@ class BGS:
                 url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse'
                 url_params = {
                     "entry.503143076": cmdr,
-                    "entry.1108939645": "bounty",
+                    "entry.1108939645": entry["Type"],
                     "entry.127349896": system,
                     "entry.442800983": "",
                     "entry.48514656": faction["Faction"],
