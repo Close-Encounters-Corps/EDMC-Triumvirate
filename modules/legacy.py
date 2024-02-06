@@ -672,10 +672,10 @@ class BGS:
             elif event == "MissionAbandoned":
                 self.__mission_abandoned(entry)
             # ваучеры
-            elif event == "RedeemVoucher":
+            elif event == "RedeemVoucher" and system in BGS._systems:
                 self.__redeem_voucher(entry, cmdr, system)
             # картография
-            elif "SellExplorationData" in event:
+            elif "SellExplorationData" in event and system in BGS._systems:
                 self.__exploration_data(entry, cmdr, system, station)
             
 
