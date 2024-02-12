@@ -174,7 +174,7 @@ def plugin_start3(plugin_dir):
     """
     this.plugin_dir = plugin_dir
     Debug.setup(logger)
-    legacy.BGS.setup()
+    legacy.BGS.setup(plugin_dir)
     this.journal_entry_processor = JournalEntryProcessor()
     this.journal_entry_processor.start()
     # префикс логов

@@ -566,8 +566,8 @@ class BGS:
     _systems = list()
 
     @classmethod
-    def setup(cls):
-        BGS._missions_tracker = BGS.Missions_Tracker()
+    def setup(cls, plugin_dir):
+        BGS._missions_tracker = BGS.Missions_Tracker(plugin_dir)
         BGS._cz_tracker = BGS.CZ_Tracker()
         BGS.Systems_Updater(BGS._systems).start()
 
@@ -610,10 +610,9 @@ class BGS:
                 return super().__new__(cls)
             raise RuntimeError("not allowed, use BGS module instead")
         
-        def __init__(self):
-            # БД будет храниться в EDMC-Triumvirate/data
-            path = os.path.normpath(os.path.dirname(__file__) + "\\..\\data")
-            self.db = sqlite3.connect(path + "\\missions.db", check_same_thread=False)
+        def __init__(self, plugin_dir):
+            path = os.path.join(plugin_dir, "data", "missions.db")
+            self.db = sqlite3.connect(path, check_same_thread=False)
             self.__query("CREATE TABLE IF NOT EXISTS missions (id, payload)")
             self.main_faction = ""
 
