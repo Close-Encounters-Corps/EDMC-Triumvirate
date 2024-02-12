@@ -1039,7 +1039,7 @@ class BGS:
                         pady=int(3*zoom_factor),
                         bd=int(3*zoom_factor),
                         command=self.__first
-                        ).grid(row=0, column=0, sticky="nsew")
+                    ).grid(row=0, column=0, sticky="nsew")
                     
                     tk.Button(
                         bottombox,
@@ -1049,7 +1049,7 @@ class BGS:
                         pady=int(3*zoom_factor),
                         bd=int(3*zoom_factor),
                         command=self.__second
-                        ).grid(row=0, column=1, sticky="nsew")
+                    ).grid(row=0, column=1, sticky="nsew")
                     
                     tk.Button(
                         bottombox,
@@ -1059,7 +1059,7 @@ class BGS:
                         pady=int(3*zoom_factor),
                         bd=int(3*zoom_factor),
                         command=self.__cancel
-                        ).grid(row=1, column=0, columnspan=2, sticky="nsew")
+                    ).grid(row=1, column=0, columnspan=2, sticky="nsew")
                     
                     bottombox.pack(expand=True, fill="x", anchor="s")
 

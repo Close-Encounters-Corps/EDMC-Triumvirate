@@ -124,7 +124,7 @@ def prefs_changed(cmdr, is_beta):
 
 
 def Alegiance_get(CMDR, SQ_old):
-    global SQ
+    SQ = this.cmdr_SQID
     if CMDR != this.CMDR:
         logger.debug("Community Check started")
         url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"
