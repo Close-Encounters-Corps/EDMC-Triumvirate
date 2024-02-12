@@ -605,7 +605,7 @@ class BGS:
 
 
     class Missions_Tracker:
-        def __new__(cls):
+        def __new__(cls, *args, **kwargs):
             if BGS._missions_tracker is None:
                 return super().__new__(cls)
             raise RuntimeError("not allowed, use BGS module instead")
