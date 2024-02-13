@@ -220,8 +220,6 @@ class PatrolModule(Frame, Module):
         self.sqid_evt = threading.Event()
         self.update_thread = None
 
-        self.start_background_thread()
-
     ########################################
     ############# MODULE HOOKS #############
     ########################################
@@ -310,8 +308,6 @@ class PatrolModule(Frame, Module):
     def _on_journal(self, entry: JournalEntry):
         self.latest_entry = entry
 
-        self.start_background_thread()
-
         if entry.cmdr:
             self.cmdr = entry.cmdr
 
@@ -327,6 +323,9 @@ class PatrolModule(Frame, Module):
             self.system = entry.system
             if self.nearest and self.CopyPatrolAdr == 1:
                 copyclip(self.nearest.get("system"))
+
+        self.start_background_thread()
+
         # If we have visted a system and
         # then jump out then lets
         # clicknext
