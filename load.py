@@ -9,6 +9,7 @@ from queue import Queue
 import os
 import logging
 import webbrowser
+import traceback
 
 ### third-party модули ###
 import requests
@@ -266,121 +267,128 @@ class JournalEntryProcessor(thread.Thread):
     def do_run(self):
         while not self.STOP or not self.queue.empty():
             if self.queue.empty():
-                self.sleep(0.2)
+                self.sleep(1)
             else:
-                cmdr, is_beta, system, station, entry, state = self.queue.get(block = False)
-                SysFactionState = this.SysFactionState,
-                SysFactionAllegiance = this.SysFactionAllegiance
-                DistFromStarLS = this.DistFromStarLS
-                body = this.body_name
-                lat = this.nearloc["Latitude"]
-                lon = this.nearloc["Longitude"]
-                client = this.client_version
+                try:
+                    self.__process_entry()
+                except:
+                    logger.error(traceback.format_exc())
+            
+    def __process_entry(self):
+        cmdr, is_beta, system, station, entry, state = self.queue.get(block = False)
+        SysFactionState = this.SysFactionState,
+        SysFactionAllegiance = this.SysFactionAllegiance
+        DistFromStarLS = this.DistFromStarLS
+        body = this.body_name
+        lat = this.nearloc["Latitude"]
+        lon = this.nearloc["Longitude"]
+        client = this.client_version
 
-                # capture some stats when we launch
-                # not read for that yet
-                startup_stats(cmdr)
+        # capture some stats when we launch
+        # not read for that yet
+        startup_stats(cmdr)
 
-                if entry["event"] == "Scan" and entry["ScanType"] in {"Detailed", "AutoScan"}:
-                    thread.BasicThread(target=lambda: submit_expedition(cmdr, entry)).start()
+        # отключено, потому что API не работает, а логи засоряются
+        #if entry["event"] == "Scan" and entry["ScanType"] in {"Detailed", "AutoScan"}:
+            #thread.BasicThread(target=lambda: submit_expedition(cmdr, entry)).start()
 
-                if "SystemFaction" in entry:
-                    """ "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }"""
-                    SystemFaction = entry.get("SystemFaction")
-                    try:
-                        this.SysFactionState = SystemFaction["FactionState"]
-                    except:
-                        this.SysFactionState = None
-                    logger.debug("SysFaction's state is" + str(this.SysFactionState))
+        if "SystemFaction" in entry:
+            """ "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }"""
+            SystemFaction = entry.get("SystemFaction")
+            try:
+                this.SysFactionState = SystemFaction["FactionState"]
+            except:
+                this.SysFactionState = None
+            logger.debug("SysFaction's state is" + str(this.SysFactionState))
 
-                if "SystemAllegiance" in entry:
+        if "SystemAllegiance" in entry:
 
-                    SystemAllegiance = entry.get("SystemAllegiance")
-                    logger.debug(SystemAllegiance)
-                    try:
-                        this.SysFactionAllegiance = SystemAllegiance
-                    except:
-                        this.SysFactionAllegiance = None
-                    logger.debug("SysFaction's allegiance is" + str(this.SysFactionAllegiance))
+            SystemAllegiance = entry.get("SystemAllegiance")
+            logger.debug(SystemAllegiance)
+            try:
+                this.SysFactionAllegiance = SystemAllegiance
+            except:
+                this.SysFactionAllegiance = None
+            logger.debug("SysFaction's allegiance is" + str(this.SysFactionAllegiance))
 
-                if "DistFromStarLS" in entry:
-                    """"DistFromStarLS":144.821411"""
-                    try:
-                        this.DistFromStarLS = entry.get("DistFromStarLS")
-                    except:
-                        this.DistFromStarLS = None
-                    logger.debug("DistFromStarLS=" + str(this.DistFromStarLS))
+        if "DistFromStarLS" in entry:
+            """"DistFromStarLS":144.821411"""
+            try:
+                this.DistFromStarLS = entry.get("DistFromStarLS")
+            except:
+                this.DistFromStarLS = None
+            logger.debug("DistFromStarLS=" + str(this.DistFromStarLS))
 
-                if entry.get("event") == "FSDJump":
-                    this.DistFromStarLS = None
-                    this.body = None
+        if entry.get("event") == "FSDJump":
+            this.DistFromStarLS = None
+            this.body = None
 
-                if "Body" in entry:
-                    this.body = entry["Body"]
-                    logger.debug(f"Body: {this.body}")
+        if "Body" in entry:
+            this.body = entry["Body"]
+            logger.debug(f"Body: {this.body}")
 
-                if entry["event"] == "JoinedSquadron":
-                    Squadronsend(cmdr, entry["SquadronName"])
+        if entry["event"] == "JoinedSquadron":
+            Squadronsend(cmdr, entry["SquadronName"])
 
-                x, y, z = None, None, None
-                if system:
-                    val = this.systems_module.get_system_coords(system)
-                    if val is not None:
-                        x, y, z = val
+        x, y, z = None, None, None
+        if system:
+            val = this.systems_module.get_system_coords(system)
+            if val is not None:
+                x, y, z = val
 
-                journal_entry = journal.JournalEntry(
-                    cmdr=cmdr,
-                    is_beta=is_beta,
-                    system=system,
-                    sys_faction_state=SysFactionState,
-                    sys_faction_allegiance=SysFactionAllegiance,
-                    dist_from_star=DistFromStarLS,
-                    station=station,
-                    data=entry,
-                    state=state,
-                    x=x,
-                    y=y,
-                    z=z,
-                    body=body,
-                    lat=lat,
-                    lon=lon,
-                    client=client,
-                )
-                status_message = None
-                factionkill.submit(cmdr, is_beta, system, station, entry, client)
-                hdreport.submit(cmdr, is_beta, system, station, entry, client)
-                codex.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
-                fssreports.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
-                journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
-                if journal_entry.data["event"] in {"SendText", "ReceiveText"}:
-                    for mod in context.enabled_modules:
-                        # TODO переписать на менеджер контекста?
-                        try:
-                            val = mod.on_chat_message(journal_entry)
-                        except:
-                            logger.error(f"Error while sending chat message to module {mod}", exc_info=1)
-                        status_message = status_message or val
-                else:
-                    for mod in context.enabled_modules:
-                        val = mod.on_journal_entry(journal_entry)
-                        status_message = status_message or val
-                this.codexcontrol.journal_entry(
-                    cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
-                )
-                codex.saaScan.journal_entry(
-                    cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
-                )
+        journal_entry = journal.JournalEntry(
+            cmdr=cmdr,
+            is_beta=is_beta,
+            system=system,
+            sys_faction_state=SysFactionState,
+            sys_faction_allegiance=SysFactionAllegiance,
+            dist_from_star=DistFromStarLS,
+            station=station,
+            data=entry,
+            state=state,
+            x=x,
+            y=y,
+            z=z,
+            body=body,
+            lat=lat,
+            lon=lon,
+            client=client,
+        )
+        status_message = None
+        factionkill.submit(cmdr, is_beta, system, station, entry, client)
+        hdreport.submit(cmdr, is_beta, system, station, entry, client)
+        codex.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
+        fssreports.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
+        journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
+        if journal_entry.data["event"] in {"SendText", "ReceiveText"}:
+            for mod in context.enabled_modules:
+                # TODO переписать на менеджер контекста?
+                try:
+                    val = mod.on_chat_message(journal_entry)
+                except:
+                    logger.error(f"Error while sending chat message to module {mod}", exc_info=1)
+                status_message = status_message or val
+        else:
+            for mod in context.enabled_modules:
+                val = mod.on_journal_entry(journal_entry)
+                status_message = status_message or val
+        this.codexcontrol.journal_entry(
+            cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
+        )
+        codex.saaScan.journal_entry(
+            cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
+        )
 
-                # legacy logging to google sheets
-                legacy.statistics(cmdr, is_beta, system, station, entry, state)
-                legacy.CodexEntry(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
-                legacy.AXZone(cmdr, is_beta, system, x, y, z, station, entry, state)
-                legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
-                legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
-                legacy.BGS.journal_entry(cmdr, system, station, entry)
-                legacy.GusonExpeditions(cmdr, is_beta, system, entry)
-                if status_message is not None:
-                    this.message_label.text = status_message
+        # legacy logging to google sheets
+        legacy.statistics(cmdr, is_beta, system, station, entry, state)
+        legacy.CodexEntry(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
+        legacy.AXZone(cmdr, is_beta, system, x, y, z, station, entry, state)
+        legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
+        legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
+        legacy.BGS.journal_entry(cmdr, system, station, entry)
+        legacy.GusonExpeditions(cmdr, is_beta, system, entry)
+        if status_message is not None:
+            this.message_label.text = status_message
 
 
 def submit_expedition(cmdr, entry: dict):

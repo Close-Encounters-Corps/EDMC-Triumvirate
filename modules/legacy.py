@@ -737,7 +737,6 @@ class BGS:
 
         def __mission_failed(self, entry, cmdr):
             mission_id = entry["MissionID"]
-            debug("MISSION FAILED {}", mission_id)
             result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
             if result is None:
                 debug("[BGS.mission_failed] Mission {!r} was failed, but not found in the database.", mission_id)
@@ -764,7 +763,6 @@ class BGS:
 
         def __mission_abandoned(self, entry):
             mission_id = entry["MissionID"]
-            debug("MISSION ABANDONED {}", mission_id)
             result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
             if result is None:
                 debug("[BGS.mission_abandoned] Mission {!r} was abandoned, but not found in the database.", mission_id)
@@ -810,7 +808,6 @@ class BGS:
                     "usp": "pp_url",
                 }
                 BasicThread(target=lambda: requests.get(url, params=url_params)).start()
-
 
 
         def __exploration_data(self, entry, cmdr, system, station):
@@ -981,7 +978,7 @@ class BGS:
                 1 - принадлежность обеих фракций известна. Всё просто, тупо сравниваем их с принадлежностью победителя.
                 2 - у одной из фракций принадлежность неизвестна. Тут чуть сложнее:
                     а) если единственная известная принадлежность совпадает с принадлежностью победителя - мы не можем быть уверены,
-                    что у второй фракции принадлежность отличается. Предсказание невозможно.
+                       что у второй фракции принадлежность отличается. Предсказание невозможно.
                     б) единственная известная принадлежность не совпадает с принадлежностью победителя - тогда это точно вторые.
                 '''
                 if factions_list[0][1] != factions_list[1][1]:
@@ -1005,21 +1002,18 @@ class BGS:
             debug("CZ_Tracker: presumed winner set to {!r}.", presumed_winner)
             if presumed_winner != self.info["player_fights_for"]:
                 debug("CZ_Tracker: presumed winner isn't the player's side, asking for confirmation.")
-                index = self.__ask_user(presumed_winner)
-                if index == -1:         # игрок отменил выбор
-                    self.__reset()
-                    return
-                else:
-                    actual_winner = factions_list[index][0]
+                # чтобы не стопорить обработку событий - продолжаем в отдельном потоке
+                info_copy = self.info.copy()
+                BasicThread(target = lambda: self.__ask_user(info_copy, presumed_winner), name="CZ notification").start()
             else:
                 actual_winner = presumed_winner
-            debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
-
-            self.__send_results(presumed_winner, actual_winner)
+                debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
+                self.__send_results(self.info, presumed_winner, actual_winner)
             self.__reset()
 
 
-        def __ask_user(self, presumed_winner) -> int:
+        @staticmethod
+        def __ask_user(info: dict, presumed_winner: str):
             class Notification(tk.Tk):
                 def __init__(self, text: str, factions: list):
                     super().__init__()
@@ -1091,36 +1085,41 @@ class BGS:
                     config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
                     self.destroy()
             
-            factions = [faction for faction, _ in self.info["allegiances"].items()]
+            factions = [faction for faction, _ in info["allegiances"].items()]
             message = str(
                 "Зафиксировано окончание зоны конфликта.\n" +
                 "Подтвердите правильность полученных данных:\n\n" +
-                "Система: {}\n".format(self.info["system"]) +
-                ("Напряжённость: {}\n".format(self.info["intensity"]) if self.info["conflict_type"] == "Space" else "") +
-                ("Поселение: {}\n".format(self.info["location"]) if self.info["conflict_type"] == "Foot" else "") +
+                "Система: {}\n".format(info["system"]) +
+                ("Напряжённость: {}\n".format(info["intensity"]) if info["conflict_type"] == "Space" else "") +
+                ("Поселение: {}\n".format(info["location"]) if info["conflict_type"] == "Foot" else "") +
                 "Участвующие фракции:\n" +
                 "  - {}\n".format(factions[0]) +
                 "  - {}\n".format(factions[1]) +
                 "Предполагаемый победитель: {}\n".format(presumed_winner if presumed_winner != "[UNKNOWN]" else "НЕ ОПРЕДЕЛЁН") +
-                "Вы сражались на стороне: {}\n\n".format(self.info["player_fights_for"]) +
+                "Вы сражались на стороне: {}\n\n".format(info["player_fights_for"]) +
                 "Выберите победившую фракцию."
             )
             notif = Notification(message, factions)
             notif.wait_window()
-            return notif.result
+            index = notif.result
+            if index != -1:         # если игрок не отменил выбор
+                actual_winner = factions[index]
+                debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
+                BGS.CZ_Tracker.__send_results(info, presumed_winner, actual_winner)
         
 
-        def __send_results(self, presumed: str, actual: str):
+        @staticmethod
+        def __send_results(info:dict, presumed: str, actual: str):
             url = f'{URL_GOOGLE}/1FAIpQLSddtVQ6ai9uByWiZgXK_xSzwDEB17UzDvMqjSx1NJxwprhkvQ/formResponse'
             url_params = {
-                    "entry.1602235775": self.info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                    "entry.493215024": self.info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                    "entry.546796530": self.info["cmdr"],
-                    "entry.1927752700": self.info["system"],
-                    "entry.608797654": self.info["conflict_type"],
-                    "entry.1376410536": self.info.get("location", ""),
-                    "entry.1838705071": self.info.get("intensity", ""),
-                    "entry.179687579": str(self.info["weight"]).replace('.', ','),
+                    "entry.1602235775": info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                    "entry.493215024": info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                    "entry.546796530": info["cmdr"],
+                    "entry.1927752700": info["system"],
+                    "entry.608797654": info["conflict_type"],
+                    "entry.1376410536": info.get("location", ""),
+                    "entry.1838705071": info.get("intensity", ""),
+                    "entry.179687579": str(info["weight"]).replace('.', ','),
                     "entry.1782663879": presumed,
                     "entry.197233273": actual,
                     "usp": "pp_url",
