@@ -854,7 +854,7 @@ class BGS:
                         self.__start_conflict(cmdr, system, entry, "Space")
                     # начало конфликта (ноги)
                     elif (event == "ApproachSettlement"
-                        and entry["StationFaction"].get("FactionState", "") == "War"
+                        and entry["StationFaction"].get("FactionState", "") in ("War", "CivilWar")
                         and "dock" not in entry["StationServices"]):
                         self.__start_conflict(cmdr, system, entry, "Foot")
                 else:
