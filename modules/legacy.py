@@ -837,6 +837,7 @@ class BGS:
         def __init__(self):
             self.in_conflict = False
             self.safe = False       # на случай, если плагин запускается посреди игры, и мы не знаем режим
+            self.on_foot = None     # не тип конфликта, а именно режим игры. ТРП тоже считается
 
 
         def process_entry(self, cmdr, system, entry):
@@ -867,6 +868,14 @@ class BGS:
                     # отслеживание сообщений, потенциальное завершение конфликта
                     elif event == "ReceiveText":
                         self.__patrol_message(entry)
+                    # пешие конфликты: смена режима
+                    elif (event in ("DropshipDeploy", "Disembark", "LaunchSRV")
+                        or event == "Location" and entry.get("InSRV") or entry.get("OnFoot")):
+                        self.on_foot = True
+                    elif (event == "DockSRV" 
+                        or event == "Embark" and entry["SRV"] == False
+                        or event == "Location" and not(entry.get("InSRV") or entry.get("OnFoot"))):
+                        self.on_foot = False
                     # завершение конфликта: прыжок
                     elif event == "StartJump":
                         self.__end_conflict()
@@ -901,10 +910,6 @@ class BGS:
                 if intensity == "Med":
                     intensity = "Medium"
                 self.info["intensity"] = intensity
-                match intensity:
-                    case "Low":     self.info["weight"] = 0.25
-                    case "Medium":  self.info["weight"] = 0.5
-                    case "High":    self.info["weight"] = 1
 
             elif c_type == "Foot":
                 self.info = {
@@ -912,7 +917,7 @@ class BGS:
                     "system": system,
                     "conflict_type": "Foot",
                     "location": entry["Name"],
-                    "weight": 0.25,
+                    "intensity": None,
                     "allegiances": {},
                     "player_fights_for": None,
                     "kills": 0,
@@ -933,11 +938,33 @@ class BGS:
                     self.info["allegiances"][conflict_side] = None
                     debug("CZ_Tracker: faction {!r} added to the list.", conflict_side)
 
-            self.info["kills"] += 1
-            debug("CZ_Tracker: detected FactionKillBond, awarding {!r}, victim {!r}. {} kills.",
-                entry["AwardingFaction"],
-                entry["VictimFaction"],
-                self.info["kills"])
+            if self.info["conflict_type"] == "Foot" and not self.on_foot:
+                self.info["kills"] += 4
+                debug("CZ_Tracker: detected a kill from a ship in a foot combat zone. Awarding {!r}, victim {!r}. {}(+4) kills.",
+                    entry["AwardingFaction"],
+                    entry["VictimFaction"],
+                    self.info["kills"])
+            else:
+                self.info["kills"] += 1
+                debug("CZ_Tracker: detected FactionKillBond, awarding {!r}, victim {!r}. {} kills.",
+                    entry["AwardingFaction"],
+                    entry["VictimFaction"],
+                    self.info["kills"])
+                
+            # определение интенсивности пешей кз
+            if (
+                self.info["conflict_type"] == "Foot"
+                and self.on_foot
+                and not self.info["intensity"]
+            ):
+                reward = entry["Reward"]
+                if 1896 <= reward < 4172:
+                    self.info["intensity"] = "Low"
+                elif 11858 <= reward <= 33762:
+                    self.info["intensity"] = "Medium"
+                elif 39642 <= reward <= 87362:
+                    self.info["intensity"] = "High"
+                debug("CZ_Tracker: intensity set to {!r}", self.info["intensity"])
         
 
         def __ship_scan(self, entry):
@@ -1110,6 +1137,11 @@ class BGS:
 
         @staticmethod
         def __send_results(info:dict, presumed: str, actual: str):
+            match info.get("intensity"):
+                case "Low":     weight = 0.25
+                case "Medium":  weight = 0.5
+                case "High":    weight = 1
+                case _:         weight = 0.25
             url = f'{URL_GOOGLE}/1FAIpQLSddtVQ6ai9uByWiZgXK_xSzwDEB17UzDvMqjSx1NJxwprhkvQ/formResponse'
             url_params = {
                     "entry.1602235775": info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
@@ -1119,12 +1151,14 @@ class BGS:
                     "entry.608797654": info["conflict_type"],
                     "entry.1376410536": info.get("location", ""),
                     "entry.1838705071": info.get("intensity", ""),
-                    "entry.179687579": str(info["weight"]).replace('.', ','),
+                    "entry.179687579": str(weight).replace('.', ','),
                     "entry.1782663879": presumed,
                     "entry.197233273": actual,
                     "usp": "pp_url",
                 }
-            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+            #BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+            requests.get(url, params=url_params)
+            # временно? есть подозрение на segfault
 
 
         def __reset(self):
