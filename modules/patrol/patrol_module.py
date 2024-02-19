@@ -141,7 +141,7 @@ class PatrolModule(Frame, Module):
         sticky = tk.EW + tk.N  # full width, stuck to the top
 
         self.ships = []
-        self.bind("<<PatrolDone>>", self.update_ui)
+        self.bind("<<PatrolDone>>", self.update)
         plugin_dir = global_context.plugin_dir
         self.IMG_PREV = tk.PhotoImage(
             file=os.path.join(plugin_dir, "icons", "left_arrow.gif")
@@ -323,8 +323,7 @@ class PatrolModule(Frame, Module):
             self.system = entry.system
             if self.nearest and self.CopyPatrolAdr == 1:
                 copyclip(self.nearest.get("system"))
-
-        self.start_background_thread()
+            self.start_background_thread()
 
         # If we have visted a system and
         # then jump out then lets
@@ -446,12 +445,12 @@ class PatrolModule(Frame, Module):
         if self.CopyPatrolAdr == 1:
             copyclip(self.nearest.get("system"))
 
-    def update_ui(self, event=None):
-        # rerun every 5 seconds
-        self.after(5000, self.update_ui)
-        self.update()
+    #def update_ui(self, event=None):
+    #    # rerun every 5 seconds
+    #    self.after(5000, self.update_ui)
+    #    self.update()
 
-    def update(self):
+    def update(self, event=None):
         if not self.enabled:
             return
 
