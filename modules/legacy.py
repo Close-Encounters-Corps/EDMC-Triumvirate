@@ -873,10 +873,12 @@ class BGS:
                     elif (event in ("DropshipDeploy", "Disembark", "LaunchSRV")
                         or event == "Location" and entry.get("InSRV") or entry.get("OnFoot")):
                         self.on_foot = True
+                        debug("CZ_Tracker: on foot")
                     elif (event == "DockSRV" 
                         or event == "Embark" and entry["SRV"] == False
                         or event == "Location" and not(entry.get("InSRV") or entry.get("OnFoot"))):
                         self.on_foot = False
+                        debug("CZ_Tracker: on ship")
                     # завершение конфликта: прыжок
                     elif event == "StartJump":
                         self._end_conflict()
@@ -1130,18 +1132,18 @@ class BGS:
                 case "Medium":  weight = 0.5
                 case "High":    weight = 1
                 case _:         weight = 0.25
-            url = f'{URL_GOOGLE}/1FAIpQLSddtVQ6ai9uByWiZgXK_xSzwDEB17UzDvMqjSx1NJxwprhkvQ/formResponse'
+            url = f'{URL_GOOGLE}/1FAIpQLSepTjgu1U8NZXskFbtdCPLuAomLqmkMAYCqk1x0JQG9Btgb9A/formResponse'
             url_params = {
-                    "entry.1602235775": info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                    "entry.493215024": info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                    "entry.546796530": info["cmdr"],
-                    "entry.1927752700": info["system"],
-                    "entry.608797654": info["conflict_type"],
-                    "entry.1376410536": info.get("location", ""),
-                    "entry.1838705071": info.get("intensity", ""),
-                    "entry.179687579": str(weight).replace('.', ','),
-                    "entry.1782663879": presumed,
-                    "entry.197233273": actual,
+                    "entry.1673815657": info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                    "entry.1896400912": info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                    "entry.1178049789": info["cmdr"],
+                    "entry.721869491": info["system"],
+                    "entry.1671504189": info["conflict_type"],
+                    "entry.461250117": info.get("location", ""),
+                    "entry.428944810": info.get("intensity", ""),
+                    "entry.1396326275": str(weight).replace('.', ','),
+                    "entry.1674382418": presumed,
+                    "entry.1383403456": actual,
                     "usp": "pp_url",
                 }
             BasicThread(target=lambda: requests.get(url, params=url_params)).start()
