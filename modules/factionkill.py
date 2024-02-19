@@ -84,5 +84,5 @@ def submit(cmdr, is_beta, system, station, entry,client):
         matches(entry, 'VictimFaction', '$faction_Guardian;')
         ):
         FactionKill(cmdr, is_beta, system,  entry, client).start()   
-        gSubmitKill(cmdr, is_beta, system, entry.get("Reward"),entry.get("VictimFaction")).start();
+        gSubmitKill(cmdr, is_beta, system, entry.get("Reward"),entry.get("VictimFaction")).start()
 
