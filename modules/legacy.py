@@ -588,7 +588,7 @@ class BGS:
                     debug("[BGS.setup] Got list of systems to track.")
                     return
                 error("[BGS.setup] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempts)
-                self.thread.sleep(10)
+                self.sleep(10)
 
     @classmethod
     def journal_entry(cls, cmdr, system, station, entry):

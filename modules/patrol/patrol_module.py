@@ -42,7 +42,7 @@ from .bgs import BGSTasksOverride, new_bgs_patrol
 from .. import legacy
 from ..lib.conf import config
 from ..lib.context import global_context
-from ..lib.thread import Thread
+from ..lib.thread import Thread, ThreadExit
 from ..lib.journal import JournalEntry
 from ..lib.spreadsheet import Spreadsheet
 from ..lib.module import Module
@@ -508,15 +508,27 @@ class PatrolModule(Frame, Module):
             We will get Canonn faction data using elitebgs api
         """
 
+        class UpdateCycle(Thread):
+            def __init__(self, j: dict, patrol: list, **kwargs):
+                super().__init__(**kwargs)
+                self.j = j
+                self.patrol = patrol
+            def do_run(self):
+                for bgs in self.j.get("docs")[0].get("faction_presence"):
+                    if self.STOP:
+                        raise ThreadExit
+                    val = new_bgs_patrol(bgs, faction, BGSOSys)
+                    if val:
+                        self.patrol.append(val)
+
         patrol = []
 
         url = "https://elitebgs.app/api/ebgs/v5/factions"
         j = requests.get(url, params={"name": faction}).json()
         if j:
-            for bgs in j.get("docs")[0].get("faction_presence"):
-                val = new_bgs_patrol(bgs, faction, BGSOSys)
-                if val:
-                    patrol.append(val)
+            thread = UpdateCycle(j, patrol, name="patrol.faction_data_dowloader")
+            thread.start()
+            thread.join()
 
         return patrol
 
