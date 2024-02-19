@@ -1120,7 +1120,7 @@ class BGS:
                 "Вы сражались на стороне: {}\n\n".format(info["player_fights_for"]) +
                 "Выберите победившую фракцию."
             )
-            Notification(message, factions)
+            BasicThread(target=lambda: Notification(message, factions), name="cz notification").start() 
         
 
         @staticmethod
