@@ -265,7 +265,7 @@ class JournalEntryProcessor(thread.Thread):
         self.queue.put((cmdr, is_beta, system, station, entry, state))
 
     def do_run(self):
-        while not self.STOP or not self.queue.empty():
+        while True:
             if self.queue.empty():
                 self.sleep(1)
             else:

@@ -567,7 +567,8 @@ class BGS:
 
     @classmethod
     def setup(cls, plugin_dir):
-        BGS._missions_tracker = BGS.Missions_Tracker(plugin_dir)
+        cls._plugin_dir = plugin_dir
+        BGS._missions_tracker = BGS.Missions_Tracker()
         BGS._cz_tracker = BGS.CZ_Tracker()
         BGS.Systems_Updater(BGS._systems).start()
 
@@ -605,22 +606,22 @@ class BGS:
 
 
     class Missions_Tracker:
-        def __new__(cls, *args, **kwargs):
+        def __new__(cls):
             if BGS._missions_tracker is None:
                 return super().__new__(cls)
             raise RuntimeError("not allowed, use BGS module instead")
         
-        def __init__(self, plugin_dir):
-            path = os.path.join(plugin_dir, "data", "missions.db")
+        def __init__(self):
+            path = os.path.join(BGS._plugin_dir, "data", "missions.db")
             self.db = sqlite3.connect(path, check_same_thread=False)
-            self.__query("CREATE TABLE IF NOT EXISTS missions (id, payload)")
+            self._query("CREATE TABLE IF NOT EXISTS missions (id, payload)")
             self.main_faction = ""
 
         def stop(self):
-            self.__prune_expired()
+            self._prune_expired()
             self.db.close()
         
-        def __query(self, query: str, *args, fetchall: bool = False):
+        def _query(self, query: str, *args, fetchall: bool = False):
             cur = self.db.cursor()
             query = query.strip()
             q_type = query[:query.find(' ')].upper()
@@ -635,11 +636,11 @@ class BGS:
             cur.close()
             return result if q_type == "SELECT" else None
         
-        def __prune_expired(self):
+        def _prune_expired(self):
             debug("[BGS.prune_expired] Clearing the database from expired missions.")
             expired_missions = []
             now = datetime.utcnow()
-            missions_list = self.__query("SELECT id, payload FROM missions", fetchall=True)
+            missions_list = self._query("SELECT id, payload FROM missions", fetchall=True)
             for id, payload in missions_list:
                 mission = json.loads(payload)
                 if "Megaship" not in mission["type"]:
@@ -647,7 +648,7 @@ class BGS:
                     if expires <= now:
                         expired_missions.append(id)
             for id in expired_missions:
-                self.__query("DELETE FROM missions WHERE id = ?", id)
+                self._query("DELETE FROM missions WHERE id = ?", id)
                 debug("[BGS.prune_expired] Mission {} was deleted.", id)
             debug("[BGS.prune_expired] Done.")
 
@@ -657,33 +658,33 @@ class BGS:
             event = entry["event"]
             # стыковка/вход в игру на станции
             if event == "Docked" or (event == "Location" and entry["Docked"] == True):
-                self.__set_faction(entry)
+                self._set_faction(entry)
             # принятие миссии
             elif event == "MissionAccepted" and system in BGS._systems:
-                self.__mission_accepted(entry, system)
+                self._mission_accepted(entry, system)
             # сдача миссии
             elif event == "MissionCompleted":
-                self.__mission_completed(entry, cmdr)
+                self._mission_completed(entry, cmdr)
             # провал миссии
             elif event == "MissionFailed":
-                self.__mission_failed(entry, cmdr)
+                self._mission_failed(entry, cmdr)
             # отказ от миссии
             elif event == "MissionAbandoned":
-                self.__mission_abandoned(entry)
+                self._mission_abandoned(entry)
             # ваучеры
             elif event == "RedeemVoucher" and system in BGS._systems:
-                self.__redeem_voucher(entry, cmdr, system)
+                self._redeem_voucher(entry, cmdr, system)
             # картография
             elif "SellExplorationData" in event and system in BGS._systems:
-                self.__exploration_data(entry, cmdr, system, station)
+                self._exploration_data(entry, cmdr, system, station)
             
 
-        def __set_faction(self, entry):
+        def _set_faction(self, entry):
             self.main_faction = entry["StationFaction"]["Name"]
             debug("[BGS.set_faction]: detected {!r}, main_faction set to {!r}", entry["event"], self.main_faction)
 
 
-        def __mission_accepted(self, entry, system):
+        def _mission_accepted(self, entry, system):
             mission = {
                 "timestamp": entry["timestamp"],
                 "ID": entry["MissionID"],
@@ -694,17 +695,17 @@ class BGS:
                 "system2": entry.get("DestinationSystem", "") if entry.get("TargetFaction") else "",
                 "faction2": entry.get("TargetFaction", ""),
             }
-            self.__query("INSERT INTO missions (id, payload) VALUES (?, ?)", mission["ID"], json.dumps(mission))
+            self._query("INSERT INTO missions (id, payload) VALUES (?, ?)", mission["ID"], json.dumps(mission))
             debug("[BGS.mission_accepted] Mission {!r} was accepted and saved to the database.", mission["ID"])
 
 
-        def __mission_completed(self, entry, cmdr):
+        def _mission_completed(self, entry, cmdr):
             mission_id = entry["MissionID"]
-            result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
+            result = self._query("SELECT payload FROM missions WHERE id = ?", mission_id)
             if result is None:
                 debug("[BGS.mission_completed] Mission {!r} was completed, but not found in the database.", mission_id)
                 return
-            self.__query("DELETE FROM missions WHERE id = ?", mission_id)
+            self._query("DELETE FROM missions WHERE id = ?", mission_id)
             debug("[BGS.mission_completed] Mission {!r} was completed and deleted from the database.", mission_id)
 
             mission = json.loads(result[0])
@@ -735,13 +736,13 @@ class BGS:
             BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
-        def __mission_failed(self, entry, cmdr):
+        def _mission_failed(self, entry, cmdr):
             mission_id = entry["MissionID"]
-            result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
+            result = self._query("SELECT payload FROM missions WHERE id = ?", mission_id)
             if result is None:
                 debug("[BGS.mission_failed] Mission {!r} was failed, but not found in the database.", mission_id)
                 return
-            self.__query("DELETE FROM missions WHERE id = ?", mission_id)
+            self._query("DELETE FROM missions WHERE id = ?", mission_id)
             debug("[BGS.mission_failed] Mission {!r} was failed and deleted from the database.", mission_id)
 
             failed_mission = json.loads(result[0])
@@ -761,20 +762,20 @@ class BGS:
             BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
-        def __mission_abandoned(self, entry):
+        def _mission_abandoned(self, entry):
             mission_id = entry["MissionID"]
-            result = self.__query("SELECT payload FROM missions WHERE id = ?", mission_id)
+            result = self._query("SELECT payload FROM missions WHERE id = ?", mission_id)
             if result is None:
                 debug("[BGS.mission_abandoned] Mission {!r} was abandoned, but not found in the database.", mission_id)
                 return
             
             mission = json.loads(result[0])
             if "Megaship" not in mission["type"]:
-                self.__query("DELETE FROM missions WHERE id = ?", mission_id)
+                self._query("DELETE FROM missions WHERE id = ?", mission_id)
                 debug("[BGS.mission_abandoned] Mission {!r} was abandoned and deleted from the database.", mission_id)
 
 
-        def __redeem_voucher(self, entry, cmdr, system):
+        def _redeem_voucher(self, entry, cmdr, system):
             # Игнорируем флитаки, юристов и лишние типы выплат.
             if (self.main_faction == "FleetCarrier"
                     or "BrokerPercentage" in entry
@@ -810,7 +811,7 @@ class BGS:
                 BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
-        def __exploration_data(self, entry, cmdr, system, station):
+        def _exploration_data(self, entry, cmdr, system, station):
             if self.main_faction != "FleetCarrier":
                 url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse'
                 url_params = {
@@ -852,22 +853,22 @@ class BGS:
                 if self.in_conflict == False:
                     # начало конфликта (космос)
                     if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
-                        self.__start_conflict(cmdr, system, entry, "Space")
+                        self._start_conflict(cmdr, system, entry, "Space")
                     # начало конфликта (ноги)
                     elif (event == "ApproachSettlement"
                         and entry["StationFaction"].get("FactionState", "") in ("War", "CivilWar")
                         and "dock" not in entry["StationServices"]):
-                        self.__start_conflict(cmdr, system, entry, "Foot")
+                        self._start_conflict(cmdr, system, entry, "Foot")
                 else:
                     # убийство
                     if event == "FactionKillBond":
-                        self.__kill(entry)
+                        self._kill(entry)
                     # сканирование корабля
                     elif event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
-                        self.__ship_scan(entry)
+                        self._ship_scan(entry)
                     # отслеживание сообщений, потенциальное завершение конфликта
                     elif event == "ReceiveText":
-                        self.__patrol_message(entry)
+                        self._patrol_message(entry)
                     # пешие конфликты: смена режима
                     elif (event in ("DropshipDeploy", "Disembark", "LaunchSRV")
                         or event == "Location" and entry.get("InSRV") or entry.get("OnFoot")):
@@ -878,17 +879,17 @@ class BGS:
                         self.on_foot = False
                     # завершение конфликта: прыжок
                     elif event == "StartJump":
-                        self.__end_conflict()
+                        self._end_conflict()
                     # завершение конфликта: возврат на шаттле (ноги)
                     elif event == "BookDropship" and entry["Retreat"] == True:
-                        self.__end_conflict()
+                        self._end_conflict()
                     # досрочный выход
                     elif (event in ("Shutdown", "Died", "CancelDropship") or
                           event == "Music" and entry["MusicTrack"] == "MainMenu"):
-                        self.__reset()
+                        self._reset()
 
             
-        def __start_conflict(self, cmdr, system, entry, c_type):
+        def _start_conflict(self, cmdr, system, entry, c_type):
             debug("CZ_Tracker: detected entering a conflict zone, {!r} type.", c_type)
             self.in_conflict = True
             self.end_messages = deque(5*[None], 5)
@@ -929,7 +930,7 @@ class BGS:
             debug("CZ_Tracker prepared.")
 
 
-        def __kill(self, entry):
+        def _kill(self, entry):
             if not self.info["player_fights_for"]:
                 self.info["player_fights_for"] = entry["AwardingFaction"]
 
@@ -967,7 +968,7 @@ class BGS:
                 debug("CZ_Tracker: intensity set to {!r}", self.info["intensity"])
         
 
-        def __ship_scan(self, entry):
+        def _ship_scan(self, entry):
             if "$ShipName_Military" in entry["PilotName"]:
                 conflict_side = entry["Faction"]
                 allegiance = entry["PilotName"][19:-1]
@@ -976,7 +977,7 @@ class BGS:
                     debug("CZ_Tracker: detected military ship scan. Faction {!r} added to the list, allegiance {!r}.", conflict_side, allegiance)
 
         
-        def __patrol_message(self, entry):
+        def _patrol_message(self, entry):
             # Логика следующая: получаем 5 "патрулирующих" сообщений за 15 секунд - 
             # считаем конфликт завершённым.
             # По имени фильтруем, чтобы случайно не поймать последним такое сообщение, например, от спецкрыла
@@ -988,10 +989,10 @@ class BGS:
                 if self.end_messages[0] != None:
                     if (self.end_messages[4] - self.end_messages[0]).seconds <= 15:
                         debug("CZ_Tracker: got 5 patrol messages in 15 seconds, calling END_CONFLICT.")
-                        self.__end_conflict(entry["From"][19:-1])
+                        self._end_conflict(entry["From"][19:-1])
 
 
-        def __end_conflict(self, winners_allegiance: str | None = None):
+        def _end_conflict(self, winners_allegiance: str | None = None):
             debug("CZ_Tracker: END_CONFLICT called, calculating the result.")
             self.info["end_time"] = datetime.utcnow()
             factions_list = list(self.info["allegiances"].items())
@@ -1020,7 +1021,7 @@ class BGS:
 
             elif self.info["kills"] < self.info["kills_limit"]:
                 debug("CZ_Tracker: not enough kills ({}/{}), resetting.", self.info["kills"], self.info["kills_limit"])
-                self.__reset()
+                self._reset()
                 return
 
             if not self.safe:
@@ -1029,22 +1030,21 @@ class BGS:
             debug("CZ_Tracker: presumed winner set to {!r}.", presumed_winner)
             if presumed_winner != self.info["player_fights_for"]:
                 debug("CZ_Tracker: presumed winner isn't the player's side, asking for confirmation.")
-                # чтобы не стопорить обработку событий - продолжаем в отдельном потоке
                 info_copy = self.info.copy()
-                BasicThread(target = lambda: self.__ask_user(info_copy, presumed_winner), name="CZ notification").start()
+                self._ask_user(info_copy, presumed_winner)
             else:
                 actual_winner = presumed_winner
                 debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
-                self.__send_results(self.info, presumed_winner, actual_winner)
-            self.__reset()
+                self._send_results(self.info, presumed_winner, actual_winner)
+            self._reset()
 
 
         @staticmethod
-        def __ask_user(info: dict, presumed_winner: str):
-            class Notification(tk.Tk):
+        def _ask_user(info: dict, presumed_winner: str):
+            class Notification(tk.Toplevel):
                 def __init__(self, text: str, factions: list):
                     super().__init__()
-                    Player(os.path.normpath(os.path.dirname(__file__) + "\\.."), ["sounds/cz_notification.wav"]).start()
+                    Player(BGS._plugin_dir, ["sounds/cz_notification.wav"]).start()
                     # Это отвратительное решение, но пусть будет так.
                     # 1x - высота экрана 1080пкс. При меньшем размере экрана - всё равно используем 1x.
                     # При большем - считаем разницу с 1080, соответственно увеличиваем все размеры.
@@ -1072,7 +1072,7 @@ class BGS:
                         padx=int(5*zoom_factor),
                         pady=int(3*zoom_factor),
                         bd=int(3*zoom_factor),
-                        command=self.__first
+                        command=lambda: self._result(factions[0])
                     ).grid(row=0, column=0, sticky="nsew")
                     
                     tk.Button(
@@ -1082,7 +1082,7 @@ class BGS:
                         padx=int(5*zoom_factor),
                         pady=int(3*zoom_factor),
                         bd=int(3*zoom_factor),
-                        command=self.__second
+                        command=lambda: self._result(factions[1]) 
                     ).grid(row=0, column=1, sticky="nsew")
                     
                     tk.Button(
@@ -1092,33 +1092,27 @@ class BGS:
                         padx=int(5*zoom_factor),
                         pady=int(3*zoom_factor),
                         bd=int(3*zoom_factor),
-                        command=self.__cancel
+                        command=lambda: self._result()
                     ).grid(row=1, column=0, columnspan=2, sticky="nsew")
                     
                     bottombox.pack(expand=True, fill="x", anchor="s")
 
-                def __first(self):
-                    self.result = 0
-                    config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
+                def _result(self, actual_winner: str = None):
+                    if actual_winner:
+                        debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
+                        BGS.CZ_Tracker._send_results(info, presumed_winner, actual_winner)
+                    else:
+                        debug("CZ_Tracker: user canceled the choice.")
                     self.destroy()
 
-                def __second(self):
-                    self.result = 1
-                    config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
-                    self.destroy()
-
-                def __cancel(self):
-                    self.result = -1
-                    config.set("CZ.Notification.position", f"+{self.winfo_x()}+{self.winfo_y()}")
-                    self.destroy()
             
             factions = [faction for faction, _ in info["allegiances"].items()]
             message = str(
                 "Зафиксировано окончание зоны конфликта.\n" +
                 "Подтвердите правильность полученных данных:\n\n" +
                 "Система: {}\n".format(info["system"]) +
-                ("Напряжённость: {}\n".format(info["intensity"]) if info["conflict_type"] == "Space" else "") +
-                ("Поселение: {}\n".format(info["location"]) if info["conflict_type"] == "Foot" else "") +
+                "Напряжённость: {}\n".format(info.get("intensity", "")) +
+                "Поселение: {}\n".format(info.get("location", "")) +
                 "Участвующие фракции:\n" +
                 "  - {}\n".format(factions[0]) +
                 "  - {}\n".format(factions[1]) +
@@ -1126,17 +1120,11 @@ class BGS:
                 "Вы сражались на стороне: {}\n\n".format(info["player_fights_for"]) +
                 "Выберите победившую фракцию."
             )
-            notif = Notification(message, factions)
-            notif.wait_window()
-            index = notif.result
-            if index != -1:         # если игрок не отменил выбор
-                actual_winner = factions[index]
-                debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
-                BGS.CZ_Tracker.__send_results(info, presumed_winner, actual_winner)
+            Notification(message, factions)
         
 
         @staticmethod
-        def __send_results(info:dict, presumed: str, actual: str):
+        def _send_results(info:dict, presumed: str, actual: str):
             match info.get("intensity"):
                 case "Low":     weight = 0.25
                 case "Medium":  weight = 0.5
@@ -1156,12 +1144,10 @@ class BGS:
                     "entry.197233273": actual,
                     "usp": "pp_url",
                 }
-            #BasicThread(target=lambda: requests.get(url, params=url_params)).start()
-            requests.get(url, params=url_params)
-            # временно? есть подозрение на segfault
+            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
 
 
-        def __reset(self):
+        def _reset(self):
             self.in_conflict = False
             self.info = None
             self.end_messages = None
