@@ -1,5 +1,4 @@
 ﻿import settings
-import requests
 from .lib.module import Module
 from .lib.cache import Cache
 from .lib.http import WebClient
@@ -27,13 +26,12 @@ class SystemsModule(WebClient, Module):
 
     def fetch_system(self, system):
         try:
-            url = "https://www.edsm.net/api-v1/system"
-            resp = requests.get(url, {"systemName": system, "showCoordinates": 1})
+            resp = self.request("GET", "/api/v1/lookup", {"name": system})
         except Exception as e:
             debug(f"fetch_systems failed: {e}")
         else:
             if resp.status_code == 200:
-                coords = resp.json()["coords"]
+                coords = resp.json()
                 return coords["x"], coords["y"], coords["z"]
             else:
                 debug(f"fetch_system failed with code {resp.status_code}")
