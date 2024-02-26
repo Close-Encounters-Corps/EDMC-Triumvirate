@@ -930,7 +930,7 @@ class BGS:
         def _start_conflict(self, cmdr, system, entry, c_type):
             debug("CZ_Tracker: detected entering a conflict zone, {!r} type.", c_type)
             self.in_conflict = True
-            self.end_messages = deque(5*[None], 5)
+            self.end_messages = dict()      # например, {"independent": deque(), "federal": deque()}
 
             if c_type == "Space":
                 self.info = {
@@ -1016,18 +1016,23 @@ class BGS:
 
         
         def _patrol_message(self, entry):
-            # Логика следующая: получаем 5 "патрулирующих" сообщений за 15 секунд - 
-            # считаем конфликт завершённым.
+            # Логика следующая: получаем 5 "патрулирующих" сообщений от одной стороны за 15 секунд - считаем конфликт завершённым.
             # По имени фильтруем, чтобы случайно не поймать последним такое сообщение, например, от спецкрыла
             # и сломать определение принадлежности победителя.
             if "$Military_Passthrough" in entry["Message"] and "$ShipName_Military" in entry["From"]:
-                debug("CZ_Tracker: detected patrol message sent by a {} ship.", entry["From"][19:-1])
                 timestamp = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
-                self.end_messages.append(timestamp)
-                if self.end_messages[0] != None:
-                    if (self.end_messages[4] - self.end_messages[0]).seconds <= 15:
+                allegiance = entry["From"][19:1]
+                debug("CZ_Tracker: detected patrol message sent from {!r} ship.", allegiance)
+
+                if not self.end_messages.get(allegiance):
+                    self.end_messages[allegiance] = deque(5*[None], 5)
+                queue = self.end_messages[allegiance]               # они же по ссылке передаются?
+                queue.append(timestamp)
+                
+                if queue[0] != None:
+                    if (queue[4] - queue[0]).seconds <= 15:
                         debug("CZ_Tracker: got 5 patrol messages in 15 seconds, calling END_CONFLICT.")
-                        self._end_conflict(entry["From"][19:-1])
+                        self._end_conflict(allegiance)
 
 
         def _end_conflict(self, winners_allegiance: str | None = None):
