@@ -6,7 +6,7 @@ from math import sqrt, pow
 from datetime import datetime
 from collections import deque
 from tkinter import font
-from .debug import debug, error
+from .debug import debug, error, info
 from .lib.conf import config
 from .lib.thread import Thread, BasicThread
 from .player import Player
@@ -586,7 +586,7 @@ class BGS:
                 if response.status_code == 200:
                     self.systems_list.clear()
                     self.systems_list += str(response.json()["files"]["systems"]["content"]).split('\n')
-                    debug("[BGS.setup] Got list of systems to track.")
+                    info("[BGS.setup] Got list of systems to track.")
                     BGS._send_all()
                     return
                 error("[BGS.setup] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempts)
@@ -619,7 +619,7 @@ class BGS:
             for system in affected_systems:
                 if system in cls._systems:
                     BasicThread(target=lambda: requests.get(url, params)).start()
-                    debug("[BGS.send]: Sent.")
+                    info("[BGS.send]: BGS information sent.")
 
     @classmethod
     def _send_all(cls):
@@ -629,7 +629,7 @@ class BGS:
                 if system in cls._systems:
                     BasicThread(target=lambda: requests.get(entry["url"], entry["params"])).start()
                     counter += 1
-        debug(f"[BGS.send_all] {counter} pending entries sent.")
+        info(f"[BGS.send_all] {counter} pending entries sent.")
         cls._data_send_queue.clear()
 
 
@@ -665,7 +665,7 @@ class BGS:
             return result if q_type == "SELECT" else None
         
         def _prune_expired(self):
-            debug("[BGS.prune_expired] Clearing the database from expired missions.")
+            info("[BGS.prune_expired] Clearing the database from expired missions.")
             expired_missions = []
             now = datetime.utcnow()
             missions_list = self._query("SELECT id, payload FROM missions", fetchall=True)
@@ -678,7 +678,7 @@ class BGS:
             for id in expired_missions:
                 self._query("DELETE FROM missions WHERE id = ?", id)
                 debug("[BGS.prune_expired] Mission {} was deleted.", id)
-            debug("[BGS.prune_expired] Done.")
+            info("[BGS.prune_expired] Done.")
 
         # Методы обработки логов:
 
