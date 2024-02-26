@@ -564,6 +564,7 @@ class BGS:
     _cz_tracker = None
     _threadlock = threading.Lock()
     _systems = list()
+    _data_send_queue = deque()      # по логике нужна queue, но не хочу ещё один импорт тащить
 
     @classmethod
     def setup(cls, plugin_dir):
@@ -586,6 +587,7 @@ class BGS:
                     self.systems_list.clear()
                     self.systems_list += str(response.json()["files"]["systems"]["content"]).split('\n')
                     debug("[BGS.setup] Got list of systems to track.")
+                    BGS._send_all()
                     return
                 error("[BGS.setup] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempts)
                 self.sleep(10)
@@ -603,6 +605,32 @@ class BGS:
     def stop(cls):
         with cls._threadlock:
             cls._missions_tracker.stop()
+
+    @classmethod
+    def _send(cls, url, params, affected_systems):
+        if not cls._systems:
+            cls._data_send_queue.append({
+                "url": url,
+                "params": params,
+                "systems": affected_systems
+            })
+            debug("[BGS.send] We still haven't got a list of systems to track, entry added to the queue.")
+        else:
+            for system in affected_systems:
+                if system in cls._systems:
+                    BasicThread(target=lambda: requests.get(url, params)).start()
+                    debug("[BGS.send]: Sent.")
+
+    @classmethod
+    def _send_all(cls):
+        counter = 0
+        for entry in cls._data_send_queue:
+            for system in entry["systems"]:
+                if system in cls._systems:
+                    BasicThread(target=lambda: requests.get(entry["url"], entry["params"])).start()
+                    counter += 1
+        debug(f"[BGS.send_all] {counter} pending entries sent.")
+        cls._data_send_queue.clear()
 
 
     class Missions_Tracker:
@@ -660,7 +688,10 @@ class BGS:
             if event == "Docked" or (event == "Location" and entry["Docked"] == True):
                 self._set_faction(entry)
             # принятие миссии
-            elif event == "MissionAccepted" and system in BGS._systems:
+            elif event == "MissionAccepted" and (
+                system in BGS._systems
+                or not BGS._systems
+            ):
                 self._mission_accepted(entry, system)
             # сдача миссии
             elif event == "MissionCompleted":
@@ -672,10 +703,16 @@ class BGS:
             elif event == "MissionAbandoned":
                 self._mission_abandoned(entry)
             # ваучеры
-            elif event == "RedeemVoucher" and system in BGS._systems:
+            elif event == "RedeemVoucher" and (
+                system in BGS._systems
+                or not BGS._systems
+            ):
                 self._redeem_voucher(entry, cmdr, system)
             # картография
-            elif "SellExplorationData" in event and system in BGS._systems:
+            elif "SellExplorationData" in event and (
+                system in BGS._systems
+                or not BGS._systems
+            ):
                 self._exploration_data(entry, cmdr, system, station)
             
 
@@ -733,7 +770,7 @@ class BGS:
                 "entry.1755429366": inf_changes.get(mission["faction2"], ""),
                 "usp": "pp_url",
             }
-            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+            BGS._send(url, url_params, [mission["system"], mission["system2"]])
 
 
         def _mission_failed(self, entry, cmdr):
@@ -759,7 +796,7 @@ class BGS:
                 "entry.1755429366": "-2" if failed_mission["system2"] != "" else "",
                 "usp": "pp_url",
             }
-            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+            BGS._send(url, url_params, [failed_mission["system"], failed_mission["system2"]])
 
 
         def _mission_abandoned(self, entry):
@@ -796,7 +833,6 @@ class BGS:
                         "entry.351553038": faction["Amount"],
                         "usp": "pp_url",
                     }
-                    BasicThread(target=lambda: requests.get(url, params=url_params)).start()
             else:
                 debug("[BGS.redeem_voucher] Redeeming bonds: faction {!r}, amount: {}", entry["Faction"], entry["Amount"])
                 url_params = {
@@ -808,7 +844,7 @@ class BGS:
                     "entry.351553038": entry["Amount"],
                     "usp": "pp_url",
                 }
-                BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+            BGS._send(url, url_params, [system])
 
 
         def _exploration_data(self, entry, cmdr, system, station):
@@ -826,7 +862,7 @@ class BGS:
                 debug("[BGS.exploration_data]: Sold exploration data for {} credits, station's owner: {!r}",
                     entry["TotalEarnings"],
                     self.main_faction)
-                BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+                BGS._send(url, url_params, system)
 
 
     class CZ_Tracker:
@@ -849,7 +885,7 @@ class BGS:
                 debug("CZ_Tracker: safe set to {!r}", self.safe)
                 return
             
-            if system in BGS._systems:
+            if system in BGS._systems or not BGS._systems:
                 if self.in_conflict == False:
                     # начало конфликта (космос)
                     if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
@@ -1126,7 +1162,7 @@ class BGS:
         
 
         @staticmethod
-        def _send_results(info:dict, presumed: str, actual: str):
+        def _send_results(info: dict, presumed: str, actual: str):
             match info.get("intensity"):
                 case "Low":     weight = 0.25
                 case "Medium":  weight = 0.5
@@ -1146,7 +1182,7 @@ class BGS:
                     "entry.1383403456": actual,
                     "usp": "pp_url",
                 }
-            BasicThread(target=lambda: requests.get(url, params=url_params)).start()
+            BGS._send(url, url_params, [info["system"]])
 
 
         def _reset(self):
