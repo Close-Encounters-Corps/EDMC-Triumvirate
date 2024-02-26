@@ -608,8 +608,8 @@ class BGS:
     class Missions_Tracker:
         def __new__(cls):
             if BGS._missions_tracker is None:
-                return super().__new__(cls)
-            raise RuntimeError("not allowed, use BGS module instead")
+                BGS._missions_tracker = super().__new__(cls)
+            return BGS._missions_tracker
         
         def __init__(self):
             path = os.path.join(BGS._plugin_dir, "data", "missions.db")
@@ -832,8 +832,8 @@ class BGS:
     class CZ_Tracker:
         def __new__(cls):
             if BGS._cz_tracker is None:
-                return super().__new__(cls)
-            raise RuntimeError("not allowed, use BGS module instead")
+                BGS._cz_tracker = super().__new__(cls)
+            return BGS._cz_tracker
         
         def __init__(self):
             self.in_conflict = False
