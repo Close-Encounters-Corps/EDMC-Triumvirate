@@ -607,7 +607,7 @@ class BGS:
             cls._missions_tracker.stop()
 
     @classmethod
-    def _send(cls, url, params, affected_systems):
+    def _send(cls, url: str, params: dict, affected_systems: list):
         if not cls._systems:
             cls._data_send_queue.append({
                 "url": url,
