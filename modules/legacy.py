@@ -862,7 +862,7 @@ class BGS:
                 debug("[BGS.exploration_data]: Sold exploration data for {} credits, station's owner: {!r}",
                     entry["TotalEarnings"],
                     self.main_faction)
-                BGS._send(url, url_params, system)
+                BGS._send(url, url_params, [system])
 
 
     class CZ_Tracker:
