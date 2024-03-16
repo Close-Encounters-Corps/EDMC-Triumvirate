@@ -6,7 +6,6 @@ from math import sqrt, pow
 from datetime import datetime
 from collections import deque
 from tkinter import font, ttk
-from PIL import Image, ImageTk
 from .debug import debug, error, info
 from .lib.conf import config
 from .lib.thread import Thread, BasicThread
@@ -16,6 +15,11 @@ try:#py3
     from urllib.parse import quote_plus
 except:#py2
     from urllib import quote_plus
+
+if sys.maxsize >= 2**31:        # maxsize на 32 битах = 2**31-1
+    from thirdparty.PIL64 import Image, ImageTk
+else:
+    from thirdparty.PIL import Image, ImageTk
 
 
 URL_GOOGLE = 'https://docs.google.com/forms/d/e'
