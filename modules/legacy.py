@@ -5,7 +5,8 @@ import tkinter as tk
 from math import sqrt, pow
 from datetime import datetime
 from collections import deque
-from tkinter import font
+from tkinter import font, ttk
+from PIL import Image, ImageTk
 from .debug import debug, error, info
 from .lib.conf import config
 from .lib.thread import Thread, BasicThread
@@ -680,7 +681,6 @@ class BGS:
                 debug("[BGS.prune_expired] Mission {} was deleted.", id)
             info("[BGS.prune_expired] Done.")
 
-        # Методы обработки логов:
 
         def process_entry(self, cmdr, system, station, entry):
             event = entry["event"]
@@ -1084,86 +1084,145 @@ class BGS:
 
         @staticmethod
         def _ask_user(info: dict, presumed_winner: str):
-            class Notification(tk.Toplevel):
-                def __init__(self, text: str, factions: list):
+            BasicThread(target=lambda: Notification(info, presumed_winner), name="cz notification").start()
+
+            class Notification(tk.Tk):
+                def __init__(self, info: dict, presumed_winner: str):
                     super().__init__()
-                    Player(BGS._plugin_dir, ["sounds/cz_notification.wav"]).start()
-                    # Это отвратительное решение, но пусть будет так.
-                    # 1x - высота экрана 1080пкс. При меньшем размере экрана - всё равно используем 1x.
-                    # При большем - считаем разницу с 1080, соответственно увеличиваем все размеры.
+                    self.info = info
+                    self.factions = [faction for faction, _ in info["allegiances"].items()]
+                    self.presumed = presumed_winner
+
                     screen_height = self.winfo_screenheight()
                     if screen_height <= 1080:
-                        zoom_factor = 1
+                        self.scale = 1
                     else:
-                        zoom_factor = screen_height / 1080
+                        self.scale = screen_height / 1080
 
-                    self.title("Завершение зоны конфликта")
+                    self.title("Результаты зоны конфликта")
                     self.resizable(False, False)
                     self.geometry(config.get_str("CZ.Notification.position"))
+                    self.default_font = font.nametofont("TkDefaultFont").actual()["family"]
 
-                    default_font = font.nametofont("TkDefaultFont").actual()["family"]
-                    tk.Label(self, text=text, justify="left", font=(default_font, int(9*zoom_factor))).pack(anchor="nw")
+                    Player(BGS._plugin_dir, ["sounds/cz_notification.wav"]).start()
+                    self.image_path = os.path.join(BGS._plugin_dir, "icons", "cz_notification.png")
 
-                    bottombox = tk.Frame(self)
-                    bottombox.grid_columnconfigure(0, weight=1, uniform="group1")
-                    bottombox.grid_columnconfigure(1, weight=1, uniform="group1")
+                    self.topframe = ttk.Frame(self, padding=3)
+                    self.bottomframe = ttk.Frame(self, padding=3)
+                    self.topframe.grid(row=0, column=0, sticky="NWE")
+                    self.bottomframe.grid(row=1, column=0, sticky="SWE")
 
-                    tk.Button(
-                        bottombox,
-                        text=factions[0],
-                        font=(default_font, int(9*zoom_factor)),
-                        padx=int(5*zoom_factor),
-                        pady=int(3*zoom_factor),
-                        bd=int(3*zoom_factor),
-                        command=lambda: self._result(factions[0])
-                    ).grid(row=0, column=0, sticky="nsew")
-                    
-                    tk.Button(
-                        bottombox,
-                        text=factions[1],
-                        font=(default_font, int(9*zoom_factor)),
-                        padx=int(5*zoom_factor),
-                        pady=int(3*zoom_factor),
-                        bd=int(3*zoom_factor),
-                        command=lambda: self._result(factions[1]) 
-                    ).grid(row=0, column=1, sticky="nsew")
-                    
-                    tk.Button(
-                        bottombox,
-                        text="Никто (досрочный выход из зоны конфликта)",
-                        font=(default_font, int(9*zoom_factor)),
-                        padx=int(5*zoom_factor),
-                        pady=int(3*zoom_factor),
-                        bd=int(3*zoom_factor),
+                    # topframe
+                    self.toplabel = ttk.Label(
+                        self.topframe,
+                        text="Зафиксировано завершение зоны конфликта",
+                        font=(self.default_font, int(15*self.scale))
+                    )
+                    self.bottomlabel = ttk.Label(
+                        self.topframe,
+                        text="Выберите победившую фракцию:",
+                        font=(self.default_font, int(12*self.scale))
+                    )
+                    self.msgframe = self._get_msgframe(self.topframe)
+
+                    self.toplabel.grid(row=0, column=0, columnspan=2, sticky="N")
+                    self.msgframe.grid(row=1, column=0, sticky="W")
+                    self.bottomlabel.grid(row=2, column=0, columnspan=2, sticky="S")
+
+                    # bottomframe
+                    ttk.Style().configure("notif.TButton", font=(self.default_font, int(10*self.scale)), padding=4, width=1)
+                    self.leftbutton = ttk.Button(
+                        self.bottomframe,
+                        text=self.factions[0],
+                        style="notif.TButton",
+                        command=lambda: self._result(self.factions[0])
+                    )
+                    self.rightbutton = ttk.Button(
+                        self.bottomframe,
+                        text=self.factions[1],
+                        style="notif.TButton",
+                        command=lambda: self._result(self.factions[1])
+                    )
+                    self.cancelbutton = ttk.Button(
+                        self.bottomframe,
+                        text="Никто (досрочный выход из зоны конфликта/ложное срабатывание)",
+                        style="notif.TButton",
                         command=lambda: self._result()
-                    ).grid(row=1, column=0, columnspan=2, sticky="nsew")
-                    
-                    bottombox.pack(expand=True, fill="x", anchor="s")
+                    )
+                    self.bottomframe.columnconfigure(0, weight=1)
+                    self.bottomframe.columnconfigure(1, weight=1)
+                    self.leftbutton.grid(row=0, column=0, sticky="NSWE")
+                    self.rightbutton.grid(row=0, column=1, sticky="NSWE")
+                    self.cancelbutton.grid(row=1, column=0, columnspan=2, sticky="NSWE")
 
+                
+                def _get_msgframe(self, parent) -> ttk.Frame:
+                    frame = ttk.Frame(parent)
+                    frame.columnconfigure(0, weight=1)
+                    frame.columnconfigure(1, weight=1)
+                    frame.columnconfigure(2, weight=1)
+
+                    ttk.Style().configure("msgtext.TLabel", font=(self.default_font, int(9*self.scale)), justify="left")
+                    is_foot = (info["conflict_type"] == "Foot")
+                    match info.get("intensity"):
+                        case "Low":     intensity = "низкая"
+                        case "Medium":  intensity = "средняя"
+                        case "High":    intensity = "высокая"
+                        case _:         intensity = "НЕ ОПРЕДЕЛЕНА"
+
+                    ttk.Label(
+                        frame,
+                        text="Подтвердите правильность полученных данных:", 
+                        font=(self.default_font, int(12*self.scale)),
+                    ).grid(row=0, column=0, columnspan=2, sticky="W")
+
+                    leftframe = tk.Frame(frame)
+                    rightframe= tk.Frame(frame)
+
+                    # левый столбец
+                    ttk.Label(leftframe, style="msgtext.TLabel", text="Система:").grid(row=0, column=0, sticky="NW")
+                    ttk.Label(leftframe, style="msgtext.TLabel", text="Напряжённость:").grid(row=1, column=0, sticky="NW")
+                    ttk.Label(leftframe, style="msgtext.TLabel", text="Поселение:").grid(row=2, column=0, sticky="NW") if is_foot else None
+                    ttk.Label(leftframe, style="msgtext.TLabel", text="Участвующие фракции:\n").grid(row=2+is_foot, column=0, sticky="NW")
+                    ttk.Label(leftframe, style="msgtext.TLabel", text="Предполагаемый победитель:").grid(row=3+is_foot, column=0, sticky="NW")
+                    ttk.Label(leftframe, style="msgtext.TLabel", text="Вы сражались на стороне:").grid(row=4+is_foot, column=0, sticky="NW")
+
+                    # правый столбец
+                    ttk.Label(rightframe, style="msgtext.TLabel", text=info["system"]).grid(row=0, column=0, sticky="NW")
+                    ttk.Label(rightframe, style="msgtext.TLabel", text=intensity).grid(row=1, column=0, sticky="NW")
+                    ttk.Label(rightframe, style="msgtext.TLabel", text=info["location"]).grid(row=2, column=0, sticky="NW") if is_foot else None
+                    ttk.Label(rightframe, style="msgtext.TLabel", text=str(self.factions[0]+"\n"+self.factions[1])).grid(row=2+is_foot, column=0, sticky="NW")
+                    ttk.Label(rightframe, style="msgtext.TLabel", text=self.presumed).grid(row=3+is_foot, column=0, sticky="NW")
+                    ttk.Label(rightframe, style="msgtext.TLabel", text=info["player_fights_for"]).grid(row=4+is_foot, column=0, sticky="NW")
+
+                    leftframe.grid(row=1, column=0, sticky="NSWE")
+                    rightframe.grid(row=1, column=1, sticky="NSWE")
+
+                    # иконка
+                    self.update()               # для получения leftframe.winfo_height()
+                    self.image = Image.open(self.image_path)
+                    img_scale = leftframe.winfo_reqheight() / self.image.height
+                    self.image = self.image.resize((int(self.image.width*img_scale), int(self.image.height*img_scale)))
+                    self.image = ImageTk.PhotoImage(self.image)
+                    self.canvas = tk.Canvas(
+                        frame,
+                        height=self.image.height(),
+                        width=self.image.width(),
+                    )
+                    # (2,2) из-за каких-то непонятных мне отступов у canvas-а, режущих картинку
+                    self.canvas.create_image(2, 2, anchor="nw", image=self.image)
+                    self.canvas.grid(row=1, column=2, sticky="NSWE", padx=int(15*self.scale))
+
+                    return frame
+                
+                
                 def _result(self, actual_winner: str = None):
                     if actual_winner:
                         debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
-                        BGS.CZ_Tracker._send_results(info, presumed_winner, actual_winner)
+                        BGS.CZ_Tracker._send_results(self.info, self.presumed, actual_winner)
                     else:
                         debug("CZ_Tracker: user canceled the choice.")
                     self.destroy()
-
-            
-            factions = [faction for faction, _ in info["allegiances"].items()]
-            message = str(
-                "Зафиксировано окончание зоны конфликта.\n" +
-                "Подтвердите правильность полученных данных:\n\n" +
-                "Система: {}\n".format(info["system"]) +
-                "Напряжённость: {}\n".format(info.get("intensity", "")) +
-                "Поселение: {}\n".format(info.get("location", "")) +
-                "Участвующие фракции:\n" +
-                "  - {}\n".format(factions[0]) +
-                "  - {}\n".format(factions[1]) +
-                "Предполагаемый победитель: {}\n".format(presumed_winner if presumed_winner != "[UNKNOWN]" else "НЕ ОПРЕДЕЛЁН") +
-                "Вы сражались на стороне: {}\n\n".format(info["player_fights_for"]) +
-                "Выберите победившую фракцию."
-            )
-            BasicThread(target=lambda: Notification(message, factions), name="cz notification").start() 
         
 
         @staticmethod
