@@ -648,7 +648,7 @@ class BGS:
             path = os.path.join(BGS._plugin_dir, "data", "missions.db")
             self.db = sqlite3.connect(path, check_same_thread=False)
             self._query("CREATE TABLE IF NOT EXISTS missions (id, payload)")
-            self.main_faction = ""
+            self.station_owner = ""
 
         def stop(self):
             self._prune_expired()
@@ -721,8 +721,8 @@ class BGS:
             
 
         def _set_faction(self, entry):
-            self.main_faction = entry["StationFaction"]["Name"]
-            debug("[BGS.set_faction]: detected {!r}, main_faction set to {!r}", entry["event"], self.main_faction)
+            self.station_owner = entry["StationFaction"]["Name"]
+            debug("[BGS.set_faction]: detected {!r}, station_owner set to {!r}", entry["event"], self.station_owner)
 
 
         def _mission_accepted(self, entry, system):
@@ -818,7 +818,7 @@ class BGS:
 
         def _redeem_voucher(self, entry, cmdr, system):
             # Игнорируем флитаки, юристов и лишние типы выплат.
-            if (self.main_faction == "FleetCarrier"
+            if (self.station_owner == "FleetCarrier"
                     or "BrokerPercentage" in entry
                     or entry["Type"] not in ("bounty", "CombatBond")):
                 return
@@ -852,20 +852,20 @@ class BGS:
 
 
         def _exploration_data(self, entry, cmdr, system, station):
-            if self.main_faction != "FleetCarrier":
+            if self.station_owner != "FleetCarrier":
                 url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse'
                 url_params = {
                     "entry.503143076": cmdr,
                     "entry.1108939645": "SellExpData",
                     "entry.127349896": system,
                     "entry.442800983": station,
-                    "entry.48514656": self.main_faction,
+                    "entry.48514656": self.station_owner,
                     "entry.351553038": entry["TotalEarnings"],
                     "usp": "pp_url"
                 }
                 debug("[BGS.exploration_data]: Sold exploration data for {} credits, station's owner: {!r}",
                     entry["TotalEarnings"],
-                    self.main_faction)
+                    self.station_owner)
                 BGS._send(url, url_params, [system])
 
 
