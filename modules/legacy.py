@@ -3,7 +3,7 @@ import threading, requests, traceback, json, os, sys, sqlite3
 import tkinter as tk
 
 from math import sqrt, pow
-from datetime import datetime
+from datetime import datetime, timezone
 from collections import deque
 from tkinter import font, ttk
 from .debug import debug, error, info
@@ -673,12 +673,12 @@ class BGS:
         def _prune_expired(self):
             info("[BGS.prune_expired] Clearing the database from expired missions.")
             expired_missions = []
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             missions_list = self._query("SELECT id, payload FROM missions", fetchall=True)
             for id, payload in missions_list:
                 mission = json.loads(payload)
                 if "Megaship" not in mission["type"]:
-                    expires = datetime.strptime(mission["expires"], "%Y-%m-%dT%H:%M:%SZ")
+                    expires = datetime.fromisoformat(mission["expires"])
                     if expires <= now:
                         expired_missions.append(id)
             for id in expired_missions:
@@ -950,7 +950,7 @@ class BGS:
                     "player_fights_for": None,
                     "kills": 0,
                     "kills_limit": 5,
-                    "start_time": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
+                    "start_time": datetime.fromisoformat(entry["timestamp"]),
                     "end_time": None
                 }
                 intensity = entry["Type"]
@@ -970,7 +970,7 @@ class BGS:
                     "player_fights_for": None,
                     "kills": 0,
                     "kills_limit": 20,
-                    "start_time": datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ"),
+                    "start_time": datetime.fromisoformat(entry["timestamp"]),
                     "end_time": None,
                 }
 
@@ -1029,13 +1029,13 @@ class BGS:
             # По имени фильтруем, чтобы случайно не поймать последним такое сообщение, например, от спецкрыла
             # и сломать определение принадлежности победителя.
             if "$Military_Passthrough" in entry["Message"] and "$ShipName_Military" in entry["From"]:
-                timestamp = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
+                timestamp = datetime.fromisoformat(entry["timestamp"])
                 allegiance = entry["From"][19:1]
                 debug("CZ_Tracker: detected patrol message sent from {!r} ship.", allegiance)
 
                 if not self.end_messages.get(allegiance):
                     self.end_messages[allegiance] = deque(5*[None], 5)
-                queue = self.end_messages[allegiance]               # они же по ссылке передаются?
+                queue = self.end_messages[allegiance]
                 queue.append(timestamp)
                 
                 if queue[0] != None:
@@ -1046,7 +1046,7 @@ class BGS:
 
         def _end_conflict(self, winners_allegiance: str | None = None):
             debug("CZ_Tracker: END_CONFLICT called, calculating the result.")
-            self.info["end_time"] = datetime.utcnow()
+            self.info["end_time"] = datetime.now(timezone.utc)
             factions_list = list(self.info["allegiances"].items())
             presumed_winner = "[UNKNOWN]"
 
