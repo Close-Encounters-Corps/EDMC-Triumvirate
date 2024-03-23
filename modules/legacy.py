@@ -25,17 +25,28 @@ else:
 URL_GOOGLE = 'https://docs.google.com/forms/d/e'
 
 
-class Reporter(threading.Thread):
-    def __init__(self, payload):
-        threading.Thread.__init__(self)
-        self.payload = payload
+class Reporter(Thread):
+    def __init__(self, url: str, params: dict = None):
+        super().__init__(self)
+        self.url = url
+        self.params = params
 
     def run(self):
-        try:
-            requests.get(self.payload)
-        except:
-            print(('Issue posting message ' + str(sys.exc_info()[0])))
-            
+        count = 0
+        while True:
+            count += 1
+            try:
+                response = requests.post(self.url, self.params)
+            except:
+                error(traceback.format_exc())
+                break
+            else:
+                if response.status_code == 200:
+                    debug(f"[Reporter] Data sent successfully ({count} attempts).")
+                    break
+                else:
+                    error(f"[Reporter] Couldn't send data, response code {response.status_code}.")
+                    self.sleep(10)
 
 
 def getDistance(x1,y1,z1,x2,y2,z2):
@@ -623,7 +634,7 @@ class BGS:
         else:
             for system in affected_systems:
                 if system in cls._systems:
-                    BasicThread(target=lambda: requests.get(url, params)).start()
+                    Reporter(url, params).start()
                     info("[BGS.send]: BGS information sent.")
 
     @classmethod
@@ -632,7 +643,7 @@ class BGS:
         for entry in cls._data_send_queue:
             for system in entry["systems"]:
                 if system in cls._systems:
-                    BasicThread(target=lambda: requests.get(entry["url"], entry["params"])).start()
+                    Reporter(entry["url"], entry["params"]).start()
                     counter += 1
         info(f"[BGS.send_all] {counter} pending entries sent.")
         cls._data_send_queue.clear()
