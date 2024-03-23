@@ -649,6 +649,7 @@ class BGS:
             self.db = sqlite3.connect(path, check_same_thread=False)
             self._query("CREATE TABLE IF NOT EXISTS missions (id, payload)")
             self.station_owner = ""
+            self.redeemed_factions = []
 
         def stop(self):
             self._prune_expired()
@@ -690,7 +691,7 @@ class BGS:
             event = entry["event"]
             # стыковка/вход в игру на станции
             if event == "Docked" or (event == "Location" and entry["Docked"] == True):
-                self._set_faction(entry)
+                self._docked(entry)
             # принятие миссии
             elif event == "MissionAccepted" and (
                 system in BGS._systems
@@ -720,8 +721,9 @@ class BGS:
                 self._exploration_data(entry, cmdr, system, station)
             
 
-        def _set_faction(self, entry):
+        def _docked(self, entry):
             self.station_owner = entry["StationFaction"]["Name"]
+            self.redeemed_factions = []
             debug("[BGS.set_faction]: detected {!r}, station_owner set to {!r}", entry["event"], self.station_owner)
 
 
@@ -819,24 +821,27 @@ class BGS:
         def _redeem_voucher(self, entry, cmdr, system):
             # Игнорируем флитаки, юристов и лишние типы выплат.
             if (self.station_owner == "FleetCarrier"
-                    or "BrokerPercentage" in entry
-                    or entry["Type"] not in ("bounty", "CombatBond")):
+                or "BrokerPercentage" in entry
+                or entry["Type"] not in ("bounty", "CombatBond")
+            ):
                 return
             
             url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse'
             if entry["Type"] == "bounty":
                 debug("[BGS.redeem_voucher] Redeeming bounties:")
                 for faction in entry["Factions"]:
-                    debug("[BGS.redeem_voucher] Faction {!r}, amount: {}", faction["Faction"], faction["Amount"])
-                    url_params = {
-                        "entry.503143076": cmdr,
-                        "entry.1108939645": entry["Type"],
-                        "entry.127349896": system,
-                        "entry.442800983": "",
-                        "entry.48514656": faction["Faction"],
-                        "entry.351553038": faction["Amount"],
-                        "usp": "pp_url",
-                    }
+                    if faction["Faction"] not in self.redeemed_factions:
+                        debug("[BGS.redeem_voucher] Faction {!r}, amount: {}", faction["Faction"], faction["Amount"])
+                        url_params = {
+                            "entry.503143076": cmdr,
+                            "entry.1108939645": entry["Type"],
+                            "entry.127349896": system,
+                            "entry.442800983": "",
+                            "entry.48514656": faction["Faction"],
+                            "entry.351553038": faction["Amount"],
+                            "usp": "pp_url",
+                        }
+                        self.redeemed_factions.append(faction["Faction"])    
             else:
                 debug("[BGS.redeem_voucher] Redeeming bonds: faction {!r}, amount: {}", entry["Faction"], entry["Amount"])
                 url_params = {
