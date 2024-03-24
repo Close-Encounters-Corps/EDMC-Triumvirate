@@ -70,3 +70,6 @@ def debug(value, *args):
 
 def error(value, *args):
     Debug.error(value, *args)
+
+def info(value, *args):
+    Debug.info(value, *args)

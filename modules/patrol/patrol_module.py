@@ -682,15 +682,9 @@ class PatrolModule(Frame, Module):
 
 
 def copyclip(value):
-    debug("copyclip")
-    window = tk.Tk()
-    window.withdraw()
-    window.clipboard_clear()  # clear clipboard contents
+    window: tk.Tk = tk._default_root
+    window.clipboard_clear()
     window.clipboard_append(value)
-    debug("copyclip_append")
-    window.update()
-    window.destroy()
-    debug("copyclip done")
 
 
 def distance_between(p, g):
