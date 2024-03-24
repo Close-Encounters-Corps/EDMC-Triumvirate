@@ -27,7 +27,7 @@ URL_GOOGLE = 'https://docs.google.com/forms/d/e'
 
 class Reporter(Thread):
     def __init__(self, url: str, params: dict = None):
-        super().__init__(self)
+        super().__init__()
         self.url = url
         self.params = params
 
