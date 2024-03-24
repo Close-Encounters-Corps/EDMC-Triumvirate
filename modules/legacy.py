@@ -1233,16 +1233,16 @@ class BGS:
 
                 # левый столбец
                 ttk.Label(leftframe, style="msgtext.TLabel", text="Система:").grid(row=0, column=0, sticky="NW")
-                ttk.Label(leftframe, style="msgtext.TLabel", text="Напряжённость:").grid(row=1, column=0, sticky="NW")
-                ttk.Label(leftframe, style="msgtext.TLabel", text="Поселение:").grid(row=2, column=0, sticky="NW") if is_foot else None
+                ttk.Label(leftframe, style="msgtext.TLabel", text="Поселение:").grid(row=1, column=0, sticky="NW") if is_foot else None
+                ttk.Label(leftframe, style="msgtext.TLabel", text="Напряжённость:").grid(row=1+is_foot, column=0, sticky="NW")
                 ttk.Label(leftframe, style="msgtext.TLabel", text="Участвующие фракции:\n").grid(row=2+is_foot, column=0, sticky="NW")
                 ttk.Label(leftframe, style="msgtext.TLabel", text="Предполагаемый победитель:").grid(row=3+is_foot, column=0, sticky="NW")
                 ttk.Label(leftframe, style="msgtext.TLabel", text="Вы сражались на стороне:").grid(row=4+is_foot, column=0, sticky="NW")
 
                 # правый столбец
                 ttk.Label(rightframe, style="msgtext.TLabel", text=self.info["system"]).grid(row=0, column=0, sticky="NW")
-                ttk.Label(rightframe, style="msgtext.TLabel", text=intensity).grid(row=1, column=0, sticky="NW")
-                ttk.Label(rightframe, style="msgtext.TLabel", text=self.info["location"]).grid(row=2, column=0, sticky="NW") if is_foot else None
+                ttk.Label(rightframe, style="msgtext.TLabel", text=self.info["location"]).grid(row=1, column=0, sticky="NW") if is_foot else None
+                ttk.Label(rightframe, style="msgtext.TLabel", text=intensity).grid(row=1+is_foot, column=0, sticky="NW")
                 ttk.Label(rightframe, style="msgtext.TLabel", text=str(self.factions[0]+"\n"+self.factions[1])).grid(row=2+is_foot, column=0, sticky="NW")
                 ttk.Label(rightframe, style="msgtext.TLabel", text=self.presumed).grid(row=3+is_foot, column=0, sticky="NW")
                 ttk.Label(rightframe, style="msgtext.TLabel", text=self.info["player_fights_for"]).grid(row=4+is_foot, column=0, sticky="NW")
