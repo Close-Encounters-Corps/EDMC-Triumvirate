@@ -942,9 +942,12 @@ class BGS:
                     # завершение конфликта: возврат на шаттле (ноги)
                     elif event == "BookDropship" and entry["Retreat"] == True:
                         self._end_conflict()
+                    # релог в пешей кз
+                    elif event == "Music" and entry["MusicTrack"] == "MainMenu" and self.on_foot == True:
+                        self._end_conflict()
                     # досрочный выход
-                    elif (event in ("Shutdown", "Died", "CancelDropship") or
-                          event == "Music" and entry["MusicTrack"] == "MainMenu"):
+                    elif (event in ("Shutdown", "Died", "CancelDropship") or        # это для любых кз
+                          event == "Music" and entry["MusicTrack"] == "MainMenu"):  # а это уже только в космосе будет работать
                         self._reset()
 
             
