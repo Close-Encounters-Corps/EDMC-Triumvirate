@@ -925,7 +925,7 @@ class BGS:
                         self._patrol_message(entry)
                     # пешие конфликты: смена режима
                     elif (event in ("DropshipDeploy", "Disembark", "LaunchSRV")
-                        or event == "Location" and entry.get("InSRV") or entry.get("OnFoot")):
+                        or event == "Location" and (entry.get("InSRV") or entry.get("OnFoot"))):
                         self.on_foot = True
                         debug("CZ_Tracker: on foot")
                     elif (event == "DockSRV" 
