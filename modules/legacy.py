@@ -587,12 +587,11 @@ class BGS:
         cls._plugin_dir = plugin_dir
         BGS._missions_tracker = BGS.Missions_Tracker()
         BGS._cz_tracker = BGS.CZ_Tracker()
-        BGS.Systems_Updater(BGS._systems).start()
+        BGS.Systems_Updater().start()
 
     class Systems_Updater(Thread):
-        def __init__(self, systems_list: list):
+        def __init__(self):
             super().__init__(name="BGS systems list updater")
-            self.systems_list = systems_list
         def do_run(self):
             url = "https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140"
             attempts = 0
@@ -600,8 +599,7 @@ class BGS:
                 attempts += 1
                 response = requests.get(url)
                 if response.status_code == 200:
-                    self.systems_list.clear()
-                    self.systems_list += str(response.json()["files"]["systems"]["content"]).split('\n')
+                    BGS._systems = str(response.json()["files"]["systems"]["content"]).split('\n')
                     info("[BGS.setup] Got list of systems to track.")
                     BGS._send_all()
                     return
