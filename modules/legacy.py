@@ -902,6 +902,19 @@ class BGS:
                 self.safe = entry["GameMode"] != "Open"
                 debug("CZ_Tracker: safe set to {!r}", self.safe)
                 return
+
+            # отслеживание режима игрока (космос/ноги)
+            if (event in ("DropshipDeploy", "Disembark", "LaunchSRV")
+                or event == "Location" and (entry.get("InSRV") or entry.get("OnFoot"))
+            ):
+                self.on_foot = True
+                debug("CZ_Tracker: on foot")
+            elif (event == "DockSRV" 
+                or event == "Embark" and entry["SRV"] == False
+                or event == "Location" and not(entry.get("InSRV") or entry.get("OnFoot"))
+            ):
+                self.on_foot = False
+                debug("CZ_Tracker: on ship")
             
             if system in BGS._systems or not BGS._systems:
                 if self.in_conflict == False:
@@ -923,16 +936,6 @@ class BGS:
                     # отслеживание сообщений, потенциальное завершение конфликта
                     elif event == "ReceiveText":
                         self._patrol_message(entry)
-                    # пешие конфликты: смена режима
-                    elif (event in ("DropshipDeploy", "Disembark", "LaunchSRV")
-                        or event == "Location" and (entry.get("InSRV") or entry.get("OnFoot"))):
-                        self.on_foot = True
-                        debug("CZ_Tracker: on foot")
-                    elif (event == "DockSRV" 
-                        or event == "Embark" and entry["SRV"] == False
-                        or event == "Location" and not(entry.get("InSRV") or entry.get("OnFoot"))):
-                        self.on_foot = False
-                        debug("CZ_Tracker: on ship")
                     # завершение конфликта: прыжок
                     elif event == "StartJump":
                         self._end_conflict()
