@@ -1,5 +1,5 @@
 ﻿# -*- coding: utf-8 -*-
-import threading, requests, traceback, json, os, sys, sqlite3
+import threading, requests, traceback, json, os, sys, sqlite3, re
 import tkinter as tk
 
 from math import sqrt, pow
@@ -915,6 +915,13 @@ class BGS:
             ):
                 self.on_foot = False
                 debug("CZ_Tracker: on ship")
+
+            # релог в пеших кз
+            # ApproachSettlement в логах идёт раньше Location, и EDMC отдаёт system = None в этот момент
+            # в самом ApproachSettlement названия системы нет, но есть название тела
+            if event == "ApproachSettlement" and system == None:
+                pattern = r"\s([A-Z]\s)?\d{1,3}(\s[a-z])?$"
+                system = re.sub(pattern, "", entry["BodyName"])
             
             if system in BGS._systems or not BGS._systems:
                 if self.in_conflict == False:
