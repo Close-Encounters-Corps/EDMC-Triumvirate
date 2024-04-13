@@ -30,7 +30,8 @@ from modules import (
     legacy,
     message_label,
     patrol,
-    release
+    release,
+    bgs
 )
 from modules.debug import Debug
 from modules.lib import canonn_api, http
@@ -175,9 +176,10 @@ def plugin_start3(plugin_dir):
     """
     this.plugin_dir = plugin_dir
     Debug.setup(logger)
-    legacy.BGS.setup(plugin_dir)
     this.journal_entry_processor = JournalEntryProcessor()
     this.journal_entry_processor.start()
+    for mod in context.modules:
+        mod.on_start(plugin_dir)
     # префикс логов
     codex.CodexTypes.plugin_start(plugin_dir)
     # в логах пишется с префиксом Triumvirate
@@ -230,11 +232,13 @@ def plugin_app(parent):
     this.canonn_rt_api = canonn_api.CanonnRealtimeApi()
     rel = release.Release(this.plugin_dir, table, this.version, 1)
     this.patrol = patrol.PatrolModule(table, 2)
+    this.bgs_module = bgs.BGS()
     this.modules = [
         rel,
         this.patrol,
         this.systems_module,
-        clientreport.ClientReportModule()
+        clientreport.ClientReportModule(),
+        this.bgs_module
     ]
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     # лейбл, в котором содержится текст из вывода модулей
@@ -385,7 +389,6 @@ class JournalEntryProcessor(thread.Thread):
         legacy.AXZone(cmdr, is_beta, system, x, y, z, station, entry, state)
         legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
         legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
-        legacy.BGS.journal_entry(cmdr, system, station, entry)
         legacy.GusonExpeditions(cmdr, is_beta, system, entry)
         if status_message is not None:
             this.message_label.text = status_message

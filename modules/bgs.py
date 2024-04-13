@@ -6,6 +6,8 @@ from collections import deque
 from tkinter import font, ttk
 
 from .debug import debug, error, info
+from .lib.journal import JournalEntry
+from .lib.module import Module
 from .lib.conf import config
 from .lib.thread import Thread, BasicThread
 from .player import Player
@@ -18,14 +20,14 @@ else:
     from thirdparty.PIL import Image, ImageTk
 
 
-class BGS:
+class BGS(Module):
     _missions_tracker = None
     _cz_tracker = None
     _systems = list()
     _data_send_queue = deque()      # по логике нужна queue, но не хочу ещё один импорт тащить
 
     @classmethod
-    def setup(cls, plugin_dir):
+    def on_start(cls, plugin_dir):
         cls._plugin_dir = plugin_dir
         BGS._missions_tracker = Missions_Tracker()
         BGS._cz_tracker = CZ_Tracker()
@@ -49,10 +51,11 @@ class BGS:
                 self.sleep(10)
 
     @classmethod
-    def journal_entry(cls, cmdr, system, station, entry):
+    def on_journal_entry(cls, journalEntry: JournalEntry):
         try:
-            cls._missions_tracker.process_entry(cmdr, system, station, entry)
-            cls._cz_tracker.process_entry(cmdr, system, entry)
+            entry = journalEntry.as_dict()
+            cls._missions_tracker.process_entry(entry["cmdr"], entry["system"], entry["station"], entry["data"])
+            cls._cz_tracker.process_entry(entry["cmdr"], entry["system"], entry["data"])
         except:
             error(traceback.format_exc())
 
