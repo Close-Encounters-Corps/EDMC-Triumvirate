@@ -1,4 +1,4 @@
-import requests, traceback, json, os, sqlite3, re
+import requests, traceback, json, os, sqlite3, re, threading
 import tkinter as tk
 
 from datetime import datetime, timezone
@@ -99,6 +99,7 @@ class Missions_Tracker:
     def __init__(self):
         path = os.path.join(BGS._plugin_dir, "data", "missions.db")
         self.db = sqlite3.connect(path, check_same_thread=False)
+        self.lock = threading.Lock()
         self._query("CREATE TABLE IF NOT EXISTS missions (id, payload)")
         self.station_owner = ""
         self.redeemed_factions = []
@@ -108,18 +109,19 @@ class Missions_Tracker:
         self.db.close()
     
     def _query(self, query: str, *args, fetchall: bool = False):
-        cur = self.db.cursor()
-        query = query.strip()
-        q_type = query[:query.find(' ')].upper()
-        cur.execute(query, args)
-        if q_type == "SELECT":
-            if fetchall:
-                result = cur.fetchall()
+        with self.lock:
+            cur = self.db.cursor()
+            query = query.strip()
+            q_type = query[:query.find(' ')].upper()
+            cur.execute(query, args)
+            if q_type == "SELECT":
+                if fetchall:
+                    result = cur.fetchall()
+                else:
+                    result = cur.fetchone()
             else:
-                result = cur.fetchone()
-        else:
-            self.db.commit()
-        cur.close()
+                self.db.commit()
+            cur.close()
         return result if q_type == "SELECT" else None
     
     def _prune_expired(self):
