@@ -200,7 +200,6 @@ def plugin_stop():
     EDMC is closing
     """
     logger.debug("Stopping the plugin")
-    legacy.BGS.stop()
     for mod in context.modules:
         mod.close()
     thread.Thread.stop_all()
