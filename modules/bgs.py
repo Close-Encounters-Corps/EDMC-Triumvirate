@@ -27,7 +27,7 @@ class BGS(Module):
     _data_send_queue = deque()      # по логике нужна queue, но не хочу ещё один импорт тащить
 
     @classmethod
-    def on_start(cls, plugin_dir):
+    def on_start(cls, plugin_dir: str):
         cls._plugin_dir = plugin_dir
         BGS._missions_tracker = Missions_Tracker()
         BGS._cz_tracker = CZ_Tracker()

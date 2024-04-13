@@ -178,8 +178,6 @@ def plugin_start3(plugin_dir):
     Debug.setup(logger)
     this.journal_entry_processor = JournalEntryProcessor()
     this.journal_entry_processor.start()
-    for mod in context.modules:
-        mod.on_start(plugin_dir)
     # префикс логов
     codex.CodexTypes.plugin_start(plugin_dir)
     # в логах пишется с префиксом Triumvirate
@@ -239,6 +237,8 @@ def plugin_app(parent):
         clientreport.ClientReportModule(),
         this.bgs_module
     ]
+    for mod in context.modules:
+        mod.on_start(context.plugin_dir)
     this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     # лейбл, в котором содержится текст из вывода модулей
     this.message_label = message_label.MessageLabel(rows, row=5)
