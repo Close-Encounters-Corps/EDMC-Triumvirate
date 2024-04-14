@@ -10,6 +10,7 @@ from .lib.journal import JournalEntry
 from .lib.module import Module
 from .lib.conf import config
 from .lib.thread import Thread, BasicThread
+from .lib.context import global_context
 from .player import Player
 from .legacy import Reporter, URL_GOOGLE
 
@@ -468,9 +469,9 @@ class CZ_Tracker:
             
         # определение интенсивности пешей кз
         if (
-            self.info["conflict_type"] == "Foot"
+            not self.info["intensity"]
+            and self.info["conflict_type"] == "Foot"
             and self.on_foot
-            and not self.info["intensity"]
         ):
             reward = entry["Reward"]
             if 1896 <= reward < 4172:
@@ -542,11 +543,19 @@ class CZ_Tracker:
             debug("CZ_Tracker: not enough kills ({}/{}), resetting.", self.info["kills"], self.info["kills_limit"])
             self._reset()
             return
-
-        if not self.safe:
-            debug("CZ_Tracker: we're (probably) in the Open, winner's prediction disabled.")
         
+        # предсказание победителя
+        # мы не можем наверняка сказать, что фракция игрока победила, но будем *предполагать* такой исход
+        if (
+            presumed_winner == "[UNKNOWN]"
+            and self.info["kills"] >= self.info["kills_limit"]
+            and self.safe
+        ):
+            debug("CZ_Tracker: predicting the winner.")
+            presumed_winner = self.info["player_fights_for"]
+
         debug("CZ_Tracker: presumed winner set to {!r}.", presumed_winner)
+
         if presumed_winner != self.info["player_fights_for"]:
             debug("CZ_Tracker: presumed winner isn't the player's side, asking for confirmation.")
             info_copy = self.info.copy()
@@ -555,6 +564,7 @@ class CZ_Tracker:
             actual_winner = presumed_winner
             debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
             self._send_results(self.info, presumed_winner, actual_winner)
+        
         self._reset()
 
 
