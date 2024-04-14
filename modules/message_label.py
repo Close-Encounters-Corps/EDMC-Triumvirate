@@ -14,7 +14,7 @@ class MessageLabel(tk.Label):
     def text(self, value):
         self["text"] = value
         if not self.showed:
-            self.grid(row=self._row, column=0, sticky=tk.EW + tk.N)
+            self.grid(row=self._row, column=0, sticky="nw")
             self.showed = True
 
     def clear(self):
