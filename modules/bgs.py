@@ -3,7 +3,8 @@ import tkinter as tk
 
 from datetime import datetime, timezone
 from collections import deque
-from tkinter import font, ttk
+from tkinter import font, ttk, filedialog
+from shutil import copyfile
 
 from .debug import debug, error, info
 from .lib.journal import JournalEntry
@@ -13,6 +14,8 @@ from .lib.thread import Thread, BasicThread
 from .lib.context import global_context
 from .player import Player
 from .legacy import Reporter, URL_GOOGLE
+
+import myNotebook as nb
 
 import sys
 if sys.maxsize >= 2**31:        # maxsize на 32 битах = 2**31-1
@@ -33,6 +36,17 @@ class BGS(Module):
         BGS._missions_tracker = Missions_Tracker()
         BGS._cz_tracker = CZ_Tracker()
         BGS.Systems_Updater().start()
+
+        sounds = config.get_str("bgs.sounds")
+        if not sounds:
+            sounds = {
+                "cz_notification": "cz_notification.wav",
+                "success": "success.wav"
+            }
+            config.set("bgs.sounds", json.dumps(sounds))
+        else:
+            sounds = json.loads(sounds)
+        cls._sounds = sounds
 
     class Systems_Updater(Thread):
         def __init__(self):
@@ -65,6 +79,48 @@ class BGS(Module):
         cls._missions_tracker.stop()
 
     @classmethod
+    def draw_settings(cls, parent, cmdr, is_beta, position):
+        frame = nb.Frame(parent)
+        nb.Label(frame, text="Настройки модуля БГС").grid(row=0, column=0, columnspan=4, sticky="NW")
+
+        cls._notifsoundpath = tk.StringVar(value=cls._sounds["cz_notification"])
+        cls._successsoundpath = tk.StringVar(value=cls._sounds["success"])
+
+        nb.Label(frame, text="Звук уведомления: ").grid(row=1, column=0, sticky="NW")
+        nb.Label(frame, textvariable=cls._notifsoundpath).grid(row=1, column=1, sticky="NW")
+        nb.Button(frame, text="Изменить", command=lambda:change_sound(cls._notifsoundpath)).grid(row=1, column=2)
+        nb.Button(frame, text="Сбросить", command=lambda:cls._notifsoundpath.set("cz_notification.wav")).grid(row=1, column=3)
+
+        nb.Label(frame, text="Звук подтверждения: ").grid(row=2, column=0, sticky="NW")
+        nb.Label(frame, textvariable=cls._successsoundpath).grid(row=2, column=1, sticky="NW")
+        nb.Button(frame, text="Изменить", command=lambda:change_sound(cls._successsoundpath)).grid(row=2, column=2)
+        nb.Button(frame, text="Сбросить", command=lambda:cls._successsoundpath.set("success.wav")).grid(row=2, column=3)
+
+        nb.Label(frame, text="При изменении звука на свой - выбранный файл будет скопирован в папку плагина.").grid(row=3, column=0, columnspan=4, sticky="NW")
+        frame.grid(column=0, row=position)
+
+        def change_sound(tkvar: tk.StringVar):
+            path = filedialog.askopenfilename(filetypes=(("WAV files", "*.wav"),))
+            if path:
+                filename = os.path.basename(path)
+                try:
+                    os.mkdir(os.path.join(cls._plugin_dir, "sounds", "custom"))
+                except FileExistsError:
+                    pass
+                copyfile(path, os.path.join(cls._plugin_dir, "sounds", "custom", filename))
+                tkvar.set(f"custom\\{filename}")
+    
+    @classmethod
+    def on_settings_changed(cls, cmdr, is_beta):
+        cls._sounds["cz_notification"] = os.path.join(cls._plugin_dir, "sounds", cls._notifsoundpath.get())
+        cls._sounds["success"] = os.path.join(cls._plugin_dir, "sounds", cls._successsoundpath.get())
+        config.set("bgs.sounds", json.dumps(cls._sounds))
+        debug("[BGS.on_settings_changed] Updated sounds paths:")
+        for key, value in cls._sounds.items():
+            debug("[BGS.on_settings_changed] {!r}: {!r}", key, value)
+        
+
+    @classmethod
     def _send(cls, url: str, params: dict, affected_systems: list):
         if not cls._systems:
             cls._data_send_queue.append({
@@ -89,6 +145,19 @@ class BGS(Module):
                     counter += 1
         info(f"[BGS.send_all] {counter} pending entries sent.")
         cls._data_send_queue.clear()
+    
+    # временное решение: громкость зависит от таковой для системных звуков
+    # TODO: добавить в playsound.py возможность регулировки громкости, переделать на его использование
+    @classmethod
+    def _playsound(filename: str):
+        path = os.path.join(BGS._plugin_dir, "sounds", filename)
+        from ctypes import windll
+        winmm = windll.winmm
+        SND_FILENAME = 0x00020000
+        SND_ASYNC = 0x0001
+        SND_SYSTEM = 0x00200000
+        if not winmm.PlaySoundW(path, None, SND_FILENAME | SND_ASYNC | SND_SYSTEM):
+            error("[BGS._playsound] Couldn't play a sound {!r}", path)
 
 
 class Missions_Tracker:
@@ -595,6 +664,7 @@ class CZ_Tracker:
                 "usp": "pp_url",
             }
         BGS._send(url, url_params, [info["system"]])
+        BGS._playsound(BGS._sounds["success"])
 
 
     def _reset(self):
@@ -607,6 +677,8 @@ class CZ_Tracker:
     class Notification(tk.Toplevel):
         def __init__(self, info: dict, presumed_winner: str):
             super().__init__()
+            BGS._playsound(BGS._sounds["cz_notification"])
+
             self.info = info
             self.factions = [faction for faction, _ in info["allegiances"].items()]
             self.presumed = presumed_winner
@@ -622,7 +694,6 @@ class CZ_Tracker:
             self.geometry(config.get_str("CZ.Notification.position"))
             self.default_font = font.nametofont("TkDefaultFont").actual()["family"]
 
-            Player(BGS._plugin_dir, ["sounds/cz_notification.wav"]).start()
             self.image_path = os.path.join(BGS._plugin_dir, "icons", "cz_notification.png")
 
             self.topframe = ttk.Frame(self, padding=3)

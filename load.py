@@ -110,6 +110,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     context.by_class(patrol.PatrolModule).draw_settings(frame, cmdr, is_beta, 2)
     Debug.plugin_prefs(frame, cmdr, is_beta, 3)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 4)
+    context.by_class(bgs.BGS).draw_settings(frame, cmdr, is_beta, 5)
     hdreport.HDInspector(frame, cmdr, is_beta, this.client_version, 6)
     nb.Label(frame, text=settings.support_message,).grid(row=8, column=0, sticky="NW")
 
