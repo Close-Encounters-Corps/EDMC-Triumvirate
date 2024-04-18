@@ -88,16 +88,16 @@ class BGS(Module):
 
         nb.Label(frame, text="Звук уведомления: ").grid(row=1, column=0, sticky="NW")
         nb.Label(frame, textvariable=cls._notifsoundpath).grid(row=1, column=1, sticky="NW")
-        nb.Button(frame, text="Изменить", command=lambda:change_sound(cls._notifsoundpath)).grid(row=1, column=2)
-        nb.Button(frame, text="Сбросить", command=lambda:cls._notifsoundpath.set("cz_notification.wav")).grid(row=1, column=3)
+        nb.Button(frame, text="Изменить", command=lambda:change_sound(cls._notifsoundpath)).grid(row=1, column=2, sticky="NW")
+        nb.Button(frame, text="Сбросить", command=lambda:cls._notifsoundpath.set("cz_notification.wav")).grid(row=1, column=3, sticky="NW")
 
         nb.Label(frame, text="Звук подтверждения: ").grid(row=2, column=0, sticky="NW")
         nb.Label(frame, textvariable=cls._successsoundpath).grid(row=2, column=1, sticky="NW")
-        nb.Button(frame, text="Изменить", command=lambda:change_sound(cls._successsoundpath)).grid(row=2, column=2)
-        nb.Button(frame, text="Сбросить", command=lambda:cls._successsoundpath.set("success.wav")).grid(row=2, column=3)
+        nb.Button(frame, text="Изменить", command=lambda:change_sound(cls._successsoundpath)).grid(row=2, column=2, sticky="NW")
+        nb.Button(frame, text="Сбросить", command=lambda:cls._successsoundpath.set("success.wav")).grid(row=2, column=3, sticky="NW")
 
         nb.Label(frame, text="При изменении звука на свой - выбранный файл будет скопирован в папку плагина.").grid(row=3, column=0, columnspan=4, sticky="NW")
-        frame.grid(column=0, row=position)
+        frame.grid(column=0, row=position, sticky="NW")
 
         def change_sound(tkvar: tk.StringVar):
             path = filedialog.askopenfilename(filetypes=(("WAV files", "*.wav"),))
