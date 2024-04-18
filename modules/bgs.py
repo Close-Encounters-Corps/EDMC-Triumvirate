@@ -40,7 +40,7 @@ class BGS(Module):
         sounds = config.get_str("bgs.sounds")
         if not sounds:
             sounds = {
-                "cz_notification": "cz_notification.wav",
+                "notification": "notification.wav",
                 "success": "success.wav"
             }
             config.set("bgs.sounds", json.dumps(sounds))
@@ -83,13 +83,13 @@ class BGS(Module):
         frame = nb.Frame(parent)
         nb.Label(frame, text="Настройки модуля БГС").grid(row=0, column=0, columnspan=4, sticky="NW")
 
-        cls._notifsoundpath = tk.StringVar(value=cls._sounds["cz_notification"])
+        cls._notifsoundpath = tk.StringVar(value=cls._sounds["notification"])
         cls._successsoundpath = tk.StringVar(value=cls._sounds["success"])
 
         nb.Label(frame, text="Звук уведомления: ").grid(row=1, column=0, sticky="NW")
         nb.Label(frame, textvariable=cls._notifsoundpath).grid(row=1, column=1, sticky="NW")
         nb.Button(frame, text="Изменить", command=lambda:change_sound(cls._notifsoundpath)).grid(row=1, column=2, sticky="NW")
-        nb.Button(frame, text="Сбросить", command=lambda:cls._notifsoundpath.set("cz_notification.wav")).grid(row=1, column=3, sticky="NW")
+        nb.Button(frame, text="Сбросить", command=lambda:cls._notifsoundpath.set("notification.wav")).grid(row=1, column=3, sticky="NW")
 
         nb.Label(frame, text="Звук подтверждения: ").grid(row=2, column=0, sticky="NW")
         nb.Label(frame, textvariable=cls._successsoundpath).grid(row=2, column=1, sticky="NW")
@@ -112,7 +112,7 @@ class BGS(Module):
     
     @classmethod
     def on_settings_changed(cls, cmdr, is_beta):
-        cls._sounds["cz_notification"] = os.path.join(cls._notifsoundpath.get())
+        cls._sounds["notification"] = os.path.join(cls._notifsoundpath.get())
         cls._sounds["success"] = os.path.join(cls._successsoundpath.get())
         config.set("bgs.sounds", json.dumps(cls._sounds))
         debug("[BGS.on_settings_changed] Updated sounds paths:")
@@ -677,7 +677,7 @@ class CZ_Tracker:
     class Notification(tk.Toplevel):
         def __init__(self, info: dict, presumed_winner: str):
             super().__init__()
-            BGS._playsound(BGS._sounds["cz_notification"])
+            BGS._playsound(BGS._sounds["notification"])
 
             self.info = info
             self.factions = [faction for faction, _ in info["allegiances"].items()]
@@ -694,7 +694,7 @@ class CZ_Tracker:
             self.geometry(config.get_str("CZ.Notification.position"))
             self.default_font = font.nametofont("TkDefaultFont").actual()["family"]
 
-            self.image_path = os.path.join(BGS._plugin_dir, "icons", "cz_notification.png")
+            self.image_path = os.path.join(BGS._plugin_dir, "icons", "notification.png")
 
             self.topframe = ttk.Frame(self, padding=3)
             self.bottomframe = ttk.Frame(self, padding=3)
