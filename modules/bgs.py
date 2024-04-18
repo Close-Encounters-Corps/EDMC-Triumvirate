@@ -112,8 +112,8 @@ class BGS(Module):
     
     @classmethod
     def on_settings_changed(cls, cmdr, is_beta):
-        cls._sounds["cz_notification"] = os.path.join(cls._plugin_dir, "sounds", cls._notifsoundpath.get())
-        cls._sounds["success"] = os.path.join(cls._plugin_dir, "sounds", cls._successsoundpath.get())
+        cls._sounds["cz_notification"] = os.path.join(cls._notifsoundpath.get())
+        cls._sounds["success"] = os.path.join(cls._successsoundpath.get())
         config.set("bgs.sounds", json.dumps(cls._sounds))
         debug("[BGS.on_settings_changed] Updated sounds paths:")
         for key, value in cls._sounds.items():
