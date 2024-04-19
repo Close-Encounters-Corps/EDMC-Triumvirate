@@ -149,8 +149,8 @@ class BGS(Module):
     # временное решение: громкость зависит от таковой для системных звуков
     # TODO: добавить в playsound.py возможность регулировки громкости, переделать на его использование
     @classmethod
-    def _playsound(filename: str):
-        path = os.path.join(BGS._plugin_dir, "sounds", filename)
+    def _playsound(cls, filename: str):
+        path = os.path.join(cls._plugin_dir, "sounds", filename)
         from ctypes import windll
         winmm = windll.winmm
         SND_FILENAME = 0x00020000
@@ -632,38 +632,50 @@ class CZ_Tracker:
         else:
             actual_winner = presumed_winner
             debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
+
+            match self.info["intensity"]:
+                case "High":    intensity = "высокая"
+                case "Medium":  intensity = "средняя"
+                case "Low":     intensity = "низкая"
+            global_context.message_label.text = (
+                "Засчитана победа в зоне конфликта.\n" +
+                "Система {}, фракция {}, {} интенсивность.".format(self.info["system"], actual_winner, intensity)
+            )
+            global_context.message_label.after(60000, global_context.message_label.clear)
+
+            BGS._playsound(BGS._sounds["success"])
             self._send_results(self.info, presumed_winner, actual_winner)
         
         self._reset()
 
 
     @staticmethod
-    def _ask_user(info: dict, presumed_winner: str):
-        BasicThread(target=lambda: CZ_Tracker.Notification(info, presumed_winner), name="cz notification").start()
+    def _ask_user(cz_info: dict, presumed_winner: str):
+        BasicThread(target=lambda: CZ_Tracker.Notification(cz_info, presumed_winner), name="cz notification").start()
     
 
     @staticmethod
-    def _send_results(info: dict, presumed: str, actual: str):
-        match info.get("intensity"):
+    def _send_results(cz_info: dict, presumed: str, actual: str):
+        match cz_info.get("intensity"):
             case "Low":     weight = 0.25
             case "Medium":  weight = 0.5
             case "High":    weight = 1
             case _:         weight = 0.25
         url = f'{URL_GOOGLE}/1FAIpQLSepTjgu1U8NZXskFbtdCPLuAomLqmkMAYCqk1x0JQG9Btgb9A/formResponse'
         url_params = {
-                "entry.1673815657": info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.1896400912": info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.1178049789": info["cmdr"],
-                "entry.721869491": info["system"],
-                "entry.1671504189": info["conflict_type"],
-                "entry.461250117": info.get("location", ""),
-                "entry.428944810": info.get("intensity", ""),
+                "entry.1673815657": cz_info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.1896400912": cz_info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.1178049789": cz_info["cmdr"],
+                "entry.721869491": cz_info["system"],
+                "entry.1671504189": cz_info["conflict_type"],
+                "entry.461250117": cz_info.get("location", ""),
+                "entry.428944810": cz_info.get("intensity", ""),
                 "entry.1396326275": str(weight).replace('.', ','),
                 "entry.1674382418": presumed,
                 "entry.1383403456": actual,
                 "usp": "pp_url",
             }
-        BGS._send(url, url_params, [info["system"]])
+        BGS._send(url, url_params, [cz_info["system"]])
         BGS._playsound(BGS._sounds["success"])
 
 
@@ -675,12 +687,12 @@ class CZ_Tracker:
 
 
     class Notification(tk.Toplevel):
-        def __init__(self, info: dict, presumed_winner: str):
+        def __init__(self, cz_info: dict, presumed_winner: str):
             super().__init__()
             BGS._playsound(BGS._sounds["notification"])
 
-            self.info = info
-            self.factions = [faction for faction, _ in info["allegiances"].items()]
+            self.info = cz_info
+            self.factions = [faction for faction, _ in self.info["allegiances"].items()]
             self.presumed = presumed_winner
 
             screen_height = self.winfo_screenheight()
@@ -694,7 +706,7 @@ class CZ_Tracker:
             self.geometry(config.get_str("CZ.Notification.position"))
             self.default_font = font.nametofont("TkDefaultFont").actual()["family"]
 
-            self.image_path = os.path.join(BGS._plugin_dir, "icons", "notification.png")
+            self.image_path = os.path.join(BGS._plugin_dir, "icons", "cz_notification.png")
 
             self.topframe = ttk.Frame(self, padding=3)
             self.bottomframe = ttk.Frame(self, padding=3)
