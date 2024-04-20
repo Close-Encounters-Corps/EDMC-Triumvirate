@@ -82,6 +82,10 @@ class BGS(Module):
             error(traceback.format_exc())
 
     @classmethod
+    def on_chat_message(cls, entry):
+        cls._cz_tracker._patrol_message(entry)
+
+    @classmethod
     def stop(cls):
         cls._missions_tracker.stop()
 
@@ -435,7 +439,7 @@ class CZ_Tracker:
             system = re.sub(pattern, "", entry["BodyName"])
         
         if system in BGS._systems or not BGS._systems:
-            if self.in_conflict == False:
+            if not self.in_conflict:
                 # начало конфликта (космос)
                 if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
                     self._start_conflict(cmdr, system, entry, "Space")
@@ -451,9 +455,8 @@ class CZ_Tracker:
                 # сканирование корабля
                 elif event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
                     self._ship_scan(entry)
-                # отслеживание сообщений, потенциальное завершение конфликта
-                elif event == "ReceiveText":
-                    self._patrol_message(entry)
+                # отслеживание сообщений, потенциальное завершение конфликта | УДАЛЕНО: см. BGS.on_chat_message()
+
                 # завершение конфликта: прыжок
                 elif event == "StartJump":
                     self._end_conflict()
@@ -569,20 +572,21 @@ class CZ_Tracker:
         # Логика следующая: получаем 5 "патрулирующих" сообщений от одной стороны за 15 секунд - считаем конфликт завершённым.
         # По имени фильтруем, чтобы случайно не поймать последним такое сообщение, например, от спецкрыла
         # и сломать определение принадлежности победителя.
-        if "$Military_Passthrough" in entry["Message"] and "$ShipName_Military" in entry["From"]:
-            timestamp = datetime.fromisoformat(entry["timestamp"])
-            allegiance = entry["From"][19:1]
-            debug("CZ_Tracker: detected patrol message sent from {!r} ship.", allegiance)
+        if self.in_conflict:
+            if "$Military_Passthrough" in entry["Message"] and "$ShipName_Military" in entry["From"]:
+                timestamp = datetime.fromisoformat(entry["timestamp"])
+                allegiance = entry["From"][19:1]
+                debug("CZ_Tracker: detected patrol message sent from {!r} ship.", allegiance)
 
-            if not self.end_messages.get(allegiance):
-                self.end_messages[allegiance] = deque(5*[None], 5)
-            queue = self.end_messages[allegiance]
-            queue.append(timestamp)
-            
-            if queue[0] != None:
-                if (queue[4] - queue[0]).seconds <= 15:
-                    debug("CZ_Tracker: got 5 patrol messages in 15 seconds, calling END_CONFLICT.")
-                    self._end_conflict(allegiance)
+                if not self.end_messages.get(allegiance):
+                    self.end_messages[allegiance] = deque(5*[None], 5)
+                queue = self.end_messages[allegiance]
+                queue.append(timestamp)
+                
+                if queue[0] != None:
+                    if (queue[4] - queue[0]).seconds <= 15:
+                        debug("CZ_Tracker: got 5 patrol messages in 15 seconds, calling END_CONFLICT.")
+                        self._end_conflict(allegiance)
 
 
     def _end_conflict(self, winners_allegiance: str | None = None):

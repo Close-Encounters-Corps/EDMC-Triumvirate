@@ -38,7 +38,6 @@ from modules.debug import Debug
 from modules.lib import canonn_api, http
 from modules.lib import context as contextlib
 from modules.lib import journal, thread
-from modules.player import Player
 from modules.release import Release
 from modules.systems import SystemsModule
 import settings
@@ -488,7 +487,7 @@ def dashboard_entry(cmdr, is_beta, entry):
     this.onSRV = bool(entry["Flags"] & edmc_data.FlagsInSRV)
     this.onFighter = bool(entry["Flags"] & edmc_data.FlagsInFighter)
     this.onFoot = bool(entry.get("Flags2", 0) & edmc_data.Flags2OnFoot)
-    this.on_surface = this.landed or this.SRVmode or this.onFoot
+    this.onSurface = this.landed or this.SRVmode or this.onFoot
     # print 'LatLon =
     # {}'.format(entry['Flags'] &
     # 1<<21 and True or False)
