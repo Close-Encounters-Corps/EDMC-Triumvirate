@@ -31,6 +31,11 @@ class Module(ABC):
         Вызывается при появлении новых данных о командире.
         """
 
+    def on_dashboard_entry(self, cmdr, is_beta, entry):
+        """
+        Вызывается при обновлении игрой status.json
+        """
+
     def on_chat_message(self, entry):
         """
         Вызывается при появлении новой записи типа сообщения в логах.

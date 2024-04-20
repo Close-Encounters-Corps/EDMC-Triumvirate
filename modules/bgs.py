@@ -75,6 +75,13 @@ class BGS(Module):
             error(traceback.format_exc())
 
     @classmethod
+    def on_dashboard_entry(cls, cmdr, is_beta, data):
+        try:
+            cls._cz_tracker.status_changed()
+        except:
+            error(traceback.format_exc())
+
+    @classmethod
     def stop(cls):
         cls._missions_tracker.stop()
 
@@ -418,19 +425,6 @@ class CZ_Tracker:
             debug("CZ_Tracker: safe set to {!r}", self.safe)
             return
 
-        # отслеживание режима игрока (космос/ноги)
-        if (event in ("DropshipDeploy", "Disembark", "LaunchSRV")
-            or event == "Location" and (entry.get("InSRV") or entry.get("OnFoot"))
-        ):
-            self.on_foot = True
-            debug("CZ_Tracker: on foot")
-        elif (event == "DockSRV" 
-            or event == "Embark" and entry["SRV"] == False
-            or event == "Location" and not(entry.get("InSRV") or entry.get("OnFoot"))
-        ):
-            self.on_foot = False
-            debug("CZ_Tracker: on ship")
-
         # релог в пеших кз
         # ApproachSettlement в логах идёт раньше Location, и EDMC отдаёт system = None в этот момент
         # в самом ApproachSettlement названия системы нет, но есть название тела
@@ -471,8 +465,16 @@ class CZ_Tracker:
                 elif (event in ("Shutdown", "Died", "CancelDropship", "SelfDestruct") or        # это для любых кз
                         event == "Music" and entry["MusicTrack"] == "MainMenu"):      # а это уже только в космосе будет работать
                     self._reset()
-
-        
+    
+    
+    def status_changed(self):
+        # отслеживание режима игрока
+        on_foot = global_context.onFoot or global_context.onSRV
+        if on_foot != self.on_foot:
+            self.on_foot = on_foot
+            debug("CZ_Tracker: on_foot set to {}", on_foot)
+    
+    
     def _start_conflict(self, cmdr, system, entry, c_type):
         debug("CZ_Tracker: detected entering a conflict zone, {!r} type.", c_type)
         self.in_conflict = True

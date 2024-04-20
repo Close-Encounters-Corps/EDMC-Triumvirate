@@ -18,6 +18,7 @@ import requests
 import l10n
 import myNotebook as nb
 import plug
+import edmc_data
 from config import appname
 
 ### модули плагина ###
@@ -482,21 +483,21 @@ def dashboard_entry(cmdr, is_beta, entry):
     # debug("Dashboard update
     # "+str(entry["Fuel"]))
 
-    this.landed = entry["Flags"] & 1 << 1 and True or False
-    this.SCmode = entry["Flags"] & 1 << 4 and True or False
-    this.SRVmode = entry["Flags"] & 1 << 26 and True or False
-    this.Fightermode = entry["Flags"] & 1 << 25 and True or False
-    this.landed = this.landed or this.SRVmode
+    this.landed = bool(entry["Flags"] & edmc_data.FlagsLanded)
+    this.inSupercruise = bool(entry["Flags"] & edmc_data.FlagsSupercruise)
+    this.onSRV = bool(entry["Flags"] & edmc_data.FlagsInSRV)
+    this.onFighter = bool(entry["Flags"] & edmc_data.FlagsInFighter)
+    this.onFoot = bool(entry.get("Flags2", 0) & edmc_data.Flags2OnFoot)
+    this.on_surface = this.landed or this.SRVmode or this.onFoot
     # print 'LatLon =
     # {}'.format(entry['Flags'] &
     # 1<<21 and True or False)
     # print entry
-    if entry["Flags"] & 1 << 21 and True or False:
+    if entry["Flags"] & edmc_data.FlagsHasLatLong:
         if "Latitude" in entry:
             this.nearloc["Latitude"] = entry["Latitude"]
             this.nearloc["Longitude"] = entry["Longitude"]
     else:
-
         this.nearloc["Latitude"] = None
         this.nearloc["Longitude"] = None
     if entry.get("BodyName"):
@@ -505,6 +506,10 @@ def dashboard_entry(cmdr, is_beta, entry):
         this.body_name = None
     this.cmdr_SQID = Alegiance_get(cmdr, this.cmdr_SQID)
     # logger.debug(this.body_name)
+
+    for mod in context.enabled_modules:
+        mod.on_dashboard_entry(cmdr, is_beta, entry)
+
 
 def cmdr_data(data, is_beta):
     """
