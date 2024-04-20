@@ -373,7 +373,8 @@ class Missions_Tracker:
                         "entry.351553038": faction["Amount"],
                         "usp": "pp_url",
                     }
-                    self.redeemed_factions.append(name)    
+                    self.redeemed_factions.append(name)
+                    BGS._send(url, url_params, [system])
         else:
             debug("[BGS.redeem_voucher] Redeeming bonds: faction {!r}, amount: {}", entry["Faction"], entry["Amount"])
             url_params = {
@@ -385,7 +386,7 @@ class Missions_Tracker:
                 "entry.351553038": entry["Amount"],
                 "usp": "pp_url",
             }
-        BGS._send(url, url_params, [system])
+            BGS._send(url, url_params, [system])
 
 
     def _exploration_data(self, entry, cmdr, system, station):
