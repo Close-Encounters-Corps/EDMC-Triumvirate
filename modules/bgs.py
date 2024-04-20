@@ -361,18 +361,19 @@ class Missions_Tracker:
         if entry["Type"] == "bounty":
             debug("[BGS.redeem_voucher] Redeeming bounties:")
             for faction in entry["Factions"]:
-                if faction["Faction"] not in self.redeemed_factions:
-                    debug("[BGS.redeem_voucher] Faction {!r}, amount: {}", faction["Faction"], faction["Amount"])
+                name = faction["Faction"]
+                if name != "" and name not in self.redeemed_factions:
+                    debug("[BGS.redeem_voucher] Faction {!r}, amount: {}", name, faction["Amount"])
                     url_params = {
                         "entry.503143076": cmdr,
                         "entry.1108939645": entry["Type"],
                         "entry.127349896": system,
                         "entry.442800983": "",
-                        "entry.48514656": faction["Faction"],
+                        "entry.48514656": name,
                         "entry.351553038": faction["Amount"],
                         "usp": "pp_url",
                     }
-                    self.redeemed_factions.append(faction["Faction"])    
+                    self.redeemed_factions.append(name)    
         else:
             debug("[BGS.redeem_voucher] Redeeming bonds: faction {!r}, amount: {}", entry["Faction"], entry["Amount"])
             url_params = {
