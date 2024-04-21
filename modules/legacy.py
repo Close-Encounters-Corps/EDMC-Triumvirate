@@ -21,21 +21,31 @@ class Reporter(Thread):
         self.params = params
 
     def run(self):
-        count = 0
+        attempts = 0
         while True:
-            count += 1
-            try:
-                response = requests.post(self.url, self.params)
+            attempts += 1
+            try: response = requests.post(self.url, self.params)
             except:
                 error(traceback.format_exc())
                 break
             else:
-                if response.status_code == 200:
-                    debug(f"[Reporter] Data sent successfully ({count} attempts).")
+                if 200 <= response.status_code < 300:
+                    debug(f"[Reporter] Data sent successfully ({attempts} attempts).")
                     break
+                elif 300 <= response.status_code < 400:
+                    debug(f"[Reporter] Request to {self.url} was redirected.")
+                    self.url = response.headers["location"]
+                    attempts -= 1       # не будем считать это неудачной попыткой
                 else:
-                    error(f"[Reporter] Couldn't send data, response code {response.status_code}.")
-                    self.sleep(10)
+                    if attempts < 10:   # мы настойчивые
+                        self.sleep(10)
+                    else:               # возможно, что-то действительно не так с нашим запросом
+                        error(
+                            "[Reporter] Couldn't send data: response code {}, url {!r}, params {!r}.",
+                            self.url,
+                            self.params
+                        )
+                        break
 
 
 def getDistance(x1,y1,z1,x2,y2,z2):
