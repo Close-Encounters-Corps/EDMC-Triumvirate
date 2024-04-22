@@ -467,7 +467,7 @@ class CZ_Tracker:
                 elif event == "Music" and entry["MusicTrack"] == "MainMenu" and self.on_foot == True:
                     self._end_conflict()
                 # досрочный выход
-                elif (event in ("Shutdown", "Died", "CancelDropship", "SelfDestruct") or        # это для любых кз
+                elif (event in ("Shutdown", "Died", "SelfDestruct") or        # это для любых кз
                         event == "Music" and entry["MusicTrack"] == "MainMenu"):      # а это уже только в космосе будет работать
                     self._reset()
     
@@ -635,19 +635,21 @@ class CZ_Tracker:
 
         if presumed_winner != self.info["player_fights_for"]:
             debug("CZ_Tracker: presumed winner isn't the player's side, asking for confirmation.")
-            info_copy = self.info.copy()
+            info_copy = self.info.copy()                # потому что передаём в другой поток
             self._ask_user(info_copy, presumed_winner)
         else:
             actual_winner = presumed_winner
             debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
 
             match self.info["intensity"]:
-                case "High":    intensity = "высокая"
-                case "Medium":  intensity = "средняя"
-                case "Low":     intensity = "низкая"
+                case "High":    intensity = "Высокая"
+                case "Medium":  intensity = "Средняя"
+                case "Low":     intensity = "Низкая"
             global_context.message_label.text = (
-                "Засчитана победа в зоне конфликта.\n" +
-                "Система {}, фракция {}, {} интенсивность.".format(self.info["system"], actual_winner, intensity)
+                "Засчитана победа в зоне конфликта:\n" +
+                "Система {}\n".format(self.info["system"])+
+                "Фракция {}\n".format(actual_winner) +
+                "{} интенсивность.".format(intensity)
             )
             global_context.message_label.after(60000, global_context.message_label.clear)
 
