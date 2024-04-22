@@ -38,13 +38,14 @@ class Reporter(Thread):
                     attempts -= 1       # не будем считать это неудачной попыткой
                 else:
                     if attempts < 10:   # мы настойчивые
+                        error(
+                            "[Reporter] Couldn't send data: response code {}, url {!r}, params {!r} ({} attempts).",
+                            self.url,
+                            self.params,
+                            attempts
+                        )
                         self.sleep(10)
                     else:               # возможно, что-то действительно не так с нашим запросом
-                        error(
-                            "[Reporter] Couldn't send data: response code {}, url {!r}, params {!r}.",
-                            self.url,
-                            self.params
-                        )
                         break
 
 
