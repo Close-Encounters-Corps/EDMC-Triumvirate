@@ -40,6 +40,7 @@ class Reporter(Thread):
                     if attempts < 10:   # мы настойчивые
                         error(
                             "[Reporter] Couldn't send data: response code {}, url {!r}, params {!r} ({} attempts).",
+                            response.status_code,
                             self.url,
                             self.params,
                             attempts

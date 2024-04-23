@@ -12,7 +12,6 @@ from .lib.module import Module
 from .lib.conf import config
 from .lib.thread import Thread, BasicThread
 from .lib.context import global_context
-from .player import Player
 from .legacy import Reporter, URL_GOOGLE
 
 import myNotebook as nb
@@ -82,7 +81,8 @@ class BGS(Module):
             error(traceback.format_exc())
 
     @classmethod
-    def on_chat_message(cls, entry):
+    def on_chat_message(cls, journalEntry: JournalEntry):
+        entry = journalEntry.data
         cls._cz_tracker._patrol_message(entry)
 
     @classmethod
