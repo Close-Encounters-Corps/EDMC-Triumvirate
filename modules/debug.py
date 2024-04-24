@@ -67,7 +67,6 @@ class Debug:
 def debug(value, *args):
     Debug.debug(value, *args)
 
-
 def error(value, *args):
     Debug.error(value, *args)
 
