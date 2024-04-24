@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import csv
+import json
 import functools
 import tkinter as tk
 from datetime import datetime
@@ -22,12 +23,9 @@ import edmc_data
 from config import appname
 
 ### модули плагина ###
-from modules import clientreport, codex, factionkill
+from modules import canonn_api, codex
 from modules import friendfoe as FF
 from modules import (
-    fssreports,
-    hdreport,
-    journaldata,
     legacy,
     message_label,
     patrol,
@@ -35,7 +33,7 @@ from modules import (
     bgs
 )
 from modules.debug import Debug
-from modules.lib import canonn_api, http
+from modules.lib import http
 from modules.lib import context as contextlib
 from modules.lib import journal, thread
 from modules.release import Release
@@ -81,6 +79,9 @@ this.SQNag = 0
 this.client_version = "{}.{}".format(myPlugin, this.version)
 this.body = None
 this.body_name = None
+this.systemAddress = None
+this.odyssey = None
+this.odyssey_events = None
 
 this.SysFactionState = None
 this.DistFromStarLS = None
@@ -111,7 +112,6 @@ def plugin_prefs(parent, cmdr, is_beta):
     Debug.plugin_prefs(frame, cmdr, is_beta, 3)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 4)
     context.by_class(bgs.BGS).draw_settings(frame, cmdr, is_beta, 5)
-    hdreport.HDInspector(frame, cmdr, is_beta, this.client_version, 6)
     nb.Label(frame, text=settings.support_message,).grid(row=8, column=0, sticky="NW")
 
     return frame
@@ -176,6 +176,8 @@ def plugin_start3(plugin_dir):
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
     this.plugin_dir = plugin_dir
+    with open(os.path.join(plugin_dir, "data", "odyssey_events.json"), 'r') as f:
+        this.odyssey_events = json.loads(f)
     Debug.setup(logger)
     this.journal_entry_processor = JournalEntryProcessor()
     this.journal_entry_processor.start()
@@ -227,7 +229,7 @@ def plugin_app(parent):
     table.grid(sticky="NSEW")
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.systems_module = SystemsModule()
-    this.canonn_rt_api = canonn_api.CanonnRealtimeApi()
+    this.canonn_rt_api = canonn_api.CanonnRealtimeAPI()
     rel = release.Release(this.plugin_dir, table, this.version, 1)
     this.patrol = patrol.PatrolModule(table, 2)
     this.bgs_module = bgs.BGS()
@@ -235,14 +237,13 @@ def plugin_app(parent):
         rel,
         this.patrol,
         this.systems_module,
-        clientreport.ClientReportModule(),
-        this.bgs_module
+        this.bgs_module,
+        this.canonn_rt_api
     ]
     for mod in context.modules:
         mod.on_start(context.plugin_dir)
-    this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
     # лейбл, в котором содержится текст из вывода модулей
-    this.message_label = message_label.MessageLabel(rows, row=5)
+    this.message_label = message_label.MessageLabel(rows, row=3)
     return frame
 
 
@@ -296,6 +297,13 @@ class JournalEntryProcessor(thread.Thread):
         #if entry["event"] == "Scan" and entry["ScanType"] in {"Detailed", "AutoScan"}:
             #thread.BasicThread(target=lambda: submit_expedition(cmdr, entry)).start()
 
+        if this.odyssey == None:
+            if entry["event"] == "LoadGame":        # ВАЖНО: Fileheader даёт Odyssey=true и в Горизонтах тоже
+                this.odyssey = entry.get("Odyssey", False)
+            # ивенты, возможные лишь в Одиссее
+            elif entry["event"] in this.odyssey_events:
+                this.odyssey = True
+        
         if "SystemFaction" in entry:
             """ "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }"""
             SystemFaction = entry.get("SystemFaction")
@@ -306,7 +314,6 @@ class JournalEntryProcessor(thread.Thread):
             logger.debug("SysFaction's state is" + str(this.SysFactionState))
 
         if "SystemAllegiance" in entry:
-
             SystemAllegiance = entry.get("SystemAllegiance")
             logger.debug(SystemAllegiance)
             try:
@@ -322,6 +329,10 @@ class JournalEntryProcessor(thread.Thread):
             except:
                 this.DistFromStarLS = None
             logger.debug("DistFromStarLS=" + str(this.DistFromStarLS))
+
+        if "SystemAddress" in entry:
+            this.systemAddress = entry["SystemAddress"]
+        systemAddress = this.systemAddress
 
         if entry.get("event") == "FSDJump":
             this.DistFromStarLS = None
@@ -344,6 +355,7 @@ class JournalEntryProcessor(thread.Thread):
             cmdr=cmdr,
             is_beta=is_beta,
             system=system,
+            systemAddress=systemAddress,
             sys_faction_state=SysFactionState,
             sys_faction_allegiance=SysFactionAllegiance,
             dist_from_star=DistFromStarLS,
@@ -359,11 +371,7 @@ class JournalEntryProcessor(thread.Thread):
             client=client,
         )
         status_message = None
-        factionkill.submit(cmdr, is_beta, system, station, entry, client)
-        hdreport.submit(cmdr, is_beta, system, station, entry, client)
         codex.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
-        fssreports.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
-        journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
         if journal_entry.data["event"] in {"SendText", "ReceiveText"}:
             for mod in context.enabled_modules:
                 # TODO переписать на менеджер контекста?
@@ -379,9 +387,6 @@ class JournalEntryProcessor(thread.Thread):
         this.codexcontrol.journal_entry(
             cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
         )
-        codex.saaScan.journal_entry(
-            cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
-        )
 
         # legacy logging to google sheets
         legacy.GusonExpeditions(cmdr, is_beta, system, entry)
@@ -389,7 +394,7 @@ class JournalEntryProcessor(thread.Thread):
             this.message_label.text = status_message
 
 
-def submit_expedition(cmdr, entry: dict):
+def submit_expedition(cmdr, entry: dict):   # не работает
     resp = http.WebClient(
         settings.cec_url
     ).post("/api/expeditions/v1/scan/submit", json={
