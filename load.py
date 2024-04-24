@@ -177,7 +177,7 @@ def plugin_start3(plugin_dir):
     """
     this.plugin_dir = plugin_dir
     with open(os.path.join(plugin_dir, "data", "odyssey_events.json"), 'r') as f:
-        this.odyssey_events = json.loads(f)
+        this.odyssey_events = json.loads(f.read())
     Debug.setup(logger)
     this.journal_entry_processor = JournalEntryProcessor()
     this.journal_entry_processor.start()
@@ -371,7 +371,6 @@ class JournalEntryProcessor(thread.Thread):
             client=client,
         )
         status_message = None
-        codex.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
         if journal_entry.data["event"] in {"SendText", "ReceiveText"}:
             for mod in context.enabled_modules:
                 # TODO переписать на менеджер контекста?

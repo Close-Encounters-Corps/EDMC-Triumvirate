@@ -1,17 +1,15 @@
 import requests, traceback, json
 from datetime import datetime
-from enum import Enum
 
 from settings import canonn_realtime_url
-from .lib.context import global_context
-from .lib.module import Module
-from .lib.journal import JournalEntry
-from .lib.thread import Thread
-from .lib.timer import Timer
-from .release import Release
-from .legacy import Reporter
-
-from debug import info, debug, error
+from modules.release import Release
+from modules.legacy import Reporter
+from modules.debug import info, debug, error
+from modules.lib.context import global_context
+from modules.lib.module import Module
+from modules.lib.journal import JournalEntry
+from modules.lib.thread import Thread
+from modules.lib.timer import Timer
 
 
 class HDDetector:
@@ -20,7 +18,7 @@ class HDDetector:
     _instance = None
     def __new__(cls):
         if cls._instance == None:
-            cls._instance = super().__new__()
+            cls._instance = super().__new__(cls)
         return cls._instance
     
     # возможные состояния
@@ -138,7 +136,7 @@ class CanonnRealtimeAPI(Module):
 
     def __new__(cls):
         if cls._instance == None:
-            cls._instance = super().__new__()
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self):
@@ -206,7 +204,7 @@ class CanonnRealtimeAPI(Module):
     def _post_event(self, journalEntry: JournalEntry):
         entry = journalEntry.data
         for accepted_event in self.whitelist:
-            for key, value in accepted_event["definition"]:
+            for key, value in accepted_event["definition"].items():
                 if entry.get(key) != value:
                     return
         # если все пары ключей-значений совпадают, каноны в этом заинтересованы
@@ -276,7 +274,7 @@ class WhitelistUpdater(Thread):
     def __init__(self):
         super().__init__(name="Canonn whitelist updater")
     def do_run(self):
-        url = f"https://api.github.com/gists/5b993467bf6be84b392418ddc9fcb6d3"
+        url = "https://api.github.com/gists/5b993467bf6be84b392418ddc9fcb6d3"
         attempts = 0
         while True:
             attempts += 1

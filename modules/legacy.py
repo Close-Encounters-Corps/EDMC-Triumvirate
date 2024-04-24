@@ -37,7 +37,7 @@ class Reporter(Thread):
                     self.url = response.headers["location"]
                     attempts -= 1       # не будем считать это неудачной попыткой
                 else:
-                    if attempts < 10:   # мы настойчивые
+                    if attempts <= 10:   # мы настойчивые
                         error(
                             "[Reporter] Couldn't send data: response code {}, url {!r}, params {!r} ({} attempts).",
                             response.status_code,
