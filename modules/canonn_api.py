@@ -2,7 +2,6 @@ import requests, traceback, json
 from datetime import datetime
 
 from settings import canonn_realtime_url
-from modules.release import Release
 from modules.legacy import Reporter
 from modules.debug import info, debug, error
 from modules.lib.context import global_context
@@ -32,6 +31,7 @@ class HDDetector:
         self.destination_system: str        = None
         self.departure_timestamp: datetime  = None
         self.status = self.SAFE
+        self._timer = None
         
 
     def journal_entry(self, journalEntry: JournalEntry):
@@ -82,9 +82,9 @@ class HDDetector:
         debug("[HDDetector] Reporting the hyperdiction to Canonn.")
         
         x, y, z    = journalEntry.coords
-        dx, dy, dz = global_context.systems_module.get_system_coords(journalEntry.system)
+        dx, dy, dz = global_context.systems_module.get_system_coords(self.destination_system)
         
-        url = f"{canonn_realtime_url}/postHDDetected"
+        url = "https://europe-west1-canonn-api-236217.cloudfunctions.net/postHDDetected"
         params = {
             "cmdr": journalEntry.cmdr,
             "system": journalEntry.system,
@@ -96,7 +96,7 @@ class HDDetector:
             "odyssey": global_context.odyssey,
             "hostile": self.status == self.HOSTILE
         }
-        Reporter(url, params).start()
+        Reporter(url, json.dumps(params)).start()
 
         # сбрасываем состояние до следующего перехвата
         self.status = self.SAFE
@@ -122,7 +122,7 @@ class HDDetector:
                 "timestamp": timestamp,
                 "x": x, "y": y, "z": z
             }
-            Reporter(url, params).start()
+            Reporter(url, json.dumps(params)).start()
 
 
 
@@ -169,14 +169,17 @@ class CanonnRealtimeAPI(Module):
                 entry.get("SignalType") == "FleetCarrier"
                 and entry.get("SignalName")[0:4] == "CEC "      # вы же привели названия флитаков в соответствие правилам фракции, господа сотрудники?
             )
-            and entry["timestamp"] == self.batch[0].data["timestamp"]
+            and (
+                len(self.batch) == 0
+                or entry["timestamp"] == self.batch[0].data["timestamp"]
+            )
         ):
             if len(self.batch) == self._batch_maxlen:
                 self._dump_batch()
             self.batch.append(journalEntry)
         
         else:
-            if len(self.batch) > 0:
+            if event != "FSSSignalDiscovered" and len(self.batch) > 0:      # мы не хотим, чтобы каждый не-станционный сигнал триггерил отправку batch
                 self._dump_batch()
             # проверяем всё остальное
             self._post_event(journalEntry)
@@ -187,20 +190,23 @@ class CanonnRealtimeAPI(Module):
 
     def _post_event(self, journalEntry: JournalEntry):
         entry = journalEntry.data
+        valuable = False
         for accepted_event in self.whitelist:
-            for key, value in accepted_event["definition"].items():
-                if entry.get(key) != value:
-                    return
+            if all(entry.get(key) == value for key, value in accepted_event["definition"].items()):
+                valuable = True
+                break
+        if not valuable:
+            return
         # если все пары ключей-значений совпадают, каноны в этом заинтересованы
         debug("[CanonnAPI] Sending the {!r} event to Canonn.", entry["event"])
         url = f"{self.url}/postEvent"
         gamestate = self._get_gamestate(journalEntry)
         params = {
-            "gamestate": gamestate,
+            "gameState": gamestate,
             "rawEvents": [entry],
             "cmdrName":  journalEntry.cmdr
         }
-        Reporter(url, params).start()
+        Reporter(url, json.dumps(params)).start()
 
     
     def _dump_batch(self):
@@ -208,11 +214,11 @@ class CanonnRealtimeAPI(Module):
         url = f"{self.url}/postEvent"
         gamestate = self._get_gamestate(self.batch[0])
         params = {
-            "gamestate": gamestate,
+            "gameState": gamestate,
             "rawEvents": [entry.data for entry in self.batch],
             "cmdrName":  self.batch[0].cmdr
         }
-        Reporter(url, params.copy()).start()
+        Reporter(url, json.dumps(params.copy())).start()
         self.batch.clear()
     
     
