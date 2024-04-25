@@ -149,10 +149,6 @@ class CanonnRealtimeAPI(Module):
     def on_journal_entry(self, journalEntry: JournalEntry):
         entry = journalEntry.data
         event = entry["event"]
-
-        if event in ("Location", "Startup"):
-            self._submit_client(journalEntry)
-            return
         
         if not journalEntry.system:     # потому что некоторые ивенты, например, FSSSignalDiscovered, при старте игры идут до Location
             return                      # и EDMC в этот момент отдаёт system=None
@@ -187,18 +183,6 @@ class CanonnRealtimeAPI(Module):
 
         # проверяем таргоидские гиперперехваты
         self._hdtracker.journal_entry(journalEntry)
-
-
-    def _submit_client(self, journalEntry: JournalEntry):
-        debug("[CanonnAPI] sending client version.")
-        url = f"{self.url}/submitClient"
-        params = {
-            "cmdr":     journalEntry.cmdr,
-            "beta":     journalEntry.is_beta,
-            "client":   journalEntry.client,
-            "autoupdate": global_context.by_class(Release).no_auto_val == False
-        }
-        Reporter(url, params).start()
 
 
     def _post_event(self, journalEntry: JournalEntry):
