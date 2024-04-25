@@ -60,7 +60,8 @@ class HDDetector:
             and self.status in (self.MISJUMP, self.THARGOID)
             and entry.get("MusicTrack") in ("Unknown_Encounter", "Combat_Unknown", "Combat_Dogfight", "Combat_Hunters")
         ):
-            debug("[HDDetector] Hyperdiction confirmed.")
+            if self.status < self.THARGOID:
+                debug("[HDDetector] Hyperdiction confirmed.")
             self.status = self.THARGOID
             if entry["MusicTrack"] in ("Unknown_Encounter"):
                 # подождём, ожидая агрессии со стороны таргоида
