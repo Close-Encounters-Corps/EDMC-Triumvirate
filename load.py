@@ -333,13 +333,9 @@ class JournalEntryProcessor(thread.Thread):
         if "SystemAddress" in entry and entry["event"] not in ("NavRoute", "StartJump"):
             this.systemAddress = entry["SystemAddress"]
             # иногда FSDJump приходит позже, чем нам хотелось бы, и имеющаяся у нас система не совпадает с реальной
-            response = requests.get(f"https://www.edsm.net/typeahead/systems/query/{this.systemAddress}")
+            response = requests.get(f"{settings.edsm_url}/api-v1/system?systemId64={this.systemAddress}")
             if response.status_code == 200:
-                try:
-                    system = response.json()[0]["value"]
-                except IndexError:
-                    # EDSM этой системы не знает
-                    pass
+                system = response.json().get("name", system)
         systemAddress = this.systemAddress
 
         if entry.get("event") == "FSDJump":
@@ -410,6 +406,7 @@ def submit_expedition(cmdr, entry: dict):   # не работает
     })
     if not resp.ok:
         logger.error("Ошибка при запросе к %s:\n%s", resp.request.url, resp.text)
+
 
 def startup_stats(cmdr):
     try:
