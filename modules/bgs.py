@@ -673,8 +673,8 @@ class CZ_Tracker:
             case _:         weight = 0.25
         url = f'{URL_GOOGLE}/1FAIpQLSepTjgu1U8NZXskFbtdCPLuAomLqmkMAYCqk1x0JQG9Btgb9A/formResponse'
         url_params = {
-                "entry.1673815657": cz_info["start_time"].strftime("%d.%m.%Y %H:%M:%M"),
-                "entry.1896400912": cz_info["end_time"].strftime("%d.%m.%Y %H:%M:%M"),
+                "entry.1673815657": cz_info["start_time"].strftime("%d.%m.%Y %H:%M:%S"),
+                "entry.1896400912": cz_info["end_time"].strftime("%d.%m.%Y %H:%M:%S"),
                 "entry.1178049789": cz_info["cmdr"],
                 "entry.721869491": cz_info["system"],
                 "entry.1671504189": cz_info["conflict_type"],
