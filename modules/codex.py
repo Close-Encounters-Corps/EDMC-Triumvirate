@@ -3,6 +3,7 @@ import myNotebook as nb
 import os
 import requests
 import threading
+import traceback
 from modules.debug import debug, error
 from .lib.conf import config
 from math import sqrt, pow
@@ -10,11 +11,14 @@ from urllib.parse import quote_plus, unquote
 from tkinter import Frame
 import tkinter as tk
 from settings import canonn_realtime_url, edsm_url
+from modules.lib.context import global_context
 
 nvl = lambda a, b: a or b
 
 
 def surface_pressure(tag, value):
+    if value == None:
+        return 0
     if tag == "surfacePressure":
         return value * 100000
     else:
@@ -22,14 +26,15 @@ def surface_pressure(tag, value):
 
 
 class poiTypes(threading.Thread):
-    def __init__(self, system, callback):
+    def __init__(self, system, cmdr, callback):
         threading.Thread.__init__(self)
         self.system = system
+        self.cmdr = cmdr
         self.callback = callback
 
     def run(self):
         debug("running poitypes")
-        self.callback(self.system)
+        self.callback(self.system, self.cmdr)
 
     # def recycle(self):
     #     print "Recycling Labels"
@@ -131,22 +136,31 @@ class CodexTypes(Frame):
     def evisualise(self, event):
         self.visualise()
 
-    def getdata(self, system):
+    def getdata(self, system, cmdr):
         debug("Getting POI data in thread")
         CodexTypes.waiting = True
 
         try:
             self.poidata = []
             system_name = quote_plus(system.encode('utf8'))
+            odyssey = "Y" if global_context.odyssey else "N"
             params = {
-                "system": system_name,
+                "system":  system_name,
+                "cmdr":    cmdr,
+                "odyssey": odyssey
             }
-            url = f"{canonn_realtime_url}/poiListSignals"
-            debug(url)
+            url = f"{canonn_realtime_url}/query/getSystemPoi"
+            debug(params)
             r = requests.get(url, params=params)
 
-            if r.status_code == requests.codes.ok:
-                poidata = r.json()
+            if r.status_code == 200:
+                poidata = r.json().get("codex")
+                if not poidata:
+                    debug("[codex] Nothing interesting here.")
+                    self.event_generate('<<POIData>>', when='tail')
+                    return
+            else:
+                debug("[codex] Error while fetching data: response code {}.")
 
             for r in poidata:
                 self.merge_poi(
@@ -220,8 +234,10 @@ class CodexTypes(Frame):
                                            body_code)
 
                         #  Landable with surface pressure
-                        if body.get('type') == 'Planet' and surface_pressure("surfacePressure", body.get(
-                                'surfacePressure')) > CodexTypes.minPressure and body.get('isLandable'):
+                        if (body.get('type') == 'Planet'
+                            and surface_pressure("surfacePressure", body.get('surfacePressure')) > CodexTypes.minPressure
+                            and body.get('isLandable')
+                        ):
                             self.merge_poi("Tourist", 'Landable with atmosphere', body_code)
 
                         #    Landable high-g (>3g)
@@ -233,9 +249,9 @@ class CodexTypes(Frame):
                             self.merge_poi("Tourist", 'Large Radius Landable', body_code)
 
                         # orbiting close to the star we need the solar radius for this...
-                        if body.get('type') == 'Planet' and self.surface_distance(body.get("distanceToArrival"),
-                                                                               CodexTypes.parentRadius,
-                                                                               self.light_seconds('radius', body.get("radius"))) < 10:
+                        if (body.get('type') == 'Planet'
+                            and body.get("distanceToArrival") - CodexTypes.parentRadius < 10
+                        ):
                             self.merge_poi("Tourist", 'Surface Close to parent star', body_code)
 
                         #    Orbiting close to parent body less than 5ls
@@ -271,6 +287,7 @@ class CodexTypes(Frame):
                 debug("bodycount: {}".format(CodexTypes.bodycount))
         except:
             debug("Error fetching data")
+            debug(traceback.format_exc())
 
         CodexTypes.waiting = False
         debug("event_generate")
@@ -389,12 +406,11 @@ class CodexTypes(Frame):
         # Things measured in meters
         if tag in ("Radius", "SemiMajorAxis"):
             # from journal metres
-            return value * 299792000
+            return value / 299792000
 
         # Things measure in kilometres
         if tag == "radius":
-            # from journal metres
-            return value * 1000 * 299792000
+            return value / 299792
 
         # Things measure in astronomical units
         if tag == "semiMajorAxis":
@@ -430,7 +446,7 @@ class CodexTypes(Frame):
         return focus
 
     def surface_distance(self, d, r1, r2):
-        return d - r1, r2
+        return d - r1 - r2
 
     def visualise(self):
 
@@ -469,13 +485,13 @@ class CodexTypes(Frame):
 
         if entry.get("event") == "StartJump" and entry.get("JumpType") == "Hyperspace":
             # go fetch some data.It will 
-            poiTypes(entry.get("StarSystem"), self.getdata).start()
+            poiTypes(entry.get("StarSystem"), cmdr, self.getdata).start()
             self.grid()
             self.grid_remove()
 
         if entry.get("event") in ("Location", "StartUp"):
             debug("Looking for POI data in {}".format(system))
-            poiTypes(system, self.getdata).start()
+            poiTypes(system, cmdr, self.getdata).start()
 
         if entry.get("event") in ("Location", "StartUp", "FSDJump"):
             if entry.get("SystemAllegiance") in ("Thargoid", "Guardian"):
