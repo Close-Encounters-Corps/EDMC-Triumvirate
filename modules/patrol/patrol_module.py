@@ -13,17 +13,11 @@
 все галочки патруля.
 """
 
-import csv
 import json
 import math
 import os
-import re
 import threading
-import time
 import tkinter as tk
-import uuid
-from contextlib import closing
-from datetime import datetime
 from tkinter import Frame
 from urllib.parse import quote_plus
 
@@ -39,14 +33,11 @@ from .patrol import build_patrol
 from .edsm import get_edsm_patrol
 from .exclusions import PatrolExclusions
 from .bgs import BGSTasksOverride, new_bgs_patrol
-from .. import legacy
-from ..lib.conf import config
+from ..lib.conf import config, base_config
 from ..lib.context import global_context
 from ..lib.thread import Thread, ThreadExit
 from ..lib.journal import JournalEntry
-from ..lib.spreadsheet import Spreadsheet
 from ..lib.module import Module
-from ..release import Release
 
 CYCLE = 60 * 1000 * 60  # 60 minutes
 
@@ -570,7 +561,10 @@ class PatrolModule(Frame, Module):
 
     def download(self):
         debug("Waiting for SQID event...")
-        self.sqid_evt.wait()
+        while not self.sqid_evt.is_set():
+            self.sqid_evt.wait(timeout=5)
+            if base_config.shutting_down:
+                return
         debug("Downloading patrol data...")
 
         # if patrol list is populated

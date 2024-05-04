@@ -2,7 +2,7 @@ import tkinter as tk
 
 class MessageLabel(tk.Label):
     def __init__(self, *args, row=0, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, justify="left", **kwargs)
         self.showed = False
         self._row = row
 
@@ -14,9 +14,9 @@ class MessageLabel(tk.Label):
     def text(self, value):
         self["text"] = value
         if not self.showed:
-            self.grid(row=self._row, column=0, sticky=tk.EW + tk.N)
+            self.grid(row=self._row, column=0, sticky="nw")
             self.showed = True
 
     def clear(self):
-        self.grid()
+        self.grid_forget()
         self.showed = False
