@@ -143,8 +143,13 @@ class BGS(Module):
         else:
             for system in affected_systems:
                 if system in cls._systems:
+                    # временно: для работы гугл.таблиц. убрать при переходе на БД
+                    for key, value in params.items():
+                        if type(value) == str:
+                            params[key] = value.replace("'", "’")
                     Reporter(url, params).start()
                     info("[BGS.send]: BGS information sent.")
+                    break
 
     @classmethod
     def _send_all(cls):
@@ -152,8 +157,15 @@ class BGS(Module):
         for entry in cls._data_send_queue:
             for system in entry["systems"]:
                 if system in cls._systems:
-                    Reporter(entry["url"], entry["params"]).start()
+                    url: str = entry["url"]
+                    params: dict = entry["params"]
+                    # временно: для работы гугл.таблиц. убрать при переходе на БД
+                    for key, value in params.items():
+                        if type(value) == str:
+                            params[key] = value.replace("'", "’")
+                    Reporter(url, params).start()
                     counter += 1
+                    break
         info(f"[BGS.send_all] {counter} pending entries sent.")
         cls._data_send_queue.clear()
     
