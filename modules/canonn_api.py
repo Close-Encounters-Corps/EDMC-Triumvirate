@@ -168,7 +168,7 @@ class CanonnRealtimeAPI(Module):
             and entry.get("IsStation") == True
             and not (
                 entry.get("SignalType") == "FleetCarrier"
-                and entry.get("SignalName")[0:4] == "CEC "      # вы же привели названия флитаков в соответствие правилам фракции, господа сотрудники?
+                and is_cec_fleetcarrier(entry.get("SignalName"))    # вы же привели названия флитаков в соответствие правилам фракции, господа сотрудники?
             )
             and (
                 len(self.batch) == 0
@@ -281,3 +281,9 @@ class WhitelistUpdater(Thread):
             else:
                 error("[CanonnRealtimeAPI] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempts)
                 self.sleep(10)
+
+
+
+def is_cec_fleetcarrier(signalName: str):
+    name = signalName.strip().upper().replace('С', 'C').replace('Е', 'E')
+    return name[0:4] == "CEC "
