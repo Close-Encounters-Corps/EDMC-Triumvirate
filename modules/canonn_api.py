@@ -129,7 +129,7 @@ class HDDetector:
 
 
 class CanonnRealtimeAPI(Module):
-    """Проверяет, интересны"""
+    """Проверяет и отправляет интересные для Canonn-ов игровые события."""
     _instance = None
     _hdtracker = HDDetector()
     url = canonn_realtime_url
