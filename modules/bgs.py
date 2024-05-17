@@ -587,7 +587,7 @@ class CZ_Tracker:
         if self.in_conflict:
             if "$Military_Passthrough" in entry["Message"] and "$ShipName_Military" in entry["From"]:
                 timestamp = datetime.fromisoformat(entry["timestamp"])
-                allegiance = entry["From"][19:1]
+                allegiance = entry["From"][19:-1]
                 debug("CZ_Tracker: detected patrol message sent from {!r} ship.", allegiance)
 
                 if not self.end_messages.get(allegiance):
