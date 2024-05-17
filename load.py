@@ -332,7 +332,11 @@ class JournalEntryProcessor(thread.Thread):
                 this.DistFromStarLS = None
             logger.debug("DistFromStarLS=" + str(this.DistFromStarLS))
 
-        if "SystemAddress" in entry and entry["event"] not in ("NavRoute", "StartJump"):
+        if (
+            "SystemAddress" in entry
+            and this.systemAddress != entry["SystemAdress"]
+            and entry["event"] not in ("NavRoute", "StartJump")
+        ):
             this.systemAddress = entry["SystemAddress"]
             # иногда FSDJump приходит позже, чем нам хотелось бы, и имеющаяся у нас система не совпадает с реальной
             response = requests.get(f"{settings.edsm_url}/api-v1/system?systemId64={this.systemAddress}")
