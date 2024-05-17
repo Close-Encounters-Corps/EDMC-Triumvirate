@@ -259,15 +259,20 @@ def Squadronsend(CMDR, entry):
 
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
-    this.journal_entry_processor(cmdr, is_beta, system, station, entry, state)
+    this.journal_entry_processor(
+        cmdr, is_beta, system, station, entry, state,
+        this.body_name,                 # эти три параметра обновляются через dashboard_entry и
+        this.nearloc["Latitude"],       # могут измениться к моменту, как мы дойдём до обработки записи в очереди.
+        this.nearloc["Longitude"]       # почему не берём body_name из state - см. https://github.com/EDCD/EDMarketConnector/blob/main/PLUGINS.md#journal-entry
+    )
 
 class JournalEntryProcessor(thread.Thread):
     def __init__(self):
         super().__init__(name="Triumvirate journal entry processor")
         self.queue = Queue()
 
-    def __call__(self, cmdr, is_beta, system, station, entry, state):
-        self.queue.put((cmdr, is_beta, system, station, entry, state))
+    def __call__(self, cmdr, is_beta, system, station, entry, state, body_name, lat, lon):
+        self.queue.put((cmdr, is_beta, system, station, entry, state, body_name, lat, lon))
 
     def do_run(self):
         while True:
@@ -280,13 +285,10 @@ class JournalEntryProcessor(thread.Thread):
                     logger.error(traceback.format_exc())
             
     def __process_entry(self):
-        cmdr, is_beta, system, station, entry, state = self.queue.get(block = False)
+        cmdr, is_beta, system, station, entry, state, body, lat, lon = self.queue.get(block = False)
         SysFactionState = this.SysFactionState,
         SysFactionAllegiance = this.SysFactionAllegiance
         DistFromStarLS = this.DistFromStarLS
-        body = this.body_name
-        lat = this.nearloc["Latitude"]
-        lon = this.nearloc["Longitude"]
         client = this.client_version
 
         # capture some stats when we launch
