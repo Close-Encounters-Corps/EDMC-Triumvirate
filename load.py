@@ -334,7 +334,7 @@ class JournalEntryProcessor(thread.Thread):
 
         if (
             "SystemAddress" in entry
-            and this.systemAddress != entry["SystemAdress"]
+            and this.systemAddress != entry["SystemAddress"]
             and entry["event"] not in ("NavRoute", "StartJump")
         ):
             this.systemAddress = entry["SystemAddress"]
