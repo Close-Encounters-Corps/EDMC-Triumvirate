@@ -82,6 +82,7 @@ this.body_name = None
 this.systemAddress = None
 this.odyssey = None
 this.odyssey_events = None
+this.pending_jump_system = None
 
 this.SysFactionState = None
 this.DistFromStarLS = None
@@ -332,21 +333,26 @@ class JournalEntryProcessor(thread.Thread):
                 this.DistFromStarLS = None
             logger.debug("DistFromStarLS=" + str(this.DistFromStarLS))
 
+        # иногда FSDJump приходит позже, чем нам хотелось бы, и имеющаяся у нас система не совпадает с реальной
         if (
             "SystemAddress" in entry
             and this.systemAddress != entry["SystemAddress"]
-            and entry["event"] not in ("NavRoute", "StartJump")
+            and entry["event"] != "NavRoute"
         ):
-            this.systemAddress = entry["SystemAddress"]
-            # иногда FSDJump приходит позже, чем нам хотелось бы, и имеющаяся у нас система не совпадает с реальной
-            response = requests.get(f"{settings.edsm_url}/api-v1/system?systemId64={this.systemAddress}")
-            if response.status_code == 200:
-                system = response.json().get("name", system)
+            if entry["event"] == "StartJump":
+                # мы ещё в актуальной системе, но сохраним ту, в которую прыгаем
+                this.pending_jump_system = entry.get("StarSystem")
+            else:
+                # мы уже прыгнули, но FSDJump в логах пока не получили
+                this.systemAddress = entry["SystemAddress"]
+                system = this.pending_jump_system or system     # чисто на всякий случай
+            
         systemAddress = this.systemAddress
 
         if entry.get("event") == "FSDJump":
             this.DistFromStarLS = None
             this.body = None
+            this.pending_jump_system = None
 
         if "Body" in entry:
             this.body = entry["Body"]
