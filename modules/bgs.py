@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from collections import deque
 from tkinter import font, ttk, filedialog
 from shutil import copyfile
+from PIL import Image, ImageTk
 
 from .debug import debug, error, info
 from .lib.journal import JournalEntry
@@ -15,12 +16,6 @@ from .lib.context import global_context
 from .legacy import Reporter, URL_GOOGLE
 
 import myNotebook as nb
-
-import sys
-if sys.maxsize >= 2**31:        # maxsize на 32 битах = 2**31-1
-    from thirdparty.PIL64 import Image, ImageTk
-else:
-    from thirdparty.PIL import Image, ImageTk
 
 
 class BGS(Module):
