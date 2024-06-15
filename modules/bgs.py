@@ -66,19 +66,13 @@ class BGS(Module):
 
     @classmethod
     def on_journal_entry(cls, journalEntry: JournalEntry):
-        try:
-            entry = journalEntry.as_dict()
-            cls._missions_tracker.process_entry(entry["cmdr"], entry["system"], entry["station"], entry["data"])
-            cls._cz_tracker.process_entry(entry["cmdr"], entry["system"], entry["data"])
-        except:
-            error(traceback.format_exc())
+        entry = journalEntry.as_dict()
+        cls._missions_tracker.process_entry(entry["cmdr"], entry["system"], entry["station"], entry["data"])
+        cls._cz_tracker.process_entry(entry["cmdr"], entry["system"], entry["data"])
 
     @classmethod
     def on_dashboard_entry(cls, cmdr, is_beta, data):
-        try:
-            cls._cz_tracker.status_changed()
-        except:
-            error(traceback.format_exc())
+        cls._cz_tracker.status_changed()
 
     @classmethod
     def on_chat_message(cls, journalEntry: JournalEntry):

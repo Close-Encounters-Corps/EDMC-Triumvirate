@@ -284,6 +284,7 @@ class JournalEntryProcessor(thread.Thread):
                     self.__process_entry()
                 except:
                     logger.error(traceback.format_exc())
+                    # TODO: отправка логов
             
     def __process_entry(self):
         cmdr, is_beta, system, station, entry, state, body, lat, lon = self.queue.get(block = False)
@@ -394,10 +395,16 @@ class JournalEntryProcessor(thread.Thread):
                     val = mod.on_chat_message(journal_entry)
                 except:
                     logger.error(f"Error while sending chat message to module {mod}", exc_info=1)
+                    # TODO: отправка логов
                 status_message = status_message or val
         else:
             for mod in context.enabled_modules:
-                val = mod.on_journal_entry(journal_entry)
+                try:
+                    val = mod.on_journal_entry(journal_entry)
+                except:
+                    event = entry["event"]
+                    logger.error(f"Error while processing a {event} event in module {mod}", exc_info=1)
+                    # TODO: отправка логов
                 status_message = status_message or val
         this.codexcontrol.journal_entry(
             cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
@@ -523,7 +530,10 @@ def dashboard_entry(cmdr, is_beta, entry):
     # logger.debug(this.body_name)
 
     for mod in context.enabled_modules:
-        mod.on_dashboard_entry(cmdr, is_beta, entry)
+        try:
+            mod.on_dashboard_entry(cmdr, is_beta, entry)
+        except:
+            logger.error(f"Error while sending a dashboard entry to module {mod}", exc_info=1)
 
 
 def cmdr_data(data, is_beta):
