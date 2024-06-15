@@ -66,9 +66,8 @@ class BGS(Module):
 
     @classmethod
     def on_journal_entry(cls, journalEntry: JournalEntry):
-        entry = journalEntry.as_dict()
-        cls._missions_tracker.process_entry(entry["cmdr"], entry["system"], entry["station"], entry["data"])
-        cls._cz_tracker.process_entry(entry["cmdr"], entry["system"], entry["data"])
+        cls._missions_tracker.process_entry(journalEntry)
+        cls._cz_tracker.process_entry(journalEntry)
 
     @classmethod
     def on_dashboard_entry(cls, cmdr, is_beta, data):
@@ -228,8 +227,10 @@ class Missions_Tracker:
         info("[BGS.prune_expired] Done.")
 
 
-    def process_entry(self, cmdr, system, station, entry):
+    def process_entry(self, journalEntry: JournalEntry):
+        cmdr, system, station, entry = journalEntry.cmdr, journalEntry.system, journalEntry.station, journalEntry.data
         event = entry["event"]
+
         # стыковка/вход в игру на станции
         if event == "Docked" or (event == "Location" and entry["Docked"] == True):
             self._docked(entry)
@@ -429,8 +430,10 @@ class CZ_Tracker:
         self.on_foot = None     # не тип конфликта, а именно режим игры. ТРП тоже считается
 
 
-    def process_entry(self, cmdr, system, entry):
+    def process_entry(self, journalEntry: JournalEntry):
+        cmdr, system, entry = journalEntry.cmdr, journalEntry.system, journalEntry.data
         event = entry["event"]
+
         # проверка режима игры
         if event == "LoadGame":
             self.safe = entry["GameMode"] != "Open"
@@ -486,12 +489,12 @@ class CZ_Tracker:
             debug("CZ_Tracker: on_foot set to {}", on_foot)
     
     
-    def _start_conflict(self, cmdr, system, entry, c_type):
-        debug("CZ_Tracker: detected entering a conflict zone, {!r} type.", c_type)
+    def _start_conflict(self, cmdr, system, entry, conflict_type):
+        debug("CZ_Tracker: detected entering a conflict zone, {!r} type.", conflict_type)
         self.in_conflict = True
         self.end_messages = dict()      # например, {"independent": deque(), "federal": deque()}
 
-        if c_type == "Space":
+        if conflict_type == "Space":
             self.info = {
                 "cmdr": cmdr,
                 "system": system,
@@ -509,7 +512,7 @@ class CZ_Tracker:
                 intensity = "Medium"
             self.info["intensity"] = intensity
 
-        elif c_type == "Foot":
+        elif conflict_type == "Foot":
             self.info = {
                 "cmdr": cmdr,
                 "system": system,
