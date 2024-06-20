@@ -177,7 +177,7 @@ def plugin_start3(plugin_dir):
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
     this.plugin_dir = plugin_dir
-    with open(os.path.join(plugin_dir, "data", "odyssey_events.json"), 'r') as f:
+    with open(os.path.join(plugin_dir, "data", "odyssey_events.json"), 'r', encoding="utf-8") as f:
         this.odyssey_events = json.loads(f.read())
     Debug.setup(logger)
     this.journal_entry_processor = JournalEntryProcessor()

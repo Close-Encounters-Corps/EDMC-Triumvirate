@@ -10,7 +10,7 @@ from PIL import Image, ImageTk
 from .debug import debug, error, info
 from .lib.journal import JournalEntry
 from .lib.module import Module
-from .lib.conf import config
+from .lib.conf import config as plugin_config
 from .lib.thread import Thread, BasicThread
 from .lib.context import global_context
 from .legacy import Reporter, URL_GOOGLE
@@ -18,11 +18,76 @@ from .legacy import Reporter, URL_GOOGLE
 import myNotebook as nb
 
 
+class _SoundGroup:
+    """Элементы отображения отдельного звука в настройках плагина."""
+    def __init__(self, parent: nb.Frame, sound_config: dict):
+        self.parent = parent
+        self.config = sound_config
+
+        self.checkbox_var =     tk.BooleanVar(value=self.config["enabled"])
+        self.path_var =         tk.StringVar(value=self.config["path"])
+
+        self.checkbox =         nb.Checkbutton(self.parent, variable=self.checkbox_var, command=self._change_state)
+        self.name_label =       nb.Label(self.parent, text=str(self.config["name"] + ": "))
+        self.path_label =       nb.Label(self.parent, textvariable=self.path_var)
+        self.change_path_button = nb.Button(self.parent, text="Изменить...", command=self._change_path)
+        self.reset_button =     nb.Button(self.parent, text="Сбросить", command=self._reset_path)
+
+        self._change_state()
+
+    def grid(self, row: int):
+        self.parent.grid_columnconfigure(2, weight=1)
+        self.checkbox.grid(row=row, column=0, sticky="NSW")
+        self.name_label.grid(row=row, column=1, sticky="NSW")
+        self.path_label.grid(row=row, column=2, sticky="NWSE", padx=5)
+        self.change_path_button.grid(row=row, column=3, sticky="NSE")
+        self.reset_button.grid(row=row, column=4, sticky="NSE")
+
+    @property
+    def path(self) -> str:
+        return self.path_var.get()
+    
+    @path.setter
+    def path(self, new_path: str):
+        self.path_var.set(new_path)
+
+    @property
+    def current_config(self) -> dict:
+        return {
+            "name": self.config["name"],
+            "path": self.path,
+            "enabled": self.checkbox_var.get(),
+            "_default": self.config["_default"]
+        }
+
+    def _change_state(self):
+        new_state = "normal" if self.checkbox_var.get() == True else "disabled"
+        self.name_label.configure(state=new_state)
+        self.path_label.configure(state=new_state)
+        self.change_path_button.configure(state=new_state)
+        self.reset_button.configure(state=new_state)
+
+    def _change_path(self):
+        path = filedialog.askopenfilename(filetypes=(("WAV files", "*.wav"),))
+        if path:
+            filename = os.path.basename(path)
+            try:
+                os.mkdir(os.path.join(global_context.plugin_dir, "sounds", "custom"))
+            except FileExistsError:
+                pass
+            copyfile(path, os.path.join(global_context.plugin_dir, "sounds", "custom", filename))
+            self.path_var.set(f"custom\\{filename}")
+
+    def _reset_path(self):
+        self.path = self.config["_default"]
+
+
 class BGS(Module):
     _missions_tracker = None
     _cz_tracker = None
     _systems = list()
     _data_send_queue = deque()      # по логике нужна queue, но не хочу ещё один импорт тащить
+    _sounds = list()
 
     @classmethod
     def on_start(cls, plugin_dir: str):
@@ -31,16 +96,29 @@ class BGS(Module):
         BGS._cz_tracker = CZ_Tracker()
         BGS.Systems_Updater().start()
 
-        sounds = config.get_str("bgs.sounds")
-        if not sounds:
-            sounds = {
-                "notification": "notification.wav",
-                "success": "success.wav"
-            }
-            config.set("bgs.sounds", json.dumps(sounds))
-        else:
-            sounds = json.loads(sounds)
-        cls._sounds = sounds
+        sounds = json.loads(plugin_config.get_str("bgs.sounds"))
+        # TODO: сделать нормальное определение актуальности схемы сохранённой конфигурации. по версии плагина?
+        if (
+            not sounds
+            or type(sounds) == dict         # замена конфига для обновившихся с прошлой бета-версии
+        ):
+            sounds = [
+                {
+                    "name": "Звук уведомления",
+                    "path": "notification.wav",
+                    "enabled": True,
+                    "_default": "notification.wav",
+                },
+                {
+                    "name": "Звук подтверждения",
+                    "path": "success.wav",
+                    "enabled": True,
+                    "_default": "success.wav",
+                },
+            ]
+            plugin_config.set("bgs.sounds", json.dumps(sounds))
+            debug("[BGS.on_start] Sounds config was set to default.")
+        cls._sounds_config = sounds
 
     class Systems_Updater(Thread):
         def __init__(self):
@@ -79,44 +157,30 @@ class BGS(Module):
 
     @classmethod
     def draw_settings(cls, parent, cmdr, is_beta, position):
-        frame = nb.Frame(parent)
-        nb.Label(frame, text="Настройки модуля БГС").grid(row=0, column=0, columnspan=4, sticky="NW")
+        main_frame = nb.Frame(parent)
+        nb.Label(main_frame, text="Настройки модуля БГС").grid(row=0, column=0, sticky="NWS")
 
-        cls._notifsoundpath = tk.StringVar(value=cls._sounds["notification"])
-        cls._successsoundpath = tk.StringVar(value=cls._sounds["success"])
+        sounds_frame = nb.Frame(main_frame)
+        cls._sound_groups = list()
+        for row, sound_config in enumerate(cls._sounds_config):
+            group = _SoundGroup(sounds_frame, sound_config)
+            group.grid(row)
+            cls._sound_groups.append(group)
+        sounds_frame.grid(row=1, column=0, sticky="NWSE")
 
-        nb.Label(frame, text="Звук уведомления: ").grid(row=1, column=0, sticky="NW")
-        nb.Label(frame, textvariable=cls._notifsoundpath).grid(row=1, column=1, sticky="NW")
-        nb.Button(frame, text="Изменить", command=lambda:change_sound(cls._notifsoundpath)).grid(row=1, column=2, sticky="NW")
-        nb.Button(frame, text="Сбросить", command=lambda:cls._notifsoundpath.set("notification.wav")).grid(row=1, column=3, sticky="NW")
+        nb.Label(main_frame, text="При изменении звука на свой - выбранный файл будет скопирован в папку плагина.").grid(row=2, column=0, sticky="NWS")
 
-        nb.Label(frame, text="Звук подтверждения: ").grid(row=2, column=0, sticky="NW")
-        nb.Label(frame, textvariable=cls._successsoundpath).grid(row=2, column=1, sticky="NW")
-        nb.Button(frame, text="Изменить", command=lambda:change_sound(cls._successsoundpath)).grid(row=2, column=2, sticky="NW")
-        nb.Button(frame, text="Сбросить", command=lambda:cls._successsoundpath.set("success.wav")).grid(row=2, column=3, sticky="NW")
-
-        nb.Label(frame, text="При изменении звука на свой - выбранный файл будет скопирован в папку плагина.").grid(row=3, column=0, columnspan=4, sticky="NW")
-        frame.grid(column=0, row=position, sticky="NW")
-
-        def change_sound(tkvar: tk.StringVar):
-            path = filedialog.askopenfilename(filetypes=(("WAV files", "*.wav"),))
-            if path:
-                filename = os.path.basename(path)
-                try:
-                    os.mkdir(os.path.join(cls._plugin_dir, "sounds", "custom"))
-                except FileExistsError:
-                    pass
-                copyfile(path, os.path.join(cls._plugin_dir, "sounds", "custom", filename))
-                tkvar.set(f"custom\\{filename}")
+        main_frame.grid(column=0, row=position, sticky="NWSE")
     
     @classmethod
     def on_settings_changed(cls, cmdr, is_beta):
-        cls._sounds["notification"] = os.path.join(cls._notifsoundpath.get())
-        cls._sounds["success"] = os.path.join(cls._successsoundpath.get())
-        config.set("bgs.sounds", json.dumps(cls._sounds))
-        debug("[BGS.on_settings_changed] Updated sounds paths:")
-        for key, value in cls._sounds.items():
-            debug("[BGS.on_settings_changed] {!r}: {!r}", key, value)
+        new_config = list()
+        for sound in cls._sound_groups:
+            new_config.append(sound.current_config)
+        plugin_config.set("bgs.sounds", json.dumps(new_config))
+        cls._sounds_config = new_config
+        debug("[BGS.on_settings_changed] New sounds config: {}", new_config)
+        del cls._sound_groups
         
 
     @classmethod
@@ -160,15 +224,25 @@ class BGS(Module):
     # временное решение: громкость зависит от таковой для системных звуков
     # TODO: добавить в playsound.py возможность регулировки громкости, переделать на его использование
     @classmethod
-    def _playsound(cls, filename: str):
-        path = os.path.join(cls._plugin_dir, "sounds", filename)
+    def _playsound(cls, name: str):
+        sound_config = cls._sounds_config.get(name)
+        if not sound_config:
+            raise KeyError(f"sound named '{name}' wasn't found in the config")
+        
+        if not sound_config["enabled"]:
+            debug("[BGS._playsound] The {!r} sound was requested to play, but it's disabled.", name)
+            return
+        
         from ctypes import windll
+        path = os.path.join(cls._plugin_dir, "sounds", sound_config["path"])
         winmm = windll.winmm
         SND_FILENAME = 0x00020000
         SND_ASYNC = 0x0001
         SND_SYSTEM = 0x00200000
         if not winmm.PlaySoundW(path, None, SND_FILENAME | SND_ASYNC | SND_SYSTEM):
             error("[BGS._playsound] Couldn't play a sound {!r}", path)
+        else:
+            debug("[BGS._playsound] Sound {!r} was played.")
 
 
 class Missions_Tracker:
@@ -657,7 +731,7 @@ class CZ_Tracker:
             )
             global_context.message_label.after(60000, global_context.message_label.clear)
 
-            BGS._playsound(BGS._sounds["success"])
+            BGS._playsound("success")
             self._send_results(self.info, presumed_winner, actual_winner)
         
         self._reset()
@@ -690,7 +764,7 @@ class CZ_Tracker:
                 "usp": "pp_url",
             }
         BGS._send(url, url_params, [cz_info["system"]])
-        BGS._playsound(BGS._sounds["success"])
+        BGS._playsound("success")
 
 
     def _reset(self):
@@ -703,7 +777,7 @@ class CZ_Tracker:
     class Notification(tk.Toplevel):
         def __init__(self, cz_info: dict, presumed_winner: str):
             super().__init__()
-            BGS._playsound(BGS._sounds["notification"])
+            BGS._playsound("notification")
 
             self.info = cz_info
             self.factions = [faction for faction, _ in self.info["allegiances"].items()]
@@ -717,7 +791,7 @@ class CZ_Tracker:
 
             self.title("Результаты зоны конфликта")
             self.resizable(False, False)
-            self.geometry(config.get_str("CZ.Notification.position"))
+            self.geometry(plugin_config.get_str("CZ.Notification.position"))
             self.default_font = font.nametofont("TkDefaultFont").actual()["family"]
 
             self.image_path = os.path.join(BGS._plugin_dir, "icons", "cz_notification.png")
