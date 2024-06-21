@@ -2,15 +2,16 @@
 import csv
 import json
 import functools
+import os
+import logging
+import webbrowser
+import traceback
 import tkinter as tk
 from datetime import datetime
 from urllib.parse import quote_plus
 from contextlib import closing
 from queue import Queue
-import os
-import logging
-import webbrowser
-import traceback
+from semantic_version import Version
 
 ### third-party модули ###
 import requests
@@ -74,7 +75,7 @@ this.nearloc = {
 
 myPlugin = "EDMC-Triumvirate"
 
-this.version = settings.version
+this.version = Version(settings.version)
 this.SQNag = 0
 this.client_version = "{}.{}".format(myPlugin, this.version)
 this.body = None
@@ -440,7 +441,7 @@ def startup_stats(cmdr):
             addr6 = addr
         url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
         url+="&entry.1181808218="+quote_plus(cmdr)
-        url+="&entry.254549730="+quote_plus(this.version)
+        url+="&entry.254549730="+quote_plus(str(this.version))
         url+="&entry.1622540328="+quote_plus(addr)
         if addr6 != addr:
             url+="&entry.488844173="+quote_plus(addr6)

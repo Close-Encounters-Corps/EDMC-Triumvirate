@@ -9,23 +9,15 @@
 """
 
 from enum import Enum
-import io
-import json
 import os
 import random
-import re
 import shutil
-import sys
 import tkinter as tk
-import uuid
 import zipfile
-from io import BytesIO, StringIO
 from tkinter import Frame
-
-import requests
+from semantic_version import Version
 
 import myNotebook as nb
-import plug
 import settings
 from ttkHyperlinkLabel import HyperlinkLabel
 
@@ -35,7 +27,6 @@ from .lib.context import global_context
 from .lib.http import WebClient, HttpError
 from .lib.module import Module
 from .lib.thread import Thread, BasicThread
-from .lib.version import Version
 from .player import Player
 
 RELEASE_CYCLE = 60 * 1000 * 60  # 1 Hour
@@ -127,7 +118,7 @@ class Release(Frame, Module):
         self.button.grid(row=1, column=0, columnspan=2, sticky="NSEW")
         self.button.grid_remove()
         
-        self.version = Version(version)
+        self.version = version
         self.env = None
         self.release_thread = None
         self.latest = {}
@@ -224,8 +215,7 @@ class Release(Frame, Module):
             self.grid_remove()
             return
         elif latest_version < self.version:
-            self.hyperlink["text"] = f"Тестовая версия {self.version.raw_value}"
-            debug(f"PLUGIN VERSION: {self.version.raw_value}")
+            self.hyperlink["text"] = f"Тестовая версия {self.version}"
             return
         if self.no_auto_val == 1:
             debug("Automatic update disabled.")
