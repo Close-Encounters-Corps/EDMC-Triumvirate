@@ -143,7 +143,7 @@ class CanonnRealtimeAPI(Module):
     def __init__(self):
         super().__init__()
         self.batch = list()
-        self._batch_maxlen = 30         # каноны рекомендуют 40 во избежаение таймаута, мы перестрахуемся
+        self._batch_maxlen = 30         # каноны рекомендуют 40 во избежание таймаута, мы перестрахуемся
         WhitelistUpdater().start()
 
 
@@ -243,19 +243,15 @@ class CanonnRealtimeAPI(Module):
         gamestate["platform"] = "PC"
 
         # дополнительные, которые мы, возможно, знаем
-        if global_context.odyssey != None:
-            gamestate["odyssey"] = global_context.odyssey
+        if global_context.odyssey != None:          gamestate["odyssey"] = global_context.odyssey
+        if entry.get("BodyID"):                     gamestate["bodyId"] = entry["BodyID"]
+        if journalEntry.body:                       gamestate["bodyName"] = journalEntry.body
+        if journalEntry.state.get("Temperature"):   gamestate["temperature"] = journalEntry.state.get("Temperature")
+        if journalEntry.state.get("Gravity"):       gamestate["gravity"] = journalEntry.state.get("Gravity")
         
-        if entry.get("BodyID"):
-            gamestate["bodyId"] = entry["BodyID"]
-        
-        if journalEntry.state.get("BodyName"):
-            gamestate["bodyName"] = journalEntry.state.get("BodyName")
-        
-        optional = ["Temperatire", "Gravity", "Latitude", "Longitude"]
-        for field in optional:
-            if journalEntry.state.get(field):
-                gamestate[field.lower()] = journalEntry.state.get(field)
+        if journalEntry.lat and journalEntry.lon:
+            gamestate["latitude"] = journalEntry.lat
+            gamestate["longitude"] = journalEntry.lon
 
         return gamestate
 
