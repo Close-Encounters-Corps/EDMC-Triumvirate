@@ -1,5 +1,6 @@
 from typing import Callable, Any
 from modules.lib.thread import Thread, ThreadExit
+from modules.debug import debug
 
 class Timer(Thread):
     """
@@ -23,10 +24,12 @@ class Timer(Thread):
     
 
     def do_run(self):
+        debug("[Timer] New timer: target {!r} will be called in {} seconds.", self.target, self.timeout)
         try:
             self.sleep(self.timeout)
         except ThreadExit:      # бросается sleep-ом, если EDMC закрывается
             if self.run_on_closing:
                 self.target()
         else:                   # а тут мы нормально дождались окончания таймера
+            debug("[Timer] Calling target {!r}, delayed by {} seconds.", self.target, self.timeout)
             self.target()
