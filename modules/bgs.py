@@ -1,4 +1,4 @@
-import requests, traceback, json, os, sqlite3, re, threading
+import requests, json, os, sqlite3, re, threading
 import tkinter as tk
 
 from datetime import datetime, timezone
@@ -6,6 +6,7 @@ from collections import deque
 from tkinter import font, ttk, filedialog
 from shutil import copyfile
 from PIL import Image, ImageTk
+from semantic_version import Version
 
 from .debug import debug, error, info
 from .lib.journal import JournalEntry
@@ -13,6 +14,7 @@ from .lib.module import Module
 from .lib.conf import config as plugin_config
 from .lib.thread import Thread, BasicThread
 from .lib.context import global_context
+from .lib.timer import Timer
 from .legacy import Reporter, URL_GOOGLE
 
 import myNotebook as nb
@@ -88,6 +90,23 @@ class BGS(Module):
     _systems = list()
     _data_send_queue = deque()      # по логике нужна queue, но не хочу ещё один импорт тащить
     _sounds = list()
+    _default_sounds_config = {
+        "version": "1.11.0-rc1.indev",
+        "sounds": [
+            {
+                "name": "Звук уведомления",
+                "path": "notification.wav",
+                "enabled": True,
+                "_default": "notification.wav",
+            },
+            {
+                "name": "Звук подтверждения",
+                "path": "success.wav",
+                "enabled": True,
+                "_default": "success.wav",
+            },
+        ]
+    }
 
     @classmethod
     def on_start(cls, plugin_dir: str):
@@ -96,29 +115,23 @@ class BGS(Module):
         BGS._cz_tracker = CZ_Tracker()
         BGS.Systems_Updater().start()
 
-        sounds = json.loads(plugin_config.get_str("bgs.sounds"))
-        # TODO: сделать нормальное определение актуальности схемы сохранённой конфигурации. по версии плагина?
+        try:
+            sounds = json.loads(plugin_config.get_str("BGS.sounds"))
+        except TypeError:
+            sounds = None
         if (
             not sounds
-            or type(sounds) == dict         # замена конфига для обновившихся с прошлой бета-версии
+            or type(sounds) == list                 # TODO: замена конфига для обновившихся с прошлых бета-версий - убрать в релизе
+            or sounds.get("version") == None        # TODO: замена конфига для обновившихся с прошлых бета-версий - убрать в релизе
+            or Version(sounds["version"]) < Version(cls._default_sounds_config["version"])
         ):
-            sounds = [
-                {
-                    "name": "Звук уведомления",
-                    "path": "notification.wav",
-                    "enabled": True,
-                    "_default": "notification.wav",
-                },
-                {
-                    "name": "Звук подтверждения",
-                    "path": "success.wav",
-                    "enabled": True,
-                    "_default": "success.wav",
-                },
-            ]
-            plugin_config.set("bgs.sounds", json.dumps(sounds))
+            sounds = cls._default_sounds_config
+            plugin_config.set("BGS.sounds", json.dumps(sounds, ensure_ascii=False))
             debug("[BGS.on_start] Sounds config was set to default.")
-        cls._sounds_config = sounds
+            global_context.message_label.text = "Конфигурация звуковых уведомлений была сброшена в состояние по-умолчанию. Проверьте настройки плагина для внесения изменений."
+            Timer(60, global_context.message_label.clear).start()
+        
+        cls._sounds_config: list[dict] = sounds["sounds"]
 
     class Systems_Updater(Thread):
         def __init__(self):
@@ -177,7 +190,7 @@ class BGS(Module):
         new_config = list()
         for sound in cls._sound_groups:
             new_config.append(sound.current_config)
-        plugin_config.set("bgs.sounds", json.dumps(new_config))
+        plugin_config.set("BGS.sounds", json.dumps(new_config, ensure_ascii=False))
         cls._sounds_config = new_config
         debug("[BGS.on_settings_changed] New sounds config: {}", new_config)
         del cls._sound_groups

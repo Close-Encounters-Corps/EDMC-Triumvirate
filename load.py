@@ -242,10 +242,13 @@ def plugin_app(parent):
         this.bgs_module,
         this.canonn_rt_api
     ]
-    for mod in context.modules:
-        mod.on_start(context.plugin_dir)
+
     # лейбл, в котором содержится текст из вывода модулей
     this.message_label = message_label.MessageLabel(rows, row=3)
+
+    for mod in context.modules:
+        mod.on_start(context.plugin_dir)
+    
     return frame
 
 
