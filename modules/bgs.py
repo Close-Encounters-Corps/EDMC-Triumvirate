@@ -30,7 +30,7 @@ class _SoundGroup:
         self.path_var =         tk.StringVar(value=self.config["path"])
 
         self.checkbox =         nb.Checkbutton(self.parent, variable=self.checkbox_var, command=self._change_state)
-        self.name_label =       nb.Label(self.parent, text=str(self.config["name"] + ": "))
+        self.name_label =       nb.Label(self.parent, text=str(self.config["displayed_name"] + ":"))
         self.path_label =       nb.Label(self.parent, textvariable=self.path_var)
         self.change_path_button = nb.Button(self.parent, text="Изменить...", command=self._change_path)
         self.reset_button =     nb.Button(self.parent, text="Сбросить", command=self._reset_path)
@@ -57,6 +57,7 @@ class _SoundGroup:
     def current_config(self) -> dict:
         return {
             "name": self.config["name"],
+            "displayed_name": self.config["displayed_name"],
             "path": self.path,
             "enabled": self.checkbox_var.get(),
             "_default": self.config["_default"]
@@ -71,14 +72,25 @@ class _SoundGroup:
 
     def _change_path(self):
         path = filedialog.askopenfilename(filetypes=(("WAV files", "*.wav"),))
-        if path:
-            filename = os.path.basename(path)
+        if not path:
+            return
+        
+        filename = os.path.basename(path)
+        # зачем нам копировать то, что уже у нас есть?
+        if path == os.path.join(global_context.plugin_dir, "sounds", filename):
+            self.path = filename
+            return
+        elif path == os.path.join(global_context.plugin_dir, "sounds", "custom", filename):
+            self.path = f"custom\\{filename}"
+            return
+        # а тут уже без вариантов
+        else:
             try:
                 os.mkdir(os.path.join(global_context.plugin_dir, "sounds", "custom"))
             except FileExistsError:
                 pass
             copyfile(path, os.path.join(global_context.plugin_dir, "sounds", "custom", filename))
-            self.path_var.set(f"custom\\{filename}")
+            self.path = f"custom\\{filename}"
 
     def _reset_path(self):
         self.path = self.config["_default"]
@@ -89,18 +101,19 @@ class BGS(Module):
     _cz_tracker = None
     _systems = list()
     _data_send_queue = deque()      # по логике нужна queue, но не хочу ещё один импорт тащить
-    _sounds = list()
     _default_sounds_config = {
         "version": "1.11.0-rc1.indev",
         "sounds": [
             {
-                "name": "Звук уведомления",
+                "name": "notification",
+                "displayed_name": "Звук уведомления",       # TODO: убрать из конфига, перенести отображаемое имя в строки перевода
                 "path": "notification.wav",
                 "enabled": True,
                 "_default": "notification.wav",
             },
             {
-                "name": "Звук подтверждения",
+                "name": "success",
+                "displayed_name": "Звук подтверждения",     # TODO: убрать из конфига, перенести отображаемое имя в строки перевода
                 "path": "success.wav",
                 "enabled": True,
                 "_default": "success.wav",
@@ -128,8 +141,21 @@ class BGS(Module):
             sounds = cls._default_sounds_config
             plugin_config.set("BGS.sounds", json.dumps(sounds, ensure_ascii=False))
             debug("[BGS.on_start] Sounds config was set to default.")
-            global_context.message_label.text = "Конфигурация звуковых уведомлений была сброшена в состояние по-умолчанию. Проверьте настройки плагина для внесения изменений."
+            global_context.message_label.text = (
+                "Конфигурация звуковых уведомлений была сброшена в состояние по-умолчанию (несовместимое обновление). " +
+                "Проверьте настройки плагина для внесения изменений.")
             Timer(60, global_context.message_label.clear).start()
+        
+        else:
+            # нам всё ещё надо проверить, что звуки на ожидаемом от них месте
+            for sound_config in sounds["sounds"]:
+                if not os.path.exists(os.path.join(cls._plugin_dir, "sounds", sound_config["path"])):
+                    sound_config["path"] = sound_config["_default"]
+                    plugin_config.set("BGS.sounds", sounds)
+                    global_context.message_label.text = (
+                        "Конфигурация {!r} была сброшена в состояние по-умолчанию (файл не был найден). ".format(sound_config["displayed_name"]) +
+                        "Проверьте настройки плагина для внесения изменений.")
+                    Timer(60, global_context.message_label.clear).start()
         
         cls._sounds_config: list[dict] = sounds["sounds"]
 
@@ -174,7 +200,7 @@ class BGS(Module):
         nb.Label(main_frame, text="Настройки модуля БГС").grid(row=0, column=0, sticky="NWS")
 
         sounds_frame = nb.Frame(main_frame)
-        cls._sound_groups = list()
+        cls._sound_groups: list[_SoundGroup] = list()
         for row, sound_config in enumerate(cls._sounds_config):
             group = _SoundGroup(sounds_frame, sound_config)
             group.grid(row)
@@ -187,14 +213,19 @@ class BGS(Module):
     
     @classmethod
     def on_settings_changed(cls, cmdr, is_beta):
-        new_config = list()
+        new_config = {
+            "version": cls._default_sounds_config["version"],
+            "sounds": list()
+        }
         for sound in cls._sound_groups:
-            new_config.append(sound.current_config)
+            new_config["sounds"].append(sound.current_config)
+
         plugin_config.set("BGS.sounds", json.dumps(new_config, ensure_ascii=False))
-        cls._sounds_config = new_config
-        debug("[BGS.on_settings_changed] New sounds config: {}", new_config)
+        cls._sounds_config = new_config["sounds"]
+
+        debug("[BGS.on_settings_changed] New sounds config: {}", cls._sounds_config)
         del cls._sound_groups
-        
+    
 
     @classmethod
     def _send(cls, url: str, params: dict, affected_systems: list):
@@ -238,9 +269,14 @@ class BGS(Module):
     # TODO: добавить в playsound.py возможность регулировки громкости, переделать на его использование
     @classmethod
     def _playsound(cls, name: str):
-        sound_config = cls._sounds_config.get(name)
+        sound_config = None
+        for sound in cls._sounds_config:
+            if sound["name"] == name:
+                sound_config = sound
+                break
         if not sound_config:
-            raise KeyError(f"sound named '{name}' wasn't found in the config")
+            error("Sound named {!r} wasn't found in the config", name)
+            return
         
         if not sound_config["enabled"]:
             debug("[BGS._playsound] The {!r} sound was requested to play, but it's disabled.", name)
@@ -255,7 +291,7 @@ class BGS(Module):
         if not winmm.PlaySoundW(path, None, SND_FILENAME | SND_ASYNC | SND_SYSTEM):
             error("[BGS._playsound] Couldn't play a sound {!r}", path)
         else:
-            debug("[BGS._playsound] Sound {!r} was played.")
+            debug("[BGS._playsound] Sound {!r} was played.", path)
 
 
 class Missions_Tracker:
@@ -742,9 +778,8 @@ class CZ_Tracker:
                 "Фракция {}\n".format(actual_winner) +
                 "{} интенсивность.".format(intensity)
             )
-            global_context.message_label.after(60000, global_context.message_label.clear)
+            Timer(60, global_context.message_label.clear)
 
-            BGS._playsound("success")
             self._send_results(self.info, presumed_winner, actual_winner)
         
         self._reset()
