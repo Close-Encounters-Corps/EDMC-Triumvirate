@@ -75,6 +75,7 @@ class _SoundGroup:
         if not path:
             return
         
+        path = os.path.normpath(path)
         filename = os.path.basename(path)
         # зачем нам копировать то, что уже у нас есть?
         if path == os.path.join(global_context.plugin_dir, "sounds", filename):
@@ -151,7 +152,7 @@ class BGS(Module):
             for sound_config in sounds["sounds"]:
                 if not os.path.exists(os.path.join(cls._plugin_dir, "sounds", sound_config["path"])):
                     sound_config["path"] = sound_config["_default"]
-                    plugin_config.set("BGS.sounds", sounds)
+                    plugin_config.set("BGS.sounds", json.dumps(sounds, ensure_ascii=False))
                     global_context.message_label.text = (
                         "Конфигурация {!r} была сброшена в состояние по-умолчанию (файл не был найден). ".format(sound_config["displayed_name"]) +
                         "Проверьте настройки плагина для внесения изменений.")
