@@ -94,6 +94,36 @@ states = {
     "war": "Война",
 }
 
+odyssey_events = [
+    "BookDropship",
+    "BookTaxi",
+    "BuyMicroResources",
+    "BuySuit",
+    "BuyWeapon",
+    "CollectItems",
+    "CreateSuitLoadout",
+    "DeleteSuitLoadout",
+    "DeleteSuitLoadout",
+    "DropShipDeploy",
+    "Disembark",
+    "Embark",
+    "FCMaterials",
+    "LoadoutEquipModule",
+    "LoadoutRemoveModule",
+    "RenameSuitLoadout",
+    "ScanOrganic",
+    "SellMicroResources",
+    "SellOrganicData",
+    "SellSuit",
+    "SellWeapon",
+    "SwitchSuitLoadout",
+    "TransferMicroResources",
+    "TradeMicroResources",
+    "TradeMicroResources",
+    "UpgradeWeapon",
+    "UpgradeWeapon"
+]
+
 
 ########################
 ### release settings ###
@@ -113,12 +143,14 @@ nhss_canonn_url = "https://us-central1-canonn-api-236217.cloudfunctions.net/subm
 #############
 support_message = """В случае возникновения проблем с плагином обращайтесь в дискорд Close Encounters Corps, канал #triumvirate_tech_support, в личные сообщения Казаков#4700 или на почтовый адрес help@cec.org"""
 
-"""Используется семантическое версионирование.
+"""
+Используется семантическое версионирование.
 Для себя для процесса разработки выбрал следующий алгоритм именования:
 0) Предположим, последняя публичная тестовая версия - 1.11.0-beta.1
 1) При дальнейшей разработке версию меняем на 1.11.0-beta.1.indev
 2) В последнем коммите после завершения работы над следующей бетой и перед её выпуском меняем версию на 1.11.0-beta.2
-Таким образом соблюдается корректность алгоритма сравнения номеров версий, указанного в спецификации semantic versioning 2.0.0."""
+Таким образом соблюдается корректность алгоритма сравнения номеров версий, указанного в спецификации semantic versioning 2.0.0.
+"""
 version = "1.11.0-rc2"
 
 try:

@@ -135,8 +135,8 @@ class BGS(Module):
             sounds = None
         if (
             not sounds
-            or type(sounds) == list                 # TODO: замена конфига для обновившихся с прошлых бета-версий - убрать в релизе
-            or sounds.get("version") == None        # TODO: замена конфига для обновившихся с прошлых бета-версий - убрать в релизе
+            or type(sounds) == list                 # TODO: замена конфига для обновившихся с бета 1.11.0 - убрать в 1.11.1
+            or sounds.get("version") == None        # TODO: замена конфига для обновившихся с бета 1.11.0 - убрать в 1.11.1
             or Version(sounds["version"]) < Version(cls._default_sounds_config["version"])
         ):
             sounds = cls._default_sounds_config

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import csv
-import json
 import functools
 import os
 import logging
@@ -82,7 +81,7 @@ this.body = None
 this.body_name = None
 this.systemAddress = None
 this.odyssey = None
-this.odyssey_events = None
+this.odyssey_events = settings.odyssey_events
 this.pending_jump_system = None
 
 this.SysFactionState = None
@@ -178,8 +177,6 @@ def plugin_start3(plugin_dir):
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
     this.plugin_dir = plugin_dir
-    with open(os.path.join(plugin_dir, "data", "odyssey_events.json"), 'r', encoding="utf-8") as f:
-        this.odyssey_events = json.loads(f.read())
     Debug.setup(logger)
     this.journal_entry_processor = JournalEntryProcessor()
     this.journal_entry_processor.start()
