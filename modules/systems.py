@@ -2,7 +2,7 @@
 from .lib.module import Module
 from .lib.cache import Cache
 from .lib.http import WebClient
-from .debug import Debug
+from .debug import debug
 
 class SystemsModule(WebClient, Module):
     def __init__(self):
@@ -25,10 +25,14 @@ class SystemsModule(WebClient, Module):
                 return self.cache[system]
 
     def fetch_system(self, system):
-        resp = self.get("/api/v1/lookup", params={"name": system})
-        if resp.status_code == 200:
-            data = resp.json()
-            return data["x"], data["y"], data["z"]
-        if resp.status_code != 400:
-            Debug.p(f"fetch_system failed with code {resp.status_code}: {resp.text}")
-        return None
+        try:
+            resp = self.request("GET", "/api/v1/lookup", {"name": system})
+        except Exception as e:
+            debug(f"fetch_systems failed: {e}")
+        else:
+            if resp.status_code == 200:
+                coords = resp.json()
+                return coords["x"], coords["y"], coords["z"]
+            else:
+                debug(f"fetch_system failed with code {resp.status_code}")
+                return None

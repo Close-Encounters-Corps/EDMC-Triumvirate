@@ -13,17 +13,11 @@
 все галочки патруля.
 """
 
-import csv
 import json
 import math
 import os
-import re
 import threading
-import time
 import tkinter as tk
-import uuid
-from contextlib import closing
-from datetime import datetime
 from tkinter import Frame
 from urllib.parse import quote_plus
 
@@ -39,14 +33,11 @@ from .patrol import build_patrol
 from .edsm import get_edsm_patrol
 from .exclusions import PatrolExclusions
 from .bgs import BGSTasksOverride, new_bgs_patrol
-from .. import legacy
-from ..lib.conf import config
+from ..lib.conf import config, base_config
 from ..lib.context import global_context
-from ..lib.thread import Thread
+from ..lib.thread import Thread, ThreadExit
 from ..lib.journal import JournalEntry
-from ..lib.spreadsheet import Spreadsheet
 from ..lib.module import Module
-from ..release import Release
 
 CYCLE = 60 * 1000 * 60  # 60 minutes
 
@@ -141,7 +132,7 @@ class PatrolModule(Frame, Module):
         sticky = tk.EW + tk.N  # full width, stuck to the top
 
         self.ships = []
-        self.bind("<<PatrolDone>>", self.update_ui)
+        self.bind("<<PatrolDone>>", self.update)
         plugin_dir = global_context.plugin_dir
         self.IMG_PREV = tk.PhotoImage(
             file=os.path.join(plugin_dir, "icons", "left_arrow.gif")
@@ -219,8 +210,6 @@ class PatrolModule(Frame, Module):
         # сквадроне пилота
         self.sqid_evt = threading.Event()
         self.update_thread = None
-
-        self.start_background_thread()
 
     ########################################
     ############# MODULE HOOKS #############
@@ -310,8 +299,6 @@ class PatrolModule(Frame, Module):
     def _on_journal(self, entry: JournalEntry):
         self.latest_entry = entry
 
-        self.start_background_thread()
-
         if entry.cmdr:
             self.cmdr = entry.cmdr
 
@@ -327,6 +314,8 @@ class PatrolModule(Frame, Module):
             self.system = entry.system
             if self.nearest and self.CopyPatrolAdr == 1:
                 copyclip(self.nearest.get("system"))
+            self.start_background_thread()
+
         # If we have visted a system and
         # then jump out then lets
         # clicknext
@@ -447,12 +436,12 @@ class PatrolModule(Frame, Module):
         if self.CopyPatrolAdr == 1:
             copyclip(self.nearest.get("system"))
 
-    def update_ui(self, event=None):
-        # rerun every 5 seconds
-        self.after(5000, self.update_ui)
-        self.update()
+    #def update_ui(self, event=None):
+    #    # rerun every 5 seconds
+    #    self.after(5000, self.update_ui)
+    #    self.update()
 
-    def update(self):
+    def update(self, event=None):
         if not self.enabled:
             return
 
@@ -510,15 +499,27 @@ class PatrolModule(Frame, Module):
             We will get Canonn faction data using elitebgs api
         """
 
+        class UpdateCycle(Thread):
+            def __init__(self, j: dict, patrol: list, **kwargs):
+                super().__init__(**kwargs)
+                self.j = j
+                self.patrol = patrol
+            def do_run(self):
+                for bgs in self.j.get("docs")[0].get("faction_presence"):
+                    if self.STOP:
+                        raise ThreadExit
+                    val = new_bgs_patrol(bgs, faction, BGSOSys)
+                    if val:
+                        self.patrol.append(val)
+
         patrol = []
 
         url = "https://elitebgs.app/api/ebgs/v5/factions"
         j = requests.get(url, params={"name": faction}).json()
         if j:
-            for bgs in j.get("docs")[0].get("faction_presence"):
-                val = new_bgs_patrol(bgs, faction, BGSOSys)
-                if val:
-                    patrol.append(val)
+            thread = UpdateCycle(j, patrol, name="patrol.faction_data_dowloader")
+            thread.start()
+            thread.join()
 
         return patrol
 
@@ -560,7 +561,10 @@ class PatrolModule(Frame, Module):
 
     def download(self):
         debug("Waiting for SQID event...")
-        self.sqid_evt.wait()
+        while not self.sqid_evt.is_set():
+            self.sqid_evt.wait(timeout=5)
+            if base_config.shutting_down:
+                return
         debug("Downloading patrol data...")
 
         # if patrol list is populated
@@ -672,15 +676,9 @@ class PatrolModule(Frame, Module):
 
 
 def copyclip(value):
-    debug("copyclip")
-    window = tk.Tk()
-    window.withdraw()
-    window.clipboard_clear()  # clear clipboard contents
+    window: tk.Tk = tk._default_root
+    window.clipboard_clear()
     window.clipboard_append(value)
-    debug("copyclip_append")
-    window.update()
-    window.destroy()
-    debug("copyclip done")
 
 
 def distance_between(p, g):

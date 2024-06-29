@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 import csv
 import functools
+import os
+import logging
+import webbrowser
+import traceback
 import tkinter as tk
 from datetime import datetime
 from urllib.parse import quote_plus
 from contextlib import closing
-import os
-import logging
-import webbrowser
+from queue import Queue
+from semantic_version import Version
 
 ### third-party модули ###
 import requests
@@ -16,25 +19,23 @@ import requests
 import l10n
 import myNotebook as nb
 import plug
+import edmc_data
 from config import appname
 
 ### модули плагина ###
-from modules import clientreport, codex, factionkill
+from modules import canonn_api, codex
 from modules import friendfoe as FF
 from modules import (
-    fssreports,
-    hdreport,
-    journaldata,
     legacy,
     message_label,
     patrol,
-    release
+    release,
+    bgs
 )
 from modules.debug import Debug
-from modules.lib import canonn_api, http
+from modules.lib import http
 from modules.lib import context as contextlib
 from modules.lib import journal, thread
-from modules.player import Player
 from modules.release import Release
 from modules.systems import SystemsModule
 import settings
@@ -73,11 +74,15 @@ this.nearloc = {
 
 myPlugin = "EDMC-Triumvirate"
 
-this.version = settings.version
+this.version = Version(settings.version)
 this.SQNag = 0
 this.client_version = "{}.{}".format(myPlugin, this.version)
 this.body = None
 this.body_name = None
+this.systemAddress = None
+this.odyssey = None
+this.odyssey_events = settings.odyssey_events
+this.pending_jump_system = None
 
 this.SysFactionState = None
 this.DistFromStarLS = None
@@ -107,7 +112,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     context.by_class(patrol.PatrolModule).draw_settings(frame, cmdr, is_beta, 2)
     Debug.plugin_prefs(frame, cmdr, is_beta, 3)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 4)
-    hdreport.HDInspector(frame, cmdr, is_beta, this.client_version, 6)
+    context.by_class(bgs.BGS).draw_settings(frame, cmdr, is_beta, 5)
     nb.Label(frame, text=settings.support_message,).grid(row=8, column=0, sticky="NW")
 
     return frame
@@ -124,8 +129,7 @@ def prefs_changed(cmdr, is_beta):
 
 
 def Alegiance_get(CMDR, SQ_old):
-
-    global SQ
+    SQ = this.cmdr_SQID
     if CMDR != this.CMDR:
         logger.debug("Community Check started")
         url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"
@@ -172,8 +176,10 @@ def plugin_start3(plugin_dir):
     """
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
-    Debug.setup(logger)
     this.plugin_dir = plugin_dir
+    Debug.setup(logger)
+    this.journal_entry_processor = JournalEntryProcessor()
+    this.journal_entry_processor.start()
     # префикс логов
     codex.CodexTypes.plugin_start(plugin_dir)
     # в логах пишется с префиксом Triumvirate
@@ -222,18 +228,24 @@ def plugin_app(parent):
     table.grid(sticky="NSEW")
     this.codexcontrol = codex.CodexTypes(table, 0)
     this.systems_module = SystemsModule()
-    this.canonn_rt_api = canonn_api.CanonnRealtimeApi()
+    this.canonn_rt_api = canonn_api.CanonnRealtimeAPI()
     rel = release.Release(this.plugin_dir, table, this.version, 1)
     this.patrol = patrol.PatrolModule(table, 2)
+    this.bgs_module = bgs.BGS()
     this.modules = [
         rel,
         this.patrol,
         this.systems_module,
-        clientreport.ClientReportModule()
+        this.bgs_module,
+        this.canonn_rt_api
     ]
-    this.hyperdiction = hdreport.hyperdictionDetector.setup(table, 4)
+
     # лейбл, в котором содержится текст из вывода модулей
-    this.message_label = message_label.MessageLabel(rows, row=5)
+    this.message_label = message_label.MessageLabel(rows, row=3)
+
+    for mod in context.modules:
+        mod.on_start(context.plugin_dir)
+    
     return frame
 
 
@@ -249,70 +261,163 @@ def Squadronsend(CMDR, entry):
 
 
 def journal_entry(cmdr, is_beta, system, station, entry, state):
-    # capture some stats when we launch
-    # not read for that yet
-    startup_stats(cmdr)
+    this.journal_entry_processor(
+        cmdr, is_beta, system, station, entry, state,
+        this.body_name,                 # эти три параметра обновляются через dashboard_entry и
+        this.nearloc["Latitude"],       # могут измениться к моменту, как мы дойдём до обработки записи в очереди.
+        this.nearloc["Longitude"]       # почему не берём body_name из state - см. https://github.com/EDCD/EDMarketConnector/blob/main/PLUGINS.md#journal-entry
+    )
 
-    if entry["event"] == "Scan" and entry["ScanType"] in {"Detailed", "AutoScan"}:
-        thread.BasicThread(target=lambda: submit_expedition(cmdr, entry)).start()
+class JournalEntryProcessor(thread.Thread):
+    def __init__(self):
+        super().__init__(name="Triumvirate journal entry processor")
+        self.queue = Queue()
 
-    if "SystemFaction" in entry:
-        """ "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }"""
-        SystemFaction = entry.get("SystemFaction")
-        try:
-            this.SysFactionState = SystemFaction["FactionState"]
-        except:
-            this.SysFactionState = None
-        logger.debug("SysFaction's state is" + str(this.SysFactionState))
+    def __call__(self, cmdr, is_beta, system, station, entry, state, body_name, lat, lon):
+        self.queue.put((cmdr, is_beta, system, station, entry, state, body_name, lat, lon))
 
-    if "SystemAllegiance" in entry:
+    def do_run(self):
+        while True:
+            if self.queue.empty():
+                self.sleep(1)
+            else:
+                try:
+                    self.__process_entry()
+                except:
+                    logger.error(traceback.format_exc())
+                    # TODO: отправка логов
+            
+    def __process_entry(self):
+        cmdr, is_beta, system, station, entry, state, body, lat, lon = self.queue.get(block = False)
+        SysFactionState = this.SysFactionState,
+        SysFactionAllegiance = this.SysFactionAllegiance
+        DistFromStarLS = this.DistFromStarLS
+        client = this.client_version
 
-        SystemAllegiance = entry.get("SystemAllegiance")
-        logger.debug(SystemAllegiance)
-        try:
-            this.SysFactionAllegiance = SystemAllegiance
-        except:
-            this.SysFactionAllegiance = None
-        logger.debug("SysFaction's allegiance is" + str(this.SysFactionAllegiance))
+        # capture some stats when we launch
+        # not read for that yet
+        startup_stats(cmdr)
 
-    if "DistFromStarLS" in entry:
-        """"DistFromStarLS":144.821411"""
-        try:
-            this.DistFromStarLS = entry.get("DistFromStarLS")
-        except:
+        # отключено, потому что API не работает, а логи засоряются
+        #if entry["event"] == "Scan" and entry["ScanType"] in {"Detailed", "AutoScan"}:
+            #thread.BasicThread(target=lambda: submit_expedition(cmdr, entry)).start()
+
+        if this.odyssey == None:
+            if entry["event"] == "LoadGame":        # ВАЖНО: Fileheader даёт Odyssey=true и в Горизонтах тоже
+                this.odyssey = entry.get("Odyssey", False)
+            # ивенты, возможные лишь в Одиссее
+            elif entry["event"] in this.odyssey_events:
+                this.odyssey = True
+        
+        if "SystemFaction" in entry:
+            """ "SystemFaction": { “Name”:"Mob of Eranin", "FactionState":"CivilLiberty" } }"""
+            SystemFaction = entry.get("SystemFaction")
+            try:
+                this.SysFactionState = SystemFaction["FactionState"]
+            except:
+                this.SysFactionState = None
+            logger.debug("SysFaction's state is" + str(this.SysFactionState))
+
+        if "SystemAllegiance" in entry:
+            SystemAllegiance = entry.get("SystemAllegiance")
+            logger.debug(SystemAllegiance)
+            try:
+                this.SysFactionAllegiance = SystemAllegiance
+            except:
+                this.SysFactionAllegiance = None
+            logger.debug("SysFaction's allegiance is" + str(this.SysFactionAllegiance))
+
+        if "DistFromStarLS" in entry:
+            """"DistFromStarLS":144.821411"""
+            try:
+                this.DistFromStarLS = entry.get("DistFromStarLS")
+            except:
+                this.DistFromStarLS = None
+            logger.debug("DistFromStarLS=" + str(this.DistFromStarLS))
+
+        # иногда FSDJump приходит позже, чем нам хотелось бы, и имеющаяся у нас система не совпадает с реальной
+        if (
+            "SystemAddress" in entry
+            and this.systemAddress != entry["SystemAddress"]
+            and entry["event"] != "NavRoute"
+        ):
+            if entry["event"] == "StartJump":
+                # мы ещё в актуальной системе, но сохраним ту, в которую прыгаем
+                this.pending_jump_system = entry.get("StarSystem")
+            else:
+                # мы уже прыгнули, но FSDJump в логах пока не получили
+                this.systemAddress = entry["SystemAddress"]
+                system = this.pending_jump_system or system     # чисто на всякий случай
+            
+        systemAddress = this.systemAddress
+
+        if entry.get("event") == "FSDJump":
             this.DistFromStarLS = None
-        logger.debug("DistFromStarLS=" + str(this.DistFromStarLS))
+            this.body = None
+            this.pending_jump_system = None
 
-    if entry.get("event") == "FSDJump":
-        this.DistFromStarLS = None
-        this.body = None
+        if "Body" in entry:
+            this.body = entry["Body"]
+            logger.debug(f"Body: {this.body}")
 
-    if "Body" in entry:
-        this.body = entry["Body"]
-        logger.debug(f"Body: {this.body}")
+        if entry["event"] == "JoinedSquadron":
+            Squadronsend(cmdr, entry["SquadronName"])
 
-    if entry["event"] == "JoinedSquadron":
-        Squadronsend(cmdr, entry["SquadronName"])
+        x, y, z = None, None, None
+        if system:
+            val = this.systems_module.get_system_coords(system)
+            if val is not None:
+                x, y, z = val
 
-    thread.BasicThread(
-        target=lambda: journal_entry_wrapper(
-            cmdr,
-            is_beta,
-            system,
-            this.SysFactionState,
-            this.SysFactionAllegiance,
-            this.DistFromStarLS,
-            station,
-            entry,
-            state,
-            this.body_name,
-            this.nearloc["Latitude"],
-            this.nearloc["Longitude"],
-            this.client_version,
+        journal_entry = journal.JournalEntry(
+            cmdr=cmdr,
+            is_beta=is_beta,
+            system=system,
+            systemAddress=systemAddress,
+            sys_faction_state=SysFactionState,
+            sys_faction_allegiance=SysFactionAllegiance,
+            dist_from_star=DistFromStarLS,
+            station=station,
+            data=entry,
+            state=state,
+            x=x,
+            y=y,
+            z=z,
+            body=body,
+            lat=lat,
+            lon=lon,
+            client=client,
         )
-    ).start()
+        status_message = None
+        if journal_entry.data["event"] in {"SendText", "ReceiveText"}:
+            for mod in context.enabled_modules:
+                # TODO переписать на менеджер контекста?
+                try:
+                    val = mod.on_chat_message(journal_entry)
+                except:
+                    logger.error(f"Error while sending chat message to module {mod}", exc_info=1)
+                    # TODO: отправка логов
+                status_message = status_message or val
+        else:
+            for mod in context.enabled_modules:
+                try:
+                    val = mod.on_journal_entry(journal_entry)
+                except:
+                    event = entry["event"]
+                    logger.error(f"Error while processing a {event} event in module {mod}", exc_info=1)
+                    # TODO: отправка логов
+                status_message = status_message or val
+        this.codexcontrol.journal_entry(
+            cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
+        )
 
-def submit_expedition(cmdr, entry: dict):
+        # legacy logging to google sheets
+        legacy.GusonExpeditions(cmdr, is_beta, system, entry)
+        if status_message is not None:
+            this.message_label.text = status_message
+
+
+def submit_expedition(cmdr, entry: dict):   # не работает
     resp = http.WebClient(
         settings.cec_url
     ).post("/api/expeditions/v1/scan/submit", json={
@@ -321,6 +426,7 @@ def submit_expedition(cmdr, entry: dict):
     })
     if not resp.ok:
         logger.error("Ошибка при запросе к %s:\n%s", resp.request.url, resp.text)
+
 
 def startup_stats(cmdr):
     try:
@@ -335,7 +441,7 @@ def startup_stats(cmdr):
             addr6 = addr
         url="https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
         url+="&entry.1181808218="+quote_plus(cmdr)
-        url+="&entry.254549730="+quote_plus(this.version)
+        url+="&entry.254549730="+quote_plus(str(this.version))
         url+="&entry.1622540328="+quote_plus(addr)
         if addr6 != addr:
             url+="&entry.488844173="+quote_plus(addr6)
@@ -345,83 +451,6 @@ def startup_stats(cmdr):
 
         legacy.Reporter(url).start()
 
-def journal_entry_wrapper(
-    cmdr,
-    is_beta,
-    system,
-    SysFactionState,
-    SysFactionAllegiance,
-    DistFromStarLS,
-    station,
-    entry,
-    state,
-    body,
-    lat,
-    lon,
-    client,
-):
-    """
-    Detect journal events
-    """
-    x, y, z = None, None, None
-    if system:
-        val = this.systems_module.get_system_coords(system)
-        if val is not None:
-            x, y, z = val
-
-    journal_entry = journal.JournalEntry(
-        cmdr=cmdr,
-        is_beta=is_beta,
-        system=system,
-        sys_faction_state=SysFactionState,
-        sys_faction_allegiance=SysFactionAllegiance,
-        dist_from_star=DistFromStarLS,
-        station=station,
-        data=entry,
-        state=state,
-        x=x,
-        y=y,
-        z=z,
-        body=body,
-        lat=lat,
-        lon=lon,
-        client=client,
-    )
-    status_message = None
-    factionkill.submit(cmdr, is_beta, system, station, entry, client)
-    hdreport.submit(cmdr, is_beta, system, station, entry, client)
-    codex.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
-    fssreports.submit(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
-    journaldata.submit(cmdr, is_beta, system, station, entry, client, body, lat, lon)
-    if journal_entry.data["event"] in {"SendText", "ReceiveText"}:
-        for mod in context.enabled_modules:
-            # TODO переписать на менеджер контекста?
-            try:
-                val = mod.on_chat_message(journal_entry)
-            except:
-                logger.error(f"Error while sending chat message to module {mod}", exc_info=1)
-            status_message = status_message or val
-    else:
-        for mod in context.enabled_modules:
-            val = mod.on_journal_entry(journal_entry)
-            status_message = status_message or val
-    this.codexcontrol.journal_entry(
-        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
-    )
-    codex.saaScan.journal_entry(
-        cmdr, is_beta, system, station, entry, state, x, y, z, body, lat, lon, client
-    )
-
-    # legacy logging to google sheets
-    legacy.statistics(cmdr, is_beta, system, station, entry, state)
-    legacy.CodexEntry(cmdr, is_beta, system, x, y, z, entry, body, lat, lon, client)
-    legacy.AXZone(cmdr, is_beta, system, x, y, z, station, entry, state)
-    legacy.faction_kill(cmdr, is_beta, system, station, entry, state)
-    legacy.NHSS.submit(cmdr, is_beta, system, x, y, z, station, entry, client)
-    legacy.BGS().TaskCheck(cmdr, is_beta, system, station, entry, client)
-    legacy.GusonExpeditions(cmdr, is_beta, system, entry)
-    if status_message is not None:
-        this.message_label.text = status_message
 
 def fuel_consumption(entry, old_fuel, old_timestamp, old_fuel_cons):
     # debug(old_timestamp==entry["timestamp"])
@@ -457,7 +486,7 @@ def dashboard_entry(cmdr, is_beta, entry):
         this.plug_start = 1
         this.old_time = datetime.strptime(entry["timestamp"], "%Y-%m-%dT%H:%M:%SZ")
     try:
-        logger.debug(f"Checking fuel consumption {this.FuelCount}")
+        # logger.debug(f"Checking fuel consumption {this.FuelCount}")
         if entry.get("Fuel") is not None:
             if this.FuelCount == 10:
                 this.fuel_cons = fuel_consumption(
@@ -477,21 +506,21 @@ def dashboard_entry(cmdr, is_beta, entry):
     # debug("Dashboard update
     # "+str(entry["Fuel"]))
 
-    this.landed = entry["Flags"] & 1 << 1 and True or False
-    this.SCmode = entry["Flags"] & 1 << 4 and True or False
-    this.SRVmode = entry["Flags"] & 1 << 26 and True or False
-    this.Fightermode = entry["Flags"] & 1 << 25 and True or False
-    this.landed = this.landed or this.SRVmode
+    this.landed = bool(entry["Flags"] & edmc_data.FlagsLanded)
+    this.inSupercruise = bool(entry["Flags"] & edmc_data.FlagsSupercruise)
+    this.onSRV = bool(entry["Flags"] & edmc_data.FlagsInSRV)
+    this.onFighter = bool(entry["Flags"] & edmc_data.FlagsInFighter)
+    this.onFoot = bool(entry.get("Flags2", 0) & edmc_data.Flags2OnFoot)
+    this.onSurface = this.landed or this.SRVmode or this.onFoot
     # print 'LatLon =
     # {}'.format(entry['Flags'] &
     # 1<<21 and True or False)
     # print entry
-    if entry["Flags"] & 1 << 21 and True or False:
+    if entry["Flags"] & edmc_data.FlagsHasLatLong:
         if "Latitude" in entry:
             this.nearloc["Latitude"] = entry["Latitude"]
             this.nearloc["Longitude"] = entry["Longitude"]
     else:
-
         this.nearloc["Latitude"] = None
         this.nearloc["Longitude"] = None
     if entry.get("BodyName"):
@@ -499,7 +528,14 @@ def dashboard_entry(cmdr, is_beta, entry):
     else:
         this.body_name = None
     this.cmdr_SQID = Alegiance_get(cmdr, this.cmdr_SQID)
-    logger.debug(this.body_name)
+    # logger.debug(this.body_name)
+
+    for mod in context.enabled_modules:
+        try:
+            mod.on_dashboard_entry(cmdr, is_beta, entry)
+        except:
+            logger.error(f"Error while sending a dashboard entry to module {mod}", exc_info=1)
+
 
 def cmdr_data(data, is_beta):
     """
@@ -507,6 +543,3 @@ def cmdr_data(data, is_beta):
     """
     for mod in context.enabled_modules:
         mod.on_cmdr_data(data, is_beta)
-
-
-

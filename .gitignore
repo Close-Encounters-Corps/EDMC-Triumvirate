@@ -3,6 +3,7 @@
 *.patrol
 /*.bat
 /data/EDMC-Canonn.patrol
+/data/missions.db
 /EDMC.log
 /.venv
 /venv
@@ -20,3 +21,4 @@
 /settings_local.py
 .vscode
 /EDMC-Triumvirate.pyproj.user
+test*.*

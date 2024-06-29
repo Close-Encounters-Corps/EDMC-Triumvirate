@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 class Module(ABC):
     """
@@ -29,6 +29,11 @@ class Module(ABC):
     def on_cmdr_data(self, data, is_beta):
         """
         Вызывается при появлении новых данных о командире.
+        """
+
+    def on_dashboard_entry(self, cmdr, is_beta, entry):
+        """
+        Вызывается при обновлении игрой status.json
         """
 
     def on_chat_message(self, entry):

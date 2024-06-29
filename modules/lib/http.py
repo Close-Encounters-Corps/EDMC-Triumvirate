@@ -1,7 +1,5 @@
 import requests
 
-from ..debug import debug
-
 class WebClient(requests.Session):
     def __init__(self, base_url=None):
         super().__init__()
