@@ -21,6 +21,7 @@ import myNotebook as nb
 import plug
 import edmc_data
 from config import appname
+from config import config as edmc_config
 
 ### модули плагина ###
 from modules import canonn_api, codex
@@ -98,6 +99,11 @@ this.fuel = 0
 this.fuel_cons = 0.0
 context.help_page_opened = False
 context.latest_dashboard_entry = None
+
+
+# фикс для старой ошибки конфига на линуксе
+edmc_config.delete("Triumvirate.Canonn:HideCodex", suppress=True)
+edmc_config.delete("Triumvirate.Canonn", suppress=True)
 
 
 def plugin_prefs(parent, cmdr, is_beta):
