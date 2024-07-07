@@ -621,7 +621,7 @@ class CZ_Tracker:
                 "allegiances": {},
                 "player_fights_for": None,
                 "kills": 0,
-                "kills_limit": 5,
+                "minimum_kills": 5,
                 "start_time": datetime.fromisoformat(entry["timestamp"]),
                 "end_time": None
             }
@@ -641,7 +641,7 @@ class CZ_Tracker:
                 "allegiances": {},
                 "player_fights_for": None,
                 "kills": 0,
-                "kills_limit": 20,
+                "minimum_kills": 20,
                 "start_time": datetime.fromisoformat(entry["timestamp"]),
                 "end_time": None,
             }
@@ -714,11 +714,11 @@ class CZ_Tracker:
                 if queue[0] != None:
                     if (queue[4] - queue[0]).seconds <= 15:
                         debug("CZ_Tracker: got 5 patrol messages in 15 seconds.")
-                        if self.info["kills"] < self.info["kills_limit"]:
+                        if self.info["kills"] < self.info["minimum_kills"]:
                             # возможно, нам попались болтливые боты, и мы торопимся с завершением конфликта
                             debug("CZ_Tracket: not enough kills ({}/{}), clearing end_messages and keeping on tracking.",
                                   self.info["kills"],
-                                  self.info["kills_limit"])
+                                  self.info["minimum_kills"])
                             self.end_messages.clear()       # чтобы не засорять логи слишком сильно, если это действительно конец конфликта
                             return
                         else:
@@ -753,8 +753,8 @@ class CZ_Tracker:
                         if faction[1] != None and faction[1] != winners_allegiance:
                             presumed_winner = factions_list[index-1][0]         # index-1 будет либо 0, либо -1, что при двух фракциях == 1
 
-        elif self.info["kills"] < self.info["kills_limit"]:
-            debug("CZ_Tracker: not enough kills ({}/{}), resetting.", self.info["kills"], self.info["kills_limit"])
+        elif self.info["kills"] < self.info["minimum_kills"]:
+            debug("CZ_Tracker: not enough kills ({}/{}), resetting.", self.info["kills"], self.info["minimum_kills"])
             self._reset()
             return
         
@@ -762,7 +762,7 @@ class CZ_Tracker:
         # мы не можем наверняка сказать, что фракция игрока победила, но будем *предполагать* такой исход
         if (
             presumed_winner == "[UNKNOWN]"
-            and self.info["kills"] >= self.info["kills_limit"]
+            and self.info["kills"] >= self.info["minimum_kills"]
             and self.safe
         ):
             debug("CZ_Tracker: predicting the winner.")
