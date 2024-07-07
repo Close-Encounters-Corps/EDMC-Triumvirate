@@ -713,8 +713,17 @@ class CZ_Tracker:
                 
                 if queue[0] != None:
                     if (queue[4] - queue[0]).seconds <= 15:
-                        debug("CZ_Tracker: got 5 patrol messages in 15 seconds, calling END_CONFLICT.")
-                        self._end_conflict(allegiance)
+                        debug("CZ_Tracker: got 5 patrol messages in 15 seconds.")
+                        if self.info["kills"] < self.info["kills_limit"]:
+                            # возможно, нам попались болтливые боты, и мы торопимся с завершением конфликта
+                            debug("CZ_Tracket: not enough kills ({}/{}), clearing end_messages and keeping on tracking.",
+                                  self.info["kills"],
+                                  self.info["kills_limit"])
+                            self.end_messages.clear()       # чтобы не засорять логи слишком сильно, если это действительно конец конфликта
+                            return
+                        else:
+                            debug("CZ_Tracker: enough kills, calling END_CONFLICT.")
+                            self._end_conflict(allegiance)
 
 
     def _end_conflict(self, winners_allegiance: str | None = None):
