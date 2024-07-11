@@ -21,32 +21,38 @@ class Timer(Thread):
         self.timeout = secs
         self.target = target
         self.run_on_closing = run_on_closing
+        self.is_active = False      # не доверяю threading.is_alive
     
 
     def do_run(self):
+        self.is_active = True
         debug("[Timer] New timer: target {!r} will be called in {} seconds.", self.target, self.timeout)
         try:
             self.sleep(self.timeout)
         except ThreadExit:      # бросается sleep-ом, если EDMC закрывается
+            self.is_active = False
             if self.run_on_closing:
                 self.target()
         else:                   # а тут мы нормально дождались окончания таймера
+            self.is_active = False
             debug("[Timer] Calling target {!r}, delayed by {} seconds.", self.target, self.timeout)
             self.target()
 
 
     def execute_now(self):
         """Сбрасывает таймер и досрочно выполняет отложенное действие."""
-        self.run_on_closing = False     # чтобы случайно дважды target не вызвать
-        self.STOP = True
-        debug("[Timer.execute_now] {!r} has been stopped, calling target {!r} ahead of schedule.",
-              self.name,
-              self.target)
-        self.target()
+        if self.is_active:
+            self.run_on_closing = False     # чтобы случайно дважды target не вызвать
+            self.STOP = True
+            debug("[Timer.execute_now] {!r} has been stopped, calling target {!r} ahead of schedule.",
+                self.name,
+                self.target)
+            self.target()
 
     
     def kill(self):
         """Сбрасывает таймер с отменой выполнения отложенного действия."""
-        self.run_on_closing = False
-        self.STOP = True
-        debug("[Timer.kill] {!r} has been cancelled.")
+        if self.is_active:
+            self.run_on_closing = False
+            self.STOP = True
+            debug("[Timer.kill] {!r} has been cancelled.")
