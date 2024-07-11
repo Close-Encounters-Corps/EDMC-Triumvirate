@@ -33,3 +33,20 @@ class Timer(Thread):
         else:                   # а тут мы нормально дождались окончания таймера
             debug("[Timer] Calling target {!r}, delayed by {} seconds.", self.target, self.timeout)
             self.target()
+
+
+    def execute_now(self):
+        """Сбрасывает таймер и досрочно выполняет отложенное действие."""
+        self.run_on_closing = False     # чтобы случайно дважды target не вызвать
+        self.STOP = True
+        debug("[Timer.execute_now] {!r} has been stopped, calling target {!r} ahead of schedule.",
+              self.name,
+              self.target)
+        self.target()
+
+    
+    def kill(self):
+        """Сбрасывает таймер с отменой выполнения отложенного действия."""
+        self.run_on_closing = False
+        self.STOP = True
+        debug("[Timer.kill] {!r} has been cancelled.")

@@ -31,7 +31,7 @@ class HDDetector:
         self.destination_system: str        = None
         self.departure_timestamp: datetime  = None
         self.status = self.SAFE
-        self._timer = None
+        self._timer: Timer | None = None
         
 
     def journal_entry(self, journalEntry: JournalEntry):
@@ -63,18 +63,21 @@ class HDDetector:
             if self.status < self.THARGOID:
                 debug("[HDDetector] Hyperdiction confirmed.")
             self.status = self.THARGOID
+
             if entry["MusicTrack"] in ("Unknown_Encounter"):
                 # подождём, ожидая агрессии со стороны таргоида
                 debug("[HDDetector] Waiting for the signs of aggression...")
                 if not self._timer:
                     self._timer = Timer(20, lambda:self._reportHD(journalEntry))
                     self._timer.start()
+            
             elif entry["MusicTrack"] in ("Combat_Unknown", "Combat_Dogfight", "Combat_Hunters"):
                 debug("[HDDetector] Detected an attack on a player.")
                 self.status = self.HOSTILE
-                if not self._timer:
-                    self._reportHD(journalEntry)
-                # в противном случае репорт будет послан после истечения таймера
+                if self._timer:
+                    self._timer.kill()
+                    self._timer = None
+                self._reportHD(journalEntry)
     
 
     def _reportHD(self, journalEntry: JournalEntry):
