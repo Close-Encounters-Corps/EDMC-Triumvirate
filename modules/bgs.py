@@ -142,10 +142,9 @@ class BGS(Module):
             sounds = cls._default_sounds_config
             plugin_config.set("BGS.sounds", json.dumps(sounds, ensure_ascii=False))
             debug("[BGS.on_start] Sounds config was set to default.")
-            global_context.message_label.text = (
+            global_context.notifier.send(
                 "Конфигурация звуковых уведомлений была сброшена в состояние по-умолчанию (несовместимое обновление). " +
                 "Проверьте настройки плагина для внесения изменений.")
-            Timer(60, global_context.message_label.clear).start()
         
         else:
             # нам всё ещё надо проверить, что звуки на ожидаемом от них месте
@@ -153,10 +152,9 @@ class BGS(Module):
                 if not os.path.exists(os.path.join(cls._plugin_dir, "sounds", sound_config["path"])):
                     sound_config["path"] = sound_config["_default"]
                     plugin_config.set("BGS.sounds", json.dumps(sounds, ensure_ascii=False))
-                    global_context.message_label.text = (
+                    global_context.notifier.send(
                         "Конфигурация {!r} была сброшена в состояние по-умолчанию (файл не был найден). ".format(sound_config["displayed_name"]) +
                         "Проверьте настройки плагина для внесения изменений.")
-                    Timer(60, global_context.message_label.clear).start()
         
         cls._sounds_config: list[dict] = sounds["sounds"]
 
@@ -782,13 +780,12 @@ class CZ_Tracker:
                 case "High":    intensity = "Высокая"
                 case "Medium":  intensity = "Средняя"
                 case "Low":     intensity = "Низкая"
-            global_context.message_label.text = (
+            global_context.notifier.send(
                 "Засчитана победа в зоне конфликта:\n" +
                 "Система {}\n".format(self.info["system"])+
                 "Фракция {}\n".format(actual_winner) +
                 "{} интенсивность.".format(intensity)
             )
-            Timer(60, global_context.message_label.clear).start()
 
             self._send_results(self.info, presumed_winner, actual_winner)
         

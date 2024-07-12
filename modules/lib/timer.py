@@ -55,4 +55,4 @@ class Timer(Thread):
         if self.is_active:
             self.run_on_closing = False
             self.STOP = True
-            debug("[Timer.kill] {!r} has been cancelled.")
+            debug("[Timer.kill] {!r} has been cancelled.", self.name)

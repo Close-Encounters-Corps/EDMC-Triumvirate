@@ -28,7 +28,6 @@ from modules import canonn_api, codex
 from modules import friendfoe as FF
 from modules import (
     legacy,
-    message_label,
     patrol,
     release,
     bgs
@@ -39,6 +38,7 @@ from modules.lib import context as contextlib
 from modules.lib import journal, thread
 from modules.release import Release
 from modules.systems import SystemsModule
+from modules.notifier import Notifier
 import settings
 
 _ = functools.partial(l10n.Translations.translate, context=__file__)
@@ -221,22 +221,14 @@ def kill_notification():
 def plugin_app(parent):
     this.parent = parent
 
-    frame = this.frame = tk.Frame(parent)
-    frame.columnconfigure(0, weight=1)
+    frame = tk.Frame(parent)
+    frame.grid_columnconfigure(0, weight=1)
 
-    rows = tk.Frame(frame)
-    rows.grid_columnconfigure(1, weight=1)
-    rows.grid(sticky="NSEW")
-
-
-    table = tk.Frame(rows)
-    table.columnconfigure(2, weight=1)
-    table.grid(sticky="NSEW")
-    this.codexcontrol = codex.CodexTypes(table, 0)
+    this.codexcontrol = codex.CodexTypes(frame, 0)
     this.systems_module = SystemsModule()
     this.canonn_rt_api = canonn_api.CanonnRealtimeAPI()
-    rel = release.Release(this.plugin_dir, table, this.version, 1)
-    this.patrol = patrol.PatrolModule(table, 2)
+    rel = release.Release(this.plugin_dir, frame, this.version, 1)
+    this.patrol = patrol.PatrolModule(frame, 2)
     this.bgs_module = bgs.BGS()
     this.modules = [
         rel,
@@ -246,8 +238,8 @@ def plugin_app(parent):
         this.canonn_rt_api
     ]
 
-    # лейбл, в котором содержится текст из вывода модулей
-    this.message_label = message_label.MessageLabel(rows, row=3)
+    # фрейм с различными уведомлениями из модулей
+    this.notifier = Notifier(frame, row=3)
 
     for mod in context.modules:
         mod.on_start(context.plugin_dir)
@@ -420,7 +412,7 @@ class JournalEntryProcessor(thread.Thread):
         # legacy logging to google sheets
         legacy.GusonExpeditions(cmdr, is_beta, system, entry)
         if status_message is not None:
-            this.message_label.text = status_message
+            this.notifier.send(status_message)
 
 
 def submit_expedition(cmdr, entry: dict):   # не работает
