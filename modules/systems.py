@@ -7,7 +7,7 @@ from .debug import debug
 class SystemsModule(WebClient, Module):
     def __init__(self):
         super().__init__(settings.galaxy_url)
-        self.cache = Cache(max_size=1024)
+        self.cache = Cache(max_size=1024, name="SYSTEMS_CACHE")
         self.cache.start()
 
     def on_journal_entry(self, entry):

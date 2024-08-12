@@ -2,8 +2,8 @@ from .thread import Thread
 from ..debug import debug
 
 class Cache(Thread):
-    def __init__(self, max_size: int, static: dict=None):
-        super().__init__(name="CACHE")
+    def __init__(self, name: str, max_size: int, static: dict=None):
+        super().__init__(name=name)
         self.max_size = max_size
         self.static = static or {}
         self.items = {}
