@@ -42,6 +42,12 @@ class Debug:
             cls.log.error(value)
 
     @classmethod
+    def warning(cls, value, *args):
+        if args:
+            value = value.format(*args)
+        cls.log.warning(value)
+
+    @classmethod
     def plugin_prefs(cls, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
@@ -72,3 +78,6 @@ def error(value, *args):
 
 def info(value, *args):
     Debug.info(value, *args)
+
+def warning(value, *args):
+    Debug.warning(value, *args)
