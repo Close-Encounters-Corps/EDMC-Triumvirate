@@ -69,7 +69,11 @@ class Module(ABC, metaclass=ModuleMeta):
         """
         Сообщает, включен ли плагин.
         """
-        return True
+        return self.__enabled
+    
+    @enabled.setter
+    def enabled(self, value: bool):
+        self.__enabled = value
     
     @property
     def localized_name(self) -> str:
