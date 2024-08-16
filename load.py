@@ -24,13 +24,14 @@ from config import appname
 from config import config as edmc_config
 
 ### модули плагина ###
-from modules import canonn_api, codex
-from modules import friendfoe as FF
 from modules import (
+    bgs,
+    canonn_api,
+    codex,
+    friendfoe as FF,
     legacy,
     patrol,
     release,
-    bgs
 )
 from modules.debug import Debug
 from modules.lib import http
