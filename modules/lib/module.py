@@ -22,6 +22,8 @@ class Module(ABC, metaclass=ModuleMeta):
     """
     Интерфейс, описывающий модуль и доступные ему "хуки".
     """
+    
+    __enabled = True
 
     def on_start(self, plugin_dir: str):
         """

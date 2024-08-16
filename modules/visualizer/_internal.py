@@ -1,13 +1,12 @@
 import re
 import tkinter as tk
-from tkinter import PhotoImage
+from tkinter import PhotoImage, ttk
 from pathlib import Path
 
-from modules.debug import warning, debug
+from modules.debug import warning
 from modules.lib.module import Module
 
-from tkinter import ttk as nb
-# import myNotebook as nb
+import myNotebook as nb
 from l10n import translations as tr
 
 
@@ -31,7 +30,7 @@ class _DataItem:
     DEFAULT_CATEGORY = "None"
     _BODY_PATTERN = re.compile(r"([A-Z]+\s)*\d+(\s[a-z])*$")
 
-    def __init__(self, category: str, body: str, text: str, no_shrink: bool):
+    def __init__(self, category: str, body: str, string: str, no_shrink: bool = False):
         """
         Контейнер для хранения информации по POI, предназначенной к отображению.
         """
@@ -47,14 +46,18 @@ class _DataItem:
         
         self.category = category
         self.body = body
-        self.text = text
+        self.info = string
     
     def __lt__(self, other):
-        return self.category < other.category or self.body < other.body
+        if self.category != other.category:
+            return self.category < other.category
+        if self.body != other.body:
+            return self.body < other.body
+        return self.info < other.info
 
 
 
-class _ModuleGroup(nb.Frame):
+class _ModuleGroup(tk.Frame):
     """Элементы отображения отдельного модуля в настройках визуализатора."""
 
     def __init__(self, parent: tk.Misc, module: Module, enabled: bool):
@@ -80,45 +83,46 @@ class _ModuleGroup(nb.Frame):
 
 
 
-class _VisualizerSettingsFrame(nb.Frame):
+class _VisualizerSettingsFrame(tk.Frame):
     """Фрейм настроек визуализатора."""
 
     def __init__(self, vis_instance: Module, parent: tk.Misc, row: int):
-        super().__init__(parent)
+        super().__init__(parent, bg='white')
         modules = vis_instance.get_registered_modules()
         self.modules_frames = [_ModuleGroup(self, module, vis_instance.is_module_enabled(module)) for module in modules]
 
-        self.info_label = nb.Label(self, text=tr.tl("Visualizer settings:"))
-        self.info_label.pack(side='top', fill='x')
-
-        self.vis_frame = nb.Frame(self)
-        self.vis_label = nb.Label(self.vis_frame, text=tr.tl("Show visualizer module: "))
+        self.vis_frame = tk.Frame(self, bg='white')
+        self.vis_label = nb.Label(self.vis_frame, text=tr.tl("Show visualizer module:"))
         self.vis_checkbox_var = tk.BooleanVar(self.vis_frame, value=vis_instance.enabled)
         self.vis_checkbox = nb.Checkbutton(self.vis_frame, variable=self.vis_checkbox_var, command=self.__change_groups_state)
-        self.vis_label.pack(side='left')
-        self.vis_checkbox.pack(side='left')
+        self.vis_label.grid(column=0, row=0)
+        self.vis_checkbox.grid(column=1, row=0, padx=5)
         self.vis_frame.pack(side='top', fill='x')
 
         self.delimeter_label = nb.Label(self, text=tr.tl("Show output from selected modules:"))
-        self.delimeter_label.pack(side='top', fill='x')
-
+        self.delimeter_label.pack(side='top', anchor='w')
+        self.modules_dummy_label = nb.Label(self, text=tr.tl("[No registered modules found]"))
+        if len(self.modules_frames) == 0:
+            self.modules_dummy_label.pack(side='left', anchor='w')
         for frame in self.modules_frames:
-            frame.pack(side='top', fill='x')
+            frame.pack(side='top', anchor='w')
         self.__change_groups_state()
 
-        self.grid(column=0, row=row)
+        self.grid(column=0, row=row, sticky="NWSE")
 
     def __change_groups_state(self):
         new_state = "normal" if self.vis_checkbox_var.get() == True else "disabled"
         for frame in self.modules_frames:
             frame.change_state(new_state)
         self.delimeter_label.configure(state=new_state)
+        self.modules_dummy_label.configure(state=new_state)
 
-    def get_current_config(self) -> dict[str, bool]:
+    def get_current_config(self) -> tuple[bool, dict[str, bool]]:
+        vis_enabled = self.vis_checkbox_var.get()
         config = dict()
         for module in self.modules_frames:
             config[module.module_qualname] = module.enabled
-        return config
+        return vis_enabled, config
     
 
 
@@ -129,59 +133,63 @@ class _IconButton(nb.Button):
         self.__callback = callback
 
         icons_path = Path(plugin_dir, "icons")
-        self.active_icon =  PhotoImage(name=f"{category}_active", file=icons_path / f"{category}.gif")
-        self.grey_icon =    PhotoImage(name=f"{category}_grey", file=icons_path / f"{category}_grey.gif")
+        self.active_icon = PhotoImage(file=icons_path / f"{category}.gif")
+        self.grey_icon = PhotoImage(file=icons_path / f"{category}_grey.gif")
 
-        self.disable()
+        self.deactivate()
         self.configure(command=self.__on_click)
     
 
     def acticate(self):
         self.configure(image=self.active_icon)
-        self.visible_state = "active"
     
     def deactivate(self):
         self.configure(image=self.grey_icon)
-        self.visible_state = "disabled"
 
     def __on_click(self):
         self.__callback(self.category)
         
 
 
-class _VisualizerFrame(nb.Frame):
+class _VisualizerFrame(tk.Frame):
     """
     Собственно отображаемая часть визуализатора.
     """
 
     def __init__(self, parent: tk.Misc, row: int, shown: bool, plugin_dir: str):
         self.__active_ctg: str | None = None
-        self.__shown: bool = shown
+        self.__shown: bool = None
         # забудьте, что видели эти аттрибуты.
         # все взаимодействия через self.active_category и self.shown соответственно
 
         super().__init__(parent)
         self.plugin_dir = plugin_dir
         self.row = row
-        self.system_data: dict[str, list[_DataItem]] = {}
+        self.system_data: dict[str, list[_DataItem]] = {}       # с разбивкой по категориям
 
-        self.buttons_frame = nb.Frame(self)
-        self.buttons: dict[str, _IconButton] = []
+        self.buttons_frame = tk.Frame(self)
+        self.buttons_dummy_label = nb.Label(self.buttons_frame, text=tr.tl("Waiting for data..."))
+        self.buttons_dummy_label.pack(side='top', fill='x')
+        self.buttons: dict[str, _IconButton] = {}
         for ctg in CATEGORIES:
             self.buttons[ctg] = _IconButton(self.buttons_frame, ctg, plugin_dir, self.__button_callback)
         self.buttons_frame.pack(side='top', fill='x')
 
-        self.category_frame = nb.Frame(self)
+        self.category_frame = tk.Frame(self)
         self.category_text_label = nb.Label(self.category_frame, text=tr.tl("Shown category:"))
         self.category_text_label.pack(side='left', padx=5)
-        self.active_category_label = nb.Label(self.category_frame)  # текст обновляется в active_category()
+        self.active_category_label = nb.Label(self.category_frame)  # текст обновляется в active_category.setter
         self.active_category_label.pack(side='left')
 
-        self.details_frame = nb.Frame(self)
+        self.details_frame = tk.Frame(self)
+
+        self.shown = shown
     
 
     def add_data(self, data: _DataItem):
         self.system_data[data.category].append(data)
+        self.buttons_dummy_label.pack_forget()
+        self.buttons[data.category].pack(side='left')
         if self.active_category == data.category:
             # надо обновить отображаемые данные
             self.__show_details(data.category)
@@ -190,6 +198,9 @@ class _VisualizerFrame(nb.Frame):
     def clear(self):
         self.active_category = None
         self.system_data.clear()
+        for button in self.buttons:
+            button.pack_forget()
+        self.buttons_dummy_label.pack(side='left')
 
 
     @property
@@ -223,9 +234,10 @@ class _VisualizerFrame(nb.Frame):
     @shown.setter
     def shown(self, val: bool):
         if val == True:
-            self.grid(column=0, row=self.row)
+            self.grid(column=0, row=self.row, sticky="NWSE")
         else:
             self.grid_forget()
+        self.__shown = val
 
 
     def __button_callback(self, category):
@@ -236,7 +248,7 @@ class _VisualizerFrame(nb.Frame):
 
 
     def __show_details(self, category):
-        class Row(nb.Frame):
+        class Row(tk.Frame):
             def __init__(self, parent, body, info, row):
                 super().__init__(parent)
                 self.b_label = nb.Label(self, text=body)

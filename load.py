@@ -32,6 +32,7 @@ from modules import (
     legacy,
     patrol,
     release,
+    visualizer,
 )
 from modules.debug import Debug
 from modules.lib import http
@@ -120,6 +121,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     Debug.plugin_prefs(frame, cmdr, is_beta, 3)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 4)
     context.by_class(bgs.BGS).draw_settings(frame, cmdr, is_beta, 5)
+    context.by_class(visualizer.Vizualizer).draw_settings(frame, cmdr, is_beta, 6)
     nb.Label(frame, text=settings.support_message,).grid(row=8, column=0, sticky="NW")
 
     return frame
@@ -225,22 +227,25 @@ def plugin_app(parent):
     frame = tk.Frame(parent)
     frame.grid_columnconfigure(0, weight=1)
 
-    this.codexcontrol = codex.CodexTypes(frame, 0)
+    # TODO: перейти на использование списка модулей из ModuleMeta
+    this.visualizer = visualizer.Vizualizer(frame, 0)
+    this.codexcontrol = codex.CodexTypes(frame, 1)
     this.systems_module = SystemsModule()
     this.canonn_rt_api = canonn_api.CanonnRealtimeAPI()
-    rel = release.Release(this.plugin_dir, frame, this.version, 1)
-    this.patrol = patrol.PatrolModule(frame, 2)
+    rel = release.Release(this.plugin_dir, frame, this.version, 2)
+    this.patrol = patrol.PatrolModule(frame, 3)
     this.bgs_module = bgs.BGS()
     this.modules = [
         rel,
         this.patrol,
         this.systems_module,
         this.bgs_module,
-        this.canonn_rt_api
+        this.canonn_rt_api,
+        this.visualizer
     ]
 
     # фрейм с различными уведомлениями из модулей
-    this.notifier = Notifier(frame, row=3)
+    this.notifier = Notifier(frame, row=4)
 
     for mod in context.modules:
         mod.on_start(context.plugin_dir)

@@ -5,7 +5,7 @@ from ._internal import _VisualizerFrame, _VisualizerSettingsFrame, _DataItem, CA
 
 from modules.lib.module import Module
 from modules.lib.conf import config as plugin_config
-from modules.debug import debug, warning
+from modules.debug import debug
 
 # для аннотаций типов
 import tkinter as tk
@@ -25,9 +25,8 @@ class Vizualizer(Module):
         self.row = row
         self.current_system = None
 
-        try:
-            self.enabled = plugin_config.get_bool("Visualizer.enabled")
-        except TypeError:
+        self.enabled = plugin_config.get_bool("Visualizer.enabled")
+        if self.enabled is None:
             self.enabled = True
             plugin_config.set("Visualizer.enabled", True)
         
@@ -50,22 +49,21 @@ class Vizualizer(Module):
         self.__registered_modules.append(module)
 
 
-    def visualize(self, category: str, body: str, data: str, no_shrink: bool = False):
+    def visualize(self, category: str, body: str, string: str, no_shrink: bool = False):
         """
         Передача информации о POI для отображения в визуализаторе.
 
-        *category* - одно из CATEGORIES,
-        в противном случае назначается категория по-умолчанию (None).
+        *category* - одно из CATEGORIES, в противном случае назначается категория по-умолчанию (None).
 
-        *body* - тело. При передаче полного названия часть с именем системы отбрасывается
-        ('Sector AA-A h0 A 1 a' -> 'A 1 a').
+        *body* - тело. При передаче полного названия часть с именем системы отбрасывается ('Sector AA-A h0 A 1 a' -> 'A 1 a').
 
-        *no_shrink* - отключает сокращение названия тела.
-        Не рекомендуется к использованию - окно EDMC не резиновое.
+        *string* - собственно информация по POI. Выводится как дано, локализация при необходимости должна быть проведена ранее.
+
+        *no_shrink* - отключает сокращение названия тела (*body*). Не рекомендуется к использованию - окно EDMC не резиновое.
         """
-        if not self.__frame:
-            raise TypeError("Visualizer is not ready yet, wait for the plugin to load completely.")
-        self.__frame.add_data(_DataItem(category, body, data, no_shrink))
+        if not hasattr(self.__frame):
+            raise RuntimeError("Visualizer is not ready yet, wait for the plugin to load completely.")
+        self.__frame.add_data(_DataItem(category, body, string, no_shrink))
 
 
     def is_module_enabled(self, module: Module) -> bool:
@@ -82,7 +80,7 @@ class Vizualizer(Module):
 
 
     def get_enabled_modules(self) -> list[Module]:
-        return [module for module in self.__registered_modules if self.__state[module.__class__.__qualname__] == True]
+        return [module for module in self.__registered_modules if self.__config[module.__class__.__qualname__] == True]
     
 
     def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool, row: int):
@@ -91,9 +89,10 @@ class Vizualizer(Module):
     
 
     def on_settings_changed(self, cmdr: str, is_beta: bool):
-        self.__config = self.__settings_frame.get_current_config()
+        self.enabled, self.__config = self.__settings_frame.get_current_config()
+        self.__frame.shown = self.enabled
         self.__save_config()
-        debug("[Visualizer.on_settings_changed] Got new config: ", self.__config)
+        debug("[Visualizer.on_settings_changed] Got new config: {}", self.__config)
         del self.__settings_frame
 
     
@@ -114,4 +113,5 @@ class Vizualizer(Module):
     
 
     def __save_config(self):
+        plugin_config.set("Visualizer.enabled", self.enabled)
         plugin_config.set("Visualizer.modulesSettings", json.dumps(self.__config))
