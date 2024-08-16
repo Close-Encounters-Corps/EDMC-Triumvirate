@@ -1,0 +1,117 @@
+import json
+
+from modules.lib.journal import JournalEntry
+from ._internal import _VisualizerFrame, _VisualizerSettingsFrame, _DataItem, CATEGORIES
+
+from modules.lib.module import Module
+from modules.lib.conf import config as plugin_config
+from modules.debug import debug, warning
+
+# для аннотаций типов
+import tkinter as tk
+
+
+
+class Vizualizer(Module):
+    """
+    Модуль для объединённого вывода информации по текущей системе
+    из других модулей с разбивкой инфы по категориям.
+    Духовный наследник старого модуля Кодекса в контексте отображения.
+    """
+
+    def __init__(self, parent: tk.Misc, row: int):
+        super().__init__()
+        self.parent = parent
+        self.row = row
+        self.current_system = None
+
+        try:
+            self.enabled = plugin_config.get_bool("Visualizer.enabled")
+        except TypeError:
+            self.enabled = True
+            plugin_config.set("Visualizer.enabled", True)
+        
+        self.__config = self.__get_saved_config()
+        self.__registered_modules: list[Module] = []
+
+    
+    def on_start(self, plugin_dir: str):
+        self.plugin_dir = plugin_config
+        self.__frame = _VisualizerFrame(self.parent, self.row, self.enabled, plugin_dir)
+
+
+    def register(self, module: Module):
+        """Добавление модуля в список визуализатора."""
+        module_name = module.__class__.__qualname__
+        state = self.__config.get(module_name)
+        if state is None:
+            self.__config[module_name] = True
+            self.__save_config()
+        self.__registered_modules.append(module)
+
+
+    def visualize(self, category: str, body: str, data: str, no_shrink: bool = False):
+        """
+        Передача информации о POI для отображения в визуализаторе.
+
+        *category* - одно из CATEGORIES,
+        в противном случае назначается категория по-умолчанию (None).
+
+        *body* - тело. При передаче полного названия часть с именем системы отбрасывается
+        ('Sector AA-A h0 A 1 a' -> 'A 1 a').
+
+        *no_shrink* - отключает сокращение названия тела.
+        Не рекомендуется к использованию - окно EDMC не резиновое.
+        """
+        if not self.__frame:
+            raise TypeError("Visualizer is not ready yet, wait for the plugin to load completely.")
+        self.__frame.add_data(_DataItem(category, body, data, no_shrink))
+
+
+    def is_module_enabled(self, module: Module) -> bool:
+        """Сообщает, включено ли пользователем отображение информации из модуля."""
+        module_name = module.__class__.__qualname__
+        registered = module in self.__registered_modules
+        if not registered:
+            raise ValueError(f'Module "{module_name}" is not registered. Use Visualizer.register()')
+        return self.__config[module_name]
+
+
+    def get_registered_modules(self) -> list[Module]:
+        return self.__registered_modules.copy()
+
+
+    def get_enabled_modules(self) -> list[Module]:
+        return [module for module in self.__registered_modules if self.__state[module.__class__.__qualname__] == True]
+    
+
+    def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool, row: int):
+        self.__settings_frame = _VisualizerSettingsFrame(self, parent_widget, row)
+        return self.__settings_frame
+    
+
+    def on_settings_changed(self, cmdr: str, is_beta: bool):
+        self.__config = self.__settings_frame.get_current_config()
+        self.__save_config()
+        debug("[Visualizer.on_settings_changed] Got new config: ", self.__config)
+        del self.__settings_frame
+
+    
+    def on_journal_entry(self, entry: JournalEntry):
+        if entry.system != self.current_system:
+            self.__frame.clear()
+    
+
+    def __get_saved_config(self) -> dict[str, bool]:
+        """
+        Возвращаемый конфиг: key = type[Module].__qualname__, val: bool
+        """
+        config = {}
+        string = plugin_config.get_str("Visualizer.modulesSettings")
+        if string:
+            config = json.loads(string)
+        return config
+    
+
+    def __save_config(self):
+        plugin_config.set("Visualizer.modulesSettings", json.dumps(self.__config))
