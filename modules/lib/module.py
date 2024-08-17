@@ -22,8 +22,6 @@ class Module(ABC, metaclass=ModuleMeta):
     """
     Интерфейс, описывающий модуль и доступные ему "хуки".
     """
-    
-    __enabled = True
 
     def on_start(self, plugin_dir: str):
         """
@@ -71,11 +69,7 @@ class Module(ABC, metaclass=ModuleMeta):
         """
         Сообщает, включен ли плагин.
         """
-        return self.__enabled
-    
-    @enabled.setter
-    def enabled(self, value: bool):
-        self.__enabled = value
+        return True
     
     @property
     def localized_name(self) -> str:
