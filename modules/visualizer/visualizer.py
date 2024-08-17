@@ -37,7 +37,7 @@ class Vizualizer(Module):
     
     def on_start(self, plugin_dir: str):
         self.plugin_dir = plugin_config
-        self.__frame = _VisualizerFrame(self.parent, self.row, self.shown, plugin_dir)
+        self.__frame = _VisualizerFrame(self.parent, self.row, self.shown, plugin_dir, self.__config)
 
 
     def register(self, module: Module):
@@ -50,9 +50,11 @@ class Vizualizer(Module):
         self.__registered_modules.append(module)
 
 
-    def visualize(self, category: str, body: str, string: str, no_shrink: bool = False):
+    def visualize(self, caller: Module, category: str, body: str, string: str, no_shrink: bool = False):
         """
         Передача информации о POI для отображения в визуализаторе.
+
+        *caller* - модуль, вызывающий метод. Просто передавайте self.
 
         *category* - одно из CATEGORIES, в противном случае назначается категория по-умолчанию (None).
 
@@ -64,7 +66,9 @@ class Vizualizer(Module):
         """
         if not self.__frame:
             raise RuntimeError("Visualizer is not ready yet, wait for the plugin to load completely.")
-        self.__frame.add_data(_DataItem(category, body, string, no_shrink))
+        if not caller in self.__registered_modules:
+            raise ValueError(f'Module {caller.__class__.__qualname__} is not registered. Use Visualizer.register()')
+        self.__frame.add_data(_DataItem(caller, category, body, string, no_shrink))
 
 
     def is_module_enabled(self, module: Module) -> bool:
@@ -72,7 +76,7 @@ class Vizualizer(Module):
         module_name = module.__class__.__qualname__
         registered = module in self.__registered_modules
         if not registered:
-            raise ValueError(f'Module "{module_name}" is not registered. Use Visualizer.register()')
+            raise ValueError(f'Module {module_name} is not registered. Use Visualizer.register()')
         return self.__config[module_name]
 
 
@@ -92,8 +96,11 @@ class Vizualizer(Module):
     def on_settings_changed(self, cmdr: str, is_beta: bool):
         self.shown, self.__config = self.__settings_frame.get_current_config()
         self.__frame.shown = self.shown
-        self.__save_config()
+        self.__frame.update_config(self.__config)
+
         debug("[Visualizer.on_settings_changed] Got new config: {}", self.__config)
+        self.__save_config()
+        
         del self.__settings_frame
 
     

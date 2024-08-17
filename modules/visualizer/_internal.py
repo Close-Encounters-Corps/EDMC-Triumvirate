@@ -4,6 +4,7 @@ from tkinter import PhotoImage, ttk
 from pathlib import Path
 
 from modules.debug import warning
+from modules.lib.conf import config as plugin_config
 from modules.lib.module import Module
 
 import myNotebook as nb
@@ -30,7 +31,7 @@ class _DataItem:
     DEFAULT_CATEGORY = "None"
     _BODY_PATTERN = re.compile(r"([A-Z]+\s)*\d+(\s[a-z])*$")
 
-    def __init__(self, category: str, body: str, string: str, no_shrink: bool = False):
+    def __init__(self, module: Module, category: str, body: str, string: str, no_shrink: bool = False):
         """
         Контейнер для хранения информации по POI, предназначенной к отображению.
         """
@@ -44,6 +45,7 @@ class _DataItem:
                 # нам дали название тела вместе с именем системы - уберём лишнее
                 body = re_match.group()
         
+        self.module = module.__class__.__qualname__
         self.category = category
         self.body = body
         self.info = string
@@ -99,7 +101,7 @@ class _VisualizerSettingsFrame(tk.Frame):
         self.vis_checkbox.grid(column=1, row=0, padx=5)
         self.vis_frame.pack(side='top', fill='x')
 
-        self.delimeter_label = nb.Label(self, text=tr.tl("Show output from selected modules only (applies after jumping to another system):"))
+        self.delimeter_label = nb.Label(self, text=tr.tl("Show output from selected modules only:"))
         self.delimeter_label.pack(side='top', anchor='w')
         self.modules_dummy_label = nb.Label(self, text=tr.tl("[No registered modules found]"))
         if len(self.modules_frames) == 0:
@@ -156,7 +158,7 @@ class _VisualizerFrame(tk.Frame):
     Собственно отображаемая часть визуализатора.
     """
 
-    def __init__(self, parent: tk.Misc, row: int, shown: bool, plugin_dir: str):
+    def __init__(self, parent: tk.Misc, row: int, shown: bool, plugin_dir: str, config: dict[str, bool]):
         self.__active_ctg: str | None = None
         self.__shown: bool = None
         # забудьте, что видели эти аттрибуты.
@@ -184,27 +186,33 @@ class _VisualizerFrame(tk.Frame):
         self.details_frame = tk.Frame(self)
         self.details_body_header_label = ttk.Label(self.details_frame, text=tr.tl("Body"))
         self.details_info_header_label = ttk.Label(self.details_frame, text=tr.tl("POI"))
+        self.details_body_header_label.grid(row=0, column=0)
+        self.details_info_header_label.grid(row=0, column=1)
 
+        self.enabled_modules = [module for module, enabled in config.items() if enabled]
         self.shown = shown
     
 
     def add_data(self, data: _DataItem):
-        if not self.system_data.get(data.category):
+        newCategory = (self.system_data.get(data.category) == None)
+        if newCategory:
             self.system_data[data.category] = []
+            self.after(0, self.__update_buttons_frame)
         self.system_data[data.category].append(data)
-        self.buttons_dummy_label.pack_forget()
-        self.buttons[data.category].pack(side='left')
         if self.active_category == data.category:
-            # надо обновить отображаемые данные
-            self.__show_details(data.category)
+            self.after(0, self.__update_details_frame)
 
     
     def clear(self):
-        self.active_category = None
         self.system_data.clear()
-        for button in self.buttons:
-            button.pack_forget()
-        self.buttons_dummy_label.pack(side='left')
+        self.after(0, self.__clear)
+    
+
+    def update_config(self, new_config: dict[str, bool]):
+        self.enabled_modules = [module for module, enabled in new_config.items() if enabled]
+        print(self.enabled_modules)
+        self.active_category = None     # здесь же обновится self.details_frame
+        self.after(0, self.__update_buttons_frame)
 
 
     @property
@@ -217,18 +225,11 @@ class _VisualizerFrame(tk.Frame):
         old_ctg = self.__active_ctg
         self.__active_ctg = ctg
         if old_ctg is not None:
-            self.buttons[old_ctg].deactivate()
+            self.after(0, self.buttons[old_ctg].deactivate())
 
-        if ctg == None:
-            self.category_frame.pack_forget()
-            self.details_frame.pack_forget()
-        else:
-            self.buttons[ctg].activate()
-            self.active_category_label.configure(text=tr.tl(ctg))
-            self.__show_details(ctg)
-            if old_ctg == None:
-                self.category_frame.pack(side='top', fill='x')
-                self.details_frame.pack(side='top', fill='x')
+        if ctg != None:
+            self.after(0, self.buttons[ctg].activate())
+        self.after(0, self.__update_details_frame)
 
     
     @property
@@ -238,10 +239,7 @@ class _VisualizerFrame(tk.Frame):
 
     @shown.setter
     def shown(self, val: bool):
-        if val == True:
-            self.grid(column=0, row=self.row, sticky="NWSE")
-        else:
-            self.grid_forget()
+        self.after(0, self.__change_visibility, val)
         self.__shown = val
 
 
@@ -250,9 +248,30 @@ class _VisualizerFrame(tk.Frame):
             self.active_category = None
         else:
             self.active_category = category
+    
 
+    def __update_buttons_frame(self):
+        self.buttons_dummy_label.pack_forget()
+        for _, button in self.buttons.items():
+            button.pack_forget()
 
-    def __show_details(self, category):
+        if len(self.system_data.keys()) == 0:
+            self.buttons_dummy_label.pack(side='top', fill='x')
+            return
+        
+        buttons_to_map = []
+        for ctg, items in self.system_data.items():
+            if any(item.module in self.enabled_modules for item in items):
+                buttons_to_map.append(self.buttons[ctg])
+
+        if len(buttons_to_map) == 0:
+            self.buttons_dummy_label.pack(side='top', fill='x')
+        else:
+            for button in buttons_to_map:
+                button.pack(side='left')
+    
+
+    def __update_details_frame(self):
         class Row:
             def __init__(self, parent, row, body, info):
                 self.b_label = ttk.Label(parent, text=body)
@@ -260,13 +279,36 @@ class _VisualizerFrame(tk.Frame):
                 self.b_label.grid(column=0, row=row, padx=3)
                 self.i_label.grid(column=1, row=row, padx=3)
         
-        # сначала очищаем существующие записи
-        for row in self.details_frame.winfo_children():
-            row.grid_forget()
+        if self.active_category == None:
+            self.category_frame.pack_forget()
+            self.details_frame.pack_forget()
+            return
         
-        self.details_body_header_label.grid(row=0, column=0)
-        self.details_info_header_label.grid(row=0, column=1)
-        data = self.system_data[category]
+        if not self.details_frame.winfo_ismapped():
+            self.category_frame.pack(side='top', fill='x')
+            self.details_frame.pack(side='top', fill='x')
+        
+        self.active_category_label.configure(text=tr.tl(self.active_category))
+
+        # очищаем существующие записи
+        for item in self.details_frame.winfo_children():
+            if item.grid_info()['row'] > 0:         # мы хотим оставить header-ы
+                item.destroy()
+        
+        data = self.system_data[self.active_category]
         data.sort()
         for i, item in enumerate(data):
-            Row(self.details_frame, i+1, item.body, item.info)
+            if item.module in self.enabled_modules:
+                Row(self.details_frame, i+1, item.body, item.info)
+
+
+    def __change_visibility(self, val):
+        if val:
+            self.grid(column=0, row=self.row, sticky="NWSE")
+        else:
+            self.grid_forget()
+
+    
+    def __clear(self):
+        self.active_category = None     # details_frame будет обновлён здесь
+        self.after(0, self.__update_buttons_frame)
