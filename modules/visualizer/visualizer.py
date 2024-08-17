@@ -25,10 +25,10 @@ class Vizualizer(Module):
         self.row = row
         self.current_system = None
 
-        self.enabled = plugin_config.get_bool("Visualizer.enabled")
-        if self.enabled is None:
-            self.enabled = True
-            plugin_config.set("Visualizer.enabled", True)
+        self.shown = plugin_config.get_bool("Visualizer.shown")
+        if self.shown is None:
+            self.shown = True
+            plugin_config.set("Visualizer.shown", True)
         
         self.__config = self.__get_saved_config()
         self.__registered_modules: list[Module] = []
@@ -36,7 +36,7 @@ class Vizualizer(Module):
     
     def on_start(self, plugin_dir: str):
         self.plugin_dir = plugin_config
-        self.__frame = _VisualizerFrame(self.parent, self.row, self.enabled, plugin_dir)
+        self.__frame = _VisualizerFrame(self.parent, self.row, self.shown, plugin_dir)
 
 
     def register(self, module: Module):
@@ -89,8 +89,8 @@ class Vizualizer(Module):
     
 
     def on_settings_changed(self, cmdr: str, is_beta: bool):
-        self.enabled, self.__config = self.__settings_frame.get_current_config()
-        self.__frame.shown = self.enabled
+        self.shown, self.__config = self.__settings_frame.get_current_config()
+        self.__frame.shown = self.shown
         self.__save_config()
         debug("[Visualizer.on_settings_changed] Got new config: {}", self.__config)
         del self.__settings_frame
@@ -113,5 +113,5 @@ class Vizualizer(Module):
     
 
     def __save_config(self):
-        plugin_config.set("Visualizer.enabled", self.enabled)
+        plugin_config.set("Visualizer.shown", self.shown)
         plugin_config.set("Visualizer.modulesSettings", json.dumps(self.__config))

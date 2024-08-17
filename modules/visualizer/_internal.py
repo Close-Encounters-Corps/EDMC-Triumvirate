@@ -93,7 +93,7 @@ class _VisualizerSettingsFrame(tk.Frame):
 
         self.vis_frame = tk.Frame(self, bg='white')
         self.vis_label = nb.Label(self.vis_frame, text=tr.tl("Show visualizer module:"))
-        self.vis_checkbox_var = tk.BooleanVar(self.vis_frame, value=vis_instance.enabled)
+        self.vis_checkbox_var = tk.BooleanVar(self.vis_frame, value=vis_instance.shown)
         self.vis_checkbox = nb.Checkbutton(self.vis_frame, variable=self.vis_checkbox_var, command=self.__change_groups_state)
         self.vis_label.grid(column=0, row=0)
         self.vis_checkbox.grid(column=1, row=0, padx=5)
