@@ -32,6 +32,7 @@ class Vizualizer(Module):
         
         self.__config = self.__get_saved_config()
         self.__registered_modules: list[Module] = []
+        self.__frame = None
 
     
     def on_start(self, plugin_dir: str):
@@ -61,7 +62,7 @@ class Vizualizer(Module):
 
         *no_shrink* - отключает сокращение названия тела (*body*). Не рекомендуется к использованию - окно EDMC не резиновое.
         """
-        if not hasattr(self.__frame):
+        if not self.__frame:
             raise RuntimeError("Visualizer is not ready yet, wait for the plugin to load completely.")
         self.__frame.add_data(_DataItem(category, body, string, no_shrink))
 

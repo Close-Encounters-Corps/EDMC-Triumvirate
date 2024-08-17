@@ -42,7 +42,7 @@ class _DataItem:
             re_match = re.search(self._BODY_PATTERN, body)
             if re_match:
                 # нам дали название тела вместе с именем системы - уберём лишнее
-                body = re_match.group(1)
+                body = re_match.group()
         
         self.category = category
         self.body = body
@@ -99,7 +99,7 @@ class _VisualizerSettingsFrame(tk.Frame):
         self.vis_checkbox.grid(column=1, row=0, padx=5)
         self.vis_frame.pack(side='top', fill='x')
 
-        self.delimeter_label = nb.Label(self, text=tr.tl("Show output from selected modules:"))
+        self.delimeter_label = nb.Label(self, text=tr.tl("Show output from selected modules only (applies after jumping to another system):"))
         self.delimeter_label.pack(side='top', anchor='w')
         self.modules_dummy_label = nb.Label(self, text=tr.tl("[No registered modules found]"))
         if len(self.modules_frames) == 0:
@@ -140,7 +140,7 @@ class _IconButton(nb.Button):
         self.configure(command=self.__on_click)
     
 
-    def acticate(self):
+    def activate(self):
         self.configure(image=self.active_icon)
     
     def deactivate(self):
@@ -168,7 +168,7 @@ class _VisualizerFrame(tk.Frame):
         self.system_data: dict[str, list[_DataItem]] = {}       # с разбивкой по категориям
 
         self.buttons_frame = tk.Frame(self)
-        self.buttons_dummy_label = nb.Label(self.buttons_frame, text=tr.tl("Waiting for data..."))
+        self.buttons_dummy_label = ttk.Label(self.buttons_frame, text=tr.tl("Waiting for data..."))
         self.buttons_dummy_label.pack(side='top', fill='x')
         self.buttons: dict[str, _IconButton] = {}
         for ctg in CATEGORIES:
@@ -176,17 +176,21 @@ class _VisualizerFrame(tk.Frame):
         self.buttons_frame.pack(side='top', fill='x')
 
         self.category_frame = tk.Frame(self)
-        self.category_text_label = nb.Label(self.category_frame, text=tr.tl("Shown category:"))
-        self.category_text_label.pack(side='left', padx=5)
-        self.active_category_label = nb.Label(self.category_frame)  # текст обновляется в active_category.setter
-        self.active_category_label.pack(side='left')
+        self.category_text_label = ttk.Label(self.category_frame, text=tr.tl("Displayed category:"))
+        self.category_text_label.pack(side='left')
+        self.active_category_label = ttk.Label(self.category_frame)  # текст обновляется в active_category.setter
+        self.active_category_label.pack(side='left', padx=3)
 
         self.details_frame = tk.Frame(self)
+        self.details_body_header_label = ttk.Label(self.details_frame, text=tr.tl("Body"))
+        self.details_info_header_label = ttk.Label(self.details_frame, text=tr.tl("POI"))
 
         self.shown = shown
     
 
     def add_data(self, data: _DataItem):
+        if not self.system_data.get(data.category):
+            self.system_data[data.category] = []
         self.system_data[data.category].append(data)
         self.buttons_dummy_label.pack_forget()
         self.buttons[data.category].pack(side='left')
@@ -212,7 +216,8 @@ class _VisualizerFrame(tk.Frame):
     def active_category(self, ctg: str | None):
         old_ctg = self.__active_ctg
         self.__active_ctg = ctg
-        self.buttons[old_ctg].deactivate()
+        if old_ctg is not None:
+            self.buttons[old_ctg].deactivate()
 
         if ctg == None:
             self.category_frame.pack_forget()
@@ -248,18 +253,20 @@ class _VisualizerFrame(tk.Frame):
 
 
     def __show_details(self, category):
-        class Row(tk.Frame):
-            def __init__(self, parent, body, info, row):
-                super().__init__(parent)
-                self.b_label = nb.Label(self, text=body)
-                self.i_label = nb.Label(self, text=info)    # перевод на совести модуля-отправителя инфы
+        class Row:
+            def __init__(self, parent, row, body, info):
+                self.b_label = ttk.Label(parent, text=body)
+                self.i_label = ttk.Label(parent, text=info)    # перевод на совести модуля-отправителя инфы
                 self.b_label.grid(column=0, row=row, padx=3)
                 self.i_label.grid(column=1, row=row, padx=3)
-
-        self.__details_rows = list()
+        
+        # сначала очищаем существующие записи
+        for row in self.details_frame.winfo_children():
+            row.grid_forget()
+        
+        self.details_body_header_label.grid(row=0, column=0)
+        self.details_info_header_label.grid(row=0, column=1)
         data = self.system_data[category]
         data.sort()
         for i, item in enumerate(data):
-            row = Row(self.details_frame, item.body, item.text, i)
-            row.pack(side='top', fill='x')
-            self.__details_rows.append(row)
+            Row(self.details_frame, i+1, item.body, item.info)

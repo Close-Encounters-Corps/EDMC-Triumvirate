@@ -76,7 +76,7 @@ class Module(ABC, metaclass=ModuleMeta):
         """
         Возвращает имя модуля в выбранной локализации. Ключ для строк перевода - self.__qualname__
         """
-        return tr.tl(self.__qualname__)
+        return tr.tl(self.__class__.__qualname__)
 
 
 
