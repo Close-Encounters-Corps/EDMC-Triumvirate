@@ -4,7 +4,6 @@ from tkinter import PhotoImage, ttk
 from pathlib import Path
 
 from modules.debug import warning
-from modules.lib.conf import config as plugin_config
 from modules.lib.module import Module
 
 import myNotebook as nb
@@ -64,7 +63,7 @@ class _ModuleGroup(tk.Frame):
 
     def __init__(self, parent: tk.Misc, module: Module, enabled: bool):
         super().__init__(parent)
-        self.__module = module
+        self.m_qualname = module.__class__.__qualname__
         self.name_label = nb.Label(self, text=module.localized_name, justify='left')
         self.status_var = tk.BooleanVar(value=enabled)
         self.checkbox   = nb.Checkbutton(self, variable=self.status_var)
@@ -79,6 +78,12 @@ class _ModuleGroup(tk.Frame):
     def enabled(self):
         return self.status_var.get()
     
+    
+    @property
+    def module_qualname(self):
+        return self.__module.__class__.__qualname__
+
+
     @property
     def module_qualname(self):
         return self.__module.__class__.__qualname__
@@ -88,14 +93,14 @@ class _ModuleGroup(tk.Frame):
 class _VisualizerSettingsFrame(tk.Frame):
     """Фрейм настроек визуализатора."""
 
-    def __init__(self, vis_instance: Module, parent: tk.Misc, row: int):
+    def __init__(self, vslz_instance: Module, parent: tk.Misc, row: int):
         super().__init__(parent, bg='white')
-        modules = vis_instance.get_registered_modules()
-        self.modules_frames = [_ModuleGroup(self, module, vis_instance.is_module_enabled(module)) for module in modules]
+        modules = vslz_instance.get_registered_modules()
+        self.modules_frames = [_ModuleGroup(self, module, vslz_instance.is_module_enabled(module)) for module in modules]
 
         self.vis_frame = tk.Frame(self, bg='white')
         self.vis_label = nb.Label(self.vis_frame, text=tr.tl("Show visualizer module:"))
-        self.vis_checkbox_var = tk.BooleanVar(self.vis_frame, value=vis_instance.shown)
+        self.vis_checkbox_var = tk.BooleanVar(self.vis_frame, value=vslz_instance.shown)
         self.vis_checkbox = nb.Checkbutton(self.vis_frame, variable=self.vis_checkbox_var, command=self.__change_groups_state)
         self.vis_label.grid(column=0, row=0)
         self.vis_checkbox.grid(column=1, row=0, padx=5)
@@ -123,7 +128,7 @@ class _VisualizerSettingsFrame(tk.Frame):
         vis_enabled = self.vis_checkbox_var.get()
         config = dict()
         for module in self.modules_frames:
-            config[module.module_qualname] = module.enabled
+            config[module.m_qualname] = module.enabled
         return vis_enabled, config
     
 
@@ -160,9 +165,9 @@ class _VisualizerFrame(tk.Frame):
 
     def __init__(self, parent: tk.Misc, row: int, shown: bool, plugin_dir: str, config: dict[str, bool]):
         self.__active_ctg: str | None = None
-        self.__shown: bool = None
+        self.__is_shown: bool = None
         # забудьте, что видели эти аттрибуты.
-        # все взаимодействия через self.active_category и self.shown соответственно
+        # все взаимодействия через self.active_category и self.is_shown соответственно
 
         super().__init__(parent)
         self.plugin_dir = plugin_dir
@@ -174,7 +179,7 @@ class _VisualizerFrame(tk.Frame):
         self.buttons_dummy_label.pack(side='top', fill='x')
         self.buttons: dict[str, _IconButton] = {}
         for ctg in CATEGORIES:
-            self.buttons[ctg] = _IconButton(self.buttons_frame, ctg, plugin_dir, self.__button_callback)
+            self.buttons[ctg] = _IconButton(self.buttons_frame, ctg, plugin_dir, self.__buttons_callback)
         self.buttons_frame.pack(side='top', fill='x')
 
         self.category_frame = tk.Frame(self)
@@ -190,12 +195,12 @@ class _VisualizerFrame(tk.Frame):
         self.details_info_header_label.grid(row=0, column=1)
 
         self.enabled_modules = [module for module, enabled in config.items() if enabled]
-        self.shown = shown
+        self.is_shown = shown
     
 
     def add_data(self, data: _DataItem):
-        newCategory = (self.system_data.get(data.category) == None)
-        if newCategory:
+        is_new_category = (self.system_data.get(data.category) == None)
+        if is_new_category:
             self.system_data[data.category] = []
             self.after(0, self.__update_buttons_frame)
         self.system_data[data.category].append(data)
@@ -210,9 +215,8 @@ class _VisualizerFrame(tk.Frame):
 
     def update_config(self, new_config: dict[str, bool]):
         self.enabled_modules = [module for module, enabled in new_config.items() if enabled]
-        print(self.enabled_modules)
-        self.active_category = None     # здесь же обновится self.details_frame
         self.after(0, self.__update_buttons_frame)
+        self.active_category = None     # здесь же обновится details_frame
 
 
     @property
@@ -226,24 +230,27 @@ class _VisualizerFrame(tk.Frame):
         self.__active_ctg = ctg
         if old_ctg is not None:
             self.after(0, self.buttons[old_ctg].deactivate())
-
         if ctg != None:
             self.after(0, self.buttons[ctg].activate())
         self.after(0, self.__update_details_frame)
 
     
     @property
-    def shown(self):
-        return self.__shown
+    def is_shown(self):
+        return self.__is_shown
     
 
-    @shown.setter
+    @is_shown.setter
     def shown(self, val: bool):
         self.after(0, self.__change_visibility, val)
-        self.__shown = val
+        self.__is_shown = val
 
 
-    def __button_callback(self, category):
+    # Нижеизложенные методы должны вызываться ИСКЛЮЧИТЕЛЬНО в главном потоке (требование tkinter).
+    # "Публичный" интерфейс изложен выше.
+
+    def __buttons_callback(self, category):
+        """Метод, вызываемый кнопками для обновления текущей категории. Для других целей не использовать."""
         if category == self.active_category:
             self.active_category = None
         else:
@@ -272,12 +279,16 @@ class _VisualizerFrame(tk.Frame):
     
 
     def __update_details_frame(self):
+        """
+        Строго говоря, обновляет ещё и category_frame - он изначально был частью details_frame,
+        но потом я решил его вынести отдельно для облегчения структуры.
+        """
         class Row:
             def __init__(self, parent, row, body, info):
-                self.b_label = ttk.Label(parent, text=body)
-                self.i_label = ttk.Label(parent, text=info)    # перевод на совести модуля-отправителя инфы
-                self.b_label.grid(column=0, row=row, padx=3)
-                self.i_label.grid(column=1, row=row, padx=3)
+                self.body_label = ttk.Label(parent, text=body)
+                self.info_label = ttk.Label(parent, text=info)      # перевод на совести модуля-отправителя инфы
+                self.body_label.grid(column=0, row=row, padx=3)
+                self.info_label.grid(column=1, row=row, padx=3)
         
         if self.active_category == None:
             self.category_frame.pack_forget()
@@ -302,8 +313,8 @@ class _VisualizerFrame(tk.Frame):
                 Row(self.details_frame, i+1, item.body, item.info)
 
 
-    def __change_visibility(self, val):
-        if val:
+    def __change_visibility(self, visible):
+        if visible:
             self.grid(column=0, row=self.row, sticky="NWSE")
         else:
             self.grid_forget()

@@ -1,1 +1,2 @@
-from .visualizer import Vizualizer, CATEGORIES
+from .visualizer import Vizualizer
+from ._internal import CATEGORIES

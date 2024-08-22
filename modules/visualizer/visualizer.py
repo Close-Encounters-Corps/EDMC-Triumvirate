@@ -95,7 +95,7 @@ class Vizualizer(Module):
 
     def on_settings_changed(self, cmdr: str, is_beta: bool):
         self.shown, self.__config = self.__settings_frame.get_current_config()
-        self.__frame.shown = self.shown
+        self.__frame.is_shown = self.shown
         self.__frame.update_config(self.__config)
 
         debug("[Visualizer.on_settings_changed] Got new config: {}", self.__config)
