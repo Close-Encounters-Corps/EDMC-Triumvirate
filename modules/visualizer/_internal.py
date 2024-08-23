@@ -173,7 +173,9 @@ class _VisualizerFrame(tk.Frame):
         self.plugin_dir = plugin_dir
         self.row = row
         self.system_data: dict[str, list[_DataItem]] = {}       # с разбивкой по категориям
+        self.enabled_modules = [module for module, enabled in config.items() if enabled]
 
+        # фрейм с кнопками-иконками категорий. обновляется в __update_buttons_frame()
         self.buttons_frame = tk.Frame(self)
         self.buttons_dummy_label = ttk.Label(self.buttons_frame, text=tr.tl("Waiting for data..."))
         self.buttons_dummy_label.pack(side='top', fill='x')
@@ -182,19 +184,21 @@ class _VisualizerFrame(tk.Frame):
             self.buttons[ctg] = _IconButton(self.buttons_frame, ctg, plugin_dir, self.__buttons_callback)
         self.buttons_frame.pack(side='top', fill='x')
 
+        # фрейм с названием отображаемой категории. обновляется в __update_details_frame()
         self.category_frame = tk.Frame(self)
         self.category_text_label = ttk.Label(self.category_frame, text=tr.tl("Displayed category:"))
         self.category_text_label.pack(side='left')
-        self.active_category_label = ttk.Label(self.category_frame)  # текст обновляется в active_category.setter
+        self.active_category_label = ttk.Label(self.category_frame)
         self.active_category_label.pack(side='left', padx=3)
 
-        self.details_frame = tk.Frame(self)
-        self.details_body_header_label = ttk.Label(self.details_frame, text=tr.tl("Body"))
-        self.details_info_header_label = ttk.Label(self.details_frame, text=tr.tl("POI"))
-        self.details_body_header_label.grid(row=0, column=0)
-        self.details_info_header_label.grid(row=0, column=1)
+        # фрейм с данными по активной категории. обновляется в __update_details_frame()
+        self.details_frame = tk.Frame(self, relief="groove")
+        self.details_table = ttk.Treeview(self.details_frame, columns=("body", "poi"), show="headings")
+        self.details_table.heading("body", text=tr.tl("Body"))
+        self.details_table.heading("poi", text=tr.tl("POI"))
+        self.details_table.pack(side="top", fill="x")
 
-        self.enabled_modules = [module for module, enabled in config.items() if enabled]
+        # маппим модуль
         self.is_shown = shown
     
 
@@ -241,9 +245,42 @@ class _VisualizerFrame(tk.Frame):
     
 
     @is_shown.setter
-    def shown(self, val: bool):
+    def is_shown(self, val: bool):
         self.after(0, self.__change_visibility, val)
         self.__is_shown = val
+    
+
+    @classmethod
+    def measure(cls, text: str) -> int:
+        """Обёртка над tk.font.Font().measure(), но возвращающая значение для самой длинной строки текста."""
+        lines = text.split('\n')
+        measures = [tk.font.Font().measure(line) for line in lines]
+        return max(measures)
+
+
+    @classmethod
+    def wrap_text(cls, text: str, max_width: int) -> str:
+        """
+        Аналог wraplength из tk.Label, но для случаев, где его применение невозможно.
+        Бьёт текст на строки так, чтобы они не превышали по ширине заданного значения.
+        """
+        words = text.split()
+        result = ''
+        current_line = ''
+        for word in words:
+            test_line = current_line + ('' if current_line == '' else ' ') + word
+            if cls.measure(test_line) > max_width:
+                # проверка на исключительный случай
+                if cls.measure(word) > max_width:
+                    # кто-то балуется с нечитаемо длинным текстом
+                    result += current_line + ('' if current_line == '' else '\n') + word + '\n'
+                else:
+                    result += current_line + '\n'
+                    current_line = word
+            else:
+                current_line = test_line
+        result += current_line
+        return result
 
 
     # Нижеизложенные методы должны вызываться ИСКЛЮЧИТЕЛЬНО в главном потоке (требование tkinter).
@@ -283,34 +320,38 @@ class _VisualizerFrame(tk.Frame):
         Строго говоря, обновляет ещё и category_frame - он изначально был частью details_frame,
         но потом я решил его вынести отдельно для облегчения структуры.
         """
-        class Row:
-            def __init__(self, parent, row, body, info):
-                self.body_label = ttk.Label(parent, text=body)
-                self.info_label = ttk.Label(parent, text=info)      # перевод на совести модуля-отправителя инфы
-                self.body_label.grid(column=0, row=row, padx=3)
-                self.info_label.grid(column=1, row=row, padx=3)
-        
         if self.active_category == None:
             self.category_frame.pack_forget()
             self.details_frame.pack_forget()
             return
-        
+
         if not self.details_frame.winfo_ismapped():
             self.category_frame.pack(side='top', fill='x')
             self.details_frame.pack(side='top', fill='x')
-        
+
         self.active_category_label.configure(text=tr.tl(self.active_category))
 
         # очищаем существующие записи
-        for item in self.details_frame.winfo_children():
-            if item.grid_info()['row'] > 0:         # мы хотим оставить header-ы
-                item.destroy()
-        
+        self.details_table.delete(*self.details_table.get_children())
+
         data = self.system_data[self.active_category]
         data.sort()
-        for i, item in enumerate(data):
-            if item.module in self.enabled_modules:
-                Row(self.details_frame, i+1, item.body, item.info)
+        for item in data:
+            self.details_table.insert("", "end", values=(self.wrap_text(item.body, 250), self.wrap_text(item.info, 250)))
+        
+        # уменьшаем дефолтные размеры таблицы до адекватных
+        lines = len(data)
+        for column in self.details_table["columns"]:
+            max_width = self.measure(column)
+            current_col_lines_sum = 1
+            for row in self.details_table.get_children():
+                text = self.details_table.item(row, 'values')[self.details_table["columns"].index(column)]
+                current_col_lines_sum += text.count('\n')
+                max_width = min(max(max_width, self.measure(text)), 250)
+            lines = max(lines, current_col_lines_sum)
+            self.details_table.column(column, width=max_width+10)
+        print(lines)
+        self.details_table.configure(height=lines)
 
 
     def __change_visibility(self, visible):
