@@ -4,6 +4,7 @@ from l10n import translations as tr
 # для аннотаций типов:
 import tkinter as tk
 from modules.lib.journal import JournalEntry
+from typing import Type, TypeVar
 
 
 class ModuleMeta(ABCMeta):
@@ -79,8 +80,8 @@ class Module(ABC, metaclass=ModuleMeta):
         return tr.tl(self.__class__.__qualname__)
 
 
-
-def get_module_instance(module_class: type[Module]) -> Module | None:
+T = TypeVar('T', bound=Module)
+def get_module_instance(module_class: Type[T]) -> T | None:
     return ModuleMeta._instances.get(module_class)
 
 
