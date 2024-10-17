@@ -1,7 +1,7 @@
 import json
 import re
 
-from modules.debug import debug, info
+from modules.debug import debug
 from modules.lib.module import Module
 from modules.lib.conf import config as plugin_config
 
@@ -32,13 +32,16 @@ class VisualizerModel:
         if not qualname in self.modules_display_status:
             self.modules_display_status[qualname] = True
             self._save_config()
+        debug("[Visualizer] Module {} registered, display status: {}.", qualname, self.modules_display_status[qualname])
 
 
     def add_data(self, module: Module, category: str, body: str, text: str):
         assert module in self.registered_modules, "Module must be registered first. Refer to Visualizer.register()"
 
+        debug("[Visualizer] Got new data from {}: category '{}', body '{}', text '{}'.", module, category, body, text)
         if category == None:
             category = self.DEFAULT_CATEGORY
+            debug("[Visualizer] Category was None, setting to default ('{}').", category)
         data_item = _DataItem(module, category, body, text)
         self.data.append(data_item)
         if self.modules_display_status[data_item.m_qualname] == True:
@@ -52,6 +55,7 @@ class VisualizerModel:
 
 
     def update_system(self, system: str | None):
+        debug("[Visualizer] Detected system change, clearing data.")
         if self.current_system != system:
             self.clear()
             self.current_system = system
@@ -95,8 +99,11 @@ class VisualizerModel:
                 "visualizer_shown": True,
                 "modules_display_status": {}
             }
+            debug("[Visualizer] No saved config found, setting to default.")
         else:
+            debug("[Visualizer] Loaded config: {}", config)
             config = json.loads(config)
+
         return config
 
 
@@ -107,3 +114,4 @@ class VisualizerModel:
         }
         plugin_config.set(self.PLUGIN_CONFIG_KEY, json.dumps(config))
         self.__saved_config = config
+        debug("[Visualizer] Config saved: {}", config)

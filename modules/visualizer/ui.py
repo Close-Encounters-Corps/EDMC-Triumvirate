@@ -5,6 +5,7 @@ from pathlib import Path
 from settings import poi_categories as CATEGORIES
 from .table import Table
 from ._dataitem import _DataItem
+from modules.debug import debug
 from modules.lib.context import global_context
 
 import myNotebook as nb
@@ -163,6 +164,7 @@ class VisualizerView(ttk.Frame):
     
     def change_visibility(self, visible: bool):
         self.after(0, self.__change_visibility, visible)
+        debug("[VisualizerView] Visibility set to {}.", visible)
     
     
     @property
