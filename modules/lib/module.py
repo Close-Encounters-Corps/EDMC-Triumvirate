@@ -75,7 +75,7 @@ class Module(ABC, metaclass=ModuleMeta):
     @property
     def localized_name(self) -> str:
         """
-        Возвращает имя модуля в выбранной локализации. Ключ для строк перевода - self.__qualname__
+        Возвращает имя модуля в выбранной локализации. Ключ для строк перевода - __qualname__
         """
         return tr.tl(self.__class__.__qualname__)
 

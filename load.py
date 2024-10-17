@@ -121,7 +121,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     Debug.plugin_prefs(frame, cmdr, is_beta, 3)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 4)
     context.by_class(bgs.BGS).draw_settings(frame, cmdr, is_beta, 5)
-    context.by_class(visualizer.Vizualizer).draw_settings(frame, cmdr, is_beta, 6)
+    context.by_class(visualizer.Visualizer).draw_settings(frame, cmdr, is_beta, 6)
     nb.Label(frame, text=settings.support_message,).grid(row=8, column=0, sticky="NW")
 
     return frame
@@ -228,7 +228,7 @@ def plugin_app(parent):
     frame.grid_columnconfigure(0, weight=1)
 
     # TODO: перейти на использование списка модулей из ModuleMeta
-    this.visualizer = visualizer.Vizualizer(frame, 0)
+    this.visualizer = visualizer.Visualizer(frame, 0)
     this.codexcontrol = codex.CodexTypes(frame, 1)
     this.systems_module = SystemsModule()
     this.canonn_rt_api = canonn_api.CanonnRealtimeAPI()
