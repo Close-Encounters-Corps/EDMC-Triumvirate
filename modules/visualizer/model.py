@@ -1,5 +1,4 @@
 import json
-import re
 
 from modules.debug import debug
 from modules.lib.module import Module
@@ -54,9 +53,9 @@ class VisualizerModel:
         return self.modules_display_status[qualname]
 
 
-    def update_system(self, system: str | None):
-        debug("[Visualizer] Detected system change, clearing data.")
+    def update_system(self, system: str | None):        
         if self.current_system != system:
+            debug("[Visualizer] Detected system change, clearing data.")
             self.clear()
             self.current_system = system
 
