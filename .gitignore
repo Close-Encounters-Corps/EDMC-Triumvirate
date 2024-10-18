@@ -23,3 +23,4 @@
 /EDMC-Triumvirate.pyproj.user
 test*.*
 .python-version
+deploy.ps1
