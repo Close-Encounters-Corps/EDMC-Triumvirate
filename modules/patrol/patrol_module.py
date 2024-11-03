@@ -383,7 +383,7 @@ class PatrolModule(Frame, Module):
         if self.system:
             self.start_background_thread()
 
-    def close(self):
+    def on_close(self):
         """
         When the plugin stops we want to save the patrols where excluded = True
         We will not inclde ships or BGS in this as they can be excluded in other ways.

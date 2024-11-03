@@ -60,7 +60,7 @@ class Module(ABC, metaclass=ModuleMeta):
         Вызывается при появлении новой записи типа сообщения в логах.
         """
 
-    def close(self):
+    def on_close(self):
         """
         Вызывается в момент завершения работы плагина.
         """

@@ -210,7 +210,7 @@ def plugin_stop():
     """
     logger.debug("Stopping the plugin")
     for mod in context.modules:
-        mod.close()
+        mod.on_close()
     thread.Thread.stop_all()
 
 
