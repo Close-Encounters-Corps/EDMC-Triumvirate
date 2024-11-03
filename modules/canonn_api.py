@@ -1,5 +1,5 @@
 import requests, traceback, json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from settings import canonn_realtime_url
 from modules.legacy import Reporter
@@ -135,18 +135,14 @@ class CanonnRealtimeAPI(Module):
     """Проверяет и отправляет интересные для Canonn-ов игровые события."""
     _instance = None
     _hdtracker = HDDetector()
-    url = canonn_realtime_url
+    CANONN_CLOUD_URL = canonn_realtime_url
     whitelist = dict()
-
-    def __new__(cls):
-        if cls._instance == None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
 
     def __init__(self):
         super().__init__()
-        self.batch = list()
+        self.fss_signals_batch = list()
         self._batch_maxlen = 30         # каноны рекомендуют 40 во избежание таймаута, мы перестрахуемся
+        self.fss_signals_timer: Timer | None = None
         WhitelistUpdater().start()
 
 
@@ -157,15 +153,6 @@ class CanonnRealtimeAPI(Module):
         if not journalEntry.system:     # потому что некоторые ивенты, например, FSSSignalDiscovered, при старте игры идут до Location
             return                      # и EDMC в этот момент отдаёт system=None
         
-        """
-        Эта секция - ивенты, которые каноны принимают в свой /postEvent.
-        При этом они держат "белый список" ивентов и критериев к ним, который, как предполагается,
-        мы должны подтягивать при запуске плагина, потому что они оставляют за собой право его изменять.
-        Мы же не хотим отправлять незнамо что, поэтому копируем список себе (пока что на гитхаб, потом на свой сервер),
-        вырезав всё, чем не хотим делиться.
-        При этом каноны убедительно просят группировать "одновременные" ивенты (напр., сигналы станций) в один запрос,
-        поэтому сначала обрабатываем их, одновременно отсеивая свои флитаки.
-        """
         if (
             event == "FSSSignalDiscovered"
             and entry.get("IsStation") == True
@@ -174,25 +161,64 @@ class CanonnRealtimeAPI(Module):
                 and is_cec_fleetcarrier(entry.get("SignalName"))    # вы же привели названия флитаков в соответствие правилам фракции, господа сотрудники?
             )
             and (
-                len(self.batch) == 0
-                or entry["timestamp"] == self.batch[0].data["timestamp"]
+                len(self.fss_signals_batch) == 0
+                or entry["timestamp"] == self.fss_signals_batch[0].data["timestamp"]
             )
         ):
-            if len(self.batch) == self._batch_maxlen:
+            if len(self.fss_signals_batch) == self._batch_maxlen:
                 self._dump_batch()
-            self.batch.append(journalEntry)
+            self.fss_signals_batch.append(journalEntry)
         
-        else:
-            if event != "FSSSignalDiscovered" and len(self.batch) > 0:      # мы не хотим, чтобы каждый не-станционный сигнал триггерил отправку batch
-                self._dump_batch()
-            # проверяем всё остальное
-            self._post_event(journalEntry)
-
-        # проверяем таргоидские гиперперехваты
+        # проверяем:
+        # сигналы в системе
+        self._check_fss_signal(journalEntry)
+        # таргоидские гиперперехваты
         self._hdtracker.journal_entry(journalEntry)
+        # всё остальное
+        self._check_whitelisted_events(journalEntry)
+    
+
+    def on_close(self):
+        if len(self.fss_signals_batch) > 0:
+            self._dump_batch()
+
+    
+    def _check_fss_signal(self, journalEntry: JournalEntry):
+        entry = journalEntry.data
+        event = entry["event"]
+
+        if event == "FSSSignalDiscovered":
+            isStation = entry.get("IsStation", False)
+            isCecFc = (
+                entry.get("SignalType") == "FleetCarrier"
+                and is_cec_fleetcarrier(entry.get("SignalName", ""))
+            )
+            if isStation and not isCecFc:
+                self.fss_signals_batch.append(journalEntry)
+
+        """
+        Отправлять FSS сигналы в системе будем при одном из следующих условий:
+        0) Очередь заполнена
+        1) Мы покинули систему
+        2) Мы вышли из игры
+        3) Мы закрываем плагин      <-- реализовано в on_close()
+        4) Прошло достаточно времени
+        """
+        first_timestamp = datetime.fromisoformat(self.fss_signals_batch[0]["timestamp"]  if len(self.fss_signals_batch) > 0  else entry["timestamp"])
+        last_timestamp  = datetime.fromisoformat(entry["timestamp"])
+        timestamp_diff: timedelta = last_timestamp - first_timestamp
+        if (
+            len(self.fss_signals_batch) == self._batch_maxlen                               # 0
+            or (event == "StartJump" and entry["JumpType"] == "Hyperspace")                 # 1
+            or event in ["Died", "SelfDestruct", "Resurrect"]                               # 1
+            or event == "Shutdown"                                                          # 2
+            or event == "Music" and entry["MusicTrack"] == "MainMenu"                       # 2
+            or (event != "FSSSignalDiscovered" and timestamp_diff > timedelta(minutes=1))   # 4
+        ):
+            self._dump_batch()
 
 
-    def _post_event(self, journalEntry: JournalEntry):
+    def _check_whitelisted_events(self, journalEntry: JournalEntry):
         entry = journalEntry.data
         valuable = False
         for accepted_event in self.whitelist:
@@ -203,7 +229,7 @@ class CanonnRealtimeAPI(Module):
             return
         # если все пары ключей-значений совпадают, каноны в этом заинтересованы
         debug("[CanonnAPI] Sending the {!r} event to Canonn.", entry["event"])
-        url = f"{self.url}/postEvent"
+        url = f"{self.CANONN_CLOUD_URL}/postEvent"
         gamestate = self._get_gamestate(journalEntry)
         params = {
             "gameState": gamestate,
@@ -214,16 +240,18 @@ class CanonnRealtimeAPI(Module):
 
     
     def _dump_batch(self):
-        debug("[CanonnAPI] Dumping the batch, len={}.", len(self.batch))
-        url = f"{self.url}/postEvent"
-        gamestate = self._get_gamestate(self.batch[0])
+        if len(self.fss_signals_batch) == 0:
+            return
+        debug("[CanonnAPI] Dumping the batch, len={}.", len(self.fss_signals_batch))
+        url = f"{self.CANONN_CLOUD_URL}/postEvent"
+        gamestate = self._get_gamestate(self.fss_signals_batch[0])
         params = {
             "gameState": gamestate,
-            "rawEvents": [entry.data for entry in self.batch],
-            "cmdrName":  self.batch[0].cmdr
+            "rawEvents": [entry.data for entry in self.fss_signals_batch],
+            "cmdrName":  self.fss_signals_batch[0].cmdr
         }
         Reporter(url, json.dumps(params.copy())).start()
-        self.batch.clear()
+        self.fss_signals_batch.clear()
     
     
     def _get_gamestate(self, journalEntry: JournalEntry):
@@ -283,6 +311,6 @@ class WhitelistUpdater(Thread):
 
 
 
-def is_cec_fleetcarrier(signalName: str):
+def is_cec_fleetcarrier(signalName: str) -> bool:
     name = signalName.strip().upper().replace('С', 'C').replace('Е', 'E')
     return name[0:4] == "CEC "
