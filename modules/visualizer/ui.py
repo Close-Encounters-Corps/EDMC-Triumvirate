@@ -42,6 +42,9 @@ class _ModuleSettingsGroup(ttk.Frame):
 class VSettingsFrame(tk.Frame):
     def __init__(self, parent: tk.Misc, row: int, vslz_shown: bool, modules_config: list[tuple[str, str, bool]]):
         super().__init__(parent, bg="white")
+
+        self.module_name_label = nb.Label(self, text=tr.tl("Visualizer settings:"))
+        self.module_name_label.pack(side="top", anchor="w")
         
         # практически _ModuleSettingsGroup, только для визуализатора целиком
         self.vis_frame = tk.Frame(self, bg="white")
