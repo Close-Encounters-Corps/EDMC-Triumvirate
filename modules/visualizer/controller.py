@@ -66,7 +66,7 @@ class VisualizerController(Module):
         self.__model.update_system(entry.system)
     
     def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool, row: int):
-        return self.__model.get_settings_frame(parent_widget, row)
+        self.__model.draw_settings_frame(parent_widget, row)
 
     def on_settings_changed(self, cmdr: str, is_beta: bool):
         self.__model.update_user_settings()

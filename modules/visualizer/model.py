@@ -60,7 +60,7 @@ class VisualizerModel:
             self.current_system = system
 
 
-    def get_settings_frame(self, parent, row):
+    def draw_settings_frame(self, parent, row):
         shown = self.visualizer_shown
         config: list[tuple[str, str, bool]] = list()    # (Module.__qualname__, Module.localized_name, статус)
         for mod in self.registered_modules:
@@ -69,7 +69,6 @@ class VisualizerModel:
             enabled = self.modules_display_status[qualname]
             config.append( (qualname, name, enabled) )
         self.__settings_frame = VSettingsFrame(parent, row, shown, config)
-        return self.__settings_frame
     
 
     def update_user_settings(self):
