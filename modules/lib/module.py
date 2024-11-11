@@ -1,10 +1,13 @@
 from abc import ABC, ABCMeta
-from l10n import translations as tr
 
 # для аннотаций типов:
 import tkinter as tk
 from modules.lib.journal import JournalEntry
 from typing import Type, TypeVar
+
+# Подключение функции перевода от EDMC
+import l10n, functools
+plugin_tr = functools.partial(l10n.translations.tl, context=__file__)
 
 
 class ModuleMeta(ABCMeta):
@@ -77,7 +80,7 @@ class Module(ABC, metaclass=ModuleMeta):
         """
         Возвращает имя модуля в выбранной локализации. Ключ для строк перевода - __qualname__
         """
-        return tr.tl(self.__class__.__qualname__)
+        return plugin_tr(self.__class__.__qualname__)
 
 
 T = TypeVar('T', bound=Module)

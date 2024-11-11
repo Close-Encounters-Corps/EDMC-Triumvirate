@@ -9,7 +9,10 @@ from modules.debug import debug
 from modules.lib.context import global_context
 
 import myNotebook as nb
-from l10n import translations as tr
+
+# Подключение функции перевода от EDMC
+import l10n, functools
+plugin_tr = functools.partial(l10n.translations.tl, context=__file__)
 
 
 
@@ -43,23 +46,23 @@ class VSettingsFrame(tk.Frame):
     def __init__(self, parent: tk.Misc, row: int, vslz_shown: bool, modules_config: list[tuple[str, str, bool]]):
         super().__init__(parent, bg="white")
 
-        self.module_name_label = nb.Label(self, text=tr.tl("Visualizer settings:"))
+        self.module_name_label = nb.Label(self, text=plugin_tr("Visualizer settings:"))
         self.module_name_label.pack(side="top", anchor="w")
         
         # практически _ModuleSettingsGroup, только для визуализатора целиком
         self.vis_frame = tk.Frame(self, bg="white")
-        self.vis_label = nb.Label(self.vis_frame, text=tr.tl("Show visualizer module:"))
+        self.vis_label = nb.Label(self.vis_frame, text=plugin_tr("Show visualizer module:"))
         self.vis_checkbox_var = tk.BooleanVar(self.vis_frame, value=vslz_shown)
         self.vis_checkbox = nb.Checkbutton(self.vis_frame, variable=self.vis_checkbox_var, command=self.change_groups_state)
         self.vis_label.grid(column=0, row=0)
         self.vis_checkbox.grid(column=1, row=0, padx=5)
         self.vis_frame.pack(side='top', fill='x')
 
-        self.delimeter_label = nb.Label(self, text=tr.tl("Show output from selected modules only:"))
+        self.delimeter_label = nb.Label(self, text=plugin_tr("Show output from selected modules only:"))
         self.delimeter_label.pack(side='top', anchor='w')
 
         self.module_frames = [_ModuleSettingsGroup(self, mod, name, enabled) for (mod, name, enabled) in modules_config]
-        self.modules_dummy_label = nb.Label(self, text=tr.tl("[No registered modules found]"))
+        self.modules_dummy_label = nb.Label(self, text=plugin_tr("[No registered modules found]"))
         if len(self.module_frames) == 0:
             self.modules_dummy_label.pack(side='left', anchor='w')
         else:
@@ -121,7 +124,7 @@ class VisualizerView(ttk.Frame):
 
         # фрейм с кнопками-иконками категорий
         self.buttons_frame = ttk.Frame(self)
-        self.buttons_dummy_label = tk.Label(self.buttons_frame, text=tr.tl("Waiting for data..."))
+        self.buttons_dummy_label = tk.Label(self.buttons_frame, text=plugin_tr("Waiting for data..."))
         self.buttons_dummy_label.pack(side='top', fill='x')
         self.buttons: dict[str, _IconButton] = {}
         for ctg in CATEGORIES:
@@ -130,14 +133,14 @@ class VisualizerView(ttk.Frame):
 
         # фрейм с названием отображаемой категории
         self.category_frame = ttk.Frame(self)       # маппится в ___ при наличии данных к отображению
-        self.category_text_label = tk.Label(self.category_frame, text=tr.tl("Displayed category:"))
+        self.category_text_label = tk.Label(self.category_frame, text=plugin_tr("Displayed category:"))
         self.category_text_label.pack(side='left')
         self.active_category_var = tk.StringVar(value="")
         self.active_category_label = tk.Label(self.category_frame, textvariable=self.active_category_var)
         self.active_category_label.pack(side='left', padx=3)
 
         # фрейм с данными по активной категории
-        headers = [tr.tl("Body"), tr.tl("POI")]
+        headers = [plugin_tr("Body"), plugin_tr("POI")]
         self.details_frame = ttk.Frame(self)         # маппится в ___ при наличии данных к отображению
         self.details_table = Table(self.details_frame, headers)
         self.details_table.pack(side="top", fill="x")
@@ -207,7 +210,7 @@ class VisualizerView(ttk.Frame):
             self.details_frame.pack_forget()
             return
         
-        self.active_category_var.set(tr.tl(self.active_category))
+        self.active_category_var.set(plugin_tr(self.active_category))
         data = sorted(self.data[self.active_category])
         for item in data:
             self.details_table.insert(item.body, item.text)
