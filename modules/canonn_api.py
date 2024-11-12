@@ -153,22 +153,6 @@ class CanonnRealtimeAPI(Module):
         if not journalEntry.system:     # потому что некоторые ивенты, например, FSSSignalDiscovered, при старте игры идут до Location
             return                      # и EDMC в этот момент отдаёт system=None
         
-        if (
-            event == "FSSSignalDiscovered"
-            and entry.get("IsStation") == True
-            and not (
-                entry.get("SignalType") == "FleetCarrier"
-                and is_cec_fleetcarrier(entry.get("SignalName"))    # вы же привели названия флитаков в соответствие правилам фракции, господа сотрудники?
-            )
-            and (
-                len(self.fss_signals_batch) == 0
-                or entry["timestamp"] == self.fss_signals_batch[0].data["timestamp"]
-            )
-        ):
-            if len(self.fss_signals_batch) == self._batch_maxlen:
-                self._dump_batch()
-            self.fss_signals_batch.append(journalEntry)
-        
         # проверяем:
         # сигналы в системе
         self._check_fss_signal(journalEntry)
@@ -204,7 +188,7 @@ class CanonnRealtimeAPI(Module):
         3) Мы закрываем плагин      <-- реализовано в on_close()
         4) Прошло достаточно времени
         """
-        first_timestamp = datetime.fromisoformat(self.fss_signals_batch[0]["timestamp"]  if len(self.fss_signals_batch) > 0  else entry["timestamp"])
+        first_timestamp = datetime.fromisoformat(self.fss_signals_batch[0].data["timestamp"]  if len(self.fss_signals_batch) > 0  else entry["timestamp"])
         last_timestamp  = datetime.fromisoformat(entry["timestamp"])
         timestamp_diff: timedelta = last_timestamp - first_timestamp
         if (
