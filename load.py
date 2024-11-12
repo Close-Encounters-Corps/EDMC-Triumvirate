@@ -33,6 +33,7 @@ from modules import (
     patrol,
     release,
     visualizer,
+    fc_tracker
 )
 from modules.debug import Debug
 from modules.lib import http
@@ -122,6 +123,7 @@ def plugin_prefs(parent, cmdr, is_beta):
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 4)
     context.by_class(bgs.BGS).draw_settings(frame, cmdr, is_beta, 5)
     context.by_class(visualizer.Visualizer).draw_settings(frame, cmdr, is_beta, 6)
+    context.by_class(fc_tracker.FC_Tracker).draw_settings(frame, cmdr, is_beta, 7)
     nb.Label(frame, text=settings.support_message,).grid(row=8, column=0, sticky="NW")
 
     return frame
@@ -235,13 +237,15 @@ def plugin_app(parent):
     rel = release.Release(this.plugin_dir, frame, this.version, 2)
     this.patrol = patrol.PatrolModule(frame, 3)
     this.bgs_module = bgs.BGS()
+    this.fc_tracker = fc_tracker.FC_Tracker()
     this.modules = [
         rel,
         this.patrol,
         this.systems_module,
         this.bgs_module,
         this.canonn_rt_api,
-        this.visualizer
+        this.visualizer,
+        this.fc_tracker
     ]
 
     # фрейм с различными уведомлениями из модулей
