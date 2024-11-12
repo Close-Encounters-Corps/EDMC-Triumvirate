@@ -7,6 +7,7 @@ from dataclasses import dataclass, asdict as dataclass_asdict
 from datetime import datetime, UTC
 from tkinter import ttk
 
+from modules.debug import debug
 from modules.legacy import Reporter
 from modules.lib.conf import config as plugin_config
 from modules.lib.context import global_context
@@ -206,6 +207,7 @@ class FC_Tracker(Module):
         if self.access_warnings_disabled is None:
             self.access_warnings_disabled = False
             plugin_config.set(self.WARNINGS_CONFIG_KEY, False)
+        debug(f"[FC_Tracker] Docking access warning disabled: {self.access_warnings_disabled}.")
 
         self.__saved_fc_config = self._load_fc_config()
         self.fc_config = deepcopy(self.__saved_fc_config)
@@ -218,6 +220,10 @@ class FC_Tracker(Module):
             and self.fc_config.decommission_timestamp is not None
             and datetime.now(UTC) > self.fc_config.decommission_timestamp
         ):
+            debug(
+                "[FC_Tracker] Fleet carrier was pending decommission (saved timestamp {}), resetting the config.",
+                datetime.isoformat(self.fc_config.decommission_timestamp)
+            )
             self.fc_config.status                   = _FCStatus.DECOMMISSIONED
             self.fc_config.name                     = None
             self.fc_config.variant                  = None
@@ -225,6 +231,8 @@ class FC_Tracker(Module):
             self.fc_config.notorious_access         = None
             self.fc_config.decommission_timestamp   = None
             self._save_fc_config()
+            debug("[FC_Tracker] Notifying the user.")
+            global_context.notifier.send(plugin_tr("Your fleet carrier configuration has been reset due to its decommissioning."))
         
         self._check_docking_access()
 
@@ -260,6 +268,7 @@ class FC_Tracker(Module):
     
 
     def carrier_bought(self, journalEntry: JournalEntry):
+        debug("[FC_Tracker] Detected CarrierBuy.")
         self.fc_config.cmdr     = journalEntry.cmdr
         self.fc_config.status = _FCStatus.ACTIVE
         self.fc_config.callsign = journalEntry.data["Callsign"]
@@ -268,6 +277,7 @@ class FC_Tracker(Module):
 
 
     def carrier_stats(self, journalEntry: JournalEntry):
+        debug("[FC_Tracker] Detected CarrierStats.")
         entry = journalEntry.data
         self.fc_config.cmdr = journalEntry.cmdr
         self.fc_config.callsign = entry["Callsign"]
@@ -285,6 +295,10 @@ class FC_Tracker(Module):
             timestamp -= timestamp % 604800     # находим его
             timestamp += 25200                  # добавляем обратно 7 часов
             self.fc_config.decommission_timestamp = datetime.fromtimestamp(timestamp)
+            debug(
+                "[FC_Tracker] The carrier was pending decommission, calculated timestamp: {}.",
+                datetime.isoformat(self.fc_config.decommission_timestamp)
+            )
 
         else:
             self.fc_config.status = _FCStatus.ACTIVE
@@ -292,8 +306,10 @@ class FC_Tracker(Module):
 
         if self.fc_config.variant is None:
             self.fc_config.variant = _FCClass.DRAKE
+            debug("[FC_Tracker] Assigning the default carrier class (Drake).")
         
         if self.__notification is not None:
+            debug("[FC_Tracker] Closing the notification.")
             self.__notification.destroy()
             self.__notification = None
         
@@ -302,6 +318,7 @@ class FC_Tracker(Module):
 
 
     def decommission_planned(self, journalEntry: JournalEntry):
+        debug("[FC_Tracker] Detected CarrierDecommission.")
         self.fc_config.cmdr = journalEntry.cmdr
         self.fc_config.status = _FCStatus.PENDING_DECOMMISSION
         self.fc_config.decommission_timestamp = datetime.fromtimestamp(journalEntry.data["ScrapTime"], UTC)
@@ -309,6 +326,7 @@ class FC_Tracker(Module):
 
 
     def decommission_canceled(self, journalEntry: JournalEntry):
+        debug("[FC_Tracker] Detected CarrierCancelDecommission.")
         self.fc_config.cmdr = journalEntry.cmdr
         self.fc_config.status = _FCStatus.ACTIVE
         self.fc_config.decommission_timestamp = None
@@ -316,6 +334,7 @@ class FC_Tracker(Module):
 
 
     def docking_access_changed(self, journalEntry: JournalEntry):
+        debug("[FC_Tracker] Detected CarrierDockingPermission.")
         self.fc_config.cmdr = journalEntry.cmdr
         if self.fc_config.status in (_FCStatus.NOT_BOUGHT, _FCStatus.DECOMMISSIONED):
             self.fc_config.status = _FCStatus.UNKNOWN      # may be pending decommission
@@ -326,6 +345,7 @@ class FC_Tracker(Module):
 
 
     def name_changed(self, journalEntry: JournalEntry):
+        debug("[FC_Tracker] Detected CarrierNameChanged.")
         self.fc_config.cmdr = journalEntry.cmdr
         if self.fc_config.status in (_FCStatus.NOT_BOUGHT, _FCStatus.DECOMMISSIONED):
             self.fc_config.status = _FCStatus.UNKNOWN      # may be pending decommission
@@ -340,10 +360,13 @@ class FC_Tracker(Module):
             config = json.loads(saved_config)
             if isinstance(config["decommission_timestamp"], str):
                 config["decommission_timestamp"] = datetime.fromisoformat(config["decommission_timestamp"])
+            debug("[FC_Tracker] Loading saved config.")
         else:
             config = {}
+            debug("[FC_Tracker] No saved config found, setting the default values.")
 
         config_instance = _FCModuleConfig(**config)
+        debug(f"[FC_Tracker] Loaded config: {config_instance}.")
         return config_instance
     
 
@@ -359,20 +382,28 @@ class FC_Tracker(Module):
                 and not self.fc_config.status == _FCStatus.NOT_BOUGHT
             ):
                 self._submit_form()
+            debug(f"[FC_Tracker] Saving updated config: {self.fc_config}")
 
     
     def _check_docking_access(self):
+        debug(
+            "[FC_Tracker] Docking access: {}, CQID: {}, warning disabled: {}.",
+            self.fc_config.docking_access,
+            global_context.cmdr_SQID,
+            self.access_warnings_disabled
+        )
         if (
             self.fc_config.docking_access == _FCDockingAccess.ALL
             # TODO: заменить на нормальную проверку "союзности" по готовности БД
             and global_context.cmdr_SQID == "SCEC"
             and not self.access_warnings_disabled
         ):
+            debug("[FC_Tracker] Sending an unsafe docking access warning.")
             global_context.notifier.send(plugin_tr("<FC_TRACKER_UNSAFE_DOCKING_ACCESS_WARNING>"))
     
 
     def _submit_form(self):
-        BasicThread(target=self.__submit_form_in_thread).start()
+        BasicThread(target=self.__submit_form_in_thread, name="FC_Tracker._submit_form").start()
 
     def __submit_form_in_thread(self):
         # проверяем наличие аккаунта на fleetcarrier.space
@@ -380,6 +411,7 @@ class FC_Tracker(Module):
         has_account = (requests.get(url, allow_redirects=False).status_code == 302)      # "found"
         # Перенаправляет на /carrier/<callsign> -> найдено. Отдаёт 200 -> такого нема.
         # Если реквестить саму /carrier/<callsign> - отдаст 200 в любом случае. Такие дела.
+        debug(f"[FC_Tracker] Found account on fleetcarrier.space: {has_account}.")
 
         # TODO: перевести с тестовой формы на основную, когда будет готово
         url = "https://docs.google.com/forms/d/e/1FAIpQLSepZDoWnZeD77CvShDw409j7FCmftaEweAFtlkBzpR7eDNniA/formResponse?usp=pp_url"
@@ -397,6 +429,7 @@ class FC_Tracker(Module):
 
 
     def __create_notification(self):
+        debug("[FC_Tracker] Creating the notification window.")
         self.__notification = _Notification(self.__notif_cancel_callback)
 
 
@@ -413,4 +446,5 @@ class FC_Tracker(Module):
         self.fc_config.comment                  = None
         self.fc_config.decommission_timestamp   = None
 
+        debug("[FC_Tracker] User said they don't own a fleet carrier, resetting the config.")
         self._save_fc_config()
