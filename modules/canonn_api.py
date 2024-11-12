@@ -147,9 +147,6 @@ class CanonnRealtimeAPI(Module):
 
 
     def on_journal_entry(self, journalEntry: JournalEntry):
-        entry = journalEntry.data
-        event = entry["event"]
-        
         if not journalEntry.system:     # потому что некоторые ивенты, например, FSSSignalDiscovered, при старте игры идут до Location
             return                      # и EDMC в этот момент отдаёт system=None
         
@@ -159,7 +156,8 @@ class CanonnRealtimeAPI(Module):
         # таргоидские гиперперехваты
         self._hdtracker.journal_entry(journalEntry)
         # всё остальное
-        self._check_whitelisted_events(journalEntry)
+        if journalEntry.data["event"] != "FSSSignalDiscovered":
+            self._check_whitelisted_events(journalEntry)
     
 
     def on_close(self):
