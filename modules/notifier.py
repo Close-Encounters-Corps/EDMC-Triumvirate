@@ -25,7 +25,7 @@ class _Message(tk.Frame):
         self.pack(side="top", fill="x")
 
         if timeout != 0:
-            self._timer = Timer(timeout, self._close, False)
+            self._timer = Timer(timeout, self._close, run_on_closing=False, run_in_the_main_thread=True)
             self._timer.start()
         else:
             self._timer = None

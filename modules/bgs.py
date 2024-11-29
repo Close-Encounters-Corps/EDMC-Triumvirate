@@ -14,7 +14,6 @@ from .lib.module import Module
 from .lib.conf import config as plugin_config
 from .lib.thread import Thread, BasicThread
 from .lib.context import global_context
-from .lib.timer import Timer
 from .legacy import Reporter, URL_GOOGLE
 
 import myNotebook as nb
