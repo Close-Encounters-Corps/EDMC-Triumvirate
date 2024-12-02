@@ -3,7 +3,7 @@ import threading, requests, traceback
 
 from math import sqrt, pow
 from .debug import debug, error
-from .lib.thread import Thread
+from .lib.thread import Thread, BasicThread
 
 try:#py3
     from urllib.parse import quote_plus
@@ -14,40 +14,48 @@ except:#py2
 URL_GOOGLE = 'https://docs.google.com/forms/d/e'
 
 
-class Reporter(Thread):
+class Reporter(BasicThread):
+    STANDARD_RETRY_DELAY = 10
+    LONG_RETRY_DELAY = 10 * 60
+    MAX_ATTEMPTS = 10
+
     def __init__(self, url: str, params: dict = None):
         super().__init__()
         self.url = url
         self.params = params
 
     def run(self):
-        attempts = 0
-        while True:
-            attempts += 1
-            try: response = requests.post(self.url, self.params)
+        n_attempt = 1
+        while n_attempt != self.MAX_ATTEMPTS + 1:
+            try:
+                response = requests.post(self.url, self.params)
             except:
+                error("[Reporter] Couldn't send data: url {!r}, params {!r}:", self.url, self.params)
                 error(traceback.format_exc())
-                break
-            else:
-                if 200 <= response.status_code < 300:
-                    debug(f"[Reporter] Data sent successfully ({attempts} attempts).")
-                    break
-                elif 300 <= response.status_code < 400:
-                    debug(f"[Reporter] Request to {self.url} was redirected.")
-                    self.url = response.headers["location"]
-                    attempts -= 1       # не будем считать это неудачной попыткой
-                else:
-                    if attempts <= 10:   # мы настойчивые
-                        error(
-                            "[Reporter] Couldn't send data: response code {}, url {!r}, params {!r} ({} attempts).",
-                            response.status_code,
-                            self.url,
-                            self.params,
-                            attempts
-                        )
-                        self.sleep(10)
-                    else:               # возможно, что-то действительно не так с нашим запросом
-                        break
+                return
+            
+            if response.ok:
+                debug("[Reporter] Data sent successfully: url {!r}, params {!r} ({} attempts).", self.url, self.params, n_attempt)
+                return
+            
+            elif response.status_code == 408:   # таймаут, есть смысл попытаться ещё
+                error("[Reporter] Couldn't send data (418 Timeout): url {!r}, params {!r} ({} attempts).", self.url, self.params, n_attempt)
+                n_attempt += 1
+                self.sleep(self.STANDARD_RETRY_DELAY)
+
+            elif response.status_code == 429:   # слишком много запросов, подождём подольше
+                error("[Reporter] Couldn't send data (429 Too many requests): url {!r}, params {!r} ({} attempts).", self.url, self.params, n_attempt)
+                n_attempt += 1
+                self.sleep(self.LONG_RETRY_DELAY)
+
+            elif response.status_code < 500:    # всё остальное из 4XX пытаться повторять смысла нет
+                error("[Reporter] Coundn't send data (code {}): url {!r}, params {!r}. Aborting.", response.status_code, self.url, self.params)
+                return
+            
+            else:                               # 5XX можно попытаться повторить
+                error("[Reporter] Coundn't send data (code {}): url {!r}, params {!r} ({} attempts).", response.status_code, self.url, self.params, n_attempt)
+                n_attempt += 1
+                self.sleep(self.STANDARD_RETRY_DELAY)
 
 
 def getDistance(x1,y1,z1,x2,y2,z2):
