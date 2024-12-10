@@ -65,7 +65,6 @@ class JournalEntry:
             "body": self.body,
             "state": self.state,
             "dist_from_star": self.dist_from_star,
-            "body": self.body,
             "coords": {
                 "x": self.coords.x,
                 "y": self.coords.y,

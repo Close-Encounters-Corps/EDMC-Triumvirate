@@ -53,8 +53,8 @@ class VisualizerModel:
         return self.modules_display_status[qualname]
 
 
-    def update_system(self, system: str | None):        
-        if self.current_system != system:
+    def update_system(self, system: str | None):
+        if self.current_system != system and system is not None:
             debug("[Visualizer] Detected system change, clearing data.")
             self.clear()
             self.current_system = system
