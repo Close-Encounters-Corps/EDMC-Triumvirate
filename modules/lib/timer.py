@@ -84,7 +84,7 @@ class Timer(Thread):
             self.run_on_closing = False     # чтобы случайно дважды target не вызвать
             self.STOP = True
             debug(
-                "[Timer.execute_now] '{!r}' has been stopped, calling target {!r} ahead of schedule.",
+                "[Timer.execute_now] {!r} has been stopped, calling target {!r} ahead of schedule.",
                 self.name,
                 self.target
             )
@@ -96,7 +96,7 @@ class Timer(Thread):
         if self.is_active:
             self.run_on_closing = False
             self.STOP = True
-            debug("[Timer.kill] '{!r}' has been cancelled.", self.name)
+            debug("[Timer.kill] {!r} has been cancelled.", self.name)
 
     
     @property
