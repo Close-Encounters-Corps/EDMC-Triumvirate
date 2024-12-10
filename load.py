@@ -347,15 +347,25 @@ class JournalEntryProcessor(thread.Thread):
         if (
             "SystemAddress" in entry
             and this.systemAddress != entry["SystemAddress"]
-            and entry["event"] != "NavRoute"
+            and entry["event"] not in ("NavRoute", "FSDTarget")
         ):
+            logger.debug("Detected SystemAddress mismatch: current {}, from entry {}.".format(this.systemAddress, entry["SystemAddress"]))
             if entry["event"] == "StartJump":
                 # мы ещё в актуальной системе, но сохраним ту, в которую прыгаем
                 this.pending_jump_system = entry.get("StarSystem")
+                logger.debug("StartJump. Pending jump system set to {}, id {}. Raw entry: {!r}".format(this.pending_jump_system, entry["SystemAddress"], entry))
             else:
                 # мы уже прыгнули, но FSDJump в логах пока не получили
                 this.systemAddress = entry["SystemAddress"]
-                system = this.pending_jump_system or system     # чисто на всякий случай
+                system = this.pending_jump_system or system
+                logger.debug("We jumped to another system; systemAddress set to {}, system set to {}.".format(this.systemAddress, system))
+        
+        # а ещё нас могут дёрнуть таргоиды, поэтому мы окажемся в той же системе, из которой прыгали.
+        if (
+            entry.get("event") == "FSDJump"
+            and entry["StarSystem"] != this.pending_jump_system
+        ):
+            logger.debug("Detected misjump; are we hyperdicted? Leaving systemAddress unchanged.")
             
         systemAddress = this.systemAddress
 
