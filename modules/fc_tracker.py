@@ -3,10 +3,11 @@ import requests
 import tkinter as tk
 import traceback
 from copy import deepcopy
-from enum import Enum
 from dataclasses import dataclass, asdict as dataclass_asdict
 from datetime import datetime, UTC
+from enum import Enum
 from tkinter import ttk
+from typing import Callable, Any
 
 from modules.debug import debug, error
 from modules.legacy import Reporter
@@ -20,7 +21,7 @@ import myNotebook as nb
 
 # Подключение функции перевода от EDMC
 import l10n, functools
-plugin_tr = functools.partial(l10n.translations.tl, context=__file__)
+_translate = functools.partial(l10n.translations.tl, context=__file__)
 
 
 
@@ -48,7 +49,7 @@ class _FCClass(str, Enum):
 
 
 @dataclass
-class _FCModuleConfig:
+class _FCConfig:
     cmdr:                   str | None              = None
     status:                 _FCStatus               = _FCStatus.UNKNOWN
     callsign:               str | None              = None
@@ -80,18 +81,18 @@ class _FCModuleConfig:
         return result
 
 
-class _SettingsFCInfoFrame(tk.Frame):
-    def __init__(self, parent, config: _FCModuleConfig):
+class _FCInfoFrame(tk.Frame):
+    def __init__(self, parent, config: _FCConfig):
         super().__init__(parent, bg="white")
 
-        name = "[{}] {}".format(config.callsign, config.name or "???") if config.callsign else plugin_tr("unknown")
-        self.name_label     = nb.Label(self, text=plugin_tr("Carrier name:"))
+        name = "[{}] {}".format(config.callsign, config.name or "???") if config.callsign else _translate("unknown")
+        self.name_label     = nb.Label(self, text=_translate("Carrier name:"))
         self.name_field     = nb.Label(self, text=name)
         self.name_label.grid(row=0, column=0, sticky="W")
         self.name_field.grid(row=0, column=1, padx=3, sticky="W")
 
-        self.class_var      = tk.StringVar(value=(config.variant or plugin_tr("unknown")))
-        self.class_label    = nb.Label(self, text=plugin_tr("Carrier class:"))
+        self.class_var      = tk.StringVar(value=(config.variant or _translate("unknown")))
+        self.class_label    = nb.Label(self, text=_translate("Carrier class:"))
         self.class_field    = ttk.Combobox(
             self,
             values=[e.value for e in _FCClass],
@@ -101,38 +102,38 @@ class _SettingsFCInfoFrame(tk.Frame):
         self.class_label.grid(row=1, column=0, sticky="W")
         self.class_field.grid(row=1, column=1, padx=3, sticky="W")
 
-        self.access_label   = nb.Label(self, text=plugin_tr("Docking access:"))
-        self.access_field   = nb.Label(self, text=plugin_tr(config.docking_access))
+        self.access_label   = nb.Label(self, text=_translate("Docking access:"))
+        self.access_field   = nb.Label(self, text=_translate(config.docking_access))
         self.access_label.grid(row=2, column=0, sticky="W")
         self.access_field.grid(row=2, column=1, padx=3, sticky="W")
 
-        self.notorious_access_label = nb.Label(self, text=plugin_tr("Docking allowed for notorious:"))
-        self.notorious_access_field = nb.Label(self, text=plugin_tr(config.notorious_access))
+        self.notorious_access_label = nb.Label(self, text=_translate("Docking allowed for notorious:"))
+        self.notorious_access_field = nb.Label(self, text=_translate(config.notorious_access))
         self.notorious_access_label.grid(row=3, column=0, sticky="W")
         self.notorious_access_field.grid(row=3, column=1, padx=3, sticky="W")
 
-        self.optional_fields_label  = nb.Label(self, text=plugin_tr("<FC_TRACKER_SETTINGS_OPTIONAL_FIELDS>"))
+        self.optional_fields_label  = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_OPTIONAL_FIELDS>"))
         self.optional_fields_label.grid(row=4, column=0, columnspan=2, sticky="W")
 
         self.role_var   = tk.StringVar(value=config.role)
-        self.role_label = nb.Label(self, text=plugin_tr("Role:"))
+        self.role_label = nb.Label(self, text=_translate("Role:"))
         self.role_field = nb.EntryMenu(self, textvariable=self.role_var, width=70)
         self.role_label.grid(row=5, column=0, sticky="W")
         self.role_field.grid(row=5, column=1, padx=3, sticky="W")
 
         self.comment_var    = tk.StringVar(self, value=config.comment)
-        self.comment_label  = nb.Label(self, text=plugin_tr("Additional comment:"))
+        self.comment_label  = nb.Label(self, text=_translate("Additional comment:"))
         self.comment_field  = nb.EntryMenu(self, textvariable=self.comment_var, width=70)
         self.comment_label.grid(row=6, column=0, sticky="W")
         self.comment_field.grid(row=6, column=1, padx=3, sticky="W")
 
 
 class _SettingsFrame(tk.Frame):
-    def __init__(self, parent: tk.Misc, row: int, config: _FCModuleConfig, disable_access_warnings: bool):
+    def __init__(self, parent: tk.Misc, row: int, config: _FCConfig, disable_access_warnings: bool):
         super().__init__(parent, bg="white")
         decom_timestamp = config.decommission_timestamp.strftime("%x %X") if config.decommission_timestamp else ""
 
-        self.module_name_label = nb.Label(self, text=plugin_tr("FC Tracker settings:"))
+        self.module_name_label = nb.Label(self, text=_translate("FC Tracker settings:"))
         self.module_name_label.pack(side="top", anchor="w")
 
         self.disable_access_warnings_frame = tk.Frame(self, bg="white")
@@ -140,17 +141,17 @@ class _SettingsFrame(tk.Frame):
         self.disable_access_warnings_checkbox = nb.Checkbutton(self.disable_access_warnings_frame, variable=self.disable_access_warnings_var)
         self.disable_access_warnings_label = nb.Label(
             self.disable_access_warnings_frame,
-            text=plugin_tr("Disable warnings about unsafe docking access configuration")
+            text=_translate("Disable warnings about unsafe docking access configuration")
         )
         self.disable_access_warnings_checkbox.grid(row=0, column=0)
         self.disable_access_warnings_label.grid(row=0, column=1, sticky="W")
         self.disable_access_warnings_frame.pack(side="top", fill="x")
 
-        self.no_fc_label            = nb.Label(self, text=plugin_tr("<FC_TRACKER_SETTINGS_NO_FC_INFO>"))
-        self.fc_info_frame          = _SettingsFCInfoFrame(self, config)
-        self.info_missing_label     = nb.Label(self, text=plugin_tr("<FC_TRACKER_SETTINGS_INFO_MISSING>"))
-        self.access_warning_label   = nb.Label(self, text=plugin_tr("<FC_TRACKER_SETTINGS_ACCESS_WARNING>"))
-        self.decom_warning_label    = nb.Label(self, text=plugin_tr("<FC_TRACKER_SETTINGS_DECOM_WARNING> {TS}").format(TS=decom_timestamp))
+        self.no_fc_label            = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_NO_FC_INFO>"))
+        self.fc_info_frame          = _FCInfoFrame(self, config)
+        self.info_missing_label     = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_INFO_MISSING>"))
+        self.access_warning_label   = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_ACCESS_WARNING>"))
+        self.decom_warning_label    = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_DECOM_WARNING> {TS}").format(TS=decom_timestamp))
 
         if config.status in (_FCStatus.NOT_BOUGHT, _FCStatus.UNKNOWN, _FCStatus.DECOMMISSIONED):
             self.no_fc_label.pack(side="top", anchor="w")
@@ -179,19 +180,78 @@ class _SettingsFrame(tk.Frame):
         return disable_access_warnings, variant, role, comment
 
 
-class _Notification(tk.Toplevel):
-    def __init__(self, callback):
-        super().__init__(tk._default_root)
-        self.title(plugin_tr("Fleetcarrier info update"))
-        self.protocol("WM_DELETE_WINDOW", self.__nothing)       # запрещаем закрывать окно
-        self.callback = callback
-        self.missing_info_label = tk.Label(self, text=plugin_tr("<FC_TRACKER_NOTIFICATION_TEXT>"), wraplength=500, justify="left")
-        self.missing_info_label.pack(side="top", fill="both")
-        self.cancel_button = nb.Button(self, text=plugin_tr("I don't have a fleet carrier"), command=self.callback)
-        self.cancel_button.pack(side="bottom", fill="x")
+
+class _FCModuleStatusFrame(tk.Frame):
+    def __init__(self, parent: tk.Misc, row: int,
+                 missing_info_cancel_callback: Callable,
+                 save_changes_callback: Callable[[_FCConfig], Any]):
+        super().__init__(parent)
+        self.row = row
+        self.missing_info_cancel_callback = missing_info_cancel_callback
+        self.save_changes_callback = save_changes_callback
+
+        # варианты
+        # 1: у нас нет информации по флитаку
+        self.missing_info_label = tk.Label(self, text=_translate("<FC_TRACKER_MISSING_INFO_TEXT>"), wraplength=400, justify="left")
+        self.missing_info_cancel_button = nb.Button(self, text=_translate("I don't have a fleet carrier"), command=self.missing_info_cancel_callback)
+
+        # 2: игрок купил флитак, и мы просим зайти в его панель
+        self.carrier_bought_label = tk.Label(self, text=_translate("<FC_CARRIER_BOUGHT_TEXT>"), wraplength=400, justify="left")
+        
+        # 3: мы обнаружили, что у нас недостаточно информации о флитаке
+        self.info_incomplete_label = tk.Label(self, text=_translate("<FC_CARRIER_INFO_INCOMPLETE_TEXT>"), wraplength=400, justify="left")
+
+        # 4: после 2 и 3 - мы получили инфу и предлагаем пользователю её проверить и дополнить
+        # фрейм с инфой по флитаку замаппим в соответствующем методе (нам нужен актуальный конфиг)
+        self.finish_configuring_fc_info_frame: _FCInfoFrame | None = None
+        self.finish_configuring_confirm_changes_button = nb.Button(self, text=_translate("Save"), command=self.__confirm_changes)
     
-    def __nothing(self):
-        pass
+
+    def show_missing_info_screen(self):
+        self.clear()
+        self.missing_info_label.pack(side="top", fill="both")
+        self.missing_info_cancel_button.pack(side="top", fill="x")
+
+    def show_carrier_bought_screen(self):
+        self.clear()
+        self.carrier_bought_label.pack(side="top", fill="both")
+
+    def show_info_incomplete_screen(self):
+        self.clear()
+        self.info_incomplete_label.pack(side="top", fill="both")
+
+    def show_finish_configuring_screen(self, config_copy: _FCConfig):
+        self.clear()
+        self.fc_config = config_copy
+        self.finish_configuring_fc_info_frame = _FCInfoFrame(self, self.fc_config)
+        self.finish_configuring_fc_info_frame.pack(side="top", fill="both")
+        self.finish_configuring_confirm_changes_button.pack(side="top", fill="x")
+
+    def __confirm_changes(self):
+        self.fc_config.variant  = self.finish_configuring_fc_info_frame.class_var.get()
+        self.fc_config.role     = self.finish_configuring_fc_info_frame.role_var.get()
+        self.fc_config.comment  = self.finish_configuring_fc_info_frame.comment_var.get()
+        self.after(0, self.save_changes_callback, deepcopy(self.fc_config))
+
+        self.finish_configuring_fc_info_frame.destroy()
+        self.finish_configuring_fc_info_frame = None
+        self.clear()
+        del self.fc_config
+
+    def clear(self):
+        for widget in self.winfo_children():
+            widget.pack_forget()
+        
+    def show(self):
+        self.grid(column=0, row=self.row, sticky="NWSE")
+    
+    def hide(self):
+        self.clear()
+        self.grid_forget()
+
+    @property
+    def is_shown(self) -> bool:
+        return self.winfo_ismapped()
 
 
 
@@ -201,22 +261,23 @@ class FC_Tracker(Module):
     FC_CONFIG_KEY = "FCTracker.fc_config"
     WARNINGS_CONFIG_KEY = "FCTracker.access_warnings_disabled"
 
-    def __init__(self):
-        self.__notification: _Notification | None = None
+    def __init__(self, parent: tk.Misc, row: int):
+        self.__ui_frame = _FCModuleStatusFrame(parent, row, self.__ui_cancel_callback, self.__ui_save_callback)
 
         self.access_warnings_disabled = plugin_config.get_bool(self.WARNINGS_CONFIG_KEY)
         if self.access_warnings_disabled is None:
             self.access_warnings_disabled = False
             plugin_config.set(self.WARNINGS_CONFIG_KEY, False)
-        debug(f"[FC_Tracker] Docking access warning disabled: {self.access_warnings_disabled}.")
+        debug(f"[FC_Tracker] Docking access warnings are {'disabled' if self.access_warnings_disabled else 'enabled'}.")
 
         self.__saved_fc_config = self._load_fc_config()
         self.fc_config = deepcopy(self.__saved_fc_config)
 
         if self.fc_config.status == _FCStatus.UNKNOWN:
-            tk._default_root.after(0, self.__create_notification)
-
-        if (
+            self.__ui_frame.after(0, self.__ui_frame.show)
+            self.__ui_frame.after(0, self.__ui_frame.show_missing_info_screen)
+        
+        elif (
             self.fc_config.status == _FCStatus.PENDING_DECOMMISSION
             and self.fc_config.decommission_timestamp is not None
             and datetime.now(UTC) > self.fc_config.decommission_timestamp
@@ -225,25 +286,18 @@ class FC_Tracker(Module):
                 "[FC_Tracker] Fleet carrier was pending decommission (saved timestamp {}), resetting the config.",
                 datetime.isoformat(self.fc_config.decommission_timestamp)
             )
-            self.fc_config.status                   = _FCStatus.DECOMMISSIONED
-            self.fc_config.name                     = None
-            self.fc_config.variant                  = None
-            self.fc_config.docking_access           = None
-            self.fc_config.notorious_access         = None
-            self.fc_config.decommission_timestamp   = None
-            self.fc_config.role                     = None
-            self.fc_config.comment                  = None
+            cmdr = self.fc_config.cmdr
+            callsign = self.fc_config.callsign
+            self.fc_config = _FCConfig(cmdr=cmdr, callsign=callsign, status=_FCStatus.DECOMMISSIONED)
             self._save_fc_config()
             debug("[FC_Tracker] Notifying the user.")
-            global_context.notifier.send(plugin_tr("Your fleet carrier configuration has been reset due to its decommissioning."))
+            global_context.notifier.send(_translate("Your fleet carrier configuration has been reset due to its decommissioning."))
         
         self._check_docking_access()
 
     
     def on_journal_entry(self, journalEntry: JournalEntry):
-        entry = journalEntry.data
-        event = entry["event"]
-
+        event = journalEntry.data["event"]
         match event:
             case "CarrierBuy": self.carrier_bought(journalEntry)
             case "CarrierStats": self.carrier_stats(journalEntry)
@@ -252,13 +306,15 @@ class FC_Tracker(Module):
             case "CarrierDockingPermission": self.docking_access_changed(journalEntry)
             case "CarrierNameChanged": self.name_changed(journalEntry)
 
-        if not journalEntry.cmdr is None:
+        if journalEntry.cmdr != self.fc_config.cmdr and journalEntry.cmdr is not None:
             self.fc_config.cmdr = journalEntry.cmdr
+            debug("[FC_Tracker] Saved CMDR changed to {}.", self.fc_config.cmdr)
     
 
     def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool, row: int):
-        if cmdr is not None:
+        if cmdr is not None and cmdr != self.fc_config.cmdr:
             self.fc_config.cmdr = cmdr
+            debug("[FC_Tracker] Saved CMDR changed to {}.", self.fc_config.cmdr)
         self.__settings_frame = _SettingsFrame(parent_widget, row, deepcopy(self.fc_config), self.access_warnings_disabled)
     
 
@@ -271,8 +327,9 @@ class FC_Tracker(Module):
         self.fc_config.variant  = variant
         self.fc_config.role     = role
         self.fc_config.comment  = comment
-        if cmdr is not None:
+        if cmdr is not None and cmdr != self.fc_config.cmdr:
             self.fc_config.cmdr = cmdr
+            debug("[FC_Tracker] Saved CMDR changed to {}.", self.fc_config.cmdr)
 
         self._save_fc_config()
         self._check_docking_access()
@@ -280,11 +337,13 @@ class FC_Tracker(Module):
 
     def carrier_bought(self, journalEntry: JournalEntry):
         debug("[FC_Tracker] Detected CarrierBuy.")
-        self.fc_config = _FCModuleConfig()
+        self.fc_config = _FCConfig()
         self.fc_config.cmdr = journalEntry.cmdr
         self.fc_config.status = _FCStatus.ACTIVE
         self.fc_config.callsign = journalEntry.data["Callsign"]
         self.fc_config.variant = _FCClass.DRAKE
+        self.__ui_frame.after(0, self.__ui_frame.show)
+        self.__ui_frame.after(0, self.__ui_frame.show_carrier_bought_screen)
         self._save_fc_config()
 
 
@@ -296,6 +355,8 @@ class FC_Tracker(Module):
         self.fc_config.name = entry["Name"]
         self.fc_config.docking_access = entry["DockingAccess"]
         self.fc_config.notorious_access = entry["AllowNotorious"]
+
+        old_status = self.fc_config.status
 
         if entry["PendingDecommission"] == False:
             self.fc_config.status = _FCStatus.ACTIVE
@@ -317,14 +378,9 @@ class FC_Tracker(Module):
                     datetime.isoformat(self.fc_config.decommission_timestamp)
                 )
         
-        if self.fc_config.variant is None:
-            self.fc_config.variant = _FCClass.DRAKE
-            debug("[FC_Tracker] Assigning the default carrier class (Drake).")
-        
-        if self.__notification is not None:
-            debug("[FC_Tracker] Closing the notification.")
-            self.__notification.destroy()
-            self.__notification = None
+        if old_status in (_FCStatus.UNKNOWN, _FCStatus.NOT_BOUGHT, _FCStatus.DECOMMISSIONED):
+            # дадим юзеру дополнить инфу
+            self.__ui_frame.after(0, self.__ui_frame.show_finish_configuring_screen, deepcopy(self.fc_config))
         
         self._save_fc_config()
         self._check_docking_access()
@@ -363,7 +419,7 @@ class FC_Tracker(Module):
         self._save_fc_config()
 
 
-    def _load_fc_config(self) -> _FCModuleConfig:
+    def _load_fc_config(self) -> _FCConfig:
         saved_config = plugin_config.get_str(self.FC_CONFIG_KEY)
         if saved_config:
             debug("[FC_Tracker] Loading saved config.")
@@ -374,14 +430,20 @@ class FC_Tracker(Module):
             debug("[FC_Tracker] No saved config found, setting the default values.")
             config = {}
 
-        config_instance = _FCModuleConfig(**config)
+        config_instance = _FCConfig(**config)
         debug(f"[FC_Tracker] Loaded config: {config_instance}.")
         return config_instance
     
 
     def _save_fc_config(self):
         if self.fc_config.is_incomplete():
-            tk._default_root.after(0, self.__create_notification)
+            self.__ui_frame.after(0, self.__ui_frame.show)
+            if self.fc_config.status == _FCStatus.UNKNOWN:
+                self.__ui_frame.after(0, self.__ui_frame.show_missing_info_screen)
+            else:
+                self.__ui_frame.after(0, self.__ui_frame.show_info_incomplete_screen)
+        else:
+            self.__ui_frame.after(0, self.__ui_frame.hide)
 
         if self.fc_config != self.__saved_fc_config:
             plugin_config.set(self.FC_CONFIG_KEY, json.dumps(self.fc_config.asjson()))
@@ -408,7 +470,7 @@ class FC_Tracker(Module):
             and not self.access_warnings_disabled
         ):
             debug("[FC_Tracker] Sending an unsafe docking access warning.")
-            global_context.notifier.send(plugin_tr("<FC_TRACKER_UNSAFE_DOCKING_ACCESS_WARNING>"))
+            global_context.notifier.send(_translate("<FC_TRACKER_UNSAFE_DOCKING_ACCESS_WARNING>"))
     
 
     def _submit_form(self):
@@ -454,24 +516,16 @@ class FC_Tracker(Module):
         }
         Reporter(url, params).start()
 
+    
+    def __ui_cancel_callback(self):
+        # нам сказали, что флитаком не владеют
+        cmdr = self.fc_config.cmdr
+        self.fc_config = _FCConfig(cmdr=cmdr, status=_FCStatus.NOT_BOUGHT)
+        self._save_fc_config()
 
-    def __create_notification(self):
-        debug("[FC_Tracker] Creating the notification window.")
-        self.__notification = _Notification(self.__notif_cancel_callback)
 
-
-    def __notif_cancel_callback(self):
-        self.__notification.destroy()
-        self.__notification = None
-
-        self.fc_config.status                   = _FCStatus.NOT_BOUGHT
-        self.fc_config.name                     = None
-        self.fc_config.variant                  = None
-        self.fc_config.docking_access           = None
-        self.fc_config.notorious_access         = None
-        self.fc_config.role                     = None
-        self.fc_config.comment                  = None
-        self.fc_config.decommission_timestamp   = None
-
-        debug("[FC_Tracker] User said they don't own a fleet carrier, resetting the config.")
+    def __ui_save_callback(self, new_config: _FCConfig):
+        self.fc_config.variant  = new_config.variant
+        self.fc_config.role     = new_config.role
+        self.fc_config.comment  = new_config.comment
         self._save_fc_config()
