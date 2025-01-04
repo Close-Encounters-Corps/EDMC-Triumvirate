@@ -58,6 +58,7 @@ if not logger.hasHandlers():
     logger_formatter.default_msec_format = '%s.%03d'
     logger_channel.setFormatter(logger_formatter)
     logger.addHandler(logger_channel)
+Debug.setup(logger)
 
 
 # хранилище данных плагина
@@ -116,10 +117,10 @@ def plugin_prefs(parent, cmdr, is_beta):
     frame = nb.Frame(parent)
     frame.columnconfigure(1, weight=1)
 
+    Debug.plugin_prefs(frame)       # всегда занимает 0-ой ряд
     # context.by_class(news.CECNews).draw_settings(frame, cmdr, is_beta, 1)
     context.by_class(release.Release).draw_settings(frame, cmdr, is_beta, 1)
     context.by_class(patrol.PatrolModule).draw_settings(frame, cmdr, is_beta, 2)
-    Debug.plugin_prefs(frame, cmdr, is_beta, 3)
     this.codexcontrol.plugin_prefs(frame, cmdr, is_beta, 4)
     context.by_class(bgs.BGS).draw_settings(frame, cmdr, is_beta, 5)
     context.by_class(visualizer.Visualizer).draw_settings(frame, cmdr, is_beta, 6)
@@ -188,7 +189,6 @@ def plugin_start3(plugin_dir):
     EDMC вызывает эту функцию при первом запуске плагина (Python 3).
     """
     this.plugin_dir = plugin_dir
-    Debug.setup(logger)
     this.journal_entry_processor = JournalEntryProcessor()
     this.journal_entry_processor.start()
     # префикс логов

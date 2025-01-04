@@ -1,73 +1,66 @@
-﻿# -*- coding: utf-8 -*-
- 
-import tkinter as tk
-from tkinter import Frame
+﻿import tkinter as tk
 import logging
-
-import datetime
-import sys
-import threading
-
 import myNotebook as nb
 from .lib.conf import config
+
+# Подключение функции перевода от EDMC
+import l10n, functools
+_translate = functools.partial(l10n.translations.tl, context=__file__)
 
 
 class Debug:
     log: logging.Logger = None
-    debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
+    debugvar = tk.BooleanVar(value=(saved if ((saved := config.get_bool("CanonnDebug")) is not None) else True))
 
     @classmethod
     def setup(cls, log: logging.Logger):
         cls.log = log
+        cls.log.setLevel(logging.DEBUG if (cls.debugvar.get() == True) else logging.INFO)
+        if config.get_bool("CanonnDebug") is None:
+            config.set('CanonnDebug', cls.debugvar.get())
+            cls.log.debug("CanonnDebug set to {}.".format(cls.debugvar.get()))
 
     @classmethod
     def info(cls, value, *args):
         if cls.log.level <= logging.INFO:
             if args:
                 value = value.format(*args)
-            cls.log.info(value)
+            cls.log.info(value, stacklevel=3)
 
     @classmethod
     def debug(cls, value, *args):
         if cls.log.level <= logging.DEBUG:
             if args:
                 value = value.format(*args)
-            cls.log.debug(value)
+            cls.log.debug(value, stacklevel=3)
 
     @classmethod
     def error(cls, value, *args):
         if cls.log.level <= logging.ERROR:
             if args:
                 value = value.format(*args)
-            cls.log.error(value)
+            cls.log.error(value, stacklevel=3)
 
     @classmethod
     def warning(cls, value, *args):
         if args:
             value = value.format(*args)
-        cls.log.warning(value)
+        cls.log.warning(value, stacklevel=3)
 
     @classmethod
-    def plugin_prefs(cls, parent, cmdr, is_beta, gridrow):
+    def plugin_prefs(cls, parent):
         "Called to get a tk Frame for the settings dialog."
-
-        cls.debugvar = tk.IntVar(value=config.getint("CanonnDebug"))
-        cls.log.level = logging.DEBUG if cls.debugvar.get() == 1 else logging.INFO
-        cls.debugswitch = cls.debugvar.get()
-
         frame = nb.Frame(parent)
         frame.columnconfigure(1, weight=1)
         frame.grid(row=0, column=0, sticky="NSEW")
-
-        nb.Checkbutton(frame, text=_("Включить отладку"), variable=cls.debugvar).grid(row=0, column=0, sticky="NW")
-
+        nb.Checkbutton(frame, text=_translate("Включить отладку"), variable=cls.debugvar).grid(row=0, column=0, sticky="NW")
         return frame
 
     @classmethod
     def prefs_changed(cls):
         "Called when the user clicks OK on the settings dialog."
         config.set('CanonnDebug', cls.debugvar.get())
-        cls.log.level = logging.DEBUG if cls.debugvar.get() == 1 else logging.INFO
+        cls.log.setLevel(logging.DEBUG if (cls.debugvar.get() == True) else logging.INFO)
 
 
 def debug(value, *args):

@@ -130,7 +130,6 @@ class HDDetector:
 
 
 
-
 class CanonnRealtimeAPI(Module):
     """Проверяет и отправляет интересные для Canonn-ов игровые события."""
     _instance = None
