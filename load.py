@@ -237,7 +237,7 @@ def plugin_app(parent):
     rel = release.Release(this.plugin_dir, frame, this.version, 2)
     this.patrol = patrol.PatrolModule(frame, 3)
     this.bgs_module = bgs.BGS()
-    this.fc_tracker = fc_tracker.FC_Tracker()
+    this.fc_tracker = fc_tracker.FC_Tracker(frame, 4)
     this.modules = [
         rel,
         this.patrol,
@@ -249,7 +249,7 @@ def plugin_app(parent):
     ]
 
     # фрейм с различными уведомлениями из модулей
-    this.notifier = Notifier(frame, row=4)
+    this.notifier = Notifier(frame, row=5)
 
     for mod in context.modules:
         mod.on_start(context.plugin_dir)

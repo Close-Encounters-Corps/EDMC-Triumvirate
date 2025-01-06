@@ -2,12 +2,11 @@ import json
 import requests
 import tkinter as tk
 import traceback
-from copy import deepcopy
 from dataclasses import dataclass, fields, asdict
-from datetime import datetime
+from datetime import datetime, UTC
 from enum import Enum
 from tkinter import ttk
-from typing import Callable, Any
+from typing import Callable
 
 from modules.debug import debug, error, warning
 from modules.legacy import Reporter
@@ -17,8 +16,7 @@ from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 from modules.lib.thread import BasicThread
 
-#import myNotebook as nb
-nb = tk
+import myNotebook as nb
 
 # Подключение функции перевода от EDMC
 import l10n, functools
@@ -79,7 +77,7 @@ class FCData:
         result = asdict(self)
         if isinstance(result["decommission_timestamp"], datetime):
             result["decommission_timestamp"] = datetime.isoformat(result["decommission_timestamp"])
-        return
+        return result
     
     def reset(self):
         map(lambda f: setattr(self, f.name, f.default), fields(self))
@@ -202,17 +200,14 @@ class FCModuleFrame(tk.Frame):
     """
     Фрейм модуля, отображаемый при необходимости в главном окне EDMC.
     """
-    def __init__(self, parent: tk.Misc, row: int,
-                 no_carrier_callback: Callable,
-                 save_changes_callback: Callable[[FCVariant, str, str], Any]):
+    def __init__(self, parent: tk.Misc, row: int, no_carrier_callback: Callable):
         super().__init__(parent)
         self.row = row
         self.no_carrier_callback = no_carrier_callback
-        self.save_changes_callback = save_changes_callback
 
         # варианты отображения
         # 1: у нас нет информации по флитаку
-        self.no_fc_info_label = tk.Label(self, text=_translate("<FC_TRACKER_STATUS_UNKNOWN_TEXT>"), wraplength=400, justify="left")
+        self.no_fc_info_label = tk.Label(self, text=_translate("<FC_TRACKER_NO_INFO_TEXT>"), wraplength=400, justify="left")
         self.no_fc_info_cancel_button = nb.Button(self, text=_translate("I don't have a fleet carrier"), command=self.no_carrier_callback)
 
         # 2: игрок купил флитак, и мы просим его зайти в панель флитака
@@ -221,10 +216,9 @@ class FCModuleFrame(tk.Frame):
         # 3: мы обнаружили аномалию в логах и просим игрока зайти в панель флитака
         self.unexpected_event_label = tk.Label(self, text=_translate("<FC_TRACKER_UNEXPECTED_EVENT_TEXT>"), wraplength=400, justify="left")
 
-        # 4: после 2 и 3 - мы получили инфу и предлагаем пользователю её проверить и дополнить
-        # фрейм с инфой по флитаку замаппим в соответствующем методе (нам нужен актуальный конфиг)
-        self.finish_configuring_fc_info_frame: FCInfoFrame | None = None
-        self.finish_configuring_confirm_changes_button = nb.Button(self, text=_translate("Save"), command=self.__confirm_changes)
+        # 4: после 2 и 3 - мы получили инфу и предлагаем пользователю её проверить в настройках
+        self.finish_configuring_fc_label = tk.Label(self, text=_translate("<FC_TRACKER_FINISH_CONFIGURING_TEXT"), wraplength=400, justify="left")
+        self.finish_configuring_close_button = nb.Button(self, text=_translate("Close"), command=self.__clear)
 
         # 5: предупреждение о небезопасном допуске к стыковке
         self.unsafe_docking_access_label = tk.Label(self, text=_translate("<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>"), wraplength=400, justify="left")
@@ -252,13 +246,11 @@ class FCModuleFrame(tk.Frame):
         self.show()
 
     @mainthread
-    def show_finish_configuring_screen(self, config: FCData):
+    def show_finish_configuring_screen(self):
         debug("[FCModuleFrame] Showing 'Finish configuring' screen.")
         self.__clear()
-        self.fc_data = deepcopy(config)
-        self.finish_configuring_fc_info_frame = FCInfoFrame(self, self.fc_data)
-        self.finish_configuring_fc_info_frame.pack(side="top", fill="both")
-        self.finish_configuring_confirm_changes_button.pack(side="top", fill="x")
+        self.finish_configuring_fc_label.pack(side="top", fill="x")
+        self.finish_configuring_close_button.pack(side="top", fill="x")
         self.show()
 
     @mainthread
@@ -267,16 +259,6 @@ class FCModuleFrame(tk.Frame):
         self.__clear()
         self.unsafe_docking_access_label.pack(side="top", fill="both")
         self.show()
-
-    @mainthread
-    def __confirm_changes(self):
-        variant, role, comment = self.finish_configuring_fc_info_frame.get_optional_fields_values()
-        self.save_changes_callback(variant, role, comment)
-
-        self.finish_configuring_fc_info_frame.destroy()
-        self.finish_configuring_fc_info_frame = None
-        self.__clear()
-        del self.fc_data
     
     def __clear(self):
         # декоратор не используется, чтобы при отображении экрана очистка не происходила после замаппивания новых виджетов
@@ -290,9 +272,12 @@ class FCModuleFrame(tk.Frame):
     
     @mainthread
     def hide(self):
+        if not self.is_shown:
+            return
         debug("[FCModuleFrame] Hidden.")
         self.__clear()
         self.grid_forget()
+        self.master.update()
 
     @property
     def is_shown(self):
@@ -307,12 +292,12 @@ class FCModuleFrame(tk.Frame):
 class FC_Tracker(Module):
     """Модуль для отслеживания информации по флитакам: название, код, привязка к fleetcarrier.space и др."""
 
-    FC_DATA_KEY = "FCTracker.carrier_data"
-    FC_ACCESS_WARNINGS_KEY = "FCTracker.disable_access_warnings"
+    FC_DATA_KEY = "FCTracker.CarrierData"
+    FC_ACCESS_WARNINGS_KEY = "FCTracker.DisableAccessWarnings"
 
     def __init__(self, parent: tk.Misc, row: int):
-        self.fc_data = self.load_fc_data()
-        self.ui_frame = FCModuleFrame(parent, row, self.__no_carrier_callback, self.__save_changes_callback)
+        self.load_fc_data()
+        self.ui_frame = FCModuleFrame(parent, row, self.__no_carrier_callback)
         self.just_bought = False    # специально для ситуаций, когда пилот купил флитак, и мы ждём CarrierStats
 
         self.disable_access_warnings = plugin_config.get_bool(self.FC_ACCESS_WARNINGS_KEY)
@@ -322,7 +307,7 @@ class FC_Tracker(Module):
         debug(f"[FC_Tracker] Unsafe docking access warnings are {'disabled' if self.disable_access_warnings else 'enabled'}.")
 
         if self.fc_data.status == FCStatus.PENDING_DECOMMISSION:
-            if datetime.now() > self.fc_data.decommission_timestamp:
+            if datetime.now(UTC) > self.fc_data.decommission_timestamp:
                 debug(
                     "[FC_Tracker] Reached saved decommission timestamp ({}), clearing FC data.",
                     self.fc_data.decommission_timestamp.isoformat()
@@ -389,6 +374,7 @@ class FC_Tracker(Module):
         self.fc_data.status = FCStatus.ACTIVE
         self.fc_data.cmdr = journal_entry.cmdr
         self.fc_data.callsign = journal_entry.data["Callsign"]
+        self.fc_data.variant = FCVariant.DRAKE
         self.save_fc_data()
         self.ui_frame.show_carrier_bought_screen()
 
@@ -405,6 +391,9 @@ class FC_Tracker(Module):
         self.fc_data.docking_access = journal_entry.data["DockingAccess"]
         self.fc_data.notorious_access = journal_entry.data["AllowNotorious"]
         
+        if not self.fc_data.variant:
+            self.fc_data.variant = FCVariant.DRAKE
+        
         if not journal_entry.data["PendingDecommission"]:
             self.fc_data.status = FCStatus.ACTIVE
             self.fc_data.decommission_timestamp = None
@@ -420,12 +409,12 @@ class FC_Tracker(Module):
                 timestamp += 604800                 # добавляем неделю, чтобы найти ближайший четверг в этом промежутке
                 timestamp -= timestamp % 604800     # находим его
                 timestamp += 25200                  # добавляем обратно 7 часов
-                self.fc_data.decommission_timestamp = datetime.fromtimestamp(timestamp)
+                self.fc_data.decommission_timestamp = datetime.fromtimestamp(timestamp, UTC)
                 debug("[FC_Tracker] Calculated decommission timestamp: {}.", self.fc_data.decommission_timestamp.isoformat())
         
         self.save_fc_data()
         if unexpected or self.just_bought:
-            self.ui_frame.show_finish_configuring_screen(self.fc_data)
+            self.ui_frame.show_finish_configuring_screen()
             self.just_bought = False
         else:
             self.ui_frame.hide()
@@ -442,7 +431,7 @@ class FC_Tracker(Module):
             return
         
         self.fc_data.status = FCStatus.PENDING_DECOMMISSION
-        self.fc_data.decommission_timestamp = datetime.fromtimestamp(journal_entry.data["ScrapTime"])
+        self.fc_data.decommission_timestamp = datetime.fromtimestamp(journal_entry.data["ScrapTime"], UTC)
         self.save_fc_data()
 
 
@@ -507,7 +496,7 @@ class FC_Tracker(Module):
 
     # Методы управления конфигом модуля
 
-    def load_fc_data(self) -> FCData:
+    def load_fc_data(self):
         saved = plugin_config.get_str(self.FC_DATA_KEY)
         if saved:
             debug("[FC_Tracker] Loading saved FC data.")
@@ -518,9 +507,11 @@ class FC_Tracker(Module):
             debug("[FC_Tracker] No saved data found, setting the default values.")
             data = {}
 
-        data_instance = FCData(**data)
-        debug(f"[FC_Tracker] Loaded FC data: {data_instance}.")
-        return data_instance
+        self.fc_data = FCData(**data)
+        debug(f"[FC_Tracker] Loaded FC data: {self.fc_data}.")
+        # на случай первого запуска
+        if data == {}:
+            self.save_fc_data()
     
 
     def save_fc_data(self):
@@ -528,8 +519,9 @@ class FC_Tracker(Module):
         saved = plugin_config.get_str(self.FC_DATA_KEY)
         if str_repr != saved:
             plugin_config.set(self.FC_DATA_KEY, str_repr)
-            debug("[FC_Tracker] Updated FC data: {}.", self.fc_data.asjson())
-            self.send_fc_data()
+            debug(f"[FC_Tracker] Updated saved FC data: {str_repr}.")
+            if self.fc_data.status not in (FCStatus.UNKNOWN, FCStatus.NOT_BOUGHT):
+                self.send_fc_data()
 
 
     def send_fc_data(self):
@@ -537,7 +529,7 @@ class FC_Tracker(Module):
 
     def __submit_form_in_thread(self):
         self.__check_fleetcarrier_space_account()
-        decommission_timestamp = self.fc_data.decommission_timestamp.isoformat() if self.fc_data.decommission_timestamp else ""
+        decommission_timestamp = datetime.isoformat(self.fc_data.decommission_timestamp) if self.fc_data.decommission_timestamp else ""
 
         # TODO: перевести с тестовой формы на основную, когда будет готово
         url = "https://docs.google.com/forms/d/e/1FAIpQLSepZDoWnZeD77CvShDw409j7FCmftaEweAFtlkBzpR7eDNniA/formResponse?usp=pp_url"
@@ -597,11 +589,3 @@ class FC_Tracker(Module):
         self.fc_data.cmdr = cmdr
         self.save_fc_data()
         self.ui_frame.hide()
-
-
-    def __save_changes_callback(self, variant: FCVariant, role: str, comment: str):
-        debug("[FC_Tracker] Got the optional info from the user.")
-        self.fc_data.variant = variant
-        self.fc_data.role = role
-        self.fc_data.comment = comment
-        self.save_fc_data()
