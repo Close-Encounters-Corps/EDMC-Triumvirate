@@ -1,6 +1,7 @@
 ﻿import tkinter as tk
 import logging
 import myNotebook as nb
+from sys import _getframe
 from .lib.conf import config
 
 # Подключение функции перевода от EDMC
@@ -25,27 +26,27 @@ class Debug:
         if cls.log.level <= logging.INFO:
             if args:
                 value = value.format(*args)
-            cls.log.info(value, stacklevel=3)
+            cls.log.info(value, stacklevel=3, extra={"qualname": cls.__get_qualname()})
 
     @classmethod
     def debug(cls, value, *args):
         if cls.log.level <= logging.DEBUG:
             if args:
                 value = value.format(*args)
-            cls.log.debug(value, stacklevel=3)
+            cls.log.debug(value, stacklevel=3, extra={"qualname": cls.__get_qualname()})
 
     @classmethod
     def error(cls, value, *args):
         if cls.log.level <= logging.ERROR:
             if args:
                 value = value.format(*args)
-            cls.log.error(value, stacklevel=3)
+            cls.log.error(value, stacklevel=3, extra={"qualname": cls.__get_qualname()})
 
     @classmethod
     def warning(cls, value, *args):
         if args:
             value = value.format(*args)
-        cls.log.warning(value, stacklevel=3)
+        cls.log.warning(value, stacklevel=3, extra={"qualname": cls.__get_qualname()})
 
     @classmethod
     def plugin_prefs(cls, parent):
@@ -61,6 +62,14 @@ class Debug:
         "Called when the user clicks OK on the settings dialog."
         config.set('CanonnDebug', cls.debugvar.get())
         cls.log.setLevel(logging.DEBUG if (cls.debugvar.get() == True) else logging.INFO)
+
+    @staticmethod
+    def __get_qualname():
+        "Чиним неправильное определение функции, пишущей логи. Спасибо разрабам EDMC, игнорящим stacklevel."
+        frame = _getframe(3)    # -> <debug>.Debug.debug -> <debug>.debug -> caller
+        qualname = frame.f_code.co_qualname
+        del frame               # https://docs.python.org/3.11/library/inspect.html#the-interpreter-stack
+        return qualname
 
 
 def debug(value, *args):
