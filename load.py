@@ -238,10 +238,13 @@ class Updater:
 # Базовые параметры и объекты, независимые от версии
 # После загрузки версии переносятся в её Context
 EDMC_VERSION: Version = appversion() if callable(appversion) else Version(appversion)
+PLUGIN_DIR: str = None
+PLUGIN_VERSION: Version = None
+PLUGIN_STOP_HOOK: Callable = None
+
 EVENT_QUEUE = Queue()
 PLUGIN_FRAME: tk.Frame = None
 UPDATER: Updater = None
-
 
 
 # Функции управления поведением плагина, вызываемые EDMC
@@ -259,14 +262,21 @@ def plugin_start3(plugin_dir):
     """
     if EDMC_VERSION < Version("5.11.0"):
         raise EnvironmentError(_translate("At least EDMC 5.11.0 is required to use this plugin."))
-    # TODO: start updater
+    
+    global PLUGIN_DIR, UPDATER
+    PLUGIN_DIR = plugin_dir
+    UPDATER = Updater(plugin_dir)
+    UPDATER.start_update_cycle(_check_now=True)
 
 
 def plugin_stop():
     """
     EDMC вызывает эту функцию при закрытии.
     """
-    #TODO: завершение с учётом механизма обновления
+    global PLUGIN_VERSION, UPDATER
+    UPDATER.stop_update_cycle()
+    if PLUGIN_VERSION is not None:
+        PLUGIN_STOP_HOOK()
 
 
 def plugin_app(parent: tk.Misc):
