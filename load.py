@@ -81,15 +81,16 @@ class UpdateCycle(threading.Thread):
                 timer = self.UPDATE_CYCLE
             timer -= self.STEP
             sleep(self.STEP)
-        
+        logger.debug("UpdateCycle stopped.")
+
 
 class Updater:
     """
     Класс, отвечающий за загрузку, распаковку, проверку и установку обновлений плагина.
     """
     RELEASE_TYPE_KEY = "Triumvirate.ReleaseType"
-    INSTALLED_VERSION_KEY = "Triumvirate.InstalledVersion"
-    REPOSITORY_URL = "https://api.github.com/repos/Close-Encounters-Corps/EDMC-Triumvirate/"
+    LOCAL_VERSION_KEY = "Triumvirate.LocalVersion"
+    REPOSITORY_URL = "https://api.github.com/repos/Close-Encounters-Corps/EDMC-Triumvirate"
 
     def __init__(self, plugin_dir: str):
         self.updater_thread: UpdateCycle = None
@@ -101,8 +102,8 @@ class Updater:
             self.release_type = ReleaseType.BETA             # TODO: изменить на stable после выпуска 1.12.0
             edmc_config.set(self.RELEASE_TYPE_KEY, self.release_type)
 
-        saved_version: str | None = edmc_config.get_str(self.INSTALLED_VERSION_KEY)
-        self.installed_version = Version(saved_version or "0.0.0")
+        saved_version: str | None = edmc_config.get_str(self.LOCAL_VERSION_KEY)
+        self.local_version = Version(saved_version or "0.0.0")
 
     
     def start_update_cycle(self, _check_now: bool = False):
@@ -110,6 +111,7 @@ class Updater:
             return
         self.updater_thread = UpdateCycle(self.check_for_updates, _check_now)
         self.updater_thread.start()
+        logger.debug("UpdateCycle started.")
 
 
     def stop_update_cycle(self):
@@ -117,13 +119,14 @@ class Updater:
             return
         self.updater_thread.stop()
         self.updater_thread = None
+        logger.debug("UpdateCycle was asked to stop.")
 
 
     def check_for_updates(self):
         if self.release_type == ReleaseType.DEVELOPMENT:
-            logger.info("Release type set to Development, stopping updating process.")
+            logger.info("Release type is Development, stopping updating process.")
             self.stop_update_cycle()
-            self.load_local_version()
+            self.init_local_version()
             return
         
         # получаем список релизов
@@ -132,7 +135,7 @@ class Updater:
             res.raise_for_status()
         except requests.RequestException as e:
             logger.error("Couldn't get the list of versions from GitHub.", exc_info=e)
-            self.load_local_version()
+            self.init_local_version()
             return
         
         # получаем последний релиз
@@ -147,22 +150,22 @@ class Updater:
         except StopIteration:
             # никогда не должно произойти, если только кто-то не удалит все релизы с гитхаба
             logger.error("No suitable release found on GitHub. Something's wrong with the repository?")
-            self.load_local_version()
+            self.init_local_version()
             return
 
         # сверяем с имеющейся версией
         latest_version = Version(latest["tag_name"])
-        if latest_version < self.installed_version:
+        if latest_version < self.local_version:
             logger.info("Local version is higher than the latest release. Setting release type to Development.")
             self.release_type = ReleaseType.DEVELOPMENT
-            self.load_local_version()
+            self.init_local_version()
             return
-        elif latest_version == self.installed_version:
+        elif latest_version == self.local_version:
             logger.info("Local version matches the latest release. No updates required.")
-            self.load_local_version()
+            self.init_local_version()
             return
         
-        logger.info(f"Found an update: {self.installed_version} -> {latest_version}.")
+        logger.info(f"Found an update: {self.local_version} -> {latest_version}.")
         self.download_update(latest_version)
 
     
@@ -171,8 +174,16 @@ class Updater:
 
         # грузить будем во временную папку
         tempdir = Path(tempfile.gettempdir()) / "EDMC-Triumvirate"
-        tempdir.mkdir()
+        try:
+            tempdir.mkdir()
+        except FileExistsError:
+            # мало ли что там лежит
+            shutil.rmtree(tempdir)
+            tempdir.mkdir()
         version_zip = Path(tempdir, f"{tag}.zip")
+
+        # загружаем
+        logger.info("Downloading the new version archive...")
         try:
             # https://stackoverflow.com/questions/16694907/download-large-file-in-python-with-requests
             with requests.get(url, stream=True) as r:
@@ -182,31 +193,38 @@ class Updater:
                         f.write(chunk)
         except requests.RequestException as e:
             logger.error("Couldn't download the version archive from GitHub.", exc_info=e)
-            self.load_local_version()
+            self.init_local_version()
             return
         
+        logger.info("Extracting the new version archive to the temporary directory...")
         # распаковываем
         with zipfile.ZipFile(version_zip, 'r') as zipf:
             zipf.extractall(tempdir)
         version_zip.unlink()
 
         # сверяем текущий load.py с новым - это нам понадобится в будущем
-        loadpy_was_edited = (filecmp.cmp(Path(tempdir, "load.py"), Path(self.plugin_dir, "load.py"), False) != 0)
+        new_ver_path = tempdir / tempdir.iterdir().__next__()       # гитхаб оборачивает файлы в директорию и пакует уже её
+        loadpy_was_edited = not filecmp.cmp(Path(new_ver_path, "load.py"), Path(self.plugin_dir, "load.py"), False)
         
         # копируем userdata, чтобы человеки не ругались, что у них миссии между перезапусками трутся
-        shutil.copytree(Path(self.plugin_dir, "userdata"), Path(tempdir, "userdata"))
+        logger.info("Copying userdata...")
+        shutil.copytree(Path(self.plugin_dir, "userdata"), Path(new_ver_path, "userdata"))
 
-        # сносим старую версию и копируем на её место новую
+        # сносим старую версию и копируем на её место новую, удаляем временные файлы
+        logger.info("Replacing plugin files...")
         shutil.rmtree(self.plugin_dir)
-        shutil.copytree(tempdir, self.plugin_dir)
+        shutil.copytree(new_ver_path, self.plugin_dir)
+        shutil.rmtree(tempdir)
 
         # обновляем запись о локальной версии
-        edmc_config.set(self.INSTALLED_VERSION_KEY, tag)
+        edmc_config.set(self.LOCAL_VERSION_KEY, tag)
+        logger.info(f"Done. Local version set to {tag}.")
 
         # определяем, что нам делать дальше: грузиться или просить перезапустить EDMC
         if not loadpy_was_edited:
-            self.load_local_version()
+            self.init_local_version()
         else:
+            logger.info("load.py was modified. EDMC restart is required.")
             self.updater_thread.stop()
             # TODO: блокировка, UI
 
