@@ -98,7 +98,6 @@ class Updater:
 
         self.release_type = edmc_config.get_str(self.RELEASE_TYPE_KEY)
         if self.release_type is None:
-            # первый запуск после обновления 1.12.0
             self.release_type = ReleaseType.BETA             # TODO: изменить на stable после выпуска 1.12.0
             edmc_config.set(self.RELEASE_TYPE_KEY, self.release_type)
 
@@ -109,7 +108,7 @@ class Updater:
     def start_update_cycle(self, _check_now: bool = False):
         if self.updater_thread:
             return
-        self.updater_thread = UpdateCycle(self.check_for_updates, _check_now)
+        self.updater_thread = UpdateCycle(self.__check_for_updates, _check_now)
         self.updater_thread.start()
         logger.debug("UpdateCycle started.")
 
@@ -122,11 +121,11 @@ class Updater:
         logger.debug("UpdateCycle was asked to stop.")
 
 
-    def check_for_updates(self):
+    def __check_for_updates(self):
         if self.release_type == ReleaseType.DEVELOPMENT:
             logger.info("Release type is Development, stopping the updating process.")
             self.stop_update_cycle()
-            self.load_local_version()
+            self.__load_local_version()
             return
         
         # получаем список релизов
@@ -135,7 +134,7 @@ class Updater:
             res.raise_for_status()
         except requests.RequestException as e:
             logger.error("Couldn't get the list of versions from GitHub.", exc_info=e)
-            self.load_local_version()
+            self.__load_local_version()
             return
         
         # получаем последний релиз
@@ -150,7 +149,7 @@ class Updater:
         except StopIteration:
             # никогда не должно произойти, если только кто-то не удалит все релизы с гитхаба
             logger.error("No suitable release found on GitHub. Something's wrong with the repository?")
-            self.load_local_version()
+            self.__load_local_version()
             return
 
         # сверяем с имеющейся версией
@@ -162,33 +161,33 @@ class Updater:
                         latest_version, self.local_version
                     )
                 )
-                self.download_update(latest_version)
+                self.__download_update(latest_version)
             
             elif self.release_type == ReleaseType.BETA:
                 logger.info("Local version is higher than the latest release. Setting release type to Development.")
                 self.release_type = ReleaseType.DEVELOPMENT
                 edmc_config.set(self.RELEASE_TYPE_KEY, ReleaseType.DEVELOPMENT)
-                self.load_local_version()
+                self.__load_local_version()
 
             else:
                 # Не должно произойти, если только пользователь не сменит тип релиза
                 # за то время, пока мы грузим релизы. Но перестрахуемся.
                 logger.info("Release type seems to be changed to Development. Skipping the updating process.")
                 self.stop_update_cycle()
-                self.load_local_version()
+                self.__load_local_version()
             return
             
         elif latest_version == self.local_version:
             logger.info("Local version matches the latest release. No updates required.")
-            self.load_local_version()
+            self.__load_local_version()
             return
         
         # latest_version > self.local_version
         logger.info(f"Found an update: {self.local_version} -> {latest_version}.")
-        self.download_update(latest_version)
+        self.__download_update(latest_version)
 
 
-    def download_update(self, tag: Version):
+    def __download_update(self, tag: Version):
         url = self.REPOSITORY_URL + f"/zipball/{tag}"
         
         tempdir = Path(tempfile.gettempdir()) / "EDMC-Triumvirate"
@@ -209,7 +208,7 @@ class Updater:
                         f.write(chunk)
         except requests.RequestException as e:
             logger.error("Couldn't download the version archive from GitHub.", exc_info=e)
-            self.load_local_version()
+            self.__load_local_version()
             return
         
         # распаковываем
@@ -239,14 +238,14 @@ class Updater:
 
         # определяем, что нам делать дальше: грузиться или просить перезапустить EDMC
         if not loadpy_was_edited:
-            self.load_local_version()
+            self.__load_local_version()
         else:
             logger.info("load.py was modified. EDMC restart is required.")
             self.updater_thread.stop()
             # TODO: блокировка, UI
 
     
-    def load_local_version(self):
+    def __load_local_version(self):
         logger.info("Loading the local version...")
         if not Path(self.plugin_dir, "plugin_init.py").exists():
             logger.error("`plugin_init` module not found. Aborting.")
