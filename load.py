@@ -14,14 +14,17 @@ import tempfile
 import threading
 import tkinter as tk
 import zipfile
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from queue import Queue
 from semantic_version import Version
 from time import sleep
+from tkinter import ttk
 from typing import Callable
 
 import l10n
+import myNotebook as nb
 from config import appname, appversion
 from config import config as edmc_config
 
@@ -46,12 +49,37 @@ if not logger.hasHandlers():
 _translate = functools.partial(l10n.translations.tl, context=__file__)
 
 
+@dataclass
+class BasicContext:
+    """
+    Хранилище объектов и параметров, используемых до загрузки версии.
+    По сути нужно лишь для того, чтобы не засорять код global-ами.
+    """
+    edmc_version: Version           = appversion() if callable(appversion) else Version(appversion)
+    plugin_loaded: bool             = False
+    plugin_version: Version         = None
+    plugin_dir: str                 = None
+
+    updater: "Updater"              = None
+    event_queue: Queue[dict]        = Queue()
+
+    plugin_frame: tk.Frame          = None
+    status_label: "StatusLabel"     = None
+    settings_frame: "ReleaseTypeSettingFrame" = None
+
+    plugin_stop_hook: Callable      = None
+    plugin_prefs_hook: Callable     = None
+    prefs_changed_hook: Callable    = None
+
+context = BasicContext()
+
+
 # Механизм обновления плагина
 
 class ReleaseType(str, Enum):
-    STABLE = "stable"
-    BETA = "beta"
-    DEVELOPMENT = "development"
+    STABLE = "Stable"
+    BETA = "Beta"
+    _DEVELOPMENT = "Development"        # не должен быть публичным, тк, по сути, отключает автообновление
 
 
 class UpdateCycle(threading.Thread):
@@ -92,9 +120,8 @@ class Updater:
     LOCAL_VERSION_KEY = "Triumvirate.Updater.LocalVersion"
     REPOSITORY_URL = "https://api.github.com/repos/Close-Encounters-Corps/EDMC-Triumvirate"
 
-    def __init__(self, plugin_dir: str):
+    def __init__(self):
         self.updater_thread: UpdateCycle = None
-        self.plugin_dir = Path(plugin_dir)
 
         self.release_type = edmc_config.get_str(self.RELEASE_TYPE_KEY)
         if self.release_type is None:
@@ -121,11 +148,17 @@ class Updater:
         logger.debug("UpdateCycle was asked to stop.")
 
 
+    def restart_update_cycle(self):
+        self.stop_update_cycle()
+        self.start_update_cycle(_check_now=True)
+
+
     def __check_for_updates(self):
-        if self.release_type == ReleaseType.DEVELOPMENT:
+        logger.info("Checking for updates started.")
+        if self.release_type == ReleaseType._DEVELOPMENT:
             logger.info("Release type is Development, stopping the updating process.")
             self.stop_update_cycle()
-            self.__load_local_version()
+            self.__use_local_version()
             return
         
         # получаем список релизов
@@ -134,7 +167,8 @@ class Updater:
             res.raise_for_status()
         except requests.RequestException as e:
             logger.error("Couldn't get the list of versions from GitHub.", exc_info=e)
-            self.__load_local_version()
+            context.status_label.set_text(_translate("Error: couldn't check for updates."))
+            self.__use_local_version()
             return
         
         # получаем последний релиз
@@ -149,52 +183,36 @@ class Updater:
         except StopIteration:
             # никогда не должно произойти, если только кто-то не удалит все релизы с гитхаба
             logger.error("No suitable release found on GitHub. Something's wrong with the repository?")
-            self.__load_local_version()
+            context.status_label.set_text(_translate("Error: couldn't check for updates."))
+            self.__use_local_version()
             return
 
         # сверяем с имеющейся версией
         latest_version = Version(latest["tag_name"])
-        if latest_version < self.local_version:
-            if self.release_type == ReleaseType.STABLE:
-                logger.info(
-                    "Remote stable version ({}) is lower than the local one ({}). Downgrading.".format(
-                        latest_version, self.local_version
-                    )
-                )
-                self.__download_update(latest_version)
-            
-            elif self.release_type == ReleaseType.BETA:
-                logger.info("Local version is higher than the latest release. Setting release type to Development.")
-                self.release_type = ReleaseType.DEVELOPMENT
-                edmc_config.set(self.RELEASE_TYPE_KEY, ReleaseType.DEVELOPMENT)
-                self.__load_local_version()
-
-            else:
-                # Не должно произойти, если только пользователь не сменит тип релиза
-                # за то время, пока мы грузим релизы. Но перестрахуемся.
-                logger.info("Release type seems to be changed to Development. Skipping the updating process.")
-                self.stop_update_cycle()
-                self.__load_local_version()
-            return
-            
-        elif latest_version == self.local_version:
+        if latest_version == self.local_version:
             logger.info("Local version matches the latest release. No updates required.")
-            self.__load_local_version()
-            return
-        
-        # latest_version > self.local_version
-        logger.info(f"Found an update: {self.local_version} -> {latest_version}.")
-        self.__download_update(latest_version)
+            context.status_label.clear()
+            self.__use_local_version()
+        else: 
+            if latest_version < self.local_version:
+                logger.info(f"Remote version ({latest_version}) is lower than the local one ({self.local_version}). A downgrade is required.")
+            else:
+                logger.info(f"Found an update: {self.local_version} -> {latest_version}.")
+
+            if not context.plugin_loaded:
+                self.__download_update(latest_version)
+            else:
+                logger.info("Notifying user.")
+                context.status_label.set_text(_translate("An update is available. Please restart EDMC."))
 
 
     def __download_update(self, tag: Version):
+        context.status_label.set_text(_translate("Downloading an update..."))
         url = self.REPOSITORY_URL + f"/zipball/{tag}"
-        
         tempdir = Path(tempfile.gettempdir()) / "EDMC-Triumvirate"
         if tempdir.exists():
             shutil.rmtree(tempdir)
         tempdir.mkdir()
-
         version_zip = tempdir / f"{tag}.zip"
 
         # загружаем
@@ -208,10 +226,12 @@ class Updater:
                         f.write(chunk)
         except requests.RequestException as e:
             logger.error("Couldn't download the version archive from GitHub.", exc_info=e)
-            self.__load_local_version()
+            context.status_label.set_text(_translate("Error: couldn't download an update."))
+            self.__use_local_version()
             return
         
         # распаковываем
+        context.status_label.set_text(_translate("Installing an update..."))
         logger.info("Extracting the new version archive to the temporary directory...")
         with zipfile.ZipFile(version_zip, 'r') as zipf:
             zipf.extractall(tempdir)
@@ -219,16 +239,16 @@ class Updater:
 
         # сверяем текущий load.py с новым - это нам понадобится в будущем
         new_ver_path = next(tempdir.iterdir())      # гитхаб оборачивает файлы в отдельную директорию
-        loadpy_was_edited = not filecmp.cmp(Path(new_ver_path, "load.py"), Path(self.plugin_dir, "load.py"), False)
+        loadpy_was_edited = not filecmp.cmp(Path(new_ver_path, "load.py"), Path(context.plugin_dir, "load.py"), False)
         
         # копируем userdata, чтобы человеки не ругались, что у них миссии между перезапусками трутся
         logger.info("Copying userdata...")
-        shutil.copytree(Path(self.plugin_dir, "userdata"), Path(new_ver_path, "userdata"))
+        shutil.copytree(Path(context.plugin_dir, "userdata"), Path(new_ver_path, "userdata"))
 
         # сносим старую версию и копируем на её место новую, удаляем временные файлы
         logger.info("Replacing plugin files...")
-        shutil.rmtree(self.plugin_dir)
-        shutil.copytree(new_ver_path, self.plugin_dir)
+        shutil.rmtree(context.plugin_dir)
+        shutil.copytree(new_ver_path, context.plugin_dir)
         shutil.rmtree(tempdir)
 
         # обновляем запись о локальной версии
@@ -238,58 +258,93 @@ class Updater:
 
         # определяем, что нам делать дальше: грузиться или просить перезапустить EDMC
         if not loadpy_was_edited:
-            self.__load_local_version()
+            context.status_label.clear()
+            self.__use_local_version()
         else:
             logger.info("load.py was modified. EDMC restart is required.")
             self.updater_thread.stop()
-            # TODO: блокировка, UI
+            context.status_label.set_text(_translate("The update is installed. Please restart EMDC."))
 
     
-    def __load_local_version(self):
+    def __use_local_version(self):
+        if context.plugin_loaded:
+            return
+        
         logger.info("Loading the local version...")
-        if not Path(self.plugin_dir, "plugin_init.py").exists():
+        if not Path(context.plugin_dir, "plugin_init.py").exists():
             logger.error("`plugin_init` module not found. Aborting.")
             return
         
         import plugin_init
-        global PLUGIN_VERSION
-        PLUGIN_VERSION = plugin_init.get_version()
-        if self.local_version != PLUGIN_VERSION:
+        context.plugin_version = plugin_init.get_version()
+        if self.local_version != context.plugin_version:
             logger.warning("Saved local version doesn't match the loaded one. This could be due to a manual update.")
-            edmc_config.set(self.LOCAL_VERSION_KEY, PLUGIN_VERSION)
-            self.local_version = PLUGIN_VERSION
-            logger.warning(f"Local version set to {PLUGIN_VERSION}.")
+            edmc_config.set(self.LOCAL_VERSION_KEY, context.plugin_version)
+            self.local_version = context.plugin_version
+            logger.warning(f"Local version set to {context.plugin_version}.")
         
-        global PLUGIN_STOP_HOOK, PLUGIN_PREFS_HOOK, PREFS_CHANGED_HOOK
-        PLUGIN_STOP_HOOK, PLUGIN_PREFS_HOOK, PREFS_CHANGED_HOOK = plugin_init.get_hooks()
+        context.plugin_stop_hook    = plugin_init.plugin_stop
+        context.plugin_prefs_hook   = plugin_init.plugin_prefs
+        context.prefs_changed_hook  = plugin_init.prefs_changed
 
-        global EDMC_VERSION, PLUGIN_DIR, EVENT_QUEUE
-        plugin_init.configure(
-            edmc_version=EDMC_VERSION,
-            plugin_dir=PLUGIN_DIR,
-            event_queue=EVENT_QUEUE
+        plugin_init.init_context(
+            edmc_version=context.edmc_version,
+            plugin_dir=context.plugin_dir,
+            event_queue=context.event_queue
         )
 
-        global PLUGIN_FRAME
-        plugin_ui = plugin_init.plugin_app(PLUGIN_FRAME)
-        plugin_ui.pack(fill="both")
+        plugin_ui = plugin_init.plugin_app(context.plugin_frame)
+        plugin_ui.pack(side="top", fill="both")
         
+        context.plugin_loaded = True
         logger.info("Local version configured, running.")
 
 
 
-# Базовые параметры и объекты, независимые от версии
-# После загрузки версии переносятся в её Context
-EDMC_VERSION: Version = appversion() if callable(appversion) else Version(appversion)
-PLUGIN_DIR: str = None
-PLUGIN_VERSION: Version = None
-PLUGIN_STOP_HOOK: Callable = None
-PLUGIN_PREFS_HOOK: Callable = None
-PREFS_CHANGED_HOOK: Callable = None
+# Базовые элементы GUI
 
-EVENT_QUEUE = Queue()
-PLUGIN_FRAME: tk.Frame = None
-UPDATER: Updater = None
+class StatusLabel(tk.Label):
+    """Отображается в главном окне EDMC. Предназначена для отображения статуса обновлений."""
+
+    def __init__(self, parent: tk.Misc):
+        self.textvar = tk.StringVar()
+        super().__init__(parent, textvariable=self.textvar)
+    
+    def set_text(self, val: str):
+        self.textvar.set(val)
+
+    def clear(self):
+        self.textvar.set("")
+        self.master.update()
+
+
+class ReleaseTypeSettingFrame(tk.Frame):
+    """Фрейм с настройкой типа релиза."""
+
+    def __init__(self, parent: tk.Misc):
+        super().__init__(parent)
+        reltypes_list = [ReleaseType.STABLE.value, ReleaseType.BETA.value]
+        if context.updater.release_type == ReleaseType._DEVELOPMENT:
+            reltypes_list.append(ReleaseType._DEVELOPMENT.value)
+
+        self.reltype_label = nb.Label(self, text=_translate("Release channel:"))
+        self.reltype_label.grid(row=0, column=0, sticky="NW")
+
+        self.reltype_var = tk.StringVar(value=context.updater.release_type)
+        self.reltype_var.trace_add('write', self._update_description)
+        self.reltype_field = ttk.Combobox(self, values=reltypes_list, textvariable=self.reltype_var, state="readonly")
+        self.reltype_field.grid(row=0, column=1, sticky="N", padx=5)
+
+        self.description_var = tk.StringVar(value=_translate(f"RELEASE_TYPE_DESC_{self.reltype_var.get()}"))
+        self.description_label = nb.Label(self, textvariable=self.description_var)
+        self.description_label.grid(row=1, columnspan=2, sticky="NWSE")
+
+    def _update_description(self):
+        self.description_var.set(_translate(f"RELEASE_TYPE_DESC_{self.reltype_var.get()}"))
+
+    def get_selected_reltype(self):
+        return ReleaseType(self.reltype_var.get())
+
 
 
 # Функции управления поведением плагина, вызываемые EDMC
@@ -305,23 +360,21 @@ def plugin_start3(plugin_dir: str):
     """
     EDMC вызывает эту функцию при запуске плагина в режиме Python 3.
     """
-    if EDMC_VERSION < Version("5.11.0"):
+    if context.edmc_version < Version("5.11.0"):
         raise EnvironmentError(_translate("At least EDMC 5.11.0 is required to use this plugin."))
     
-    global PLUGIN_DIR, UPDATER
-    PLUGIN_DIR = plugin_dir
-    UPDATER = Updater(plugin_dir)
-    UPDATER.start_update_cycle(_check_now=True)
+    context.plugin_dir = plugin_dir
+    context.updater = Updater()
+    context.updater.start_update_cycle(_check_now=True)
 
 
 def plugin_stop():
     """
     EDMC вызывает эту функцию при закрытии.
     """
-    global PLUGIN_VERSION, UPDATER
-    UPDATER.stop_update_cycle()
-    if PLUGIN_STOP_HOOK is not None:
-        PLUGIN_STOP_HOOK()
+    context.updater.stop_update_cycle()
+    if context.plugin_loaded:
+        context.plugin_stop_hook()
 
 
 def plugin_app(parent: tk.Misc) -> tk.Frame:
@@ -329,27 +382,35 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     EDMC вызывает эту функцию при запуске плагина для получения элемента UI плагина,
     отображаемого в окне программы.
     """
-    global PLUGIN_FRAME
-    return PLUGIN_FRAME
+    context.plugin_frame = tk.Frame(parent)
+    context.status_label = StatusLabel(context.plugin_frame)
+    context.status_label.pack(side="top", fill="both")
+    return context.plugin_frame
 
 
 def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
     """
     EDMC вызывает эту функцию для получения вкладки настроек плагина.
     """
-    if PLUGIN_PREFS_HOOK is not None:
-        return PLUGIN_PREFS_HOOK()
-    #TODO: заглушка
+    frame = tk.Frame(parent)
+    context.settings_frame = ReleaseTypeSettingFrame(frame)
+    context.settings_frame.pack(side="top", fill="both")
+    if context.plugin_loaded:
+        context.plugin_prefs_hook(frame, cmdr, is_beta).pack(side="top", fill="both")
+    return frame
 
 
 def prefs_changed(cmdr: str | None, is_beta: bool):
     """
     EDMC вызывает эту функцию при сохранении настроек пользователем.
     """
-    if PREFS_CHANGED_HOOK is not None:
-        PREFS_CHANGED_HOOK()
-        return
-    #TODO: заглушка
+    new_reltype = context.settings_frame.get_selected_reltype()
+    context.settings_frame = None
+    if new_reltype != context.updater.release_type:
+        context.updater.release_type = new_reltype
+        context.updater.restart_update_cycle()
+    if context.plugin_loaded:
+        context.prefs_changed_hook(cmdr, is_beta)
     
 
 # Эти функции относятся к внутреигровым событиям.
@@ -367,18 +428,18 @@ def journal_entry(
     """
     EDMC вызывает эту функцию при появлении новой записи в логах игры.
     """
-    EVENT_QUEUE.put({"type": "journal_entry", "data": (cmdr, is_beta, system, station, entry, state)})
+    context.event_queue.put({"type": "journal_entry", "data": (cmdr, is_beta, system, station, entry, state)})
 
 
 def dashboard_entry(cmdr: str | None, is_beta: bool, entry: dict):
     """
     EDMC вызывает эту функцию при обновлении игрой status.json.
     """
-    EVENT_QUEUE.put({"type": "dashboard_entry", "data": (cmdr, is_beta, entry)})
+    context.event_queue.put({"type": "dashboard_entry", "data": (cmdr, is_beta, entry)})
 
 
 def cmdr_data(data: dict, is_beta: bool):
     """
     EDMC вызывает эту функцию при получении данных о командире с серверов Frontier.
     """
-    EVENT_QUEUE.put({"type": "cmdr_data", "data": (data, is_beta)})
+    context.event_queue.put({"type": "cmdr_data", "data": (data, is_beta)})
