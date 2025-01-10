@@ -1,9 +1,9 @@
 import requests
 
+from context import PluginContext
 from settings import edsm_poi_url
 
 from .patrol import build_patrol
-from ..lib.context import global_context
 
 types = {
     "minorPOI": "Minor Point of Interest",
@@ -52,9 +52,7 @@ validtypes = [
 
 
 def get_edsm_patrol() -> list:
-    from .patrol_module import PatrolModule
-
-    patrol = global_context.by_class(PatrolModule)
+    patrol = PluginContext.patrol_module
 
     r = requests.get(edsm_poi_url)
     r.encoding = "utf-8"

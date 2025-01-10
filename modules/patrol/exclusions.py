@@ -2,8 +2,7 @@ import os.path
 
 import json
 
-from ..lib.context import global_context
-
+from context import PluginContext
 
 class PatrolExclusions(dict):
     def __init__(self, path, **kwargs):
@@ -12,7 +11,7 @@ class PatrolExclusions(dict):
 
     @classmethod
     def from_file(cls):
-        pth = os.path.join(global_context.plugin_dir, "data", "EDMC-Triumvirate.patrol")
+        pth = os.path.join(PluginContext.plugin_dir, "data", "EDMC-Triumvirate.patrol")
         out = cls(pth)
         out.load()
         return out

@@ -11,7 +11,7 @@ from urllib.parse import quote_plus, unquote
 from tkinter import Frame
 import tkinter as tk
 from settings import canonn_realtime_url, edsm_url
-from modules.lib.context import global_context
+from context import GameState
 
 nvl = lambda a, b: a or b
 
@@ -143,7 +143,7 @@ class CodexTypes(Frame):
         try:
             self.poidata = []
             system_name = quote_plus(system.encode('utf8'))
-            odyssey = "Y" if global_context.odyssey else "N"
+            odyssey = "Y" if GameState.odyssey else "N"
             params = {
                 "system":  system_name,
                 "cmdr":    cmdr,

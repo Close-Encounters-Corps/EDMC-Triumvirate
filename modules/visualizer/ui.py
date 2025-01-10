@@ -2,11 +2,11 @@ import tkinter as tk
 from tkinter import ttk, PhotoImage
 from pathlib import Path
 
+from context import PluginContext
 from settings import poi_categories as CATEGORIES
 from .table import Table
 from ._dataitem import _DataItem
 from modules.debug import debug
-from modules.lib.context import global_context
 
 import myNotebook as nb
 
@@ -96,7 +96,7 @@ class _IconButton(nb.Button):
         self.category = category
         self.__callback = callback
 
-        icons_path = Path(global_context.plugin_dir, "icons")
+        icons_path = Path(PluginContext.plugin_dir, "icons")
         self.active_icon = PhotoImage(file=icons_path / f"{category}.gif")
         self.grey_icon = PhotoImage(file=icons_path / f"{category}_grey.gif")
 

@@ -28,13 +28,13 @@ from l10n import Locale
 from ttkHyperlinkLabel import HyperlinkLabel
 import settings
 
+from context import PluginContext
 from .canonn import CanonnPatrols
 from .patrol import build_patrol
 from .edsm import get_edsm_patrol
 from .exclusions import PatrolExclusions
 from .bgs import BGSTasksOverride, new_bgs_patrol
 from ..lib.conf import config, base_config
-from ..lib.context import global_context
 from ..lib.thread import Thread, ThreadExit
 from ..lib.journal import JournalEntry
 from ..lib.module import Module
@@ -46,7 +46,7 @@ WRAP_LENGTH = 200
 
 
 def debug(msg):
-    global_context.log.info(f"[patrol] {msg}")
+    PluginContext.logger.info(f"[patrol] {msg}")
 
 
 def get_ship_type(key):
@@ -133,7 +133,7 @@ class PatrolModule(Frame, Module):
 
         self.ships = []
         self.bind("<<PatrolDone>>", self.update)
-        plugin_dir = global_context.plugin_dir
+        plugin_dir = PluginContext.plugin_dir
         self.IMG_PREV = tk.PhotoImage(
             file=os.path.join(plugin_dir, "icons", "left_arrow.gif")
         )
@@ -294,7 +294,7 @@ class PatrolModule(Frame, Module):
         try:
             self._on_journal(entry=entry)
         except:
-            global_context.log.debug("error in patrol", exc_info=1)
+            PluginContext.logger.debug("error in patrol", exc_info=1)
 
     def _on_journal(self, entry: JournalEntry):
         self.latest_entry = entry
@@ -366,7 +366,7 @@ class PatrolModule(Frame, Module):
             shipsystems[ship_system].append(ships[ship])
 
         for system, ships in shipsystems.items():
-            ship_pos = global_context.systems_module.get_system_coords(system)
+            ship_pos = PluginContext.systems_module.get_system_coords(system)
             ship_count = len(ships)
             if ship_count == 1:
                 ship = ships[0]
@@ -450,7 +450,7 @@ class PatrolModule(Frame, Module):
 
         if journal_update or capi_update:
             self.sort_patrol()
-            p = global_context.systems_module.get_system_coords(self.system)
+            p = PluginContext.systems_module.get_system_coords(self.system)
             self.nearest = self.get_nearest(p)
             self.hyperlink["text"] = self.nearest.get("system")
             self.hyperlink[
@@ -536,7 +536,7 @@ class PatrolModule(Frame, Module):
         return r
 
     def keyval(self, k):
-        x, y, z = global_context.systems_module.get_system_coords(self.system)
+        x, y, z = PluginContext.systems_module.get_system_coords(self.system)
         return distance_between((x, y, z), k.get("coords"))
 
     def sort_patrol(self):

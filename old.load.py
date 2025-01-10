@@ -229,7 +229,6 @@ def plugin_app(parent):
     frame = tk.Frame(parent)
     frame.grid_columnconfigure(0, weight=1)
 
-    # TODO: перейти на использование списка модулей из ModuleMeta
     this.visualizer = visualizer.Visualizer(frame, 0)
     this.codexcontrol = codex.CodexTypes(frame, 1)
     this.systems_module = SystemsModule()

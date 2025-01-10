@@ -9,7 +9,7 @@ import datetime
 
 import time
 
-from .lib.context import global_context
+from context import GameState
 
 # this = sys.modules[__name__]
 contentlist = {
@@ -55,7 +55,7 @@ def send(cmdr, action, params):
     action- name of webhook
     params - dist of parametrs
     """
-    SQID = global_context.SQ
+    SQID = GameState.squadron_id
     debug("Webhook Initiated")
     if SQID not in webhookList:
         return "Вам недоступно данное действие"

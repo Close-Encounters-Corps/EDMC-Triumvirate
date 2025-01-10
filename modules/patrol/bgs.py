@@ -6,10 +6,10 @@ from datetime import datetime
 import settings
 from l10n import Locale
 
-from ..debug import debug, error
-from ..lib.context import global_context
-from ..lib.spreadsheet import Spreadsheet
-from .patrol import build_patrol
+from context import PluginContext
+from modules.debug import debug, error
+from modules.lib.spreadsheet import Spreadsheet
+from modules.patrol.patrol import build_patrol
 
 EXCLUDE = {"Basta", "Hide", "Cancel"}
 
@@ -58,16 +58,14 @@ def new_bgs_patrol(bgs, faction, override):
     return build_patrol(
         type="BGS",
         system=system,
-        coords=global_context.systems_module.get_system_coords(system),
+        coords=PluginContext.systems_module.get_system_coords(system),
         instructions=get_bgs_instructions(bgs, faction),
         url="https://elitebgs.app/systems/{}".format(bgs.get("system_id")),
     )
 
 
 def get_bgs_instructions(bgs, faction):
-    from .patrol_module import PatrolModule
-
-    patrol = global_context.by_class(PatrolModule)
+    patrol = PluginContext.patrol_module
     target = 0.50 <= float(bgs.get("influence")) <= 0.65
     over = float(bgs.get("influence")) > 0.65
     under = float(bgs.get("influence")) < 0.50

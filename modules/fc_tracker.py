@@ -8,10 +8,10 @@ from enum import Enum
 from tkinter import ttk
 from typing import Callable
 
+from context import GameState
 from modules.debug import debug, error, warning
 from modules.legacy import Reporter
 from modules.lib.conf import config as plugin_config
-from modules.lib.context import global_context
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 from modules.lib.thread import BasicThread
@@ -487,7 +487,7 @@ class FC_Tracker(Module):
         
         # TODO: перевести на нормальное определение "союзности", когда будет возможность
         from modules.canonn_api import is_cec_fleetcarrier
-        if is_cec_fleetcarrier(self.fc_data.name) or global_context.cmdr_SQID == "CEC":
+        if is_cec_fleetcarrier(self.fc_data.name) or GameState.squadron_id == "CEC":
             if self.fc_data.docking_access == FCDockingAccess.ALL:
                 self.ui_frame.show_unsafe_docking_access_warning()
             else:

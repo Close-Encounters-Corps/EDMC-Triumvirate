@@ -8,12 +8,12 @@ from shutil import copyfile
 from PIL import Image, ImageTk
 from semantic_version import Version
 
+from context import PluginContext, GameState
 from .debug import debug, error, info
 from .lib.journal import JournalEntry
 from .lib.module import Module
 from .lib.conf import config as plugin_config
 from .lib.thread import Thread, BasicThread
-from .lib.context import global_context
 from .legacy import Reporter, URL_GOOGLE
 
 import myNotebook as nb
@@ -77,19 +77,19 @@ class _SoundGroup:
         path = os.path.normpath(path)
         filename = os.path.basename(path)
         # зачем нам копировать то, что уже у нас есть?
-        if path == os.path.join(global_context.plugin_dir, "sounds", filename):
+        if path == os.path.join(PluginContext.plugin_dir, "sounds", filename):
             self.path = filename
             return
-        elif path == os.path.join(global_context.plugin_dir, "sounds", "custom", filename):
+        elif path == os.path.join(PluginContext.plugin_dir, "sounds", "custom", filename):
             self.path = f"custom\\{filename}"
             return
         # а тут уже без вариантов
         else:
             try:
-                os.mkdir(os.path.join(global_context.plugin_dir, "sounds", "custom"))
+                os.mkdir(os.path.join(PluginContext.plugin_dir, "sounds", "custom"))
             except FileExistsError:
                 pass
-            copyfile(path, os.path.join(global_context.plugin_dir, "sounds", "custom", filename))
+            copyfile(path, os.path.join(PluginContext.plugin_dir, "sounds", "custom", filename))
             self.path = f"custom\\{filename}"
 
     def _reset_path(self):
@@ -141,7 +141,7 @@ class BGS(Module):
             sounds = cls._default_sounds_config
             plugin_config.set("BGS.sounds", json.dumps(sounds, ensure_ascii=False))
             debug("[BGS.on_start] Sounds config was set to default.")
-            global_context.notifier.send(
+            PluginContext.notifier.send(
                 "Конфигурация звуковых уведомлений была сброшена в состояние по-умолчанию (несовместимое обновление). " +
                 "Проверьте настройки плагина для внесения изменений.")
         
@@ -151,7 +151,7 @@ class BGS(Module):
                 if not os.path.exists(os.path.join(cls._plugin_dir, "sounds", sound_config["path"])):
                     sound_config["path"] = sound_config["_default"]
                     plugin_config.set("BGS.sounds", json.dumps(sounds, ensure_ascii=False))
-                    global_context.notifier.send(
+                    PluginContext.notifier.send(
                         "Конфигурация {!r} была сброшена в состояние по-умолчанию (файл не был найден). ".format(sound_config["displayed_name"]) +
                         "Проверьте настройки плагина для внесения изменений.")
         
@@ -599,7 +599,7 @@ class CZ_Tracker:
     
     def status_changed(self):
         # отслеживание режима игрока
-        on_foot = global_context.onFoot or global_context.onSRV
+        on_foot = GameState.on_foot or GameState.in_srv
         if on_foot != self.on_foot:
             self.on_foot = on_foot
             debug("CZ_Tracker: on_foot set to {}", on_foot)
@@ -779,7 +779,7 @@ class CZ_Tracker:
                 case "High":    intensity = "Высокая"
                 case "Medium":  intensity = "Средняя"
                 case "Low":     intensity = "Низкая"
-            global_context.notifier.send(
+            PluginContext.notifier.send(
                 "Засчитана победа в зоне конфликта:\n" +
                 "Система {}\n".format(self.info["system"])+
                 "Фракция {}\n".format(actual_winner) +

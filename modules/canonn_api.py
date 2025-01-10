@@ -1,10 +1,10 @@
 import requests, traceback, json
 from datetime import datetime, timedelta
 
+from context import PluginContext, GameState
 from settings import canonn_realtime_url
 from modules.legacy import Reporter
 from modules.debug import info, debug, error
-from modules.lib.context import global_context
 from modules.lib.module import Module
 from modules.lib.journal import JournalEntry
 from modules.lib.thread import Thread
@@ -86,7 +86,7 @@ class HDDetector:
         debug("[HDDetector] Reporting the hyperdiction to Canonn.")
         
         x, y, z    = journalEntry.coords
-        dx, dy, dz = global_context.systems_module.get_system_coords(self.destination_system)
+        dx, dy, dz = PluginContext.systems_module.get_system_coords(self.destination_system)
         
         url = "https://europe-west1-canonn-api-236217.cloudfunctions.net/postHDDetected"
         params = {
@@ -97,7 +97,7 @@ class HDDetector:
             "destination": self.destination_system,
             "dx": dx, "dy": dy, "dz": dz,
             "client": journalEntry.client,
-            "odyssey": global_context.odyssey,
+            "odyssey": GameState.odyssey,
             "hostile": self.status == self.HOSTILE
         }
         Reporter(url, json.dumps(params)).start()
@@ -113,7 +113,7 @@ class HDDetector:
         ):
             debug("[HDDetector] Detected {!r} event, sending the last thargoid encounter to Canonn.", entry["event"])
             system = entry["TG_ENCOUNTERS"]["TG_ENCOUNTER_TOTAL_LAST_SYSTEM"]
-            x, y, z = global_context.systems_module.get_system_coords(system)
+            x, y, z = PluginContext.systems_module.get_system_coords(system)
             timestamp: str = entry["TG_ENCOUNTERS"]["TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP"]
             game_year = timestamp[:4]
             timestamp = timestamp.replace(game_year, str(int(game_year)-1286))
@@ -255,7 +255,7 @@ class CanonnRealtimeAPI(Module):
         gamestate["platform"] = "PC"
 
         # дополнительные, которые мы, возможно, знаем
-        if global_context.odyssey != None:          gamestate["odyssey"] = global_context.odyssey
+        if GameState.odyssey != None:               gamestate["odyssey"] = GameState.odyssey
         if entry.get("BodyID"):                     gamestate["bodyId"] = entry["BodyID"]
         if journalEntry.body:                       gamestate["bodyName"] = journalEntry.body
         if journalEntry.state.get("Temperature"):   gamestate["temperature"] = journalEntry.state.get("Temperature")

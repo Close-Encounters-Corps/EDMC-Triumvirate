@@ -3,8 +3,8 @@ from tkinter import ttk
 from pathlib import Path
 from PIL import Image, ImageTk
 
+from context import PluginContext
 from modules.lib.timer import Timer
-from modules.lib.context import global_context
 
 
 class _Message(tk.Frame):
@@ -40,7 +40,7 @@ class _Message(tk.Frame):
     @classmethod
     def _set_image(cls):
         size = int(16 * (tk._default_root.winfo_screenheight() / 1080))
-        image = Image.open(Path(global_context.plugin_dir)/'icons'/'cross.png')
+        image = Image.open(Path(PluginContext.plugin_dir)/'icons'/'cross.png')
         image = image.resize((size, size))
         cls._cross_image = ImageTk.PhotoImage(image)
 
