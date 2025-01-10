@@ -15,8 +15,7 @@ from modules.patrol import PatrolModule
 from modules.systems import SystemsModule
 from modules.visualizer import Visualizer
 
-#import myNotebook as nb
-from tkinter import ttk as nb
+import myNotebook as nb
 
 
 def get_version() -> Version:
@@ -59,7 +58,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     return frame
 
 
-def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
+def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
     """
     EDMC вызывает эту функцию для получения вкладки настроек плагина.
     """

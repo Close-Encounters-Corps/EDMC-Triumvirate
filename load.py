@@ -102,7 +102,7 @@ class UpdateCycle(threading.Thread):
             self._updater_fn()
         
         timer = self.UPDATE_CYCLE
-        while not (self._stop or edmc_config.shutting_down()):
+        while not (self._stop or edmc_config.shutting_down):
             if timer <= 0:
                 self._updater_fn()
                 timer = self.UPDATE_CYCLE
@@ -241,8 +241,11 @@ class Updater:
         loadpy_was_edited = self.__files_differ(Path(new_ver_path, "load.py"), Path(context.plugin_dir, "load.py"))
         
         # копируем userdata, чтобы человеки не ругались, что у них миссии между перезапусками трутся
-        logger.info("Copying userdata...")
-        shutil.copytree(Path(context.plugin_dir, "userdata"), Path(new_ver_path, "userdata"))
+        logger.info("Copying `userdata`...")
+        try:
+            shutil.copytree(Path(context.plugin_dir, "userdata"), Path(new_ver_path, "userdata"))
+        except FileNotFoundError:
+            logger.warning("Directory `userdata` not found, skipping.")
 
         # сносим старую версию и копируем на её место новую, удаляем временные файлы
         logger.info("Replacing plugin files...")
@@ -251,7 +254,7 @@ class Updater:
         shutil.rmtree(tempdir)
 
         # обновляем запись о локальной версии
-        edmc_config.set(self.LOCAL_VERSION_KEY, tag)
+        edmc_config.set(self.LOCAL_VERSION_KEY, str(tag))
         self.local_version = tag
         logger.info(f"Done. Local version set to {tag}.")
 
@@ -266,38 +269,40 @@ class Updater:
 
     
     def __use_local_version(self):
+        def _(self):
+            logger.info("Loading the local version in main thread...")
+            if not Path(context.plugin_dir, "plugin_init.py").exists():
+                logger.error("`plugin_init` module not found. Aborting.")
+                return
+            
+            import plugin_init
+            context.plugin_version = plugin_init.get_version()
+            if self.local_version != context.plugin_version:
+                logger.warning("Saved local version doesn't match the loaded one. This could be due to a manual update.")
+                edmc_config.set(self.LOCAL_VERSION_KEY, str(context.plugin_version))
+                self.local_version = context.plugin_version
+                logger.warning(f"Local version set to {context.plugin_version}.")
+            
+            context.plugin_stop_hook    = plugin_init.plugin_stop
+            context.plugin_prefs_hook   = plugin_init.plugin_prefs
+            context.prefs_changed_hook  = plugin_init.prefs_changed
+
+            plugin_init.init_context(
+                edmc_version=context.edmc_version,
+                plugin_dir=context.plugin_dir,
+                event_queue=context.event_queue,
+                logger=logger
+            )
+
+            plugin_ui = plugin_init.plugin_app(context.plugin_frame)
+            plugin_ui.pack(side="top", fill="both")
+            
+            context.plugin_loaded = True
+            logger.info("Local version configured, running.")
+
         if context.plugin_loaded:
             return
-        
-        logger.info("Loading the local version...")
-        if not Path(context.plugin_dir, "plugin_init.py").exists():
-            logger.error("`plugin_init` module not found. Aborting.")
-            return
-        
-        import plugin_init
-        context.plugin_version = plugin_init.get_version()
-        if self.local_version != context.plugin_version:
-            logger.warning("Saved local version doesn't match the loaded one. This could be due to a manual update.")
-            edmc_config.set(self.LOCAL_VERSION_KEY, context.plugin_version)
-            self.local_version = context.plugin_version
-            logger.warning(f"Local version set to {context.plugin_version}.")
-        
-        context.plugin_stop_hook    = plugin_init.plugin_stop
-        context.plugin_prefs_hook   = plugin_init.plugin_prefs
-        context.prefs_changed_hook  = plugin_init.prefs_changed
-
-        plugin_init.init_context(
-            edmc_version=context.edmc_version,
-            plugin_dir=context.plugin_dir,
-            event_queue=context.event_queue,
-            logger=logger
-        )
-
-        plugin_ui = plugin_init.plugin_app(context.plugin_frame)
-        plugin_ui.pack(side="top", fill="both")
-        
-        context.plugin_loaded = True
-        logger.info("Local version configured, running.")
+        tk._default_root.after(0, _, self)
 
     
     def __files_differ(self, file1: Path, file2: Path):
@@ -329,7 +334,7 @@ class StatusLabel(tk.Label):
         self.master.update()
 
 
-class ReleaseTypeSettingFrame(tk.Frame):
+class ReleaseTypeSettingFrame(nb.Frame):
     """Фрейм с настройкой типа релиза."""
 
     def __init__(self, parent: tk.Misc):
@@ -344,13 +349,13 @@ class ReleaseTypeSettingFrame(tk.Frame):
         self.reltype_var = tk.StringVar(value=context.updater.release_type)
         self.reltype_var.trace_add('write', self._update_description)
         self.reltype_field = ttk.Combobox(self, values=reltypes_list, textvariable=self.reltype_var, state="readonly")
-        self.reltype_field.grid(row=0, column=1, sticky="N", padx=5)
+        self.reltype_field.grid(row=0, column=1, sticky="NW", padx=5)
 
         self.description_var = tk.StringVar(value=_translate(f"RELEASE_TYPE_DESC_{self.reltype_var.get()}"))
         self.description_label = nb.Label(self, textvariable=self.description_var)
-        self.description_label.grid(row=1, columnspan=2, sticky="NWSE")
+        self.description_label.grid(row=1, columnspan=2, sticky="NWS")
 
-    def _update_description(self):
+    def _update_description(self, varname, index, mode):
         self.description_var.set(_translate(f"RELEASE_TYPE_DESC_{self.reltype_var.get()}"))
 
     def get_selected_reltype(self):
@@ -367,9 +372,10 @@ def plugin_start(plugin_dir):
     raise EnvironmentError(_translate("At least EDMC 5.11.0 is required to use this plugin."))
 
 
-def plugin_start3(plugin_dir: str):
+def plugin_start3(plugin_dir: str) -> str:
     """
     EDMC вызывает эту функцию при запуске плагина в режиме Python 3.
+    Возвращаемое значение - строка, которой будет озаглавлена вкладка плагина в настройках.
     """
     if context.edmc_version < Version("5.11.0"):
         raise EnvironmentError(_translate("At least EDMC 5.11.0 is required to use this plugin."))
@@ -377,6 +383,8 @@ def plugin_start3(plugin_dir: str):
     context.plugin_dir = plugin_dir
     context.updater = Updater()
     context.updater.start_update_cycle(_check_now=True)
+
+    return "Triumvirate"
 
 
 def plugin_stop():
@@ -399,15 +407,18 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     return context.plugin_frame
 
 
-def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
+def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
     """
     EDMC вызывает эту функцию для получения вкладки настроек плагина.
     """
-    frame = tk.Frame(parent)
+    # EDMC позволяет вернуть только их nb.Frame, иначе AssertionError.
+    # При этом эта хрень где-то у себя в кишочках что-то маппит grid-ом,
+    # поэтому использовать удобный нам pack здесь не выйдет.
+    frame = nb.Frame(parent)
     context.settings_frame = ReleaseTypeSettingFrame(frame)
-    context.settings_frame.pack(side="top", fill="both")
+    context.settings_frame.grid(row=0, column=0, sticky="NSWE")
     if context.plugin_loaded:
-        context.plugin_prefs_hook(frame, cmdr, is_beta).pack(side="top", fill="both")
+        context.plugin_prefs_hook(frame, cmdr, is_beta).grid(row=1, column=0, sticky="NWSE")
     return frame
 
 
@@ -418,6 +429,7 @@ def prefs_changed(cmdr: str | None, is_beta: bool):
     new_reltype = context.settings_frame.get_selected_reltype()
     context.settings_frame = None
     if new_reltype != context.updater.release_type:
+        edmc_config.set(context.updater.RELEASE_TYPE_KEY, new_reltype)
         context.updater.release_type = new_reltype
         context.updater.restart_update_cycle()
     if context.plugin_loaded:

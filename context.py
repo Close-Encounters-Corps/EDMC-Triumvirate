@@ -20,6 +20,15 @@ if TYPE_CHECKING:
     from modules.legacy import Reporter
 
 
+class _ClassProperty:
+    """
+    Заменяет связку @classmethod и @property (depricated в Python 3.11).
+    """
+    def __init__(self, func):
+        self.func = func
+    def __get__(self, instance, owner):
+        return self.func(owner)
+
 @dataclass
 class PluginContext:
     """
@@ -49,9 +58,8 @@ class PluginContext:
     patrol_module: 'PatrolModule'   = None
     visualizer: 'Visualizer'        = None
 
-    @property
-    @staticmethod
-    def active_modules() -> list[Module]:
+    @_ClassProperty
+    def active_modules(cls) -> list['Module']:
         return get_active_modules()
 
 
