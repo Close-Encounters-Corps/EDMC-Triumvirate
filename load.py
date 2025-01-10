@@ -290,7 +290,8 @@ class Updater:
         plugin_init.init_context(
             edmc_version=context.edmc_version,
             plugin_dir=context.plugin_dir,
-            event_queue=context.event_queue
+            event_queue=context.event_queue,
+            logger=logger
         )
 
         plugin_ui = plugin_init.plugin_app(context.plugin_frame)

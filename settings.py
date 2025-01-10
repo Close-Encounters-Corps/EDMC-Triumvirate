@@ -153,7 +153,7 @@ nhss_canonn_url = "https://us-central1-canonn-api-236217.cloudfunctions.net/subm
 #############
 ### other ###
 #############
-support_message = """В случае возникновения проблем с плагином обращайтесь в дискорд Close Encounters Corps, канал #triumvirate_tech_support, в личные сообщения Казаков#4700 или на почтовый адрес help@cec.org"""
+support_message = """В случае возникновения проблем с плагином обращайтесь в дискорд Close Encounters Corps, канал #triumvirate_tech_support, в личные сообщения @elcylite и @kazak0v или на почтовый адрес help@cec.org"""
 version = "1.12.0-beta-1.indev"     # семантическое версионирование
 
 try:

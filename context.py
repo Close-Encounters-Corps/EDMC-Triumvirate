@@ -3,10 +3,13 @@ from enum import Enum, IntFlag, auto
 from semantic_version import Version
 from typing import TYPE_CHECKING
 import settings
+from modules.lib.module import get_active_modules
 
 if TYPE_CHECKING:
     # for type hinting
     import logging
+    from queue import Queue
+    from modules.lib.module import Module
     from modules.notifier import Notifier
     from modules.bgs import BGS
     from modules.canonn_api import CanonnRealtimeAPI
@@ -31,6 +34,7 @@ class PluginContext:
 
     # объекты
     logger: 'logging.Logger'        = None
+    _event_queue: 'Queue'           = None
     journal_processor               = None      #TODO: сделать
     notifier: 'Notifier'            = None
     reporter: 'Reporter'            = None
@@ -44,6 +48,11 @@ class PluginContext:
     systems_module: 'SystemsModule' = None
     patrol_module: 'PatrolModule'   = None
     visualizer: 'Visualizer'        = None
+
+    @property
+    @staticmethod
+    def active_modules() -> list[Module]:
+        return get_active_modules()
 
 
 @dataclass

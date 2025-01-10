@@ -78,7 +78,7 @@ class Module(ABC, metaclass=ModuleMeta):
     @property
     def localized_name(self) -> str:
         """
-        Возвращает имя модуля в выбранной локализации. Ключ для строк перевода - __qualname__
+        Возвращает имя модуля в выбранной локализации.
         """
         return plugin_tr(self.__class__.__qualname__)
 
@@ -88,9 +88,9 @@ def get_module_instance(module_class: Type[T]) -> T | None:
     return ModuleMeta._instances.get(module_class)
 
 
-def get_active_modules():
+def get_active_modules() -> list[Module]:
     return [instance for instance in ModuleMeta._instances.values() if instance.enabled]
 
 
-def list_active_modules_names():
+def list_active_modules_names() -> list[str]:
     return [instance.__class__.__name__ for instance in ModuleMeta._instances.values() if instance.enabled]
