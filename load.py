@@ -1,12 +1,11 @@
 """
 ПРЕДУПРЕЖДЕНИЕ ПОТОМКАМ И БУДУЩЕМУ СЕБЕ
-Текущий механизм автообновлений плагина подразумевает, что импорты из других файлов здесь НЕ РАЗРЕШЕНЫ!
+Текущий механизм автообновлений плагина подразумевает, что импорты из других файлов плагина здесь НЕ РАЗРЕШЕНЫ!
 Вся логика инициализации плагина, которая раньше была в load.py, должна быть перенесена в plugin_init.py.
 """
 
 import os
 import logging
-import filecmp
 import functools
 import requests
 import shutil
@@ -239,7 +238,7 @@ class Updater:
 
         # сверяем текущий load.py с новым - это нам понадобится в будущем
         new_ver_path = next(tempdir.iterdir())      # гитхаб оборачивает файлы в отдельную директорию
-        loadpy_was_edited = not filecmp.cmp(Path(new_ver_path, "load.py"), Path(context.plugin_dir, "load.py"), False)
+        loadpy_was_edited = self.__files_differ(Path(new_ver_path, "load.py"), Path(context.plugin_dir, "load.py"))
         
         # копируем userdata, чтобы человеки не ругались, что у них миссии между перезапусками трутся
         logger.info("Copying userdata...")
@@ -299,6 +298,17 @@ class Updater:
         
         context.plugin_loaded = True
         logger.info("Local version configured, running.")
+
+    
+    def __files_differ(self, file1: Path, file2: Path):
+        """
+        Этой функции могло бы не быть, если бы EDMC предоставлял filecmp. Но там как всегда.
+        """
+        if not (file1.exists() and file2.exists()):
+            return True
+        with open(file1, 'rb') as f1, open(file2, 'rb') as f2:
+            # файлы не такие большие, можем позволить себе считать их полностью
+            return f1.read() != f2.read()
 
 
 
