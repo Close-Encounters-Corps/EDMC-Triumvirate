@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     # for type hinting
     import logging
     from queue import Queue
+    from journal_processor import JournalProcessor
     from modules.lib.module import Module
     from modules.notifier import Notifier
     from modules.bgs import BGS
@@ -45,7 +46,7 @@ class PluginContext:
     # объекты
     logger: 'logging.Logger'        = None
     _event_queue: 'Queue'           = None
-    journal_processor               = None      #TODO: сделать
+    journal_processor: 'JournalProcessor'   = None
     notifier: 'Notifier'            = None
     reporter: 'Reporter'            = None
 

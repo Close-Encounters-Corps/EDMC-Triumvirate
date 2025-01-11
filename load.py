@@ -63,6 +63,7 @@ class BasicContext:
     event_queue: Queue[dict]        = Queue()
 
     plugin_frame: tk.Frame          = None
+    plugin_ui: tk.Misc              = None
     status_label: "StatusLabel"     = None
     settings_frame: "ReleaseTypeSettingFrame" = None
 
@@ -294,10 +295,11 @@ class Updater:
                 logger=logger
             )
 
-            plugin_ui = plugin_init.plugin_app(context.plugin_frame)
-            plugin_ui.pack(side="top", fill="both")
+            context.plugin_ui = plugin_init.plugin_app(context.plugin_frame)
+            context.plugin_ui.grid(row=1, column=0)
             
             context.plugin_loaded = True
+            context.status_label.set_text(_translate("Version: {v}").format(v=str(context.plugin_version)))
             logger.info("Local version configured, running.")
 
 
@@ -334,16 +336,24 @@ class Updater:
 class StatusLabel(tk.Label):
     """Отображается в главном окне EDMC. Предназначена для отображения статуса обновлений."""
 
-    def __init__(self, parent: tk.Misc):
+    def __init__(self, parent: tk.Misc, row: int):
         self.textvar = tk.StringVar()
+        self.row = row
         super().__init__(parent, textvariable=self.textvar)
     
     def set_text(self, val: str):
+        self.show()
         self.textvar.set(val)
 
     def clear(self):
         self.textvar.set("")
-        self.master.update()
+        self.hide()
+        
+    def show(self):
+        self.grid(row=self.row, column=0, sticky="NWS")
+
+    def hide(self):
+        self.grid_forget()
 
 
 class ReleaseTypeSettingFrame(nb.Frame):
@@ -414,8 +424,8 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     отображаемого в окне программы.
     """
     context.plugin_frame = tk.Frame(parent)
-    context.status_label = StatusLabel(context.plugin_frame)
-    context.status_label.pack(side="top", fill="both")
+    context.status_label = StatusLabel(context.plugin_frame, 0)
+    context.status_label.show()
     return context.plugin_frame
 
 

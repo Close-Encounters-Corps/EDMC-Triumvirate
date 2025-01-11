@@ -6,10 +6,8 @@ from modules import legacy
 from modules.lib.journal import JournalEntry
 from modules.lib.thread import Thread
 
-logger = PluginContext.logger
 
-
-class JournalEntryProcessor(Thread):
+class JournalProcessor(Thread):
     def __init__(self):
         super().__init__(name="Triumvirate journal entry processor")
         self.queue: Queue = PluginContext._event_queue
@@ -29,7 +27,7 @@ class JournalEntryProcessor(Thread):
                     case "cmdr_data":       self.on_cmdr_data(*entry["data"])
                     case _:                 raise ValueError("unknown entry type")
             except Exception as e:
-                logger.error("Uncatched exception while processing a journal entry.\n%s", str(entry), exc_info=e)
+                PluginContext.logger.error("Uncatched exception while processing a journal entry.\n%s", str(entry), exc_info=e)
                 # TODO: отправка логов
 
 
@@ -47,9 +45,12 @@ class JournalEntryProcessor(Thread):
         
         if new_cmdr != GameState.cmdr:
             GameState.cmdr = new_cmdr
+            PluginContext.logger.debug(f"New CMDR: {GameState.cmdr}. Fetching a squadron.")
             GameState.squadron, GameState.legacy_sqid = legacy.fetch_squadron()
+            PluginContext.logger.debug(f"Squadron set to {GameState.squadron}, SQID set to {GameState.legacy_sqid}.")
 
         if self._startup and GameState.cmdr is not None:
+            PluginContext.logger.debug("Reporting the plugin version.")
             legacy.report_version()
             self._startup = False
         
@@ -66,23 +67,30 @@ class JournalEntryProcessor(Thread):
             and GameState.system_address != entry["SystemAddress"]
             and entry["event"] not in ("NavRoute", "FSDTarget")
         ):
-            logger.debug("Detected SystemAddress mismatch: current {}, from entry {}.".format(GameState.system_address, entry["SystemAddress"]))
+            PluginContext.logger.debug("Detected SystemAddress mismatch: current {}, from entry {}.".format(GameState.system_address, entry["SystemAddress"]))
             if entry["event"] == "StartJump":
                 # мы ещё в актуальной системе, но сохраним ту, в которую прыгаем
                 GameState.pending_jump_system = entry.get("StarSystem")
-                logger.debug("StartJump. Pending jump system set to {}, id {}. Raw entry: {!r}".format(GameState.pending_jump_system, entry["SystemAddress"], entry))
+                PluginContext.logger.debug("StartJump. Pending jump system set to {}, id {}. Raw entry: {!r}".format(GameState.pending_jump_system, entry["SystemAddress"], entry))
             else:
                 # мы уже прыгнули, но FSDJump в логах пока не получили
                 GameState.system_address = entry["SystemAddress"]
-                GameState.system = GameState.pending_jump_system or system      # систему от EMDC используем только в *крайнем* случае
-                logger.debug("We jumped to another system; system_address set to {}, system set to {}.".format(GameState.system_address, GameState.system))
+                GameState.system = GameState.pending_jump_system or system
+                PluginContext.logger.debug("We jumped to another system; system_address set to {}, system set to {}.".format(GameState.system_address, GameState.system))
         
         # а ещё нас могут дёрнуть таргоиды, поэтому мы окажемся в той же системе, из которой прыгали.
         if (
             entry.get("event") == "FSDJump"
             and entry["StarSystem"] != GameState.pending_jump_system
         ):
-            logger.debug("Detected misjump; are we hyperdicted? Leaving system_address unchanged.")
+            PluginContext.logger.debug("Detected misjump; are we hyperdicted? Leaving system_address unchanged.")
+
+        if GameState.system != system and system is not None and GameState.pending_jump_system is None:
+            PluginContext.logger.debug(
+                "GameState.system was {}, but EDMC reported {}. No pending jump detected. Changing system to {}.".format(
+                    GameState.system, system, system
+            ))
+            GameState.system = system
 
         if entry.get("event") == "FSDJump":
             GameState.body_name = None
@@ -111,13 +119,13 @@ class JournalEntryProcessor(Thread):
                 try:
                     mod.on_chat_message(journal_entry)
                 except Exception as e:
-                    logger.error(f"Exception in module {mod} while processing a chat message.", exc_info=e)
+                    PluginContext.logger.error(f"Exception in module {mod} while processing a chat message.", exc_info=e)
         else:
             for mod in PluginContext.active_modules:
                 try:
                     mod.on_journal_entry(journal_entry)
                 except Exception as e:
-                    logger.error(f"Exception in module {mod} while processing a journal entry.", exc_info=e)
+                    PluginContext.logger.error(f"Exception in module {mod} while processing a journal entry.", exc_info=e)
 
 
     def on_dashboard_entry(self, cmdr: str | None, is_beta: bool, entry: dict):
@@ -144,15 +152,17 @@ class JournalEntryProcessor(Thread):
         GameState.temperature = entry.get("Temperature")
         GameState.gravity = entry.get("Gravity")
 
-        GameState.flags_raw = entry.get("Flags")
-        GameState.flags2_raw = entry.get("Flags2")
-        GameState.in_ship = GameState.flags_raw & Flags.IN_MAIN_SHIP
-        GameState.in_fighter = GameState.flags_raw & Flags.IN_FIGHTER
-        GameState.in_srv = GameState.flags_raw & Flags.IN_SRV
-        GameState.on_foot = GameState.flags2_raw & Flags2.ON_FOOT
+        if flags := entry.get("Flags") is not None:
+            GameState.flags_raw     = flags
+            GameState.in_ship       = flags & Flags.IN_MAIN_SHIP
+            GameState.in_fighter    = flags & Flags.IN_FIGHTER
+            GameState.in_srv        = flags & Flags.IN_SRV
+        if flags2 := entry.get("Flags2") is not None:
+            GameState.flags2_raw    = flags2
+            GameState.on_foot       = flags2 & Flags2.ON_FOOT
 
 
-    def on_cmdr_entry(self, data: dict, is_beta: bool):
+    def on_cmdr_data(self, data: dict, is_beta: bool):
         GameState.game_in_beta = is_beta
         for mod in PluginContext.active_modules:
             mod.on_cmdr_data(data, is_beta)

@@ -56,6 +56,7 @@ class VisualizerModel:
     def update_system(self, system: str | None):
         if self.current_system != system and system is not None:
             debug("[Visualizer] Detected system change, clearing data.")
+            debug("[Visualizer] {} -> {}", self.current_system, system)
             self.clear()
             self.current_system = system
 

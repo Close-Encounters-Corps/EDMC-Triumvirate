@@ -119,7 +119,7 @@ class HDDetector:
             timestamp = timestamp.replace(game_year, str(int(game_year)-1286))
             debug("[HDDetector] Last encounter: timestamp {!r}, system {!r}.", timestamp, system)
 
-            url = f"{canonn_realtime_url}/postHD"
+            url = f"https://europe-west1-canonn-api-236217.cloudfunctions.net/postHD"
             params = {
                 "cmdr": journalEntry.cmdr,
                 "system": system,

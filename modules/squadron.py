@@ -10,7 +10,7 @@ class Squadron_Tracker(Module):
     SQUADRON_KEY = "SquadronTracker.SavedSquadron"
 
     def __init__(self):
-        self.saved_squadron = plugin_config.get_str(self.SQUADRON_KEY)
+        self.saved_squadron = plugin_config.get_str(self.SQUADRON_KEY) or None
         debug("Saved squadron: {}", self.saved_squadron)
         # При запуске плагина сквадрон определяется данными из нашей таблички,
         # поэтому здесь контекст не редактируем.
@@ -20,7 +20,7 @@ class Squadron_Tracker(Module):
         match entry.data["event"]:
             case "SquadronStartup": self.startup_squadron(entry)
             case "JoinedSquadron" | "SquadronCreated": self.joined_squadron(entry)
-            case "KickedFromSquadron" | "LeftSquadron": self.left_squadron(entry)
+            case "KickedFromSquadron" | "LeftSquadron" | "DisbandedSquadron": self.left_squadron(entry)
 
 
     def startup_squadron(self, journal_entry: JournalEntry):
@@ -46,13 +46,14 @@ class Squadron_Tracker(Module):
     def left_squadron(self, journal_entry: JournalEntry):
         GameState.squadron = None
         GameState.legacy_sqid = None
-        plugin_config.set(self.SQUADRON_KEY, None)
+        plugin_config.set(self.SQUADRON_KEY, "")
         self.saved_squadron = None
         debug("Left the squadron. Reporting.")
         self.report_sq()
 
 
     def report_sq(self):
+        #TODO: вернуть после тестов на реальную форму
         #url = "https://docs.google.com/forms/d/e/1FAIpQLScZvs3MB2AK6pPwFoSCpdaarfAeu_P-ineIhtO1mOPgr09q8A/formResponse?usp=pp_url"
         #params = {
         #    "entry.558317192":  GameState.cmdr,
@@ -61,6 +62,6 @@ class Squadron_Tracker(Module):
         url = "https://docs.google.com/forms/d/e/1FAIpQLSfFxDAvHttNmVFwk56PvrNNVouQYmgE4rd-vqO_3yR2CdkFIA/formResponse?usp=pp_url"
         params = {
             "entry.1289608233": GameState.cmdr,
-            "entry.1616589915": GameState.squadron
+            "entry.1616589915": GameState.squadron or "[independent]"
         }
         legacy.Reporter(url, params).start()

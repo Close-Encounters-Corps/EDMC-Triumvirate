@@ -4,8 +4,8 @@ from queue import Queue
 from semantic_version import Version
 
 import settings
-from modules.lib import thread
 from context import PluginContext
+from journal_processor import JournalProcessor
 from modules.bgs import BGS
 from modules.canonn_api import CanonnRealtimeAPI
 from modules.debug import Debug
@@ -15,6 +15,7 @@ from modules.patrol import PatrolModule
 from modules.systems import SystemsModule
 from modules.squadron import Squadron_Tracker
 from modules.visualizer import Visualizer
+from modules.lib import thread
 
 import myNotebook as nb
 
@@ -55,7 +56,8 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
         mod.on_start(PluginContext.plugin_dir)
 
     # в последнюю очередь запускаем обработчик событий
-    #TODO
+    PluginContext.journal_processor = JournalProcessor()
+    PluginContext.journal_processor.start()
 
     return frame
 

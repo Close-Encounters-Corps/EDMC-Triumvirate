@@ -543,7 +543,6 @@ class CZ_Tracker:
     def __init__(self):
         self.in_conflict = False
         self.safe = False       # на случай, если плагин запускается посреди игры, и мы не знаем режим
-        self.on_foot = None     # не тип конфликта, а именно режим игры. ТРП тоже считается
 
 
     def process_entry(self, journalEntry: JournalEntry):
@@ -589,20 +588,12 @@ class CZ_Tracker:
                 elif event == "BookDropship" and entry["Retreat"] == True:
                     self._end_conflict()
                 # релог в пешей кз
-                elif event == "Music" and entry["MusicTrack"] == "MainMenu" and self.on_foot == True:
+                elif event == "Music" and entry["MusicTrack"] == "MainMenu" and (GameState.on_foot or GameState.in_srv):
                     self._end_conflict()
                 # досрочный выход
                 elif (event in ("Shutdown", "Died", "SelfDestruct") or        # это для любых кз
                         event == "Music" and entry["MusicTrack"] == "MainMenu"):      # а это уже только в космосе будет работать
                     self._reset()
-    
-    
-    def status_changed(self):
-        # отслеживание режима игрока
-        on_foot = GameState.on_foot or GameState.in_srv
-        if on_foot != self.on_foot:
-            self.on_foot = on_foot
-            debug("CZ_Tracker: on_foot set to {}", on_foot)
     
     
     def _start_conflict(self, cmdr, system, entry, conflict_type):
@@ -655,7 +646,8 @@ class CZ_Tracker:
                 self.info["allegiances"][conflict_side] = None
                 debug("CZ_Tracker: faction {!r} added to the list.", conflict_side)
 
-        if self.info["conflict_type"] == "Foot" and not self.on_foot:
+        on_foot = GameState.on_foot or GameState.in_srv
+        if self.info["conflict_type"] == "Foot" and not on_foot:
             self.info["kills"] += 4
             debug("CZ_Tracker: detected a kill from a ship in a foot combat zone. Awarding {!r}, victim {!r}. {}(+4) kills.",
                 entry["AwardingFaction"],
@@ -672,7 +664,7 @@ class CZ_Tracker:
         if (
             not self.info["intensity"]
             and self.info["conflict_type"] == "Foot"
-            and self.on_foot
+            and on_foot
         ):
             reward = entry["Reward"]
             if 1896 <= reward < 4172:
