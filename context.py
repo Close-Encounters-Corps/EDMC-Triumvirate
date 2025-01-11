@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from modules.canonn_api import CanonnRealtimeAPI
     from modules.fc_tracker import FC_Tracker
     from modules.systems import SystemsModule
+    from modules.squadron import Squadron_Tracker
     from modules.patrol import PatrolModule
     from modules.visualizer import Visualizer
     from modules.legacy import Reporter
@@ -37,7 +38,7 @@ class PluginContext:
     # параметры
     plugin_name: str                = "EDMC-Triumvirate"
     plugin_version: Version         = Version(settings.version)
-    client_version: str             = f"{plugin_name} {plugin_version}"
+    client_version: str             = f"{plugin_name}.{plugin_version}"
     edmc_version: Version           = None
     plugin_dir: str                 = None
 
@@ -52,6 +53,7 @@ class PluginContext:
     bgs_module: 'BGS'               = None
     canonn_api: 'CanonnRealtimeAPI' = None
     codex                           = None      #TODO: переработка
+    sq_tracker: 'Squadron_Tracker'  = None
     fc_tracker: 'FC_Tracker'        = None
     friendfoe                       = None      #TODO: оживить
     systems_module: 'SystemsModule' = None
@@ -71,9 +73,10 @@ class GameState:
     # параметры
     cmdr: str                   = None
     squadron: str               = None
-    squadron_id: str            = None
+    legacy_sqid: str            = None
 
     odyssey: bool               = None
+    game_in_beta: bool          = None
     pips: list[int, int, int]   = None
     firegroup: int              = None
     gui_focus: 'GuiFocus'       = None
@@ -87,6 +90,7 @@ class GameState:
     system: str                 = None
     system_address: int         = None
     pending_jump_system: str    = None
+    station: str                = None
     body_name: str              = None
     latitude: float             = None
     longitude: float            = None

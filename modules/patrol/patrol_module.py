@@ -28,7 +28,7 @@ from l10n import Locale
 from ttkHyperlinkLabel import HyperlinkLabel
 import settings
 
-from context import PluginContext
+from context import PluginContext, GameState
 from .canonn import CanonnPatrols
 from .patrol import build_patrol
 from .edsm import get_edsm_patrol
@@ -529,9 +529,9 @@ class PatrolModule(Frame, Module):
         """
         r = url.replace("{CMDR}", self.cmdr)
 
-        r = r.replace("{LAT}", str(self.latest_entry.lat or ""))
-        r = r.replace("{LON}", str(self.latest_entry.lon or ""))
-        r = r.replace("{BODY}", self.latest_entry.body or "")
+        r = r.replace("{LAT}", str(GameState.latitude or ""))
+        r = r.replace("{LON}", str(GameState.longitude or ""))
+        r = r.replace("{BODY}", GameState.body_name or "")
 
         return r
 

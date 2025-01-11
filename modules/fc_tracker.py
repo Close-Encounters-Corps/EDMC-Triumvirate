@@ -487,7 +487,7 @@ class FC_Tracker(Module):
         
         # TODO: перевести на нормальное определение "союзности", когда будет возможность
         from modules.canonn_api import is_cec_fleetcarrier
-        if is_cec_fleetcarrier(self.fc_data.name) or GameState.squadron_id == "CEC":
+        if is_cec_fleetcarrier(self.fc_data.name) or GameState.squadron == "CLOSE ENCOUNTERS CORPS":
             if self.fc_data.docking_access == FCDockingAccess.ALL:
                 self.ui_frame.show_unsafe_docking_access_warning()
             else:

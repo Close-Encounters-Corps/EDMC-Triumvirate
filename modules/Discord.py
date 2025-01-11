@@ -55,7 +55,7 @@ def send(cmdr, action, params):
     action- name of webhook
     params - dist of parametrs
     """
-    SQID = GameState.squadron_id
+    SQID = GameState.legacy_sqid
     debug("Webhook Initiated")
     if SQID not in webhookList:
         return "Вам недоступно данное действие"

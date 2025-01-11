@@ -1,9 +1,14 @@
 ﻿# -*- coding: utf-8 -*-
-import threading, requests, traceback
-
+import csv
+import requests
+import traceback
+import webbrowser
+from contextlib import closing
 from math import sqrt, pow
+
+from context import PluginContext, GameState
 from .debug import debug, error
-from .lib.thread import Thread, BasicThread
+from .lib.thread import BasicThread
 
 try:#py3
     from urllib.parse import quote_plus
@@ -328,3 +333,51 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
         }
         url = f'{URL_GOOGLE}/1FAIpQLSfYl0iPm-qQOCyD6iVIjK7BPIgnp6yABR2YVwfcp2GB5KWtNA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
         Reporter(url).start()
+
+
+def report_version():
+    ip = requests.get('https://api.ipify.org').text
+    try:
+        ip6 = requests.get('https://api6.ipify.org').text
+    except requests.RequestException:
+        ip6 = None
+    
+    url = "https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
+    params = {
+        "entry.1181808218": GameState.cmdr,
+        "entry.254549730":  str(PluginContext.plugin_version),
+        "entry.1622540328": ip,
+        "entry.488844173":  ip6 or "0",
+        "entry.1210213202": 1
+    }
+    Reporter(url, params).start()
+
+
+def fetch_squadron() -> tuple[str|None, str|None]:
+    """
+    Возвращает название и ID сквадрона командира из имеющихся у нас данных.
+    """
+    debug("Community Check started")
+    url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"
+    with closing(requests.get(url, stream=True)) as r:
+        try:
+            reader = csv.reader(r.content.splitlines(),
+                                delimiter='\t')  # .decode('utf-8')
+            next(reader)
+        except:
+            reader = csv.reader(r.content.decode(
+                'utf-8').splitlines(), delimiter='\t')
+            next(reader)
+
+        for row in reader:
+            cmdr, squadron, sqid = row
+            if cmdr == GameState.cmdr:
+                PluginContext.patrol_module.sqid = sqid
+                return squadron.upper(), sqid
+
+    debug("Community Check failed: CMDR not found, requesting to fill a form.")
+    url = "https://docs.google.com/forms/d/e/1FAIpQLSeERKxF6DlrQ3bMqFdceycSlBV0kwkzziIhYD0ctDzrytm8ug/viewform?usp=pp_url"
+    url += "&entry.42820869=" + quote_plus(GameState.cmdr)
+    debug(f"SQID {url}")
+    webbrowser.open(url)
+    return None, None

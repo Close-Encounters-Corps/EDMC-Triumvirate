@@ -13,6 +13,7 @@ from modules.fc_tracker import FC_Tracker
 from modules.notifier import Notifier
 from modules.patrol import PatrolModule
 from modules.systems import SystemsModule
+from modules.squadron import Squadron_Tracker
 from modules.visualizer import Visualizer
 
 import myNotebook as nb
@@ -47,6 +48,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     PluginContext.bgs_module = BGS()
     PluginContext.canonn_api = CanonnRealtimeAPI()
     PluginContext.systems_module = SystemsModule()
+    PluginContext.sq_tracker = Squadron_Tracker()
 
     #TODO: on_start вообще не нужен с новой системой обновлений, отредактировать модули
     for mod in PluginContext.active_modules:

@@ -96,7 +96,7 @@ class HDDetector:
             "x": x, "y": y, "z": z,
             "destination": self.destination_system,
             "dx": dx, "dy": dy, "dz": dz,
-            "client": journalEntry.client,
+            "client": PluginContext.client_version,
             "odyssey": GameState.odyssey,
             "hostile": self.status == self.HOSTILE
         }
@@ -247,7 +247,7 @@ class CanonnRealtimeAPI(Module):
                 journalEntry.coords.y,
                 journalEntry.coords.z
             ],
-            "clientVersion":    journalEntry.client,
+            "clientVersion":    PluginContext.client_version,
             "isBeta":           journalEntry.is_beta
         }
 
@@ -255,15 +255,15 @@ class CanonnRealtimeAPI(Module):
         gamestate["platform"] = "PC"
 
         # дополнительные, которые мы, возможно, знаем
-        if GameState.odyssey != None:               gamestate["odyssey"] = GameState.odyssey
-        if entry.get("BodyID"):                     gamestate["bodyId"] = entry["BodyID"]
-        if journalEntry.body:                       gamestate["bodyName"] = journalEntry.body
-        if journalEntry.state.get("Temperature"):   gamestate["temperature"] = journalEntry.state.get("Temperature")
-        if journalEntry.state.get("Gravity"):       gamestate["gravity"] = journalEntry.state.get("Gravity")
-        
-        if journalEntry.lat and journalEntry.lon:
-            gamestate["latitude"] = journalEntry.lat
-            gamestate["longitude"] = journalEntry.lon
+        if GameState.odyssey is not None:   gamestate["odyssey"] = GameState.odyssey
+        if entry.get("BodyID"):             gamestate["bodyId"] = entry["BodyID"]
+        if GameState.body_name:             gamestate["bodyName"] = GameState.body_name
+        if GameState.temperature:           gamestate["temperature"] = GameState.temperature
+        if GameState.gravity:               gamestate["gravity"] = GameState.gravity
+
+        if GameState.latitude and GameState.longitude:
+            gamestate["latitude"] = GameState.latitude
+            gamestate["longitude"] = GameState.longitude
 
         return gamestate
 
