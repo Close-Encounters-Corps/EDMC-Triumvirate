@@ -269,7 +269,7 @@ class Updater:
 
     
     def __use_local_version(self):
-        def _(self):
+        def __inner(self):
             logger.info("Loading the local version in main thread...")
             if not Path(context.plugin_dir, "plugin_init.py").exists():
                 logger.error("`plugin_init` module not found. Aborting.")
@@ -300,9 +300,21 @@ class Updater:
             context.plugin_loaded = True
             logger.info("Local version configured, running.")
 
+
         if context.plugin_loaded:
             return
-        tk._default_root.after(0, _, self)
+        # Q: Что это за уродство?
+        # A: Если у нас стоит актуальная версия, мы можем дойти до этого участка кода быстрее,
+        #    чем EDMC успеет создать свой GUI, и tkinter начнёт выкобениваться по этому поводу.
+        #    Нам не остаётся ничего другого, кроме как ждать, пока он не будет готов...
+        while True:
+            try:
+                tk._default_root.after(0, __inner, self)
+                logger.info("IGNORE THE SURROUNDING LOGGING ALERTS. THIS IS BECAUSE OF TKINTER.")
+            except RuntimeError:
+                sleep(1)
+            else:
+                break
 
     
     def __files_differ(self, file1: Path, file2: Path):
