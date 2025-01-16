@@ -108,18 +108,20 @@ class HDDetector:
 
     def _check_last_encounter(self, journalEntry: JournalEntry):
         entry = journalEntry.data
-        if (entry.get("TG_ENCOUNTERS")
-            and entry["TG_ENCOUNTERS"].get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM")
-        ):
+        if entry.get("TG_ENCOUNTERS", {}).get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM"):
             debug("[HDDetector] Detected {!r} event, sending the last thargoid encounter to Canonn.", entry["event"])
-            system = entry["TG_ENCOUNTERS"]["TG_ENCOUNTER_TOTAL_LAST_SYSTEM"]
+            system = entry.get(["TG_ENCOUNTERS"]).get(["TG_ENCOUNTER_TOTAL_LAST_SYSTEM"])
+            if system == "Pleiades Sector IR-W d1-55":
+                system = "Delphi"
             x, y, z = PluginContext.systems_module.get_system_coords(system)
-            timestamp: str = entry["TG_ENCOUNTERS"]["TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP"]
-            game_year = timestamp[:4]
-            timestamp = timestamp.replace(game_year, str(int(game_year)-1286))
+            
+            gametime = entry.get("TG_ENCOUNTERS").get("TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP")
+            year, remainder = gametime.split("-", 1)
+            timestamp = "{}-{}".format(str(int(year) - 1286), remainder)
+            
             debug("[HDDetector] Last encounter: timestamp {!r}, system {!r}.", timestamp, system)
 
-            url = f"https://europe-west1-canonn-api-236217.cloudfunctions.net/postHD"
+            url = "https://europe-west1-canonn-api-236217.cloudfunctions.net/postHD"
             params = {
                 "cmdr": journalEntry.cmdr,
                 "system": system,
