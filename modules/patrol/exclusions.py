@@ -11,7 +11,7 @@ class PatrolExclusions(dict):
 
     @classmethod
     def from_file(cls):
-        pth = os.path.join(PluginContext.plugin_dir, "data", "EDMC-Triumvirate.patrol")
+        pth = os.path.join(PluginContext.plugin_dir, "userdata", "EDMC-Triumvirate.patrol")
         out = cls(pth)
         out.load()
         return out

@@ -299,7 +299,7 @@ class Missions_Tracker:
         return BGS._missions_tracker
     
     def __init__(self):
-        path = os.path.join(BGS._plugin_dir, "data", "missions.db")
+        path = os.path.join(BGS._plugin_dir, "userdata", "missions.db")
         self.db = sqlite3.connect(path, check_same_thread=False)
         self.lock = threading.Lock()
         self._query("CREATE TABLE IF NOT EXISTS missions (id, payload)")

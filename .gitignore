@@ -2,8 +2,7 @@
 *.pyo
 *.patrol
 /*.bat
-/data/EDMC-Canonn.patrol
-/data/missions.db
+userdata
 /EDMC.log
 /.venv
 /venv
