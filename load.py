@@ -24,8 +24,10 @@ from typing import Callable
 
 import l10n
 import myNotebook as nb
+from ttkHyperlinkLabel import HyperlinkLabel
 from config import appname, appversion
 from config import config as edmc_config
+from theme import theme
 
 
 # Дефолтная конфигурация логгера. Требование EDMC
@@ -65,6 +67,7 @@ class BasicContext:
     plugin_frame: tk.Frame          = None
     plugin_ui: tk.Misc              = None
     status_label: "StatusLabel"     = None
+    version_frame: "VersionFrame"   = None
     settings_frame: "ReleaseTypeSettingFrame" = None
 
     plugin_stop_hook: Callable      = None
@@ -297,13 +300,18 @@ class Updater:
                 event_queue=context.event_queue,
                 logger=logger
             )
-
-            context.plugin_ui = plugin_init.plugin_app(context.plugin_frame)
-            context.plugin_ui.grid(row=1, column=0)
             
+            context.status_label.clear()
+            context.version_frame = VersionFrame(context.plugin_frame, context.plugin_version)
+            context.plugin_ui = plugin_init.plugin_app(context.plugin_frame)
+            theme.update(context.version_frame)
+            theme.update(context.plugin_ui)
+            context.version_frame.grid(row=0, column=0, sticky="NWS")
+            context.plugin_ui.grid(row=2, column=0, sticky="NWSE")
+
             context.plugin_loaded = True
-            context.status_label.set_text(_translate("Version: {v}").format(v=str(context.plugin_version)))
             logger.info("Local version configured, running.")
+
 
         # фикс для development-версий: удостоверимся, что userdata всегда существует
         Path(context.plugin_dir, "userdata").mkdir(exist_ok=True)
@@ -347,6 +355,36 @@ class StatusLabel(tk.Label):
 
     def hide(self):
         self.grid_forget()
+
+
+class VersionFrame(tk.Frame):
+    """Отображается в главном окне EDMC. Отображает версию плагина со ссылкой на страницу релиза."""
+
+    def __init__(self, parent: tk.Misc, version: Version):
+        super().__init__(parent)
+        self.text_label = tk.Label(self, text=_translate("Version:")+' ')
+        self.text_label.pack(side="left")
+        
+        release_url = f"https://github.com/{Updater.REPOSITORY_PATH}/releases/{version}"
+        try:
+            res = requests.get(release_url)
+            res.raise_for_status()
+        except requests.RequestException:
+            release_url = None
+        
+        if release_url is not None:
+            self.version_label = HyperlinkLabel(
+                master=self,
+                text=str(context.plugin_version),
+                url=release_url,
+            )
+        else:
+            self.version_label = tk.Label(
+                master=self,
+                text=str(context.plugin_version),
+            )
+        
+        self.version_label.pack(side="left")
 
 
 class ReleaseTypeSettingFrame(nb.Frame):
