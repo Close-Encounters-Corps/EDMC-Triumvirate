@@ -1,5 +1,6 @@
 import logging
 import tkinter as tk
+from tkinter import ttk
 from queue import Queue
 from semantic_version import Version
 
@@ -16,6 +17,7 @@ from modules.systems import SystemsModule
 from modules.squadron import Squadron_Tracker
 from modules.visualizer import Visualizer
 from modules.lib import thread
+from modules.lib.module import Module
 
 import myNotebook as nb
 
@@ -66,11 +68,26 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
     """
     EDMC вызывает эту функцию для получения вкладки настроек плагина.
     """
+    # TODO: перейти на pack
+
+    def rowgen():
+        row = 1     # Debug.plugin_prefs всегда занимает нулевой ряд
+        while True:
+            yield row
+            row += 1
+    rg = rowgen()
+
     frame = nb.Frame(parent)
-    Debug.plugin_prefs(frame)       # всегда занимает 0-ой ряд
-    for row, mod in enumerate(PluginContext.active_modules):
-        mod.draw_settings(frame, cmdr, is_beta, row+1)
-    nb.Label(frame, text=settings.support_message).grid(row=row+2, column=0, sticky="NW")
+    Debug.plugin_prefs(frame)
+    ttk.Separator(frame, orient="horizontal").grid(row=next(rg), column=0, pady=5, sticky="EW")
+
+    for mod in PluginContext.active_modules:
+        # некоторые модули не имеют настроек, а лишние линии нам не нужны
+        if mod.__class__.draw_settings != Module.draw_settings:
+            mod.draw_settings(frame, cmdr, is_beta, next(rg))
+            ttk.Separator(frame, orient="horizontal").grid(row=next(rg), column=0, pady=5, sticky="EW")
+    
+    nb.Label(frame, text=settings.support_message).grid(row=next(rg), column=0, sticky="NW")
     return frame
 
 
