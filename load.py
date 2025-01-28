@@ -302,6 +302,8 @@ class Updater:
             context.status_label.set_text(_translate("Version: {v}").format(v=str(context.plugin_version)))
             logger.info("Local version configured, running.")
 
+        # фикс для development-версий: удостоверимся, что userdata всегда существует
+        Path(context.plugin_dir, "userdata").mkdir(exist_ok=True)
 
         if context.plugin_loaded:
             return
