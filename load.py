@@ -273,11 +273,8 @@ class Updater:
 
     
     def __use_local_version(self):
-        if context.plugin_loaded:
-            return
-        
         def __inner(self):
-            logger.info("Loading local version in the main thread...")
+            logger.info("Loading the local version in main thread...")
             if not Path(context.plugin_dir, "plugin_init.py").exists():
                 logger.error("`plugin_init` module not found. Aborting.")
                 return
@@ -316,8 +313,20 @@ class Updater:
         # фикс для development-версий: удостоверимся, что userdata всегда существует
         Path(context.plugin_dir, "userdata").mkdir(exist_ok=True)
 
-        logger.info("IGNORE THE FOLLOWING EDMC LOGGING ALERTS, IF ANY. They appear because of tkinter implementation.")
-        tk._default_root.after(0, __inner, self)
+        if context.plugin_loaded:
+            return
+        # Q: Что это за уродство?
+        # A: Если у нас стоит актуальная версия, мы можем дойти до этого участка кода быстрее,
+        #    чем EDMC успеет создать свой GUI, и tkinter начнёт выкобениваться по этому поводу.
+        #    Нам не остаётся ничего другого, кроме как ждать, пока он не будет готов...
+        while True:
+            try:
+                tk._default_root.after(0, __inner, self)
+                logger.info("IGNORE THE SURROUNDING LOGGING ALERTS. THIS IS BECAUSE OF TKINTER.")
+            except RuntimeError:
+                sleep(1)
+            else:
+                break
 
     
     def __files_differ(self, file1: Path, file2: Path):
@@ -434,6 +443,9 @@ def plugin_start3(plugin_dir: str) -> str:
         raise EnvironmentError(_translate("At least EDMC 5.11.0 is required to use this plugin."))
     
     context.plugin_dir = plugin_dir
+    context.updater = Updater()
+    context.updater.start_update_cycle(_check_now=True)
+
     return "Triumvirate"
 
 
@@ -452,9 +464,8 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     отображаемого в окне программы.
     """
     context.plugin_frame = tk.Frame(parent)
-    context.status_label = StatusLabel(context.plugin_frame, 1)     # на 0 ряду будет плашка с номером версии
-    context.updater = Updater()
-    context.updater.start_update_cycle(_check_now=True)
+    context.status_label = StatusLabel(context.plugin_frame, 0)
+    context.status_label.show()
     return context.plugin_frame
 
 
