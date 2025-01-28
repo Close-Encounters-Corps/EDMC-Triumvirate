@@ -118,7 +118,7 @@ class Updater:
     """
     RELEASE_TYPE_KEY = "Triumvirate.Updater.ReleaseType"
     LOCAL_VERSION_KEY = "Triumvirate.Updater.LocalVersion"
-    REPOSITORY_URL = "https://api.github.com/repos/Close-Encounters-Corps/EDMC-Triumvirate"
+    REPOSITORY_PATH = "Close-Encounters-Corps/EDMC-Triumvirate"
 
     def __init__(self):
         self.updater_thread: UpdateCycle = None
@@ -163,7 +163,7 @@ class Updater:
         
         # получаем список релизов
         try:
-            res = requests.get(self.REPOSITORY_URL + "/releases")
+            res = requests.get("https://api.github.com/repos/" + self.REPOSITORY_PATH + "/releases")
             res.raise_for_status()
         except requests.RequestException as e:
             logger.error("Couldn't get the list of versions from GitHub.", exc_info=e)
@@ -203,12 +203,12 @@ class Updater:
                 self.__download_update(latest_version)
             else:
                 logger.info("Notifying user.")
-                context.status_label.set_text(_translate("An update is available. Please restart EDMC."))
+                context.status_label.set_text(_translate("An update is available ({v}). Please restart EDMC.").format(v=str(latest_version)))
 
 
     def __download_update(self, tag: Version):
         context.status_label.set_text(_translate("Downloading an update..."))
-        url = self.REPOSITORY_URL + f"/zipball/{tag}"
+        url = f"https://api.github.com/repos/{self.REPOSITORY_PATH}/zipball/{tag}"
         tempdir = Path(tempfile.gettempdir()) / "EDMC-Triumvirate"
         if tempdir.exists():
             shutil.rmtree(tempdir)
@@ -375,12 +375,12 @@ class ReleaseTypeSettingFrame(nb.Frame):
         self.reltype_field = ttk.Combobox(self, values=reltypes_list, textvariable=self.reltype_var, state="readonly")
         self.reltype_field.grid(row=0, column=1, sticky="NW", padx=5)
 
-        self.description_var = tk.StringVar(value=_translate(f"RELEASE_TYPE_DESC_{self.reltype_var.get()}"))
+        self.description_var = tk.StringVar(value=_translate(f"RELEASE_TYPE_DESCRIPTION_{self.reltype_var.get()}"))
         self.description_label = nb.Label(self, textvariable=self.description_var)
         self.description_label.grid(row=1, columnspan=2, sticky="NWS")
 
     def _update_description(self, varname, index, mode):
-        self.description_var.set(_translate(f"RELEASE_TYPE_DESC_{self.reltype_var.get()}"))
+        self.description_var.set(_translate(f"RELEASE_TYPE_DESCRIPTION_{self.reltype_var.get()}"))
 
     def get_selected_reltype(self):
         return ReleaseType(self.reltype_var.get())
