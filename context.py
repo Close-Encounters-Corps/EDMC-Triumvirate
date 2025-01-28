@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from modules.systems import SystemsModule
     from modules.squadron import Squadron_Tracker
     from modules.patrol import PatrolModule
-    from modules.visualizer import Visualizer
+    from modules.exploring.visualizer import Visualizer
     from modules.legacy import Reporter
 
 

@@ -15,7 +15,7 @@ from modules.notifier import Notifier
 from modules.patrol import PatrolModule
 from modules.systems import SystemsModule
 from modules.squadron import Squadron_Tracker
-from modules.visualizer import Visualizer
+from modules.exploring.visualizer import Visualizer
 from modules.lib import thread
 from modules.lib.module import Module
 
