@@ -45,7 +45,7 @@ class JournalProcessor(Thread):
         
         if new_cmdr != GameState.cmdr:
             GameState.cmdr = new_cmdr
-            PluginContext.logger.debug(f"New CMDR: {GameState.cmdr}. Fetching a squadron.")
+            PluginContext.logger.debug(f"New CMDR: {GameState.cmdr}. Fetching the squadron.")
             GameState.squadron, GameState.legacy_sqid = legacy.fetch_squadron()
             PluginContext.logger.debug(f"Squadron set to {GameState.squadron}, SQID set to {GameState.legacy_sqid}.")
 

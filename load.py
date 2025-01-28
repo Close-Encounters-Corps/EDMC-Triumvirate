@@ -273,8 +273,11 @@ class Updater:
 
     
     def __use_local_version(self):
+        if context.plugin_loaded:
+            return
+        
         def __inner(self):
-            logger.info("Loading the local version in main thread...")
+            logger.info("Loading local version the in main thread...")
             if not Path(context.plugin_dir, "plugin_init.py").exists():
                 logger.error("`plugin_init` module not found. Aborting.")
                 return
@@ -313,16 +316,13 @@ class Updater:
         # фикс для development-версий: удостоверимся, что userdata всегда существует
         Path(context.plugin_dir, "userdata").mkdir(exist_ok=True)
 
-        if context.plugin_loaded:
-            return
-        # Q: Что это за уродство?
-        # A: Если у нас стоит актуальная версия, мы можем дойти до этого участка кода быстрее,
-        #    чем EDMC успеет создать свой GUI, и tkinter начнёт выкобениваться по этому поводу.
-        #    Нам не остаётся ничего другого, кроме как ждать, пока он не будет готов...
+        # Если у нас стоит актуальная версия, мы можем дойти до этого участка кода быстрее,
+        # чем EDMC успеет создать своё окно, и мы словим runtime error.
+        # winfo_ismapped до создания окна тоже бросает эксепшн, поэтому придётся делать по-уродски.
         while True:
             try:
                 tk._default_root.after(0, __inner, self)
-                logger.info("IGNORE THE SURROUNDING LOGGING ALERTS. THIS IS BECAUSE OF TKINTER.")
+                logger.info("IGNORE THE SURROUNDING LOGGING ALERTS. They appear because of tkinter and EMDC logging implementations.")
             except RuntimeError:
                 sleep(1)
             else:
