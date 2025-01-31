@@ -15,6 +15,7 @@ from modules.notifier import Notifier
 from modules.patrol import PatrolModule
 from modules.systems import SystemsModule
 from modules.squadron import Squadron_Tracker
+from modules.exploring.codex import CanonnPOIFetcher
 from modules.exploring.visualizer import Visualizer
 from modules.lib import thread
 from modules.lib.module import Module
@@ -52,6 +53,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     PluginContext.canonn_api = CanonnRealtimeAPI()
     PluginContext.systems_module = SystemsModule()
     PluginContext.sq_tracker = Squadron_Tracker()
+    PluginContext.codex = CanonnPOIFetcher()
 
     #TODO: on_start вообще не нужен с новой системой обновлений, отредактировать модули
     for mod in PluginContext.active_modules:
@@ -86,7 +88,7 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
         if mod.__class__.draw_settings != Module.draw_settings:
             mod.draw_settings(frame, cmdr, is_beta, next(rg))
             ttk.Separator(frame, orient="horizontal").grid(row=next(rg), column=0, pady=5, sticky="EW")
-    
+
     nb.Label(frame, text=settings.support_message).grid(row=next(rg), column=0, sticky="NW")
     return frame
 
