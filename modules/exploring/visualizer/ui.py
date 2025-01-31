@@ -113,7 +113,7 @@ class _IconButton(nb.Button):
         self.__callback(self.category)
 
 
-class VisualizerView(ttk.Frame):
+class VisualizerView(tk.Frame):
     def __init__(self, parent: tk.Misc, row: int):
         self.__active_ctg: str | None = None
         # забудьте, что видели этот атрибут. всё взаимодействие через self.active_category
@@ -123,9 +123,9 @@ class VisualizerView(ttk.Frame):
         self.data: dict[str, list[_DataItem]] = dict()      # с разбивкой по категориям
 
         # фрейм с кнопками-иконками категорий
-        self.buttons_frame = ttk.Frame(self)
+        self.buttons_frame = tk.Frame(self)
         self.buttons_dummy_label = tk.Label(self.buttons_frame, text=plugin_tr("Waiting for data..."))
-        self.buttons_dummy_label.pack(side='top', fill='x')
+        self.buttons_dummy_label.pack(side='left', fill='x')
         self.buttons: dict[str, _IconButton] = {}
         for ctg in CATEGORIES:
             self.buttons[ctg] = _IconButton(self.buttons_frame, ctg, self.__button_callback)
@@ -200,7 +200,7 @@ class VisualizerView(ttk.Frame):
                     button.activate()
         
         if len(self.data) == 0:
-            self.buttons_dummy_label.pack(side="top", fill="x")
+            self.buttons_dummy_label.pack(side="left", fill="x")
         
     
     def __update_content(self):

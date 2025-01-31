@@ -21,9 +21,9 @@ class _DataItem:
         self.body       = body
         self.text       = text
     
-    def __lt__(self, other):
+    def __lt__(self, other: '_DataItem'):
         if self.category != other.category:
             return self.category < other.category
         if self.body != other.body:
             return self.body < other.body
-        return self.info < other.info
+        return self.text < other.text
