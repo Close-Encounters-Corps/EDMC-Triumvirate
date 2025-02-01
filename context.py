@@ -19,7 +19,6 @@ if TYPE_CHECKING:
     from modules.squadron import Squadron_Tracker
     from modules.patrol import PatrolModule
     from modules.exploring.visualizer import Visualizer
-    from modules.legacy import Reporter
 
 
 class _ClassProperty:
@@ -48,7 +47,6 @@ class PluginContext:
     _event_queue: 'Queue'           = None
     journal_processor: 'JournalProcessor'   = None
     notifier: 'Notifier'            = None
-    reporter: 'Reporter'            = None
 
     # модули
     bgs_module: 'BGS'               = None
