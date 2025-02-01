@@ -120,7 +120,7 @@ class VisualizerView(tk.Frame):
 
         super().__init__(parent)
         self.row = row
-        self.data: dict[str, list[_DataItem]] = dict()      # с разбивкой по категориям
+        self.data: dict[str, set[_DataItem]] = dict()      # с разбивкой по категориям
 
         # фрейм с кнопками-иконками категорий
         self.buttons_frame = tk.Frame(self)
@@ -154,13 +154,15 @@ class VisualizerView(tk.Frame):
         for item in data:
             ctg = item.category
             if ctg not in self.data:
-                self.data[ctg] = []
+                self.data[ctg] = set()
                 update_buttons = True
-            self.data[ctg].append(item)
+            self.data[ctg].add(item)
             if ctg == self.active_category:
                 update_content = True
-        if update_buttons:  self.after(0, self.__update_buttons)
-        if update_content:  self.after(0, self.__update_content)
+        if update_buttons:
+            self.after(0, self.__update_buttons)
+        if update_content:
+            self.after(0, self.__update_content)
     
     
     def clear(self):

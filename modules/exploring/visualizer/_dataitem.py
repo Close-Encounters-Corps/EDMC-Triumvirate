@@ -21,9 +21,19 @@ class _DataItem:
         self.body       = body
         self.text       = text
     
-    def __lt__(self, other: '_DataItem'):
+    def __lt__(self, other: '_DataItem') -> bool:
         if self.category != other.category:
             return self.category < other.category
         if self.body != other.body:
             return self.body < other.body
         return self.text < other.text
+    
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, _DataItem):
+            return NotImplemented
+        # одинаковую инфу из разных модулей будем считать равной - это нужно для упрощения кода ui
+        return (self.category, self.body, self.text) == (other.category, other.body, other.text)
+    
+    def __hash__(self) -> int:
+        # аналогично - модуль-источник не будет давать уникальности
+        return hash((self.category, self.body, self.text))
