@@ -32,6 +32,8 @@ class CanonnReporter(Thread):
                 "[CanonnReporter] Couldn't send data to Canonn Cloud. Url: {}, payload: {}.".format(self.url, self.payload),
                 exc_info=e
             )
+        else:
+            debug("[CanonnReporter] Data sent successfully: url {!r}, payload {!r}.", self.url, self.payload)
 
 
 class HDDetector:
@@ -61,10 +63,7 @@ class HDDetector:
         entry = journalEntry.data
         event = entry["event"]
 
-        if event == "Statistics":
-            self.check_last_encounter(journalEntry)
-
-        elif event == "StartJump" and entry["JumpType"] == "Hyperspace":
+        if event == "StartJump" and entry["JumpType"] == "Hyperspace":
             self.departure_system = journalEntry.system
             self.destination_system = entry["StarSystem"]
             self.departure_timestamp = datetime.fromisoformat(entry["timestamp"])
