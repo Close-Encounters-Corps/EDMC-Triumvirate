@@ -12,7 +12,8 @@ galaxy_url = "https://api-galaxy.closeencounterscorps.org"
 ###################
 ### CANONN URLS ###
 ###################
-canonn_realtime_url = "https://us-central1-canonn-api-236217.cloudfunctions.net"
+canonn_cloud_url_us_central = "https://us-central1-canonn-api-236217.cloudfunctions.net"
+canonn_cloud_url_europe_west = "https://europe-west1-canonn-api-236217.cloudfunctions.net"
 
 ships = {  #Некоторые корабли имеют "а" перед названием, потому что этот словарь используется  для подстановки типов в сообщение с учетом женского рода
     "adder": " Adder",
@@ -145,16 +146,13 @@ release_gh_latest = "https://api.github.com/repos/Close-Encounters-Corps/EDMC-Tr
 release_zip_template = "https://github.com/Close-Encounters-Corps/EDMC-Triumvirate/archive/{}.zip"
 release_gh_ver_info = "https://api.github.com/repos/Close-Encounters-Corps/EDMC-Triumvirate/releases/tags/{}"
 
-#####################
-### NHSS settings ###
-#####################
-nhss_canonn_url = "https://us-central1-canonn-api-236217.cloudfunctions.net/submitNHSS"
 
 #############
 ### other ###
 #############
 support_message = """В случае возникновения проблем с плагином обращайтесь в дискорд Close Encounters Corps, канал #triumvirate_tech_support, в личные сообщения @elcylite и @kazak0v или на почтовый адрес help@cec.org"""
 version = "1.12.0-beta-1.indev"     # семантическое версионирование
+
 
 try:
     from settings_local import *

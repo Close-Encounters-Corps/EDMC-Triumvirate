@@ -2,7 +2,7 @@ import requests, traceback, json
 from datetime import datetime, timedelta
 
 from context import PluginContext, GameState
-from settings import canonn_realtime_url
+from settings import canonn_cloud_url_us_central, canonn_cloud_url_europe_west
 from modules.debug import info, debug, error
 from modules.lib.module import Module
 from modules.lib.journal import JournalEntry
@@ -111,7 +111,7 @@ class HDDetector:
         x, y, z    = journalEntry.coords
         dx, dy, dz = PluginContext.systems_module.get_system_coords(self.destination_system)
         
-        url = "https://europe-west1-canonn-api-236217.cloudfunctions.net/postHDDetected"
+        url = f"{canonn_cloud_url_europe_west}/postHDDetected"
         params = {
             "cmdr": journalEntry.cmdr,
             "system": journalEntry.system,
@@ -145,7 +145,7 @@ class HDDetector:
             
             debug("[HDDetector] Last encounter: timestamp {!r}, system {!r}.", timestamp, system)
 
-            url = "https://europe-west1-canonn-api-236217.cloudfunctions.net/postHD"
+            url = f"{canonn_cloud_url_europe_west}/postHD"
             params = {
                 "cmdr": journalEntry.cmdr,
                 "system": system,
@@ -160,7 +160,6 @@ class CanonnRealtimeAPI(Module):
     """Проверяет и отправляет интересные для Canonn-ов игровые события."""
     _instance = None
     _hdtracker = HDDetector()
-    CANONN_CLOUD_URL = canonn_realtime_url
     whitelist = dict()
 
     def __init__(self):
@@ -239,7 +238,7 @@ class CanonnRealtimeAPI(Module):
             return
         # если все пары ключей-значений совпадают, каноны в этом заинтересованы
         debug("[CanonnAPI] Sending the {!r} event to Canonn.", entry["event"])
-        url = f"{self.CANONN_CLOUD_URL}/postEvent"
+        url = f"{canonn_cloud_url_us_central}/postEvent"
         gamestate = self._get_gamestate(journalEntry)
         params = {
             "gameState": gamestate,
@@ -253,7 +252,7 @@ class CanonnRealtimeAPI(Module):
         if len(self.fss_signals_batch) == 0:
             return
         debug("[CanonnAPI] Dumping the batch, len={}.", len(self.fss_signals_batch))
-        url = f"{self.CANONN_CLOUD_URL}/postEvent"
+        url = f"{canonn_cloud_url_us_central}/postEvent"
         gamestate = self._get_gamestate(self.fss_signals_batch[0])
         params = {
             "gameState": gamestate,

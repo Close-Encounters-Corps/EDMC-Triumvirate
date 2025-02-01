@@ -10,7 +10,7 @@ from math import sqrt, pow
 from urllib.parse import quote_plus, unquote
 from tkinter import Frame
 import tkinter as tk
-from settings import canonn_realtime_url, edsm_url
+from settings import edsm_url, canonn_cloud_url_us_central
 from context import GameState
 
 nvl = lambda a, b: a or b
@@ -149,7 +149,7 @@ class CodexTypes(Frame):
                 "cmdr":    cmdr,
                 "odyssey": odyssey
             }
-            url = f"{canonn_realtime_url}/query/getSystemPoi"
+            url = f"{canonn_cloud_url_us_central}/query/getSystemPoi"
             debug(params)
             r = requests.get(url, params=params)
 

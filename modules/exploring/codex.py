@@ -1,14 +1,14 @@
 import requests
 
 from context import PluginContext, GameState
-from settings import canonn_realtime_url, poi_categories
+from settings import poi_categories, canonn_cloud_url_us_central
 from modules.debug import debug, warning
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 
 
 class CanonnPOIFetcher(Module):
-    URL = f"{canonn_realtime_url}/query/getSystemPoi"
+    URL = f"{canonn_cloud_url_us_central}/query/getSystemPoi"
 
     def __init__(self):
         PluginContext.visualizer.register(self)
@@ -26,14 +26,13 @@ class CanonnPOIFetcher(Module):
 
 
     def fetch_data(self, system: str):
-        url = f"{canonn_realtime_url}/query/getSystemPoi"
         params = {
             "cmdr": GameState.cmdr,
             "system": system,
             "odyssey": GameState.odyssey
         }
         try:
-            res = requests.get(url, params=params)
+            res = requests.get(self.URL, params=params)
             res.raise_for_status()
         except requests.RequestException as e:
             PluginContext.logger.error("[Codex] Couldn't fetch system POIs from Canonn.", exc_info=e)
