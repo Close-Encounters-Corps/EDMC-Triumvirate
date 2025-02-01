@@ -39,7 +39,7 @@ class HDDetector:
         event = entry["event"]
 
         if event == "Statistics":
-            self._check_last_encounter(journalEntry)
+            self.check_last_encounter(journalEntry)
 
         elif event == "StartJump" and entry["JumpType"] == "Hyperspace":
             self.departure_system = journalEntry.system
@@ -100,17 +100,18 @@ class HDDetector:
             "odyssey": GameState.odyssey,
             "hostile": self.status == self.HOSTILE
         }
-        Reporter(url, json.dumps(params)).start()
+        Reporter(url, params).start()
 
         # сбрасываем состояние до следующего перехвата
         self.status = self.SAFE
     
 
-    def _check_last_encounter(self, journalEntry: JournalEntry):
+    @classmethod
+    def check_last_encounter(cls, journalEntry: JournalEntry):
         entry = journalEntry.data
         if entry.get("TG_ENCOUNTERS", {}).get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM"):
             debug("[HDDetector] Detected {!r} event, sending the last thargoid encounter to Canonn.", entry["event"])
-            system = entry.get(["TG_ENCOUNTERS"]).get(["TG_ENCOUNTER_TOTAL_LAST_SYSTEM"])
+            system = entry.get("TG_ENCOUNTERS").get("TG_ENCOUNTER_TOTAL_LAST_SYSTEM")
             if system == "Pleiades Sector IR-W d1-55":
                 system = "Delphi"
             x, y, z = PluginContext.systems_module.get_system_coords(system)
@@ -128,7 +129,7 @@ class HDDetector:
                 "timestamp": timestamp,
                 "x": x, "y": y, "z": z
             }
-            Reporter(url, json.dumps(params)).start()
+            Reporter(url, params).start()
 
 
 
@@ -148,6 +149,9 @@ class CanonnRealtimeAPI(Module):
 
 
     def on_journal_entry(self, journalEntry: JournalEntry):
+        if journalEntry.data["event"] == "Statistics":
+            self._hdtracker.check_last_encounter(journalEntry)
+
         if not journalEntry.system:     # потому что некоторые ивенты, например, FSSSignalDiscovered, при старте игры идут до Location
             return                      # и EDMC в этот момент отдаёт system=None
         
@@ -219,7 +223,7 @@ class CanonnRealtimeAPI(Module):
             "rawEvents": [entry],
             "cmdrName":  journalEntry.cmdr
         }
-        Reporter(url, json.dumps(params)).start()
+        Reporter(url, params).start()
 
     
     def _dump_batch(self):
@@ -233,7 +237,7 @@ class CanonnRealtimeAPI(Module):
             "rawEvents": [entry.data for entry in self.fss_signals_batch],
             "cmdrName":  self.fss_signals_batch[0].cmdr
         }
-        Reporter(url, json.dumps(params.copy())).start()
+        Reporter(url, params.copy()).start()
         self.fss_signals_batch.clear()
     
     
