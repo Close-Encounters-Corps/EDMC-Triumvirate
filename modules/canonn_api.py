@@ -6,11 +6,11 @@ from settings import canonn_cloud_url_us_central, canonn_cloud_url_europe_west
 from modules.debug import info, debug, error
 from modules.lib.module import Module
 from modules.lib.journal import JournalEntry
-from modules.lib.thread import Thread
+from modules.lib.thread import Thread, BasicThread
 from modules.lib.timer import Timer
 
 
-class CanonnReporter(Thread):
+class CanonnReporter(BasicThread):
     """Смесь Reporter и Canonn-овского Emitter"""
     # https://github.com/canonn-science/EDMC-Canonn/blob/05a5d9c4f842ad4fdb52b1a04ffc01ac623eba2b/canonn/emitter.py
 
@@ -19,7 +19,7 @@ class CanonnReporter(Thread):
         self.url = url
         self.payload = payload
 
-    def do_run(self):
+    def run(self):
         try:
             res = requests.post(
                 self.url,
