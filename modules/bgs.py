@@ -14,7 +14,7 @@ from .lib.journal import JournalEntry
 from .lib.module import Module
 from .lib.conf import config as plugin_config
 from .lib.thread import Thread, BasicThread
-from .legacy import Reporter, URL_GOOGLE
+from .legacy import GoogleReporter, URL_GOOGLE
 
 import myNotebook as nb
 
@@ -241,7 +241,7 @@ class BGS(Module):
                     for key, value in params.items():
                         if type(value) == str:
                             params[key] = value.replace("'", "’")
-                    Reporter(url, params).start()
+                    GoogleReporter(url, params).start()
                     info("[BGS.send]: BGS information sent.")
                     break
 
@@ -257,7 +257,7 @@ class BGS(Module):
                     for key, value in params.items():
                         if type(value) == str:
                             params[key] = value.replace("'", "’")
-                    Reporter(url, params).start()
+                    GoogleReporter(url, params).start()
                     counter += 1
                     break
         info(f"[BGS.send_all] {counter} pending entries sent.")

@@ -10,7 +10,7 @@ from typing import Callable
 
 from context import GameState
 from modules.debug import debug, error, warning
-from modules.legacy import Reporter
+from modules.legacy import GoogleReporter
 from modules.lib.conf import config as plugin_config
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
@@ -546,7 +546,7 @@ class FC_Tracker(Module):
             "entry.78144414":   self.fc_data.comment,
             "entry.1361520128": decommission_timestamp
         }
-        Reporter(url, params).start()
+        GoogleReporter(url, params).start()
 
     
     def __check_fleetcarrier_space_account(self):

@@ -64,4 +64,4 @@ class Squadron_Tracker(Module):
             "entry.1289608233": GameState.cmdr,
             "entry.1616589915": GameState.squadron or "[independent]"
         }
-        legacy.Reporter(url, params).start()
+        legacy.GoogleReporter(url, params).start()

@@ -19,7 +19,7 @@ except:#py2
 URL_GOOGLE = 'https://docs.google.com/forms/d/e'
 
 
-class Reporter(BasicThread):
+class GoogleReporter(BasicThread):
     STANDARD_RETRY_DELAY = 10
     LONG_RETRY_DELAY = 10 * 60
     MAX_ATTEMPTS = 10
@@ -35,30 +35,30 @@ class Reporter(BasicThread):
             try:
                 response = requests.post(self.url, self.params)
             except:
-                error("[Reporter] Couldn't send data: url {!r}, params {!r}:", self.url, self.params)
+                error("[GoogleReporter] Couldn't send data: url {!r}, params {!r}:", self.url, self.params)
                 error(traceback.format_exc())
                 return
             
             if response.ok:
-                debug("[Reporter] Data sent successfully: url {!r}, params {!r} ({} attempts).", self.url, self.params, n_attempt)
+                debug("[GoogleReporter] Data sent successfully: url {!r}, params {!r} ({} attempts).", self.url, self.params, n_attempt)
                 return
             
             elif response.status_code == 408:   # таймаут, есть смысл попытаться ещё
-                error("[Reporter] Couldn't send data (418 Timeout): url {!r}, params {!r} ({} attempts).", self.url, self.params, n_attempt)
+                error("[GoogleReporter] Couldn't send data (418 Timeout): url {!r}, params {!r} ({} attempts).", self.url, self.params, n_attempt)
                 n_attempt += 1
                 self.sleep(self.STANDARD_RETRY_DELAY)
 
             elif response.status_code == 429:   # слишком много запросов, подождём подольше
-                error("[Reporter] Couldn't send data (429 Too many requests): url {!r}, params {!r} ({} attempts).", self.url, self.params, n_attempt)
+                error("[GoogleReporter] Couldn't send data (429 Too many requests): url {!r}, params {!r} ({} attempts).", self.url, self.params, n_attempt)
                 n_attempt += 1
                 self.sleep(self.LONG_RETRY_DELAY)
 
             elif response.status_code < 500:    # всё остальное из 4XX пытаться повторять смысла нет
-                error("[Reporter] Coundn't send data (code {}): url {!r}, params {!r}. Aborting.", response.status_code, self.url, self.params)
+                error("[GoogleReporter] Coundn't send data (code {}): url {!r}, params {!r}. Aborting.", response.status_code, self.url, self.params)
                 return
             
             else:                               # 5XX можно попытаться повторить
-                error("[Reporter] Coundn't send data (code {}): url {!r}, params {!r} ({} attempts).", response.status_code, self.url, self.params, n_attempt)
+                error("[GoogleReporter] Coundn't send data (code {}): url {!r}, params {!r} ({} attempts).", response.status_code, self.url, self.params, n_attempt)
                 n_attempt += 1
                 self.sleep(self.STANDARD_RETRY_DELAY)
 
@@ -88,7 +88,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                 "entry.1301773715": entry.get("BodyCount", ""),
             }
             url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-            Reporter(url).start()
+            GoogleReporter(url).start()
 
     # проверка АТ на биосигналы перед отправкой в базу
     if entry["event"] == "FSSBodySignals":
@@ -135,7 +135,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                 "entry.1301773715": str(mass).replace('.', ','),
             }
             url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-            Reporter(url).start()
+            GoogleReporter(url).start()
 
         # рекорды: горячие юпитеры
         if "gas giant" in entry.get("PlanetClass").lower():
@@ -147,7 +147,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                     "entry.1301773715": str(entry.get("SurfaceTemperature")).replace('.', ','),
                 }
                 url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-                Reporter(url).start()
+                GoogleReporter(url).start()
 
         # рекорды: радиус колец
         if "Rings" in entry:
@@ -163,7 +163,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                         "entry.1301773715": outerRad[:-3],
                     }
                     url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-                    Reporter(url).start()
+                    GoogleReporter(url).start()
         
         if entry.get("Landable") == True:
             # рекорды: температура посадочных
@@ -175,7 +175,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                     "entry.1301773715": entry.get("SurfaceTemperature"),
                 }
                 url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-                Reporter(url).start()
+                GoogleReporter(url).start()
 
             # рекорды: радиус посадочных
             if entry.get("Radius") / 1000 > 25444:
@@ -186,7 +186,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                     "entry.1301773715": str(entry.get("Radius")).replace('.', ','),
                 }
                 url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-                Reporter(url).start()
+                GoogleReporter(url).start()
             elif entry.get("Radius") <= 138000:
                 url_params = {
                     "entry.1258689641": cmdr,
@@ -195,7 +195,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                     "entry.1301773715": str(entry.get("Radius") / 1000).replace('.', ','),
                 }
                 url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-                Reporter(url).start()
+                GoogleReporter(url).start()
             
             # рекорды: гравитация посадочных
             if entry.get("SurfaceGravity") / 10 > 7.51:
@@ -206,7 +206,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                     "entry.1301773715": str(entry.get("SurfaceGravity") / 10).replace('.', ','),
                 }
                 url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-                Reporter(url).start()
+                GoogleReporter(url).start()
 
     # рекорды: орбитальный период
     if "OrbitalPeriod" in entry:
@@ -218,7 +218,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                 "entry.1301773715": entry.get("OrbitalPeriod"),
             }
             url = f'{URL_GOOGLE}/1FAIpQLSfFr7ezqpQ4cnw99bJ-lOIW-6QtKRArhgDNtSj8eLtPoILXUg/formResponse?usp=pp_url&{"&".join([f"{k}={v}" for k, v in url_params.items()])}'
-            Reporter(url).start()
+            GoogleReporter(url).start()
 
     if "PlanetClass" in entry:
         # БД атмосферных и рекорды - ГГ
@@ -235,7 +235,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                 "entry.549950938": entry.get("StarSystem", "")
             }
             url = f'{URL_GOOGLE}/1FAIpQLSeVvva2K9VMJZyr4mJ9yRnQPXhcDHUwO8iTxrg2z1Qi4lJk_Q/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-            Reporter(url).start()
+            GoogleReporter(url).start()
 
             # БД Boepp (экспедиционная)
             if "Boepp " in entry["BodyName"]:
@@ -245,7 +245,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                     "entry.1828517199": entry.get("StarSystem", "")
                 }
                 url = f'{URL_GOOGLE}/1FAIpQLSeCRZ9GXprtSEUFgUOMR5yBGkqYpdrKAumLkYH6KkPOUq3sIA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-                Reporter(url).start()
+                GoogleReporter(url).start()
 
             # рекорды
             url_params = {
@@ -254,7 +254,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                 "entry.1789316283": entry.get("StarSystem", "")
             }
             url = f'{URL_GOOGLE}/1FAIpQLSc6mPwibfkLDyVklC7bEiJsNOtcE8pE9OS2b9o3FpBDNiaN4g/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-            Reporter(url).start()
+            GoogleReporter(url).start()
 
         # Картография
         valuable = False
@@ -275,7 +275,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                 "entry.1992174852": entry.get("StarSystem", "")
             }
             url = f'{URL_GOOGLE}/1FAIpQLSdgwzvgxow5ATuB4Gimj6DvDRD3-ub3Yp4UD-nQK4CnZdKV9w/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-            Reporter(url).start()
+            GoogleReporter(url).start()
 
         # БД атмосферных - планеты
         if entry["Landable"] == True:
@@ -301,11 +301,11 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
                         }
                         # общая БД
                         url = f'{URL_GOOGLE}/1FAIpQLScWkHPhTEHcNCoAwIAbb54AQgg8A6ocX2Ulbfkr2hcubgfbRA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-                        Reporter(url).start()
+                        GoogleReporter(url).start()
                         # БД Boepp (экспедиционная)
                         if "Boepp " in entry["BodyName"]:
                             url = f'{URL_GOOGLE}/1FAIpQLSfrZqrZHJ5T0lgpaoUOcLgM0fXmR_t5_vLKvT7J5HDA8mugeg/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-                            Reporter(url).start()
+                            GoogleReporter(url).start()
 
     # звёзды
     if "StarType" in entry:
@@ -318,11 +318,11 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
         }
         # общая БД
         url = f'{URL_GOOGLE}/1FAIpQLSdfXA2mLXTamWdz3mXC3Ta3UaJS6anqY4wvzkX-9XzGilZ6Tw/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-        Reporter(url).start()
+        GoogleReporter(url).start()
         # БД Boepp (экспедиционная)
         if "Boepp " in entry["BodyName"]:
             url = f'{URL_GOOGLE}/1FAIpQLSeapH5azc-9T0kIZ4vfDBcDlcd8ZfMUBS42DMRXL8fYcBxRtQ/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-            Reporter(url).start()
+            GoogleReporter(url).start()
         # картография
         url_params = {
             "entry.1407433679": entry.get("BodyName", ""),
@@ -332,7 +332,7 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
             "entry.2033592775": str(entry.get("Age_MY"))
         }
         url = f'{URL_GOOGLE}/1FAIpQLSfYl0iPm-qQOCyD6iVIjK7BPIgnp6yABR2YVwfcp2GB5KWtNA/formResponse?usp=pp_url&{"&".join([f"{k}={quote_plus(v)}" for k, v in url_params.items()])}'
-        Reporter(url).start()
+        GoogleReporter(url).start()
 
 
 def report_version():
@@ -350,7 +350,7 @@ def report_version():
         "entry.488844173":  ip6 or "0",
         "entry.1210213202": 1
     }
-    Reporter(url, params).start()
+    GoogleReporter(url, params).start()
 
 
 def fetch_squadron() -> tuple[str|None, str|None]:
