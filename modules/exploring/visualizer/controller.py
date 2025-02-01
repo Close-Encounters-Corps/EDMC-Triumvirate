@@ -55,7 +55,7 @@ class VisualizerController(Module):
         self.__model.add_data(caller, category, body, text)
 
 
-    def is_display_enabled_for(self, module: Module) -> bool:
+    def display_enabled_for(self, module: Module) -> bool:
         assert isinstance(module, Module)
         return self.__model.is_data_shown_from(module)
     

@@ -7,7 +7,7 @@ from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 
 
-class CanonnPOIFetcher(Module):
+class CanonnCodexPOI(Module):
     URL = f"{canonn_cloud_url_us_central}/query/getSystemPoi"
 
     def __init__(self):
@@ -16,11 +16,16 @@ class CanonnPOIFetcher(Module):
 
 
     def on_journal_entry(self, entry: JournalEntry):
+        if not PluginContext.visualizer.display_enabled_for(self):
+            return
+        
         event = entry.data.get("event")
         if event == "StartJump" and entry.data.get("JumpType") == "Hyperspace":
-            self.destination_system = entry.data.get("SystemName")
-        elif event == "FSDJump" and (system := entry.data["StarSystem"] == self.destination_system):
-            self.fetch_data(system)
+            self.destination_system = entry.data.get("StarSystem")
+        elif event == "FSDJump":
+            if (system := entry.data["StarSystem"]) == self.destination_system:
+                self.fetch_data(system)
+            self.destination_system = None
         elif event == "Location":
             self.fetch_data(entry.data["StarSystem"])
 

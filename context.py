@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from modules.squadron import Squadron_Tracker
     from modules.patrol import PatrolModule
     from modules.exploring.visualizer import Visualizer
+    from modules.exploring.canonn_codex_poi import CanonnCodexPOI
 
 
 class _ClassProperty:
@@ -51,7 +52,7 @@ class PluginContext:
     # модули
     bgs_module: 'BGS'               = None
     canonn_api: 'CanonnRealtimeAPI' = None
-    codex                           = None      #TODO: переработка
+    canonn_codex_poi: 'CanonnCodexPOI'  = None
     sq_tracker: 'Squadron_Tracker'  = None
     fc_tracker: 'FC_Tracker'        = None
     friendfoe                       = None      #TODO: оживить
