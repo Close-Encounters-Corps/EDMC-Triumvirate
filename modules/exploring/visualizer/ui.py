@@ -124,7 +124,7 @@ class VisualizerView(tk.Frame):
 
         # фрейм с кнопками-иконками категорий
         self.buttons_frame = tk.Frame(self)
-        self.buttons_dummy_label = tk.Label(self.buttons_frame, text=plugin_tr("Waiting for data..."))
+        self.buttons_dummy_label = tk.Label(self.buttons_frame, text=plugin_tr("Visualizer: No data yet."))
         self.buttons_dummy_label.pack(side='left', fill='x')
         self.buttons: dict[str, _IconButton] = {}
         for ctg in CATEGORIES:
