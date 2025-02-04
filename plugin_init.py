@@ -15,8 +15,9 @@ from modules.notifier import Notifier
 from modules.patrol import PatrolModule
 from modules.systems import SystemsModule
 from modules.squadron import Squadron_Tracker
-from modules.exploring.canonn_codex_poi import CanonnCodexPOI
 from modules.exploring.visualizer import Visualizer
+from modules.exploring.canonn_codex_poi import CanonnCodexPOI
+from modules.exploring.poi_checker import CustomPOIChecker
 from modules.lib import thread
 from modules.lib.module import Module
 
@@ -54,6 +55,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     PluginContext.systems_module = SystemsModule()
     PluginContext.sq_tracker = Squadron_Tracker()
     PluginContext.canonn_codex_poi = CanonnCodexPOI()
+    PluginContext.poi_checker = CustomPOIChecker()
 
     #TODO: on_start вообще не нужен с новой системой обновлений, отредактировать модули
     for mod in PluginContext.active_modules:

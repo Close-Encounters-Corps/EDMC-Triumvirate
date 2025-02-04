@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from modules.patrol import PatrolModule
     from modules.exploring.visualizer import Visualizer
     from modules.exploring.canonn_codex_poi import CanonnCodexPOI
+    from modules.exploring.poi_checker import CustomPOIChecker
 
 
 class _ClassProperty:
@@ -54,13 +55,14 @@ class PluginContext:
     # модули
     bgs_module: 'BGS'               = None
     canonn_api: 'CanonnRealtimeAPI' = None
-    canonn_codex_poi: 'CanonnCodexPOI'  = None
     sq_tracker: 'Squadron_Tracker'  = None
     fc_tracker: 'FC_Tracker'        = None
     friendfoe                       = None      # TODO: оживить
     systems_module: 'SystemsModule' = None
     patrol_module: 'PatrolModule'   = None
     exp_visualizer: 'Visualizer'    = None
+    canonn_codex_poi: 'CanonnCodexPOI'  = None
+    poi_checker: 'CustomPOIChecker' = None
 
     @_ClassProperty
     def active_modules(cls) -> list['Module']:
