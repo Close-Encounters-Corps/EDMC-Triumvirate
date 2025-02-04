@@ -2,7 +2,6 @@
 *.pyo
 *.patrol
 /*.bat
-userdata
 /EDMC.log
 /.venv
 /venv
