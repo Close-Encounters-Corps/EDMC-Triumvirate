@@ -1,0 +1,423 @@
+[
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Landable with volcanism",
+            "category": "Geology"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "Landable",
+                    "value": true
+                },
+                {
+                    "operation": "not equal",
+                    "field": "Volcanism",
+                    "value": ""
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Earthlike body",
+            "category": "Planets"
+        },
+        "definition": {
+            "operation": "equal",
+            "field": "BodyType",
+            "value": "Earthlike body"
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Ammonia world",
+            "category": "Planets"
+        },
+        "definition": {
+            "operation": "equal",
+            "field": "BodyType",
+            "value": "Ammonia world"
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Terraformable water world",
+            "category": "Planets"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "BodyType",
+                    "value": "Water world"
+                },
+                {
+                    "operation": "equal",
+                    "field": "TerraformState",
+                    "value": "Terraformable"
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Fast orbit",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "less or equal",
+            "field": "OrbitalPeriod",
+            "value": 1200
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Earthlike body with rings",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "BodyType",
+                    "value": "Earthlike body"
+                },
+                {
+                    "operation": "contains",
+                    "value": "Rings"
+                },
+                {
+                    "operation": "not equal",
+                    "field": "Rings",
+                    "value": []
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Ammonia world with rings",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "BodyType",
+                    "value": "Ammonia world"
+                },
+                {
+                    "operation": "contains",
+                    "value": "Rings"
+                },
+                {
+                    "operation": "not equal",
+                    "field": "Rings",
+                    "value": []
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Water world with rings",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "BodyType",
+                    "value": "Water world"
+                },
+                {
+                    "operation": "contains",
+                    "value": "Rings"
+                },
+                {
+                    "operation": "not equal",
+                    "field": "Rings",
+                    "value": []
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Earthlike moon",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "BodyType",
+                    "value": "Earthlike body"
+                },
+                {
+                    "operation": "any",
+                    "field": "Parents",
+                    "subcondition": {
+                        "operation": "contains",
+                        "value": "Planet"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Ammonia world moon",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "BodyType",
+                    "value": "Ammonia world"
+                },
+                {
+                    "operation": "any",
+                    "field": "Parents",
+                    "subcondition": {
+                        "operation": "contains",
+                        "value": "Planet"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Water world moon",
+            "category": "Tourist"
+        },
+        "definition": {
+        "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "BodyType",
+                    "value": "Water world"
+                },
+                {
+                    "operation": "any",
+                    "field": "Parents",
+                    "subcondition": {
+                        "operation": "contains",
+                        "value": "Planet"
+                    }
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Tidal locked Earthlike world",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "BodyType",
+                    "value": "Earthlike body"
+                },
+                {
+                    "operation": "equal",
+                    "field": "TidalLock",
+                    "value": true
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Landable with high gravity",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "Landable",
+                    "value": true
+                },
+                {
+                    "operation": "greater or equal",
+                    "field": "SurfaceGravity",
+                    "value": 34.335
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Large landable",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "Landable",
+                    "value": true
+                },
+                {
+                    "operation": "greater or equal",
+                    "field": "Radius",
+                    "value": 18500000
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Tiny landable",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "equal",
+                    "field": "Landable",
+                    "value": true
+                },
+                {
+                    "operation": "less or equal",
+                    "field": "Radius",
+                    "value": 250000
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Planet orbiting close to star",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "contains",
+                    "value": "BodyType"
+                },
+                {
+                    "operation": "less or equal",
+                    "field": "DistanceFromArrivalLS",
+                    "value": 5.5
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Landable orbiting close to star",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "contains",
+                    "value": "BodyType"
+                },
+                {
+                    "operation": "less or equal",
+                    "field": "DistanceFromArrivalLS",
+                    "value": 5.5
+                },
+                {
+                    "operation": "equal",
+                    "field": "Landable",
+                    "value": true
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Fast orbiting",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "and",
+            "conditions": [
+                {
+                    "operation": "less or equal",
+                    "field": "OrbitalPeriod",
+                    "value": 1800
+                },
+                {
+                    "operation": "not equal",
+                    "field": "BodyName",
+                    "value": "Triton"
+                }
+            ]
+        }
+    },
+    {
+        "event": "Scan",
+        "message": {
+            "body_field": "BodyName",
+            "text": "Highly elliptical orbit",
+            "category": "Tourist"
+        },
+        "definition": {
+            "operation": "greater or equal",
+            "field": "Eccentricity",
+            "value": 0.95
+        }
+    }
+]
