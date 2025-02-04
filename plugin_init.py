@@ -44,7 +44,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     """
     frame = tk.Frame(parent)
     PluginContext.notifier = Notifier(frame, 3)    # его надо инициализировать первым, но маппить в самый низ
-    PluginContext.visualizer = Visualizer(frame, 0)
+    PluginContext.exp_visualizer = Visualizer(frame, 0)
     PluginContext.patrol_module = PatrolModule(frame, 1)
     PluginContext.fc_tracker = FC_Tracker(frame, 2)
 

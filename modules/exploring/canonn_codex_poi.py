@@ -11,14 +11,14 @@ class CanonnCodexPOI(Module):
     URL = f"{canonn_cloud_url_us_central}/query/getSystemPoi"
 
     def __init__(self):
-        PluginContext.visualizer.register(self)
+        PluginContext.exp_visualizer.register(self)
         self.destination_system: str = None
 
 
-    def on_journal_entry(self, entry: JournalEntry):
-        if not PluginContext.visualizer.display_enabled_for(self):
+    def on_journal_entry(self, entry: JournalEntry):        # noqa e303
+        if not PluginContext.exp_visualizer.display_enabled_for(self):
             return
-        
+
         event = entry.data.get("event")
         if event == "StartJump" and entry.data.get("JumpType") == "Hyperspace":
             self.destination_system = entry.data.get("StarSystem")
@@ -30,7 +30,7 @@ class CanonnCodexPOI(Module):
             self.fetch_data(entry.data["StarSystem"])
 
 
-    def fetch_data(self, system: str):
+    def fetch_data(self, system: str):      # noqa e303
         params = {
             "cmdr": GameState.cmdr,
             "system": system,
@@ -60,7 +60,7 @@ class CanonnCodexPOI(Module):
                 warning("[Codex] Unexpected POI category in Canonn data: {}".format(poi))
                 continue
             if poi.get("scanned", False) in ('false', False):       # без понятия, почему оно (иногда?) даётся строкой
-                PluginContext.visualizer.show(
+                PluginContext.exp_visualizer.show(
                     caller=self,
                     body=poi.get("body"),
                     text=poi.get("english_name"),

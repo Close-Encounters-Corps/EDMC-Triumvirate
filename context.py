@@ -28,8 +28,10 @@ class _ClassProperty:
     """
     def __init__(self, func):
         self.func = func
+
     def __get__(self, instance, owner):
         return self.func(owner)
+
 
 @dataclass
 class PluginContext:
@@ -55,10 +57,10 @@ class PluginContext:
     canonn_codex_poi: 'CanonnCodexPOI'  = None
     sq_tracker: 'Squadron_Tracker'  = None
     fc_tracker: 'FC_Tracker'        = None
-    friendfoe                       = None      #TODO: оживить
+    friendfoe                       = None      # TODO: оживить
     systems_module: 'SystemsModule' = None
     patrol_module: 'PatrolModule'   = None
-    visualizer: 'Visualizer'        = None
+    exp_visualizer: 'Visualizer'    = None
 
     @_ClassProperty
     def active_modules(cls) -> list['Module']:
@@ -174,6 +176,7 @@ class Flags(IntFlag):
     ALT_FROM_AVERAGE_RADIUS = auto()
     FSD_JUMP                = auto()
     SRV_HIGH_BEAM           = auto()
+
 
 class Flags2(IntFlag):
     ON_FOOT                 = auto()
