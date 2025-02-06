@@ -57,10 +57,14 @@ class Notifier(tk.Frame):
     Поддерживает несколько одновременных уведомлений, их скрытие пользователем по нажатию кнопки
     или плагином по истечении определённого промежутка времени.
     """
+
+    MAX_NOTIFICATIONS = 5
+
     def __init__(self, parent, row):
         super().__init__(parent)
-        self.grid(row=row, column=0, sticky="nwse")
-        self._pool = set()
+        self.gridrow = row
+        self._pool: list[_Message] = list()
+
 
     def send(self, text: str, timeout: int = 60):
         """
@@ -71,24 +75,38 @@ class Notifier(tk.Frame):
         *timeout* - промежуток времени, спустя который уведомление автоматически скроется.
         Можно задать 0, тогда оно будет висеть, пока пользователь сам его не закроет.
         """
-        self._pool.add(_Message(self, text, timeout))
+        self.after(0, self.__send, text, timeout)
+
 
     def clear(self):
         """Очищает фрейм, удаляя все уведомления."""
+        self.after(0, self.__clear)
+
+
+    def __send(self, text, timeout):
+        if len(self._pool) == 0:
+            self.__show()
+        elif len(self._pool) == self.MAX_NOTIFICATIONS:
+            self._pool[0]._close()
+        self._pool.append(_Message(self, text, timeout))
+
+
+    def __clear(self):
         for message in self._pool:
-            # мы не можем просто вызвать для всех _close() - иначе сет изменится при итерации
-            # придётся немного продублировать код
-            if message._timer:
-                message._timer.kill()
-            message.destroy()
-        self._pool.clear()
-        self.configure(height=1)
+            message._close()
+        self.__hide()
+
 
     def _message_destroyed(self, message: _Message):
         """Метод, вызываемый скрытыми сообщения при удаления их из списка."""
         self._pool.remove(message)
         if len(self._pool) == 0:
-            # tkinter не меняет размер master, если был убран последний slave - придётся прятать вручную
-            # И да, на единичку, потому что 0 он игнорит, а забывать-вспоминать grid каждый раз мне не хочется
-            self.configure(height=1)
-        self.update()
+            self.__hide()
+
+
+    def __show(self):
+        if len(self._pool) > 0:
+            self.grid(row=self.gridrow, column=0, sticky="NWSE")
+
+    def __hide(self):
+        self.grid_forget()
