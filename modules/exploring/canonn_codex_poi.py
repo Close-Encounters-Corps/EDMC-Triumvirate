@@ -15,7 +15,7 @@ class CanonnCodexPOI(Module):
         self.destination_system: str = None
 
 
-    def on_journal_entry(self, entry: JournalEntry):        # noqa e303
+    def on_journal_entry(self, entry: JournalEntry):
         if not PluginContext.exp_visualizer.display_enabled_for(self):
             return
 
@@ -30,7 +30,7 @@ class CanonnCodexPOI(Module):
             self.fetch_data(entry.data["StarSystem"])
 
 
-    def fetch_data(self, system: str):      # noqa e303
+    def fetch_data(self, system: str):
         params = {
             "cmdr": GameState.cmdr,
             "system": system,

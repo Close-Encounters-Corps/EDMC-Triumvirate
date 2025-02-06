@@ -93,7 +93,7 @@ class CustomPOIChecker(Module):
         self.criteria = self.load_config()
 
 
-    def load_config(self) -> dict[str, list[POIType]]:      # noqa e303
+    def load_config(self) -> dict[str, list[POIType]]:
         config_file = Path(PluginContext.plugin_dir, "userdata", self.CONFIG_FILENAME)
         if not config_file.exists():
             PluginContext.logger.error("[POIChecker] POI criteria file not found.")
@@ -147,7 +147,7 @@ class CustomPOIChecker(Module):
         return criteria
 
 
-    def _validate(self, definition: dict, root = True):        # noqa e303
+    def _validate(self, definition: dict, root=True):
         if root:
             try:
                 assert isinstance(definition.get("event"), str)
@@ -182,7 +182,7 @@ class CustomPOIChecker(Module):
         return True
 
 
-    def on_journal_entry(self, entry: JournalEntry):      # noqa e303
+    def on_journal_entry(self, entry: JournalEntry):
         event = entry.data["event"]
         if event in self.criteria:
             for poi_type in self.criteria[event]:
