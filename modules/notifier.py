@@ -83,7 +83,7 @@ class Notifier(tk.Frame):
             message.destroy()
         self._pool.clear()
         self.configure(height=1)
-        
+
     def _message_destroyed(self, message: _Message):
         """Метод, вызываемый скрытыми сообщения при удаления их из списка."""
         self._pool.remove(message)

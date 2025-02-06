@@ -3,23 +3,25 @@ class Coords:
         self.x = x
         self.y = y
         self.z = z
+
     def __iter__(self):
         yield self.x
         yield self.y
         yield self.z
 
+
 class JournalEntry:
     def __init__(
         self,
-        cmdr:       str,
-        is_beta:    bool,
-        system:     str,
+        cmdr: str,
+        is_beta: bool,
+        system: str,
         systemAddress: int,
-        station:    str,
-        data:       dict,
-        x:          float,
-        y:          float,
-        z:          float,
+        station: str,
+        data: dict,
+        x: float,
+        y: float,
+        z: float,
     ):
         self.cmdr = cmdr
         self.is_beta = is_beta

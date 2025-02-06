@@ -4,6 +4,7 @@ from contextlib import closing
 import requests
 from ..debug import debug
 
+
 class BytesDecoder:
     def __init__(self, stream):
         self.stream = stream
@@ -13,6 +14,7 @@ class BytesDecoder:
             line = line.decode()
             # debug("Processing {}", line)
             yield line
+
 
 class Spreadsheet:
     def __init__(self, url):
@@ -43,8 +45,8 @@ class Spreadsheet:
         stream = BytesDecoder(self.response.raw)
         reader = csv.reader(stream)
         try:
-            next(reader) # пропускаем заголовок
-        except StopIteration: # ну и ладно...
+            next(reader)    # пропускаем заголовок
+        except StopIteration:   # ну и ладно...
             pass
         yield from reader
 

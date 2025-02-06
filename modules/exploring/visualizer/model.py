@@ -19,7 +19,8 @@ class VisualizerModel:
         self.__saved_config = self._load_config()       # это меняется ТОЛЬКО в _save_config()
         self.visualizer_shown: bool = self.__saved_config["visualizer_shown"]
         self.view.change_visibility(self.visualizer_shown)
-        self.modules_display_status: dict[str, bool] = self.__saved_config["modules_display_status"].copy()    # чтобы __saved_config не менялся
+        # копируем, чтобы __saved_config не менялся
+        self.modules_display_status: dict[str, bool] = self.__saved_config["modules_display_status"].copy()
 
         self.current_system: str | None = None
         self.data: list[_DataItem] = list()
@@ -28,7 +29,7 @@ class VisualizerModel:
     def add_module(self, module: Module):
         self.registered_modules.append(module)
         qualname = module.__class__.__qualname__
-        if not qualname in self.modules_display_status:
+        if qualname not in self.modules_display_status:
             self.modules_display_status[qualname] = True
             self._save_config()
         debug("[Visualizer] Module {} registered, display status: {}.", qualname, self.modules_display_status[qualname])
@@ -38,12 +39,12 @@ class VisualizerModel:
         assert module in self.registered_modules, "Module must be registered first. Refer to Visualizer.register()"
 
         debug("[Visualizer] Got new data from {}: category '{}', body '{}', text '{}'.", module, category, body, text)
-        if category == None:
+        if category is None:
             category = self.DEFAULT_CATEGORY
             debug("[Visualizer] Category was None, setting to default ('{}').", category)
         data_item = _DataItem(module, category, body, text)
         self.data.append(data_item)
-        if self.modules_display_status[data_item.m_qualname] == True:
+        if self.modules_display_status[data_item.m_qualname] is True:
             self.view.display(data_item)
 
 
@@ -68,9 +69,9 @@ class VisualizerModel:
             qualname = mod.__class__.__qualname__
             name = mod.localized_name
             enabled = self.modules_display_status[qualname]
-            config.append( (qualname, name, enabled) )
+            config.append((qualname, name, enabled))
         self.__settings_frame = VSettingsFrame(parent, row, shown, config)
-    
+
 
     def update_user_settings(self):
         shown, config = self.__settings_frame.get_current_config()
@@ -79,7 +80,7 @@ class VisualizerModel:
         self._save_config()
 
         self.view.clear()
-        data_for_display = [item for item in self.data  if self.modules_display_status[item.m_qualname] == True]
+        data_for_display = [item for item in self.data if self.modules_display_status[item.m_qualname] is True]
         if len(data_for_display) > 0:
             self.view.display(data_for_display)
 
@@ -108,8 +109,8 @@ class VisualizerModel:
 
     def _save_config(self):
         config = {
-            "visualizer_shown":         self.visualizer_shown,
-            "modules_display_status":   self.modules_display_status
+            "visualizer_shown": self.visualizer_shown,
+            "modules_display_status": self.modules_display_status
         }
         plugin_config.set(self.PLUGIN_CONFIG_KEY, json.dumps(config))
         self.__saved_config = config

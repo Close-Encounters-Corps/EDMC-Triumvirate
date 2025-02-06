@@ -38,7 +38,7 @@ if not logger.hasHandlers():
     level = logging.INFO  # So logger.info(...) is equivalent to print()
     logger.setLevel(level)
     logger_channel = logging.StreamHandler()
-    logger_formatter = logging.Formatter(f'%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(lineno)d:%(funcName)s: %(message)s')
+    logger_formatter = logging.Formatter(r'%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(lineno)d:%(funcName)s: %(message)s')
     logger_formatter.default_time_format = '%Y-%m-%d %H:%M:%S'
     logger_formatter.default_msec_format = '%s.%03d'
     logger_channel.setFormatter(logger_formatter)
@@ -74,7 +74,7 @@ class BasicContext:
     plugin_prefs_hook: Callable     = None
     prefs_changed_hook: Callable    = None
 
-context = BasicContext()
+context = BasicContext()        # noqa: E305
 
 
 # Механизм обновления плагина
@@ -89,7 +89,7 @@ class UpdateCycle(threading.Thread):
     """
     Поток, крутящийся в фоне и время от времени проверяющий наличие обновлений.
     """
-    UPDATE_CYCLE = 30*60
+    UPDATE_CYCLE = 30 * 60
     STEP = 3
 
     def __init__(self, updater_fn: Callable, check_now: bool):
@@ -104,7 +104,7 @@ class UpdateCycle(threading.Thread):
     def run(self):
         if self._check_now:
             self._updater_fn()
-        
+
         timer = self.UPDATE_CYCLE
         while not (self._stop or edmc_config.shutting_down):
             if timer <= 0:
@@ -134,7 +134,7 @@ class Updater:
         saved_version: str | None = edmc_config.get_str(self.LOCAL_VERSION_KEY)
         self.local_version = Version(saved_version or "0.0.0")
 
-    
+
     def start_update_cycle(self, _check_now: bool = False):
         if self.updater_thread:
             return
@@ -163,7 +163,7 @@ class Updater:
             self.stop_update_cycle()
             self.__use_local_version()
             return
-        
+
         # получаем список релизов
         try:
             res = requests.get("https://api.github.com/repos/" + self.REPOSITORY_PATH + "/releases")
@@ -173,7 +173,7 @@ class Updater:
             context.status_label.set_text(_translate("Error: couldn't check for updates."))
             self.__use_local_version()
             return
-        
+
         # получаем последний релиз
         releases = res.json()
         try:
@@ -196,9 +196,10 @@ class Updater:
             logger.info("Local version matches the latest release. No updates required.")
             context.status_label.clear()
             self.__use_local_version()
-        else: 
+        else:
             if latest_version < self.local_version:
-                logger.info(f"Remote version ({latest_version}) is lower than the local one ({self.local_version}). A downgrade is required.")
+                logger.info((f"Remote version ({latest_version}) is lower than the local one ({self.local_version}). ",
+                             "A downgrade is required."))
             else:
                 logger.info(f"Found an update: {self.local_version} -> {latest_version}.")
 
@@ -206,7 +207,9 @@ class Updater:
                 self.__download_update(latest_version)
             else:
                 logger.info("Notifying user.")
-                context.status_label.set_text(_translate("An update is available ({v}). Please restart EDMC.").format(v=str(latest_version)))
+                context.status_label.set_text(
+                    _translate("An update is available ({v}). Please restart EDMC.").format(v=str(latest_version))
+                )
 
 
     def __download_update(self, tag: Version):
@@ -232,7 +235,7 @@ class Updater:
             context.status_label.set_text(_translate("Error: couldn't download an update."))
             self.__use_local_version()
             return
-        
+
         # распаковываем
         context.status_label.set_text(_translate("Installing an update..."))
         logger.info("Extracting the new version archive to the temporary directory...")
@@ -243,7 +246,7 @@ class Updater:
         # сверяем текущий load.py с новым - это нам понадобится в будущем
         new_ver_path = next(tempdir.iterdir())      # гитхаб оборачивает файлы в отдельную директорию
         loadpy_was_edited = self.__files_differ(Path(new_ver_path, "load.py"), Path(context.plugin_dir, "load.py"))
-        
+
         # копируем userdata, чтобы человеки не ругались, что у них миссии между перезапусками трутся
         logger.info("Copying `userdata`...")
         try:
@@ -271,17 +274,17 @@ class Updater:
             self.updater_thread.stop()
             context.status_label.set_text(_translate("The update is installed. Please restart EMDC."))
 
-    
+
     def __use_local_version(self):
         if context.plugin_loaded:
             return
-        
+
         def __inner(self):
             logger.info("Loading local version the in main thread...")
             if not Path(context.plugin_dir, "plugin_init.py").exists():
                 logger.error("`plugin_init` module not found. Aborting.")
                 return
-            
+
             import plugin_init
             context.plugin_version = plugin_init.get_version()
             if self.local_version != context.plugin_version:
@@ -289,10 +292,10 @@ class Updater:
                 edmc_config.set(self.LOCAL_VERSION_KEY, str(context.plugin_version))
                 self.local_version = context.plugin_version
                 logger.warning(f"Local version set to {context.plugin_version}.")
-            
-            context.plugin_stop_hook    = plugin_init.plugin_stop
-            context.plugin_prefs_hook   = plugin_init.plugin_prefs
-            context.prefs_changed_hook  = plugin_init.prefs_changed
+
+            context.plugin_stop_hook = plugin_init.plugin_stop
+            context.plugin_prefs_hook = plugin_init.plugin_prefs
+            context.prefs_changed_hook = plugin_init.prefs_changed
 
             plugin_init.init_context(
                 edmc_version=context.edmc_version,
@@ -300,7 +303,7 @@ class Updater:
                 event_queue=context.event_queue,
                 logger=logger
             )
-            
+
             context.status_label.clear()
             context.version_frame = VersionFrame(context.plugin_frame, context.plugin_version)
             context.plugin_ui = plugin_init.plugin_app(context.plugin_frame)
@@ -328,7 +331,7 @@ class Updater:
             else:
                 break
 
-    
+
     def __files_differ(self, file1: Path, file2: Path):
         """
         Этой функции могло бы не быть, если бы EDMC предоставлял filecmp. Но там как всегда.
@@ -340,7 +343,6 @@ class Updater:
             return f1.read() != f2.read()
 
 
-
 # Базовые элементы GUI
 
 class StatusLabel(tk.Label):
@@ -350,7 +352,7 @@ class StatusLabel(tk.Label):
         self.textvar = tk.StringVar()
         self.row = row
         super().__init__(parent, textvariable=self.textvar)
-    
+
     def set_text(self, val: str):
         self.show()
         self.textvar.set(val)
@@ -358,7 +360,7 @@ class StatusLabel(tk.Label):
     def clear(self):
         self.textvar.set("")
         self.hide()
-        
+
     def show(self):
         self.grid(row=self.row, column=0, sticky="NWS")
 
@@ -371,16 +373,16 @@ class VersionFrame(tk.Frame):
 
     def __init__(self, parent: tk.Misc, version: Version):
         super().__init__(parent)
-        self.text_label = tk.Label(self, text=_translate("Version:")+' ')
+        self.text_label = tk.Label(self, text=(_translate("Version:") + ' '))
         self.text_label.pack(side="left")
-        
+
         release_url = f"https://github.com/{Updater.REPOSITORY_PATH}/releases/{version}"
         try:
             res = requests.get(release_url)
             res.raise_for_status()
         except requests.RequestException:
             release_url = None
-        
+
         if release_url is not None:
             self.version_label = HyperlinkLabel(
                 master=self,
@@ -392,7 +394,7 @@ class VersionFrame(tk.Frame):
                 master=self,
                 text=str(context.plugin_version),
             )
-        
+
         self.version_label.pack(side="left")
 
 
@@ -424,7 +426,6 @@ class ReleaseTypeSettingFrame(nb.Frame):
         return ReleaseType(self.reltype_var.get())
 
 
-
 # Функции управления поведением плагина, вызываемые EDMC
 
 def plugin_start(plugin_dir):
@@ -441,7 +442,7 @@ def plugin_start3(plugin_dir: str) -> str:
     """
     if context.edmc_version < Version("5.11.0"):
         raise EnvironmentError(_translate("At least EDMC 5.11.0 is required to use this plugin."))
-    
+
     context.plugin_dir = plugin_dir
     context.updater = Updater()
     context.updater.start_update_cycle(_check_now=True)
@@ -496,19 +497,19 @@ def prefs_changed(cmdr: str | None, is_beta: bool):
         context.updater.restart_update_cycle()
     if context.plugin_loaded:
         context.prefs_changed_hook(cmdr, is_beta)
-    
+
 
 # Эти функции относятся к внутреигровым событиям.
 # Здесь мы будем лишь сохранять все входящие данные в общую очередь.
 # После загрузки версии её обработчик ивентов подключится к этой очереди и начнёт её обрабатывать.
 
 def journal_entry(
-    cmdr:       str | None,
-    is_beta:    bool,
-    system:     str | None,
-    station:    str | None,
-    entry:      dict,
-    state:      dict
+    cmdr: str | None,
+    is_beta: bool,
+    system: str | None,
+    station: str | None,
+    entry: dict,
+    state: dict
 ):
     """
     EDMC вызывает эту функцию при появлении новой записи в логах игры.

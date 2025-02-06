@@ -11,7 +11,7 @@ from modules.debug import debug
 import myNotebook as nb
 
 # Подключение функции перевода от EDMC
-import l10n, functools
+import l10n, functools                  # noqa: E401
 plugin_tr = functools.partial(l10n.translations.tl, context=__file__)
 
 
@@ -25,7 +25,7 @@ class _ModuleSettingsGroup(ttk.Frame):
         self.__status_var = tk.BooleanVar(value=enabled)
         self.__status_checkbox = nb.Checkbutton(self, variable=self.__status_var)
         self.__status_checkbox.pack(side='left')
-        
+
         self.__name_label = nb.Label(self, text=self.__m_localized_name, justify='left')
         self.__name_label.pack(side='left')
 
@@ -36,11 +36,11 @@ class _ModuleSettingsGroup(ttk.Frame):
     @property
     def enabled(self):
         return self.__status_var.get()
-    
+
     @property
     def module_qualname(self):
         return self.__m_qualname
-    
+
 
 class VSettingsFrame(tk.Frame):
     def __init__(self, parent: tk.Misc, row: int, vslz_shown: bool, modules_config: list[tuple[str, str, bool]]):
@@ -48,7 +48,7 @@ class VSettingsFrame(tk.Frame):
 
         self.module_name_label = nb.Label(self, text=plugin_tr("Visualizer settings:"))
         self.module_name_label.pack(side="top", anchor="w")
-        
+
         # практически _ModuleSettingsGroup, только для визуализатора целиком
         self.vis_frame = tk.Frame(self, bg="white")
         self.vis_label = nb.Label(self.vis_frame, text=plugin_tr("Show visualizer module:"))
@@ -71,15 +71,15 @@ class VSettingsFrame(tk.Frame):
 
         self.change_groups_state()
         self.grid(column=0, row=row, sticky="NWSE")
-    
+
 
     def change_groups_state(self):
-        new_state = "normal" if self.vis_checkbox_var.get() == True else "disabled"
+        new_state = "normal" if self.vis_checkbox_var.get() is True else "disabled"
         for frame in self.module_frames:
             frame.change_state(new_state)
         self.delimeter_label.configure(state=new_state)
         self.modules_dummy_label.configure(state=new_state)
-    
+
 
     def get_current_config(self) -> tuple[bool, dict[str, bool]]:
         vslz_shown = self.vis_checkbox_var.get()
@@ -102,10 +102,10 @@ class _IconButton(nb.Button):
 
         self.deactivate()
         self.configure(command=self.__on_click)
-    
+
     def activate(self):
         self.configure(image=self.active_icon)
-    
+
     def deactivate(self):
         self.configure(image=self.grey_icon)
 
@@ -144,7 +144,7 @@ class VisualizerView(tk.Frame):
         self.details_frame = ttk.Frame(self)         # маппится в ___ при наличии данных к отображению
         self.details_table = Table(self.details_frame, headers)
         self.details_table.pack(side="top", fill="x")
-    
+
 
     def display(self, data: _DataItem | list[_DataItem]):
         if isinstance(data, _DataItem):
@@ -163,33 +163,33 @@ class VisualizerView(tk.Frame):
             self.after(0, self.__update_buttons)
         if update_content:
             self.after(0, self.__update_content)
-    
-    
+
+
     def clear(self):
         self.data.clear()
         self.active_category = None
 
-    
+
     def change_visibility(self, visible: bool):
         self.after(0, self.__change_visibility, visible)
         debug("[VisualizerView] Visibility set to {}.", visible)
-    
-    
+
+
     @property
     def active_category(self):
         return self.__active_ctg
-    
+
     @active_category.setter
     def active_category(self, value: str | None):
         assert value in CATEGORIES or value is None     # TODO: удалить после тестов?
         self.__active_ctg = value
         self.after(0, self.__update_buttons)
         self.after(0, self.__update_content)
-    
+
 
     # нижеизложенные методы должны вызываться ИСКЛЮЧИТЕЛЬНО в главном потоке
 
-    def __update_buttons(self):
+    def __update_buttons(self):         # noqa: E301
         self.buttons_dummy_label.pack_forget()
 
         for category, button in self.buttons.items():
@@ -200,25 +200,25 @@ class VisualizerView(tk.Frame):
                 button.pack(side="left")
                 if category == self.__active_ctg:
                     button.activate()
-        
+
         if len(self.data) == 0:
             self.buttons_dummy_label.pack(side="left", fill="x")
-        
-    
+
+
     def __update_content(self):
         self.details_table.clear()
-        if self.active_category == None:
+        if self.active_category is None:
             self.category_frame.pack_forget()
             self.details_frame.pack_forget()
             return
-        
+
         self.active_category_var.set(plugin_tr(self.active_category))
         data = sorted(self.data[self.active_category])
         for item in data:
             self.details_table.insert(item.body, item.text)
         self.category_frame.pack(side="top", fill="x")
         self.details_frame.pack(side="top", fill="x")
-    
+
 
     def __change_visibility(self, visible: bool):
         if not visible:

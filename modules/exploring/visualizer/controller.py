@@ -22,7 +22,7 @@ class VisualizerController(Module):
 
     # а-ля публичный интерфейс: методы для вызова из других модулей
 
-    def register(self, module: Module) -> None:
+    def register(self, module_instance: Module) -> None:         # noqa: E301
         """
         Добавляет модуль в список к отображению.
         Обязательно к использованию ДО вызова Visualizer.show(),
@@ -31,9 +31,9 @@ class VisualizerController(Module):
         module : Module
             Просто передайте self
         """
-        assert isinstance(module, Module)
-        self.__model.add_module(module)
-    
+        assert isinstance(module_instance, Module)
+        self.__model.add_module(module_instance)
+
 
     def show(self, caller: Module, body: str, text: str, category: str = None) -> None:
         """
@@ -58,13 +58,13 @@ class VisualizerController(Module):
     def display_enabled_for(self, module: Module) -> bool:
         assert isinstance(module, Module)
         return self.__model.is_data_shown_from(module)
-    
+
 
     # методы, специфичные для Module
 
-    def on_journal_entry(self, entry: JournalEntry):
+    def on_journal_entry(self, entry: JournalEntry):        # noqa: E301
         self.__model.update_system(entry.system)
-    
+
     def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool, row: int):
         self.__model.draw_settings_frame(parent_widget, row)
 

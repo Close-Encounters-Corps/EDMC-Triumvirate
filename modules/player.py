@@ -3,7 +3,6 @@
 """
 
 import os
-import sys
 
 from .playsound import playsound
 from .lib.thread import Thread

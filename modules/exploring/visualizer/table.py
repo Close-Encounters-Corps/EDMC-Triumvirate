@@ -29,7 +29,7 @@ class Table(tk.Frame):
             f.grid(row=0, column=i, sticky="NWSE")
             self.__columns.append(tk.Label(f, text=headers[i], bg=self.bg))
             self.__columns[i].pack(padx=3, fill="both")
-        
+
         self.__n_columns = len(self.__columns)
         self.__current_row = 1
         self.__cells: list[tk.Frame] = []
@@ -39,30 +39,31 @@ class Table(tk.Frame):
         values = list(values)
         if len(values) != self.__n_columns:
             raise RuntimeError()
-        
+
         max_width = max(self.MAXWIDTH, tk._default_root.winfo_width())
         max_string_len = int(self.MAXWIDTH / len(values))
         used_width = 0
-        
+
         for i, val in enumerate(values):
-            f = tk.Frame(self, bg=self.bg, relief=self.relief, borderwidth=1)
-            f.grid(row=self.__current_row, column=i, sticky="NWSE")
+            frame = tk.Frame(self, bg=self.bg, relief=self.relief, borderwidth=1)
+            frame.grid(row=self.__current_row, column=i, sticky="NWSE")
 
-            if i == len(values)-1:
-                max_string_len = max(max_string_len, max_width-used_width)
-            l = tk.Label(f, text=val, bg=self.bg, wraplength=max_string_len)
-            l.pack(padx=3, expand=True)
+            if i == len(values) - 1:
+                max_string_len = max(max_string_len, max_width - used_width)
+            label = tk.Label(frame, text=val, bg=self.bg, wraplength=max_string_len)
+            label.pack(padx=3, expand=True)
 
-            used_width += self.measure_longest_line(l["text"])
-            self.__cells.append(f)
+            used_width += self.measure_longest_line(label["text"])
+            self.__cells.append(frame)
 
         self.__current_row += 1
-    
-    
+
+
     def clear(self):
-        for l in self.__cells:  l.destroy()
+        for frame in self.__cells:
+            frame.destroy()
         self.__current_row = 1
-        
+
 
     def measure_longest_line(self, text: str) -> int:
         """Обёртка над tk.font.Font().measure(), но возвращающая значение для самой длинной строки текста."""

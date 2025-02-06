@@ -1,5 +1,6 @@
 import requests
 
+
 class WebClient(requests.Session):
     def __init__(self, base_url=None):
         super().__init__()
@@ -10,6 +11,7 @@ class WebClient(requests.Session):
             url = self.base_url + url
         resp = super().request(method, url, *args, **kwargs)
         return resp
+
 
 class HttpError(Exception):
     def __init__(self, response):

@@ -1,4 +1,6 @@
-import requests, traceback, json
+import requests
+import traceback
+import json
 from datetime import datetime, timedelta
 
 from context import PluginContext, GameState
@@ -40,24 +42,24 @@ class HDDetector:
     """Отслеживает гиперперехваты таргоидами."""
 
     _instance = None
-    def __new__(cls):
-        if cls._instance == None:
+    def __new__(cls):       # noqa: E301
+        if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     # возможные состояния
     SAFE     = 1
     MISJUMP  = 2
     THARGOID = 3
     HOSTILE  = 4
-    
+
     def __init__(self):
         self.departure_system: str          = None
         self.destination_system: str        = None
         self.departure_timestamp: datetime  = None
         self.status = self.SAFE
         self._timer: Timer | None = None
-        
+
 
     def journal_entry(self, journalEntry: JournalEntry):
         entry = journalEntry.data
@@ -67,7 +69,7 @@ class HDDetector:
             self.departure_system = journalEntry.system
             self.destination_system = entry["StarSystem"]
             self.departure_timestamp = datetime.fromisoformat(entry["timestamp"])
-        
+
         elif event == "FSDJump":
             arrived_to = entry["StarSystem"]
             if self.departure_system == arrived_to:
@@ -90,9 +92,9 @@ class HDDetector:
                 # подождём, ожидая агрессии со стороны таргоида
                 debug("[HDDetector] Waiting for the signs of aggression...")
                 if not self._timer:
-                    self._timer = Timer(20, lambda:self._reportHD(journalEntry))
+                    self._timer = Timer(20, lambda: self._reportHD(journalEntry))
                     self._timer.start()
-            
+
             elif entry["MusicTrack"] in ("Combat_Unknown", "Combat_Dogfight", "Combat_Hunters"):
                 debug("[HDDetector] Detected an attack on a player.")
                 self.status = self.HOSTILE
@@ -100,16 +102,16 @@ class HDDetector:
                     self._timer.kill()
                     self._timer = None
                 self._reportHD(journalEntry)
-    
+
 
     def _reportHD(self, journalEntry: JournalEntry):
         if not self.status == self.HOSTILE:
             debug("[HDDetector] Aggression against the player not detected.")
         debug("[HDDetector] Reporting the hyperdiction to Canonn.")
-        
+
         x, y, z    = journalEntry.coords
         dx, dy, dz = PluginContext.systems_module.get_system_coords(self.destination_system)
-        
+
         url = f"{canonn_cloud_url_europe_west}/postHDDetected"
         params = {
             "cmdr": journalEntry.cmdr,
@@ -126,7 +128,7 @@ class HDDetector:
 
         # сбрасываем состояние до следующего перехвата
         self.status = self.SAFE
-    
+
 
     @classmethod
     def check_last_encounter(cls, journalEntry: JournalEntry):
@@ -137,11 +139,11 @@ class HDDetector:
             if system == "Pleiades Sector IR-W d1-55":
                 system = "Delphi"
             x, y, z = PluginContext.systems_module.get_system_coords(system)
-            
+
             gametime = entry.get("TG_ENCOUNTERS").get("TG_ENCOUNTER_TOTAL_LAST_TIMESTAMP")
             year, remainder = gametime.split("-", 1)
             timestamp = "{}-{}".format(str(int(year) - 1286), remainder)
-            
+
             debug("[HDDetector] Last encounter: timestamp {!r}, system {!r}.", timestamp, system)
 
             url = f"{canonn_cloud_url_europe_west}/postHD"
@@ -175,7 +177,7 @@ class CanonnRealtimeAPI(Module):
 
         if not journalEntry.system:     # потому что некоторые ивенты, например, FSSSignalDiscovered, при старте игры идут до Location
             return                      # и EDMC в этот момент отдаёт system=None
-        
+
         # проверяем:
         # сигналы в системе
         self._check_fss_signal(journalEntry)
@@ -184,13 +186,13 @@ class CanonnRealtimeAPI(Module):
         # всё остальное
         if journalEntry.data["event"] != "FSSSignalDiscovered":
             self._check_whitelisted_events(journalEntry)
-    
+
 
     def on_close(self):
         if len(self.fss_signals_batch) > 0:
             self._dump_batch()
 
-    
+
     def _check_fss_signal(self, journalEntry: JournalEntry):
         entry = journalEntry.data
         event = entry["event"]
@@ -212,7 +214,11 @@ class CanonnRealtimeAPI(Module):
         3) Мы закрываем плагин      <-- реализовано в on_close()
         4) Прошло достаточно времени
         """
-        first_timestamp = datetime.fromisoformat(self.fss_signals_batch[0].data["timestamp"]  if len(self.fss_signals_batch) > 0  else entry["timestamp"])
+        first_timestamp = datetime.fromisoformat(
+            self.fss_signals_batch[0].data["timestamp"]
+            if len(self.fss_signals_batch) > 0
+            else entry["timestamp"]
+        )
         last_timestamp  = datetime.fromisoformat(entry["timestamp"])
         timestamp_diff: timedelta = last_timestamp - first_timestamp
         if (
@@ -242,11 +248,11 @@ class CanonnRealtimeAPI(Module):
         params = {
             "gameState": gamestate,
             "rawEvents": [entry],
-            "cmdrName":  journalEntry.cmdr
+            "cmdrName": journalEntry.cmdr
         }
         CanonnReporter(url, params).start()
 
-    
+
     def _dump_batch(self):
         if len(self.fss_signals_batch) == 0:
             return
@@ -256,37 +262,42 @@ class CanonnRealtimeAPI(Module):
         params = {
             "gameState": gamestate,
             "rawEvents": [entry.data for entry in self.fss_signals_batch],
-            "cmdrName":  self.fss_signals_batch[0].cmdr
+            "cmdrName": self.fss_signals_batch[0].cmdr
         }
         CanonnReporter(url, params.copy()).start()
         self.fss_signals_batch.clear()
-    
-    
+
+
     def _get_gamestate(self, journalEntry: JournalEntry):
         entry = journalEntry.data
 
         # обязательные параметры
         gamestate = {
-            "systemName":       journalEntry.system,
-            "systemAddress":    journalEntry.systemAddress,
+            "systemName": journalEntry.system,
+            "systemAddress": journalEntry.systemAddress,
             "systemCoordinates": [
                 journalEntry.coords.x,
                 journalEntry.coords.y,
                 journalEntry.coords.z
             ],
-            "clientVersion":    PluginContext.client_version,
-            "isBeta":           journalEntry.is_beta
+            "clientVersion": PluginContext.client_version,
+            "isBeta": journalEntry.is_beta
         }
 
         # дополнительные, которые мы 100% знаем
         gamestate["platform"] = "PC"
 
         # дополнительные, которые мы, возможно, знаем
-        if GameState.odyssey is not None:   gamestate["odyssey"] = GameState.odyssey
-        if entry.get("BodyID"):             gamestate["bodyId"] = entry["BodyID"]
-        if GameState.body_name:             gamestate["bodyName"] = GameState.body_name
-        if GameState.temperature:           gamestate["temperature"] = GameState.temperature
-        if GameState.gravity:               gamestate["gravity"] = GameState.gravity
+        if GameState.odyssey is not None:
+            gamestate["odyssey"] = GameState.odyssey
+        if entry.get("BodyID"):
+            gamestate["bodyId"] = entry["BodyID"]
+        if GameState.body_name:
+            gamestate["bodyName"] = GameState.body_name
+        if GameState.temperature:
+            gamestate["temperature"] = GameState.temperature
+        if GameState.gravity:
+            gamestate["gravity"] = GameState.gravity
 
         if GameState.latitude and GameState.longitude:
             gamestate["latitude"] = GameState.latitude
@@ -299,22 +310,28 @@ class CanonnRealtimeAPI(Module):
 class WhitelistUpdater(Thread):
     def __init__(self):
         super().__init__(name="Canonn whitelist updater")
+
     def do_run(self):
         url = "https://api.github.com/gists/5b993467bf6be84b392418ddc9fcb6d3"
         attempts = 0
         while True:
             attempts += 1
-            try: response = requests.get(url)
-            except:
+            try:
+                response = requests.get(url)
+            except Exception:
                 error(traceback.format_exc())
                 return
-            
+
             if response.status_code == 200:
                 info("[CanonnRealtimeAPI]: Got list of events to track.")
                 CanonnRealtimeAPI.whitelist = json.loads(response.json()["files"]["canonn_whitelist.json"]["content"])
                 return
             else:
-                error("[CanonnRealtimeAPI] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempts)
+                error(
+                    "[CanonnRealtimeAPI] Couldn't get list of systems to track, response code {} ({} attempts)",
+                    response.status_code,
+                    attempts
+                )
                 self.sleep(10)
 
 

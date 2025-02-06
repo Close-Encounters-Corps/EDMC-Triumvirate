@@ -5,6 +5,7 @@ import time
 
 from ..debug import debug
 
+
 class BasicThread(threading.Thread):
     """
     Обёртка над Thread'ом с различными
@@ -40,6 +41,7 @@ class BasicThread(threading.Thread):
     @classmethod
     def list_alive(cls):
         return [x for x in cls.pool if x.is_alive()]
+
 
 class Thread(BasicThread):
     def run(self):

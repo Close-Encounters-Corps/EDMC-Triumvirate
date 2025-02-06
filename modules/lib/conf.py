@@ -1,11 +1,13 @@
 from config import config as base_config
 
+
 class Config:
     """
     Обёртка над config, которая автоматически добавляет
     префикс к переменным.
     """
     prefix = "Triumvirate"
+
     def getint(self, key):
         return base_config.get_int(f"{self.prefix}.{key}")
 
@@ -17,7 +19,7 @@ class Config:
 
     def get_bool(self, key):
         return base_config.get_bool(f"{self.prefix}.{key}")
-    
+
     def get_list(self, key):
         return base_config.get_list(f"{self.prefix}.{key}")
 
@@ -26,5 +28,6 @@ class Config:
 
     def set(self, key, val):
         base_config.set(f"{self.prefix}.{key}", val)
+
 
 config = Config()

@@ -55,7 +55,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     PluginContext.sq_tracker = Squadron_Tracker()
     PluginContext.canonn_codex_poi = CanonnCodexPOI()
 
-    #TODO: on_start вообще не нужен с новой системой обновлений, отредактировать модули
+    # TODO: on_start вообще не нужен с новой системой обновлений, отредактировать модули
     for mod in PluginContext.active_modules:
         mod.on_start(PluginContext.plugin_dir)
 

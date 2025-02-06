@@ -5,7 +5,7 @@ from sys import _getframe
 from .lib.conf import config
 
 # Подключение функции перевода от EDMC
-import l10n, functools
+import l10n, functools                  # noqa: E401
 _translate = functools.partial(l10n.translations.tl, context=__file__)
 
 
@@ -16,7 +16,7 @@ class Debug:
     @classmethod
     def setup(cls, log: logging.Logger):
         cls.log = log
-        cls.log.setLevel(logging.DEBUG if (cls.debugvar.get() == True) else logging.INFO)
+        cls.log.setLevel(logging.DEBUG if (cls.debugvar.get() is True) else logging.INFO)
         if config.get_bool("CanonnDebug") is None:
             config.set('CanonnDebug', cls.debugvar.get())
             cls.log.debug("CanonnDebug set to {}.".format(cls.debugvar.get()))
@@ -61,7 +61,7 @@ class Debug:
     def prefs_changed(cls):
         "Called when the user clicks OK on the settings dialog."
         config.set('CanonnDebug', cls.debugvar.get())
-        cls.log.setLevel(logging.DEBUG if (cls.debugvar.get() == True) else logging.INFO)
+        cls.log.setLevel(logging.DEBUG if (cls.debugvar.get() is True) else logging.INFO)
 
     @staticmethod
     def __get_qualname():
@@ -75,11 +75,14 @@ class Debug:
 def debug(value, *args):
     Debug.debug(value, *args)
 
+
 def error(value, *args):
     Debug.error(value, *args)
 
+
 def info(value, *args):
     Debug.info(value, *args)
+
 
 def warning(value, *args):
     Debug.warning(value, *args)

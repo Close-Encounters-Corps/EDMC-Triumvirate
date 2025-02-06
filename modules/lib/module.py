@@ -6,12 +6,13 @@ from modules.lib.journal import JournalEntry
 from typing import Type, TypeVar
 
 # Подключение функции перевода от EDMC
-import l10n, functools
+import l10n, functools                  # noqa: E401
 plugin_tr = functools.partial(l10n.translations.tl, context=__file__)
 
 
 class ModuleMeta(ABCMeta):
-    _instances = dict()    
+    _instances = dict()
+
     def __call__(cls, *args, **kwargs):
         """
         Модификация конструктора модулей.
@@ -74,7 +75,7 @@ class Module(ABC, metaclass=ModuleMeta):
         Сообщает, включен ли плагин.
         """
         return True
-    
+
     @property
     def localized_name(self) -> str:
         """
@@ -84,7 +85,7 @@ class Module(ABC, metaclass=ModuleMeta):
 
 
 T = TypeVar('T', bound=Module)
-def get_module_instance(module_class: Type[T]) -> T | None:
+def get_module_instance(module_class: Type[T]) -> T | None:     # noqa: E302
     return ModuleMeta._instances.get(module_class)
 
 

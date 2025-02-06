@@ -1,8 +1,9 @@
 from .thread import Thread
 from ..debug import debug
 
+
 class Cache(Thread):
-    def __init__(self, name: str, max_size: int, static: dict=None):
+    def __init__(self, name: str, max_size: int, static: dict = None):
         super().__init__(name=name)
         self.max_size = max_size
         self.static = static or {}
@@ -27,7 +28,7 @@ class Cache(Thread):
             self.sleep(10)
 
     def _do_check(self):
-        size_to_remove = len(self.items) - self.max_size 
+        size_to_remove = len(self.items) - self.max_size
         if size_to_remove >= 0:
             for i in range(size_to_remove or 1):
                 key = self._key_order.pop(i)

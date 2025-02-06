@@ -4,6 +4,7 @@ from .lib.cache import Cache
 from .lib.http import WebClient
 from .debug import debug
 
+
 class SystemsModule(WebClient, Module):
     def __init__(self):
         super().__init__(settings.galaxy_url)

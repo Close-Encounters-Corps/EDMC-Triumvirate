@@ -19,7 +19,7 @@ from modules.lib.thread import BasicThread
 import myNotebook as nb
 
 # Подключение функции перевода от EDMC
-import l10n, functools
+import l10n, functools                  # noqa: E401
 _translate = functools.partial(l10n.translations.tl, context=__file__)
 
 
@@ -32,9 +32,9 @@ def mainthread(func):
     return wrapper
 
 
-###################
-## КЛАССЫ ДАННЫХ ##
-###################
+#################
+# КЛАССЫ ДАННЫХ #
+#################
 
 class FCStatus(str, Enum):
     UNKNOWN                 = "unknown"
@@ -78,15 +78,14 @@ class FCData:
         if isinstance(result["decommission_timestamp"], datetime):
             result["decommission_timestamp"] = datetime.isoformat(result["decommission_timestamp"])
         return result
-    
+
     def reset(self):
         map(lambda f: setattr(self, f.name, f.default), fields(self))
 
 
-
-################
-## КЛАССЫ GUI ##
-################
+##############
+# КЛАССЫ GUI #
+##############
 
 class FCInfoFrame(tk.Frame):
     """
@@ -96,14 +95,14 @@ class FCInfoFrame(tk.Frame):
         super().__init__(parent, bg="white")
 
         name = "[{}] {}".format(fc_data.callsign, fc_data.name or "???") if fc_data.callsign else _translate("unknown")
-        self.name_label     = nb.Label(self, text=_translate("Carrier name:"))
-        self.name_field     = nb.Label(self, text=name)
+        self.name_label = nb.Label(self, text=_translate("Carrier name:"))
+        self.name_field = nb.Label(self, text=name)
         self.name_label.grid(row=0, column=0, sticky="W")
         self.name_field.grid(row=0, column=1, padx=3, sticky="W")
 
-        self.variant_var    = tk.StringVar(value=(fc_data.variant or "Drake"))
-        self.variant_label  = nb.Label(self, text=_translate("Carrier class:"))
-        self.variant_field  = ttk.Combobox(
+        self.variant_var = tk.StringVar(value=(fc_data.variant or "Drake"))
+        self.variant_label = nb.Label(self, text=_translate("Carrier class:"))
+        self.variant_field = ttk.Combobox(
             self,
             values=[e.value for e in FCVariant],
             textvariable=self.variant_var,
@@ -122,18 +121,18 @@ class FCInfoFrame(tk.Frame):
         self.notorious_access_label.grid(row=3, column=0, sticky="W")
         self.notorious_access_field.grid(row=3, column=1, padx=3, sticky="W")
 
-        self.optional_fields_label  = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_OPTIONAL_FIELDS>"))
+        self.optional_fields_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_OPTIONAL_FIELDS>"))
         self.optional_fields_label.grid(row=4, column=0, columnspan=2, sticky="W")
 
-        self.role_var   = tk.StringVar(value=fc_data.role)
+        self.role_var = tk.StringVar(value=fc_data.role)
         self.role_label = nb.Label(self, text=_translate("Role:"))
         self.role_field = nb.EntryMenu(self, textvariable=self.role_var, width=70)
         self.role_label.grid(row=5, column=0, sticky="W")
         self.role_field.grid(row=5, column=1, padx=3, sticky="W")
 
-        self.comment_var    = tk.StringVar(self, value=fc_data.comment)
-        self.comment_label  = nb.Label(self, text=_translate("Additional comment:"))
-        self.comment_field  = nb.EntryMenu(self, textvariable=self.comment_var, width=70)
+        self.comment_var = tk.StringVar(self, value=fc_data.comment)
+        self.comment_label = nb.Label(self, text=_translate("Additional comment:"))
+        self.comment_field = nb.EntryMenu(self, textvariable=self.comment_var, width=70)
         self.comment_label.grid(row=6, column=0, sticky="W")
         self.comment_field.grid(row=6, column=1, padx=3, sticky="W")
 
@@ -159,7 +158,10 @@ class SettingsFrame(tk.Frame):
 
         self.disable_access_warnings_frame = tk.Frame(self, bg="white")
         self.disable_access_warnings_var = tk.BooleanVar(value=disable_access_warnings)
-        self.disable_access_warnings_checkbox = nb.Checkbutton(self.disable_access_warnings_frame, variable=self.disable_access_warnings_var)
+        self.disable_access_warnings_checkbox = nb.Checkbutton(
+            self.disable_access_warnings_frame,
+            variable=self.disable_access_warnings_var
+        )
         self.disable_access_warnings_label = nb.Label(
             self.disable_access_warnings_frame,
             text=_translate("Disable unsafe docking access configuration warnings")
@@ -168,11 +170,11 @@ class SettingsFrame(tk.Frame):
         self.disable_access_warnings_label.grid(row=0, column=1, sticky="W")
         self.disable_access_warnings_frame.pack(side="top", fill="x")
 
-        self.no_fc_label            = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_NO_FC>"))
-        self.fc_info_frame          = FCInfoFrame(self, config)
-        self.info_missing_label     = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_INFO_MISSING>"))
-        self.access_warning_label   = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_ACCESS_WARNING>"))
-        self.decom_warning_label    = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_DECOM_WARNING> {TS}").format(TS=decom_timestamp))
+        self.no_fc_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_NO_FC>"))
+        self.fc_info_frame = FCInfoFrame(self, config)
+        self.info_missing_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_INFO_MISSING>"))
+        self.access_warning_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_ACCESS_WARNING>"))
+        self.decom_warning_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_DECOM_WARNING> {TS}").format(TS=decom_timestamp))   # noqa: E501
 
         if config.status in (FCStatus.NOT_BOUGHT, FCStatus.DECOMMISSIONED):
             self.no_fc_label.pack(side="top", anchor="w")
@@ -186,7 +188,7 @@ class SettingsFrame(tk.Frame):
                 self.access_warning_label.pack(side="top", anchor="w")
             if config.status == FCStatus.PENDING_DECOMMISSION:
                 self.decom_warning_label.pack(side="top", anchor="w")
-        
+
         self.grid(column=0, row=row, sticky="NWSE")
 
 
@@ -207,22 +209,43 @@ class FCModuleFrame(tk.Frame):
 
         # варианты отображения
         # 1: у нас нет информации по флитаку
-        self.no_fc_info_label = tk.Label(self, text=_translate("<FC_TRACKER_NO_INFO_TEXT>"), wraplength=400, justify="left")
-        self.no_fc_info_cancel_button = nb.Button(self, text=_translate("I don't have a fleet carrier"), command=self.no_carrier_callback)
+        self.no_fc_info_label = tk.Label(
+            self, wraplength=400, justify="left",
+            text=_translate("<FC_TRACKER_NO_INFO_TEXT>")
+        )
+        self.no_fc_info_cancel_button = nb.Button(
+            self, command=self.no_carrier_callback,
+            text=_translate("I don't have a fleet carrier")
+        )
 
         # 2: игрок купил флитак, и мы просим его зайти в панель флитака
-        self.carrier_bought_label = tk.Label(self, text=_translate("<FC_TRACKER_BOUGHT_TEXT>"), wraplength=400, justify="left")
-        
+        self.carrier_bought_label = tk.Label(
+            self, wraplength=400, justify="left",
+            text=_translate("<FC_TRACKER_BOUGHT_TEXT>")
+        )
+
         # 3: мы обнаружили аномалию в логах и просим игрока зайти в панель флитака
-        self.unexpected_event_label = tk.Label(self, text=_translate("<FC_TRACKER_UNEXPECTED_EVENT_TEXT>"), wraplength=400, justify="left")
+        self.unexpected_event_label = tk.Label(
+            self, wraplength=400, justify="left",
+            text=_translate("<FC_TRACKER_UNEXPECTED_EVENT_TEXT>")
+        )
 
         # 4: после 2 и 3 - мы получили инфу и предлагаем пользователю её проверить в настройках
-        self.finish_configuring_fc_label = tk.Label(self, text=_translate("<FC_TRACKER_FINISH_CONFIGURING_TEXT"), wraplength=400, justify="left")
-        self.finish_configuring_close_button = nb.Button(self, text=_translate("Close"), command=self.__clear)
+        self.finish_configuring_fc_label = tk.Label(
+            self, wraplength=400, justify="left",
+            text=_translate("<FC_TRACKER_FINISH_CONFIGURING_TEXT")
+        )
+        self.finish_configuring_close_button = nb.Button(
+            self, command=self.__clear,
+            text=_translate("Close")
+        )
 
         # 5: предупреждение о небезопасном допуске к стыковке
-        self.unsafe_docking_access_label = tk.Label(self, text=_translate("<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>"), wraplength=400, justify="left")
-    
+        self.unsafe_docking_access_label = tk.Label(
+            self, wraplength=400, justify="left",
+            text=_translate("<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>")
+        )
+
     @mainthread
     def show_no_fc_info_screen(self):
         debug("[FCModuleFrame] Showing 'No info' screen.")
@@ -259,17 +282,17 @@ class FCModuleFrame(tk.Frame):
         self.__clear()
         self.unsafe_docking_access_label.pack(side="top", fill="both")
         self.show()
-    
+
     def __clear(self):
         # декоратор не используется, чтобы при отображении экрана очистка не происходила после замаппивания новых виджетов
         for widget in self.winfo_children():
             widget.pack_forget()
-    
+
     @mainthread
     def show(self):
         debug("[FCModuleFrame] Mapped.")
         self.grid(column=0, row=self.row, sticky="NWSE")
-    
+
     @mainthread
     def hide(self):
         if not self.is_shown:
@@ -284,10 +307,9 @@ class FCModuleFrame(tk.Frame):
         return self.winfo_ismapped()
 
 
-
-##################
-## КЛАСС МОДУЛЯ ##
-##################
+################
+# КЛАСС МОДУЛЯ #
+################
 
 class FC_Tracker(Module):
     """Модуль для отслеживания информации по флитакам: название, код, привязка к fleetcarrier.space и др."""
@@ -325,7 +347,7 @@ class FC_Tracker(Module):
 
     # Методы модуля
 
-    def on_journal_entry(self, journal_entry: JournalEntry):
+    def on_journal_entry(self, journal_entry: JournalEntry):        # noqa: E301
         event = journal_entry.data["event"]
         match event:
             case "CarrierBuy":                  self.carrier_bought(journal_entry)
@@ -343,31 +365,31 @@ class FC_Tracker(Module):
                     debug("[FC_Tracker] No FC info found.")
                     self.fc_data.cmdr = journal_entry.cmdr
                     self.ui_frame.show_no_fc_info_screen()
-    
+
 
     def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool, row: int):
         self.settings_frame = SettingsFrame(parent_widget, row, self.fc_data, self.disable_access_warnings)
-    
+
 
     def on_settings_changed(self, cmdr: str, is_beta: bool):
         self.disable_access_warnings, variant, role, comment = self.settings_frame.get_current_config()
         plugin_config.set(self.FC_ACCESS_WARNINGS_KEY, self.disable_access_warnings)
 
-        self.fc_data.variant    = variant
-        self.fc_data.role       = role
-        self.fc_data.comment    = comment
+        self.fc_data.variant = variant
+        self.fc_data.role = role
+        self.fc_data.comment = comment
         self.save_fc_data()
-        debug(f"[FC_Tracker] New config:")
-        debug(f"[FC_Tracker] Unsafe access warnings - {'disabled' if self.disable_access_warnings else 'enabled'}.")
-        debug(f"[FC_Tracker] FC optional data: variant '{variant}', role '{role}', comment '{comment}'.")
+        debug(("[FC_Tracker] New config: ",
+               f"unsafe access warnings {'disabled' if self.disable_access_warnings else 'enabled'}, ",
+               "FC optional data: variant '{variant}', role '{role}', comment '{comment}'."))
 
         del self.settings_frame
         self.check_docking_access()
-    
+
 
     # Методы-обработчики ивентов флитака
 
-    def carrier_bought(self, journal_entry: JournalEntry):
+    def carrier_bought(self, journal_entry: JournalEntry):      # noqa: E301
         debug("[FC_Tracker] Detected CarrierBuy.")
         self.just_bought = True
         self.fc_data.reset()
@@ -390,10 +412,10 @@ class FC_Tracker(Module):
         self.fc_data.name = journal_entry.data["Name"]
         self.fc_data.docking_access = journal_entry.data["DockingAccess"]
         self.fc_data.notorious_access = journal_entry.data["AllowNotorious"]
-        
+
         if not self.fc_data.variant:
             self.fc_data.variant = FCVariant.DRAKE
-        
+
         if not journal_entry.data["PendingDecommission"]:
             self.fc_data.status = FCStatus.ACTIVE
             self.fc_data.decommission_timestamp = None
@@ -411,7 +433,7 @@ class FC_Tracker(Module):
                 timestamp += 25200                  # добавляем обратно 7 часов
                 self.fc_data.decommission_timestamp = datetime.fromtimestamp(timestamp, UTC)
                 debug("[FC_Tracker] Calculated decommission timestamp: {}.", self.fc_data.decommission_timestamp.isoformat())
-        
+
         self.save_fc_data()
         if unexpected or self.just_bought:
             self.ui_frame.show_finish_configuring_screen()
@@ -429,7 +451,7 @@ class FC_Tracker(Module):
             self.fc_data.reset()
             self.ui_frame.show_unexpected_event_screen()
             return
-        
+
         self.fc_data.status = FCStatus.PENDING_DECOMMISSION
         self.fc_data.decommission_timestamp = datetime.fromtimestamp(journal_entry.data["ScrapTime"], UTC)
         self.save_fc_data()
@@ -442,7 +464,7 @@ class FC_Tracker(Module):
             self.fc_data.reset()
             self.ui_frame.show_unexpected_event_screen()
             return
-        
+
         self.fc_data.status = FCStatus.ACTIVE
         self.fc_data.decommission_timestamp = None
         self.save_fc_data()
@@ -455,17 +477,20 @@ class FC_Tracker(Module):
             self.fc_data.reset()
             self.ui_frame.show_unexpected_event_screen()
             return
-        
+
         self.fc_data.docking_access = journal_entry.data["DockingAccess"]
         self.fc_data.notorious_access = journal_entry.data["AllowNotorious"]
         self.check_docking_access()
         self.save_fc_data()
-    
+
 
     def carrier_name_changed(self, journal_entry: JournalEntry):
         # проверяем на unexpected-ность
         unexpected_status = self.fc_data.status in (FCStatus.UNKNOWN, FCStatus.NOT_BOUGHT, FCStatus.DECOMMISSIONED)
-        callsign_mismatch = self.fc_data.callsign is not None  and  self.fc_data.callsign != journal_entry.data["Callsign"]
+        callsign_mismatch = (
+            self.fc_data.callsign is not None
+            and self.fc_data.callsign != journal_entry.data["Callsign"]
+        )
         if unexpected_status or callsign_mismatch:
             warning("[FC_Tracker] Last event was unexpected.")
             if callsign_mismatch:
@@ -473,18 +498,18 @@ class FC_Tracker(Module):
             self.fc_data.reset()
             self.ui_frame.show_unexpected_event_screen()
             return
-        
+
         self.fc_data.name = journal_entry.data["CarrierNameChanged"]
         self.save_fc_data()
 
 
     def check_docking_access(self):
-        if not self.fc_data.status in (FCStatus.ACTIVE, FCStatus.PENDING_DECOMMISSION):
+        if self.fc_data.status not in (FCStatus.ACTIVE, FCStatus.PENDING_DECOMMISSION):
             return
         if self.disable_access_warnings:
             self.ui_frame.hide()
             return
-        
+
         # TODO: перевести на нормальное определение "союзности", когда будет возможность
         from modules.canonn_api import is_cec_fleetcarrier
         if is_cec_fleetcarrier(self.fc_data.name) or GameState.squadron == "CLOSE ENCOUNTERS CORPS":
@@ -496,7 +521,7 @@ class FC_Tracker(Module):
 
     # Методы управления конфигом модуля
 
-    def load_fc_data(self):
+    def load_fc_data(self):     # noqa: E301
         saved = plugin_config.get_str(self.FC_DATA_KEY)
         if saved:
             debug("[FC_Tracker] Loading saved FC data.")
@@ -512,7 +537,7 @@ class FC_Tracker(Module):
         # на случай первого запуска
         if data == {}:
             self.save_fc_data()
-    
+
 
     def save_fc_data(self):
         str_repr = json.dumps(self.fc_data.asjson(), ensure_ascii=False)
@@ -548,11 +573,11 @@ class FC_Tracker(Module):
         }
         GoogleReporter(url, params).start()
 
-    
+
     def __check_fleetcarrier_space_account(self):
         if self.fc_data._fcspace_link:
             return
-        
+
         # Проверяем наличие аккаунта на fleetcarrier.space
         # Перенаправляет на /carrier/<callsign> -> найдено. Отдаёт 200 -> такого нема.
         # Если реквестить саму /carrier/<callsign> - отдаст 200 в любом случае. Такие дела.
@@ -561,7 +586,7 @@ class FC_Tracker(Module):
 
         try:
             res = requests.get(url, allow_redirects=False)
-        except:
+        except requests.RequestException:
             error("[FC_Tracker] Couldn't check for account on fleetcarrier.space:\n" + traceback.format_exc())
             fc_account_link = "[UNKNOWN]"
         else:
@@ -572,15 +597,18 @@ class FC_Tracker(Module):
                 debug("[FC_Tracker] Found account on fleetcarrier.space.")
                 fc_account_link = f"https://fleetcarrier.space/carrier/{self.fc_data.callsign}"
             else:
-                error(f"[FC_Tracker] Unexpected status code {res.status_code} when checking for account on fleetcarrier.space:\n" + res.text)
+                error(
+                    "[FC_Tracker] Unexpected status code {} when checking for account on fleetcarrier.space:\n{}",
+                    res.status_code, res.text
+                )
                 fc_account_link = "[UNKNOWN]"
-        
+
         self.fc_data._fcspace_link = fc_account_link
 
 
     # danger zone: эти методы вызывает UI на действия пользователя
 
-    def __no_carrier_callback(self):
+    def __no_carrier_callback(self):        # noqa: E301
         # пользователь указал, что флитака во владении не имеет
         debug("[FC_Tracker] User claims not to own a fleet carrier.")
         cmdr = self.fc_data.cmdr

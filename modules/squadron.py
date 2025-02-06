@@ -53,12 +53,12 @@ class Squadron_Tracker(Module):
 
 
     def report_sq(self):
-        #TODO: вернуть после тестов на реальную форму
-        #url = "https://docs.google.com/forms/d/e/1FAIpQLScZvs3MB2AK6pPwFoSCpdaarfAeu_P-ineIhtO1mOPgr09q8A/formResponse?usp=pp_url"
-        #params = {
-        #    "entry.558317192":  GameState.cmdr,
-        #    "entry.1042067605": GameState.squadron
-        #}
+        # TODO: вернуть после тестов на реальную форму
+        # url = "https://docs.google.com/forms/d/e/1FAIpQLScZvs3MB2AK6pPwFoSCpdaarfAeu_P-ineIhtO1mOPgr09q8A/formResponse?usp=pp_url"
+        # params = {
+        #     "entry.558317192":  GameState.cmdr,
+        #     "entry.1042067605": GameState.squadron
+        # }
         url = "https://docs.google.com/forms/d/e/1FAIpQLSfFxDAvHttNmVFwk56PvrNNVouQYmgE4rd-vqO_3yR2CdkFIA/formResponse?usp=pp_url"
         params = {
             "entry.1289608233": GameState.cmdr,

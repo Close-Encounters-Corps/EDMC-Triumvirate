@@ -22,10 +22,14 @@ class JournalProcessor(Thread):
             try:
                 entry = self.queue.get(block=False)
                 match entry["type"]:
-                    case "journal_entry":   self.on_journal_entry(*entry["data"])
-                    case "dashboard_entry": self.on_dashboard_entry(*entry["data"])
-                    case "cmdr_data":       self.on_cmdr_data(*entry["data"])
-                    case _:                 raise ValueError("unknown entry type")
+                    case "journal_entry":
+                        self.on_journal_entry(*entry["data"])
+                    case "dashboard_entry":
+                        self.on_dashboard_entry(*entry["data"])
+                    case "cmdr_data":
+                        self.on_cmdr_data(*entry["data"])
+                    case _:
+                        raise ValueError("unknown entry type")
             except Exception as e:
                 PluginContext.logger.error("Uncatched exception while processing a journal entry.\n%s", str(entry), exc_info=e)
                 # TODO: отправка логов
@@ -42,7 +46,7 @@ class JournalProcessor(Thread):
             new_cmdr = entry["Commander"]
         elif GameState.cmdr is None and cmdr:
             new_cmdr = cmdr
-        
+
         if new_cmdr != GameState.cmdr:
             GameState.cmdr = new_cmdr
             PluginContext.logger.debug(f"New CMDR: {GameState.cmdr}. Fetching the squadron.")
@@ -53,7 +57,7 @@ class JournalProcessor(Thread):
             PluginContext.logger.debug("Reporting the plugin version.")
             legacy.report_version()
             self._startup = False
-        
+
         if GameState.odyssey is None:
             if entry["event"] == "LoadGame":        # ВАЖНО: Fileheader даёт Odyssey=true и в Горизонтах тоже
                 GameState.odyssey = entry.get("Odyssey", False)
@@ -67,17 +71,26 @@ class JournalProcessor(Thread):
             and GameState.system_address != entry["SystemAddress"]
             and entry["event"] not in ("NavRoute", "FSDTarget")
         ):
-            PluginContext.logger.debug("Detected SystemAddress mismatch: current {}, from entry {}.".format(GameState.system_address, entry["SystemAddress"]))
+            PluginContext.logger.debug(
+                "Detected SystemAddress mismatch: current {}, from entry {}.".format(
+                    GameState.system_address, entry["SystemAddress"]
+                ))
             if entry["event"] == "StartJump":
                 # мы ещё в актуальной системе, но сохраним ту, в которую прыгаем
                 GameState.pending_jump_system = entry.get("StarSystem")
-                PluginContext.logger.debug("StartJump. Pending jump system set to {}, id {}. Raw entry: {!r}".format(GameState.pending_jump_system, entry["SystemAddress"], entry))
+                PluginContext.logger.debug(
+                    "StartJump. Pending jump system set to {}, id {}. Raw entry: {!r}".format(
+                        GameState.pending_jump_system, entry["SystemAddress"], entry
+                    ))
             else:
                 # мы уже прыгнули, но FSDJump в логах пока не получили
                 GameState.system_address = entry["SystemAddress"]
                 GameState.system = GameState.pending_jump_system or system
-                PluginContext.logger.debug("We jumped to another system; system_address set to {}, system set to {}.".format(GameState.system_address, GameState.system))
-        
+                PluginContext.logger.debug(
+                    "We jumped to another system; system_address set to {}, system set to {}.".format(
+                        GameState.system_address, GameState.system
+                    ))
+
         # а ещё нас могут дёрнуть таргоиды, поэтому мы окажемся в той же системе, из которой прыгали.
         if (
             entry.get("event") == "FSDJump"
@@ -89,7 +102,7 @@ class JournalProcessor(Thread):
             PluginContext.logger.debug(
                 "GameState.system was {}, but EDMC reported {}. No pending jump detected. Changing system to {}.".format(
                     GameState.system, system, system
-            ))
+                ))
             GameState.system = system
 
         if entry.get("event") == "FSDJump":
