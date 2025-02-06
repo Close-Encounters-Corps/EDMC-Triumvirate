@@ -33,6 +33,15 @@ class JournalProcessor(Thread):
             except Exception as e:
                 PluginContext.logger.error("Uncatched exception while processing a journal entry.\n%s", str(entry), exc_info=e)
                 # TODO: отправка логов
+                # TODO: убрать после тестирования 1.12.0
+                PluginContext.notifier.send(
+                    (
+                        "Неожиданная ошибка при обработке логов! ",
+                        "Дальнейшая корректная работа плагина не гарантирована - перезапустите EDMC.",
+                        "Пожалуйста, сообщите @elcy."
+                    ),
+                    timeout=0
+                )
 
 
     def on_journal_entry(self, cmdr: str | None, is_beta: bool, system: str | None, station: str | None, entry: dict, state: dict):
@@ -133,6 +142,8 @@ class JournalProcessor(Thread):
                     mod.on_chat_message(journal_entry)
                 except Exception as e:
                     PluginContext.logger.error(f"Exception in module {mod} while processing a chat message.", exc_info=e)
+                    # TODO: убрать после тестирования 1.12.0
+                    PluginContext.notifier.send("Ошибка при обработке логов. Пожалуйста, сообщите @elcy.", 0)
         else:
             for mod in PluginContext.active_modules:
                 try:
