@@ -1,4 +1,4 @@
-﻿import settings
+import settings
 from .lib.module import Module
 from .lib.cache import Cache
 from .lib.http import WebClient

@@ -1,4 +1,4 @@
-﻿import tkinter as tk
+import tkinter as tk
 import logging
 import myNotebook as nb
 from sys import _getframe
