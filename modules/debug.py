@@ -54,7 +54,7 @@ class Debug:
         frame = nb.Frame(parent)
         frame.columnconfigure(1, weight=1)
         frame.grid(row=0, column=0, sticky="NSEW")
-        nb.Checkbutton(frame, text=_translate("Включить отладку"), variable=cls.debugvar).grid(row=0, column=0, sticky="NW")
+        nb.Checkbutton(frame, text=_translate("Enable debugging mode"), variable=cls.debugvar).grid(row=0, column=0, sticky="NW")
         return frame
 
     @classmethod

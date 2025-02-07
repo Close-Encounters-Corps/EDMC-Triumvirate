@@ -415,12 +415,12 @@ class ReleaseTypeSettingFrame(nb.Frame):
         self.reltype_field = ttk.Combobox(self, values=reltypes_list, textvariable=self.reltype_var, state="readonly")
         self.reltype_field.grid(row=0, column=1, sticky="NW", padx=5)
 
-        self.description_var = tk.StringVar(value=_translate(f"RELEASE_TYPE_DESCRIPTION_{self.reltype_var.get()}"))
+        self.description_var = tk.StringVar(value=_translate(f"<RELEASE_TYPE_DESCRIPTION_{self.reltype_var.get()}>"))
         self.description_label = nb.Label(self, textvariable=self.description_var)
         self.description_label.grid(row=1, columnspan=2, sticky="NWS")
 
     def _update_description(self, varname, index, mode):
-        self.description_var.set(_translate(f"RELEASE_TYPE_DESCRIPTION_{self.reltype_var.get()}"))
+        self.description_var.set(_translate(f"<RELEASE_TYPE_DESCRIPTION_{self.reltype_var.get()}>"))
 
     def get_selected_reltype(self):
         return ReleaseType(self.reltype_var.get())

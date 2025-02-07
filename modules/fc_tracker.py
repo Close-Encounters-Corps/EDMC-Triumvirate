@@ -117,7 +117,9 @@ class FCInfoFrame(tk.Frame):
         self.access_field.grid(row=2, column=1, padx=3, sticky="W")
 
         self.notorious_access_label = nb.Label(self, text=_translate("Docking allowed for notorious:"))
-        self.notorious_access_field = nb.Label(self, text=_translate(fc_data.notorious_access))
+        self.notorious_access_field = nb.Label(
+            self, text=_translate("Allowed" if fc_data.notorious_access else "Not allowed")
+        )
         self.notorious_access_label.grid(row=3, column=0, sticky="W")
         self.notorious_access_field.grid(row=3, column=1, padx=3, sticky="W")
 

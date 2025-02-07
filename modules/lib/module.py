@@ -7,7 +7,7 @@ from typing import Type, TypeVar
 
 # Подключение функции перевода от EDMC
 import l10n, functools                  # noqa: E401
-plugin_tr = functools.partial(l10n.translations.tl, context=__file__)
+_translate = functools.partial(l10n.translations.tl, context=__file__)
 
 
 class ModuleMeta(ABCMeta):
@@ -81,7 +81,7 @@ class Module(ABC, metaclass=ModuleMeta):
         """
         Возвращает имя модуля в выбранной локализации.
         """
-        return plugin_tr(self.__class__.__qualname__)
+        return _translate(self.__class__.__qualname__)
 
 
 T = TypeVar('T', bound=Module)
