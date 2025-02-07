@@ -176,12 +176,12 @@ class JournalProcessor(Thread):
         GameState.temperature = entry.get("Temperature")
         GameState.gravity = entry.get("Gravity")
 
-        if flags := entry.get("Flags") is not None:
+        if (flags := entry.get("Flags")) is not None:
             GameState.flags_raw     = flags
             GameState.in_ship       = flags & Flags.IN_MAIN_SHIP
             GameState.in_fighter    = flags & Flags.IN_FIGHTER
             GameState.in_srv        = flags & Flags.IN_SRV
-        if flags2 := entry.get("Flags2") is not None:
+        if (flags2 := entry.get("Flags2")) is not None:
             GameState.flags2_raw    = flags2
             GameState.on_foot       = flags2 & Flags2.ON_FOOT
 
