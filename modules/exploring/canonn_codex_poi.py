@@ -6,8 +6,13 @@ from modules.debug import debug, warning
 from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 
+# Подключение функции перевода от EDMC
+import l10n, functools                  # noqa: E401
+_translate = functools.partial(l10n.translations.tl, context=__file__)
+
 
 class CanonnCodexPOI(Module):
+    localized_name = _translate("Codex module")
     URL = f"{canonn_cloud_url_us_central}/query/getSystemPoi"
 
     def __init__(self):

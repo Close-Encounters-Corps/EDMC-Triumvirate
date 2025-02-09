@@ -1,17 +1,25 @@
-from abc import ABC, ABCMeta
+from abc import ABC, ABCMeta, abstractmethod
 
 # для аннотаций типов:
 import tkinter as tk
 from modules.lib.journal import JournalEntry
 from typing import Type, TypeVar
 
-# Подключение функции перевода от EDMC
-import l10n, functools                  # noqa: E401
-_translate = functools.partial(l10n.translations.tl, context=__file__)
-
 
 class ModuleMeta(ABCMeta):
     _instances = dict()
+
+    def __new__(cls, name, bases, dct):
+        """
+        Модификация определения модулей.
+        Задаёт дефолтные значения полям `enabled` и `localized_name`,
+        если они отсутствуют в определении класса.
+        """
+        if "enabled" not in dct:
+            dct["enabled"] = True
+        if "localized_name" not in dct:
+            dct["localized_name"] = name
+        return super().__new__(cls, name, bases, dct)
 
     def __call__(cls, *args, **kwargs):
         """
@@ -70,18 +78,19 @@ class Module(ABC, metaclass=ModuleMeta):
         """
 
     @property
+    @abstractmethod
     def enabled(self) -> bool:
         """
-        Сообщает, включен ли плагин.
+        Сообщает, включен ли модуль.
         """
-        return True
 
     @property
+    @abstractmethod
     def localized_name(self) -> str:
         """
-        Возвращает имя модуля в выбранной локализации.
+        Возвращает имя модуля в выбранной локализации. По-умолчанию отдаёт имя класса.
+        Реализацией предполагается _translate() и читабельные названия в строках перевода для отображения в GUI.
         """
-        return _translate(self.__class__.__qualname__)
 
 
 T = TypeVar('T', bound=Module)
