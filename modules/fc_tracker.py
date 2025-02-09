@@ -167,19 +167,13 @@ class SettingsFrame(tk.Frame):
         self.module_name_label = nb.Label(self, text=_translate("Fleet Carrier tracker settings:"))
         self.module_name_label.pack(side="top", anchor="w")
 
-        self.disable_access_warnings_frame = tk.Frame(self, bg="white")
         self.disable_access_warnings_var = tk.BooleanVar(value=disable_access_warnings)
         self.disable_access_warnings_checkbox = nb.Checkbutton(
-            self.disable_access_warnings_frame,
-            variable=self.disable_access_warnings_var
-        )
-        self.disable_access_warnings_label = nb.Label(
-            self.disable_access_warnings_frame,
+            self,
+            variable=self.disable_access_warnings_var,
             text=_translate("Disable unsafe docking access configuration warnings")
         )
-        self.disable_access_warnings_checkbox.grid(row=0, column=0)
-        self.disable_access_warnings_label.grid(row=0, column=1, sticky="W")
-        self.disable_access_warnings_frame.pack(side="top", fill="x")
+        self.disable_access_warnings_checkbox.pack(side="top", fill="x")
 
         self.no_fc_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_NO_FC>"))
         self.fc_info_frame = FCInfoFrame(self, config)
