@@ -111,15 +111,24 @@ class FCInfoFrame(tk.Frame):
         self.variant_label.grid(row=1, column=0, sticky="W")
         self.variant_field.grid(row=1, column=1, padx=3, sticky="W")
 
-        self.access_label   = nb.Label(self, text=_translate("Docking access:"))
-        self.access_field   = nb.Label(self, text=_translate(fc_data.docking_access))
+        self.access_localized = {
+            FCDockingAccess.ALL: _translate("<DOCKING_ACCESS_ALL>"),
+            FCDockingAccess.FRIENDS: _translate("<DOCKING_ACCESS_FRIENDS>"),
+            FCDockingAccess.SQUADRON: _translate("<DOCKING_ACCESS_SQUADRON>"),
+            FCDockingAccess.SQUADRON_AND_FRIENDS: _translate("<DOCKING_ACCESS_SQUADRONFRIENDS>"),
+            FCDockingAccess.NONE: _translate("<DOCKING_ACCESS_NONE>")
+        }
+        self.access_label = nb.Label(self, text=_translate("Docking access:"))
+        self.access_field = nb.Label(self, text=self.access_localized[fc_data.docking_access])
         self.access_label.grid(row=2, column=0, sticky="W")
         self.access_field.grid(row=2, column=1, padx=3, sticky="W")
 
-        self.notorious_access_label = nb.Label(self, text=_translate("Docking allowed for notorious:"))
-        self.notorious_access_field = nb.Label(
-            self, text=_translate("Allowed" if fc_data.notorious_access else "Not allowed")
-        )
+        self.notorious_access_localized = {
+            True: _translate("<NOTORIOUS_ACCESS_ALLOWED>"),
+            False: _translate("<NOTORIOUS_ACCESS_NOT_ALLOWED>")
+        }
+        self.notorious_access_label = nb.Label(self, text=_translate("Docking permission for notorious:"))
+        self.notorious_access_field = nb.Label(self, text=self.notorious_access_localized[fc_data.notorious_access])
         self.notorious_access_label.grid(row=3, column=0, sticky="W")
         self.notorious_access_field.grid(row=3, column=1, padx=3, sticky="W")
 
@@ -235,7 +244,7 @@ class FCModuleFrame(tk.Frame):
         # 4: после 2 и 3 - мы получили инфу и предлагаем пользователю её проверить в настройках
         self.finish_configuring_fc_label = tk.Label(
             self, wraplength=400, justify="left",
-            text=_translate("<FC_TRACKER_FINISH_CONFIGURING_TEXT")
+            text=_translate("<FC_TRACKER_FINISH_CONFIGURING_TEXT>")
         )
         self.finish_configuring_close_button = nb.Button(
             self, command=self.__clear,

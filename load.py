@@ -272,7 +272,7 @@ class Updater:
         else:
             logger.info("load.py was modified. EDMC restart is required.")
             self.updater_thread.stop()
-            context.status_label.set_text(_translate("The update is installed. Please restart EMDC."))
+            context.status_label.set_text(_translate("The update is installed. Please restart EDMC."))
 
 
     def __use_local_version(self):
@@ -325,7 +325,7 @@ class Updater:
         while True:
             try:
                 tk._default_root.after(0, __inner, self)
-                logger.info("IGNORE THE SURROUNDING LOGGING ALERTS. They appear because of tkinter and EMDC logging implementations.")
+                logger.info("IGNORE THE SURROUNDING LOGGING ALERTS. They appear because of tkinter and EDMC logging implementations.")
             except RuntimeError:
                 sleep(1)
             else:
@@ -415,12 +415,17 @@ class ReleaseTypeSettingFrame(nb.Frame):
         self.reltype_field = ttk.Combobox(self, values=reltypes_list, textvariable=self.reltype_var, state="readonly")
         self.reltype_field.grid(row=0, column=1, sticky="NW", padx=5)
 
-        self.description_var = tk.StringVar(value=_translate(f"<RELEASE_TYPE_DESCRIPTION_{self.reltype_var.get()}>"))
-        self.description_label = nb.Label(self, textvariable=self.description_var)
+        self.rt_descriptions = {
+            "Stable": _translate("<RELEASE_TYPE_DESCRIPTION_STABLE>"),
+            "Beta": _translate("<RELEASE_TYPE_DESCRIPTION_BETA>"),
+            "Development": _translate("<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>")
+        }
+        self.description_var = tk.StringVar(value=self.rt_descriptions[self.reltype_var.get()])
+        self.description_label = nb.Label(self, textvariable=self.description_var, justify="left")
         self.description_label.grid(row=1, columnspan=2, sticky="NWS")
 
     def _update_description(self, varname, index, mode):
-        self.description_var.set(_translate(f"<RELEASE_TYPE_DESCRIPTION_{self.reltype_var.get()}>"))
+        self.description_var.set(self.rt_descriptions[self.reltype_var.get()])
 
     def get_selected_reltype(self):
         return ReleaseType(self.reltype_var.get())
@@ -432,7 +437,7 @@ def plugin_start(plugin_dir):
     """
     EDMC вызывает эту функцию при запуске плагина в режиме Python 2.
     """
-    raise EnvironmentError(_translate("At least EDMC 5.11.0 is required to use this plugin."))
+    raise EnvironmentError(_translate("This plugin requires EDMC version 5.11.0 or later."))
 
 
 def plugin_start3(plugin_dir: str) -> str:
@@ -441,7 +446,7 @@ def plugin_start3(plugin_dir: str) -> str:
     Возвращаемое значение - строка, которой будет озаглавлена вкладка плагина в настройках.
     """
     if context.edmc_version < Version("5.11.0"):
-        raise EnvironmentError(_translate("At least EDMC 5.11.0 is required to use this plugin."))
+        raise EnvironmentError(_translate("This plugin requires EDMC version 5.11.0 or later."))
 
     context.plugin_dir = plugin_dir
     context.updater = Updater()

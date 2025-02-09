@@ -15,6 +15,21 @@ import l10n, functools                  # noqa: E401
 _translate = functools.partial(l10n.translations.tl, context=__file__)
 
 
+categories_localized = {
+    "Anomaly": _translate("Anomaly"),
+    "Biology": _translate("Biology"),
+    "Cloud": _translate("Cloud"),
+    "Geology": _translate("Geology"),
+    "Guardian": _translate("Guardian"),
+    "Human": _translate("Human"),
+    "Other": _translate("Other"),
+    "Planets": _translate("Planets"),
+    "Ring": _translate("Ring"),
+    "Thargoid": _translate("Thargoid"),
+    "Tourist": _translate("Tourist"),
+    "None": _translate("None")
+}
+
 
 class _ModuleSettingsGroup(ttk.Frame):
     def __init__(self, parent: tk.Misc, qualname: str, localized_name: str, enabled: bool):
@@ -140,7 +155,10 @@ class VisualizerView(tk.Frame):
         self.active_category_label.pack(side='left', padx=3)
 
         # фрейм с данными по активной категории
-        headers = [_translate("Body"), _translate("POI")]
+        headers = [
+            _translate("Body"),
+            _translate("POI")
+        ]
         self.details_frame = ttk.Frame(self)         # маппится в ___ при наличии данных к отображению
         self.details_table = Table(self.details_frame, headers)
         self.details_table.pack(side="top", fill="x")
@@ -212,7 +230,7 @@ class VisualizerView(tk.Frame):
             self.details_frame.pack_forget()
             return
 
-        self.active_category_var.set(_translate(self.active_category))
+        self.active_category_var.set(categories_localized[self.active_category])
         data = sorted(self.data[self.active_category])
         for item in data:
             self.details_table.insert(item.body, item.text)

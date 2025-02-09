@@ -138,20 +138,15 @@ poi_categories = [
 ]
 
 
-########################
-### release settings ###
-########################
-release_gh_url = "https://github.com/Close-Encounters-Corps/EDMC-Triumvirate/releases"
-release_gh_latest = "https://api.github.com/repos/Close-Encounters-Corps/EDMC-Triumvirate/releases/latest"
-release_zip_template = "https://github.com/Close-Encounters-Corps/EDMC-Triumvirate/archive/{}.zip"
-release_gh_ver_info = "https://api.github.com/repos/Close-Encounters-Corps/EDMC-Triumvirate/releases/tags/{}"
-
-
 #############
 ### other ###
 #############
-support_message = """В случае возникновения проблем с плагином обращайтесь в дискорд Close Encounters Corps, канал #triumvirate_tech_support, в личные сообщения @elcylite и @kazak0v или на почтовый адрес help@cec.org"""
 version = "1.12.0-beta-1.indev"     # семантическое версионирование
+
+# Подключение функции перевода от EDMC
+import l10n, functools                  # noqa: E401
+_translate = functools.partial(l10n.translations.tl, context=__file__)
+support_message = _translate("<SETTINGS_SUPPORT_MESSAGE>")
 
 
 try:
