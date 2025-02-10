@@ -1,6 +1,7 @@
 import logging
 import tkinter as tk
 from tkinter import ttk
+from typing import Callable
 from queue import Queue
 from semantic_version import Version
 
@@ -96,7 +97,9 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
             mod.draw_settings(frame, cmdr, is_beta, next(rg))
             ttk.Separator(frame, orient="horizontal").grid(row=next(rg), column=0, pady=5, sticky="EW")
 
-    nb.Label(frame, text=settings.support_message).grid(row=next(rg), column=0, sticky="NW")
+    nb.Label(
+        frame, text=PluginContext._tr_template("<SETTINGS_SUPPORT_MESSAGE>", context=__file__)
+    ).grid(row=next(rg), column=0, sticky="NW")
     return frame
 
 

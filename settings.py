@@ -143,11 +143,6 @@ poi_categories = [
 #############
 version = "1.11.0+dev"     # семантическое версионирование
 
-import functools
-from context import PluginContext
-_translate = functools.partial(PluginContext._tr_template, context=__file__)
-support_message = _translate("<SETTINGS_SUPPORT_MESSAGE>")
-
 
 try:
     from settings_local import *
