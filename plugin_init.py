@@ -76,7 +76,7 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
             ttk.Separator(frame, orient="horizontal").grid(row=next(rg), column=0, pady=5, sticky="EW")
 
     nb.Label(
-        frame, text=PluginContext._tr_template("<SETTINGS_SUPPORT_MESSAGE>", context=__file__)
+        frame, text=PluginContext._tr_template("<SETTINGS_SUPPORT_MESSAGE>", filepath=__file__)
     ).grid(row=next(rg), column=0, sticky="NW")
     return frame
 

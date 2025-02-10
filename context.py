@@ -26,10 +26,10 @@ if TYPE_CHECKING:
 
 
 class TranslateFunc(Protocol):
-    def __call__(self, x: str, context: str, lang: str | None) -> str:
+    def __call__(self, x: str, filepath: str, lang: str = None) -> str:
         """
         :param x: Ключ перевода
-        :param context: Путь к файлу, в котором вызывается функция
+        :param filepath: Путь к файлу (__file__), в котором вызывается функция
         :param optional lang: Позволяет явно указать, для какого языка будет взят перевод
         """
         ...

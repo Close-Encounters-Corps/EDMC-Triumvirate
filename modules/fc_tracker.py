@@ -21,7 +21,7 @@ import myNotebook as nb
 # Подключение функции перевода
 import functools
 from context import PluginContext
-_translate = functools.partial(PluginContext._tr_template, context=__file__)
+_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 # Эксперимент: декоратор для UI методов, чтобы везде tk.after не пихать

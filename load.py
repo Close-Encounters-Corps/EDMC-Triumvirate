@@ -106,22 +106,22 @@ class _Translation:
         logger.info(f"{len(cls.available_languages)} available translation languages loaded.")
 
     @classmethod
-    def translate(cls, x: str, context: str, lang: str | None):
+    def translate(cls, x: str, filepath: str, lang: str = None):
         if not lang:
             lang = cls.edmc_language
         if lang not in cls.available_languages:
             lang = cls.fallback_language
 
-        relative = Path(context).relative_to(context.plugin_dir)
-        translation = cls._strings.get(lang).get(relative).get(x)
+        relative = str(Path(filepath).relative_to(context.plugin_dir))
+        translation = cls._strings.get(lang, {}).get(relative, {}).get(x)
 
         if not translation:
-            logger.error(f"Missing translation: language '{lang}', key \"{x}\".")
+            logger.error(f"Missing translation: language '{lang}', file '{relative}', key \"{x}\".")
             return x
-        return translation
+        return translation.replace(r"\\", "\\").replace(r"\n", "\n")
 
 
-_translate = functools.partial(_Translation.translate, context=__file__)
+_translate = functools.partial(_Translation.translate, filepath=__file__)
 
 
 # Механизм обновления плагина

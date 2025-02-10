@@ -12,7 +12,7 @@ import myNotebook as nb
 
 # Подключение функции перевода
 import functools
-_translate = functools.partial(PluginContext._tr_template, context=__file__)
+_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 categories_localized = {

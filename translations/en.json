@@ -71,7 +71,7 @@
         "Close": "Close",
         "<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>": "ATTENTION: Docking on the fleet carrier is allowed for all pilots! To ensure the safety of the carrier, lower the docking access level!"
     },
-    "settings.py": {
+    "plugin_init.py": {
         "<SETTINGS_SUPPORT_MESSAGE>": "If you encounter any issues with the plugin, contact us via email at help@cec.org."
     }
 }

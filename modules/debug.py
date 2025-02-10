@@ -7,7 +7,7 @@ from .lib.conf import config
 # Подключение функции перевода
 import functools
 from context import PluginContext
-_translate = functools.partial(PluginContext._tr_template, context=__file__)
+_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 class Debug:
