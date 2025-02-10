@@ -52,7 +52,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     return frame
 
 
-def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
+def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
     """
     EDMC вызывает эту функцию для получения вкладки настроек плагина.
     """
@@ -65,7 +65,8 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
             row += 1
     rg = rowgen()
 
-    frame = nb.Frame(parent)
+    frame = tk.Frame(parent, bg="white")
+    frame.grid_columnconfigure(0, weight=1)
     Debug.plugin_prefs(frame)
     ttk.Separator(frame, orient="horizontal").grid(row=next(rg), column=0, pady=5, sticky="EW")
 
