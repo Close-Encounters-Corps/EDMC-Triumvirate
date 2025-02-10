@@ -4,9 +4,10 @@ import myNotebook as nb
 from sys import _getframe
 from .lib.conf import config
 
-# Подключение функции перевода от EDMC
-import l10n, functools                  # noqa: E401
-_translate = functools.partial(l10n.translations.tl, context=__file__)
+# Подключение функции перевода
+import functools
+from context import PluginContext
+_translate = functools.partial(PluginContext._tr_template, context=__file__)
 
 
 class Debug:

@@ -4,6 +4,7 @@
 Вся логика инициализации плагина, которая раньше была в load.py, должна быть перенесена в plugin_init.py.
 """
 
+import json
 import os
 import logging
 import functools
@@ -22,7 +23,6 @@ from time import sleep
 from tkinter import ttk
 from typing import Callable
 
-import l10n
 import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import appname, appversion
@@ -43,11 +43,6 @@ if not logger.hasHandlers():
     logger_formatter.default_msec_format = '%s.%03d'
     logger_channel.setFormatter(logger_formatter)
     logger.addHandler(logger_channel)
-
-
-# Функция перевода
-# https://github.com/EDCD/EDMarketConnector/blob/main/PLUGINS.md#localisation
-_translate = functools.partial(l10n.translations.tl, context=__file__)
 
 
 @dataclass
@@ -75,6 +70,58 @@ class BasicContext:
     prefs_changed_hook: Callable    = None
 
 context = BasicContext()        # noqa: E305
+
+
+# Функция перевода
+# Из-за ограничений механизма локализации EDMC будем использовать свой
+class _Translation:
+    fallback_language = "en"
+    edmc_language: str = None
+    available_languages: list[str] = []
+    _strings: dict[str, dict[str, dict[str, str]]] = {}
+
+    @classmethod
+    def setup(cls):
+        translations_dir = Path(context.plugin_dir) / "translations"
+        if not translations_dir.exists():
+            logger.error("Couldn't locate the directory with translations files.")
+            return
+        cls.available_languages = [
+            f.name.removesuffix(".json")
+            for f in translations_dir.iterdir()
+            if f.is_file() and f.name.endswith(".json")
+        ]
+        for lang in cls.available_languages:
+            try:
+                with open(translations_dir / f"{lang}.json", 'r', encoding="utf-8") as f:
+                    data = json.load(f)
+            except json.JSONDecodeError as e:
+                logger.error(f"Couldn't parse language file '{lang}.json'.", exc_info=e)
+                cls.available_languages.remove(lang)
+            except Exception as e:
+                logger.error(f"Error while reading language file '{lang}.json'.", exc_info=e)
+                cls.available_languages.remove(lang)
+            else:
+                cls._strings[lang] = data
+        logger.info(f"{len(cls.available_languages)} available translation languages loaded.")
+
+    @classmethod
+    def translate(cls, x: str, context: str, lang: str | None):
+        if not lang:
+            lang = cls.edmc_language
+        if lang not in cls.available_languages:
+            lang = cls.fallback_language
+
+        relative = Path(context).relative_to(context.plugin_dir)
+        translation = cls._strings.get(lang).get(relative).get(x)
+
+        if not translation:
+            logger.error(f"Missing translation: language '{lang}', key \"{x}\".")
+            return x
+        return translation
+
+
+_translate = functools.partial(_Translation.translate, context=__file__)
 
 
 # Механизм обновления плагина
@@ -301,7 +348,8 @@ class Updater:
                 edmc_version=context.edmc_version,
                 plugin_dir=context.plugin_dir,
                 event_queue=context.event_queue,
-                logger=logger
+                logger=logger,
+                tr_template=_Translation.translate
             )
 
             context.status_label.clear()
@@ -445,10 +493,13 @@ def plugin_start3(plugin_dir: str) -> str:
     EDMC вызывает эту функцию при запуске плагина в режиме Python 3.
     Возвращаемое значение - строка, которой будет озаглавлена вкладка плагина в настройках.
     """
+    context.plugin_dir = plugin_dir
+    _Translation.edmc_language = edmc_config.get_str("language") or _Translation.fallback_language
+    _Translation.setup()
+
     if context.edmc_version < Version("5.11.0"):
         raise EnvironmentError(_translate("This plugin requires EDMC version 5.11.0 or later."))
 
-    context.plugin_dir = plugin_dir
     context.updater = Updater()
     context.updater.start_update_cycle(_check_now=True)
 
@@ -494,6 +545,7 @@ def prefs_changed(cmdr: str | None, is_beta: bool):
     """
     EDMC вызывает эту функцию при сохранении настроек пользователем.
     """
+    _Translation.edmc_language = edmc_config.get_str("language") or _Translation.fallback_language
     new_reltype = context.settings_frame.get_selected_reltype()
     context.settings_frame = None
     if new_reltype != context.updater.release_type:

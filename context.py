@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum, IntFlag, auto
 from semantic_version import Version
-from typing import TYPE_CHECKING
+from typing import Protocol, TYPE_CHECKING
 import settings
 from modules.lib.module import get_active_modules
 
@@ -20,6 +20,16 @@ if TYPE_CHECKING:
     from modules.patrol import PatrolModule
     from modules.exploring.visualizer import Visualizer
     from modules.exploring.canonn_codex_poi import CanonnCodexPOI
+
+
+class TranslateFunc(Protocol):
+    def __call__(self, x: str, context: str, lang: str | None) -> str:
+        """
+        :param x: Ключ перевода
+        :param context: Путь к файлу, в котором вызывается функция
+        :param optional lang: Позволяет явно указать, для какого языка будет взят перевод
+        """
+        ...
 
 
 class _ClassProperty:
@@ -48,6 +58,7 @@ class PluginContext:
     # объекты
     logger: 'logging.Logger'        = None
     _event_queue: 'Queue'           = None
+    _tr_template: TranslateFunc     = None
     journal_processor: 'JournalProcessor'   = None
     notifier: 'Notifier'            = None
 

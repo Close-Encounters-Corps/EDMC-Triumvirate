@@ -1,0 +1,77 @@
+{
+    "load.py": {
+        "Error: couldn't check for updates.": "Error: couldn't check for updates.",
+        "An update is available ({v}). Please restart EDMC.": "An update is available ({v}). Please restart EDMC.",
+        "Downloading an update...": "Downloading an update...",
+        "Error: couldn't download an update.": "Error: couldn't download an update.",
+        "Installing an update...": "Installing an update...",
+        "The update is installed. Please restart EDMC.": "The update is installed. Please restart EDMC.",
+        "Version:": "Version:",
+        "Release channel:": "Release channel:",
+        "<RELEASE_TYPE_DESCRIPTION_STABLE>": "Official numbered versions of the plugin. In most cases, this is the recommended choice.",
+        "<RELEASE_TYPE_DESCRIPTION_BETA>": "Beta versions for testers of new updates. Stability is not guaranteed.\nPlease note that the main discussion of the testing process takes place in the closed CEC channel,\nso if you are not a member of the faction, using these versions is at your own risk.",
+        "<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>": "Versions for developers, not intended for public use.\nIf you don't know why this option appeared in your menu, switch to the Stable update channel and report this bug to CEC.",
+        "This plugin requires EDMC version 5.11.0 or later.": "This plugin requires EDMC version 5.11.0 or later."
+    },
+    "modules\\debug.py": {
+        "Enable debugging mode": "Enable debugging mode"
+    },
+    "modules\\exploring\\canonn_codex_poi.py": {
+        "Codex module": "Codex module"
+    },
+    "modules\\exploring\\visualizer\\ui.py": {
+        "Anomaly": "Anomaly",
+        "Biology": "Biology",
+        "Cloud": "Cloud",
+        "Geology": "Geology",
+        "Guardian": "Guardian",
+        "Human": "Human",
+        "Other": "Other",
+        "Planets": "Planets",
+        "Ring": "Ring",
+        "Thargoid": "Thargoid",
+        "Tourist": "Tourist",
+        "None": "None",
+        "Visualizer settings:": "Visualizer settings:",
+        "Show visualizer module:": "Show visualizer module:",
+        "Show output from selected modules only:": "Show output from selected modules only:",
+        "[No registered modules found]": "[No registered modules found]",
+        "Visualizer: No data yet.": "Visualizer: No data yet.",
+        "Displayed category:": "Displayed category:",
+        "Body": "Body",
+        "POI": "POI"
+    },
+    "modules\\fc_tracker.py": {
+        "unknown": "unknown",
+        "Carrier name:": "Carrier name:",
+        "Carrier class:": "Carrier class:",
+        "<DOCKING_ACCESS_ALL>": "all",
+        "<DOCKING_ACCESS_FRIENDS>": "friends",
+        "<DOCKING_ACCESS_SQUADRON>": "squadron",
+        "<DOCKING_ACCESS_SQUADRONFRIENDS>": "squadron and friends",
+        "<DOCKING_ACCESS_NONE>": "none",
+        "Docking access:": "Docking access:",
+        "<NOTORIOUS_ACCESS_ALLOWED>": "allowed",
+        "<NOTORIOUS_ACCESS_NOT_ALLOWED>": "not allowed",
+        "Docking permission for notorious:": "Docking permission for notorious:",
+        "<FC_TRACKER_SETTINGS_OPTIONAL_FIELDS>": "The following settings are optional and let you set a personal description for your carrier:",
+        "Role:": "Role:",
+        "Additional comment:": "Additional comment:",
+        "Fleet Carrier tracker settings:": "Fleet Carrier tracker settings:",
+        "Disable unsafe docking access configuration warnings": "Disable unsafe docking access configuration warnings",
+        "<FC_TRACKER_SETTINGS_NO_FC>": "You don't own a fleet carrier.\n(if this is incorrect, please go to the carrier management panel so the plugin can retrieve the necessary information)",
+        "<FC_TRACKER_SETTINGS_INFO_MISSING>": "The fleet carrier status is unknown.\nPlease go to the carrier management panel so the plugin can retrieve the necessary information,\nor click the \"I don't have a fleet carrier\" button in the EDMC window.",
+        "<FC_TRACKER_SETTINGS_ACCESS_WARNING>": "ATTENTION: Docking on the fleet carrier is allowed for all pilots!\nTo ensure the safety of the carrier, lower the docking access level!",
+        "<FC_TRACKER_SETTINGS_DECOM_WARNING> {TS}": "ATTENTION: The carrier is preparing for decommissioning! Estimated decommissioning time: {TS}\n(if this is incorrect, please go to the carrier management panel so the plugin can retrieve the necessary information)",
+        "<FC_TRACKER_NO_INFO_TEXT>": "Fleet Carrier Tracker did not find any saved information about your carrier.\nTo update the plugin data, go to the carrier management panel.\nIf you do not own a carrier, click the button below.",
+        "I don't have a fleet carrier": "I don't have a fleet carrier",
+        "<FC_TRACKER_BOUGHT_TEXT>": "Congratulations on purchasing your new fleet carrier!\nPlease, go to the carrier management panel to update plugin data and configure Fleet Carrier Tracker.",
+        "<FC_TRACKER_UNEXPECTED_EVENT_TEXT>": "Fleet Carrier Tracker encountered unexpected data from the game. To ensure data integrity, the saved configuration was reset.\nPlease, go to the carrier management panel so the plugin can retrieve the necessary information.",
+        "<FC_TRACKER_FINISH_CONFIGURING_TEXT>": "The data on the fleet carrier has been successfully received. You can review it and provide additional information about your carrier in the plugin settings.",
+        "Close": "Close",
+        "<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>": "ATTENTION: Docking on the fleet carrier is allowed for all pilots! To ensure the safety of the carrier, lower the docking access level!"
+    },
+    "settings.py": {
+        "<SETTINGS_SUPPORT_MESSAGE>": "If you encounter any issues with the plugin, contact us via email at help@cec.org."
+    }
+}
