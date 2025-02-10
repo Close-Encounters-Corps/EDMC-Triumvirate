@@ -2,11 +2,14 @@ from dataclasses import dataclass
 from enum import Enum, IntFlag, auto
 from semantic_version import Version
 from typing import Protocol, TYPE_CHECKING
+
+# АХТУНГ: ничто из того, что здесь импортируется, не должно использовать начальные параметры контекста!
+# См. load.py -> Updater.__use_local_version
 import settings
 from modules.lib.module import get_active_modules
 
 if TYPE_CHECKING:
-    # for type hinting
+    # им можно, они тут для аннотаций типов и в рантайме не импортируются
     import logging
     from queue import Queue
     from journal_processor import JournalProcessor

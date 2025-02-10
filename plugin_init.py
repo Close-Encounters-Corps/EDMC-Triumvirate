@@ -1,12 +1,7 @@
-import logging
 import tkinter as tk
 from tkinter import ttk
-from typing import Callable
-from queue import Queue
-from semantic_version import Version
 
-import settings
-from context import PluginContext, TranslateFunc
+from context import PluginContext
 from journal_processor import JournalProcessor
 from modules.bgs import BGS
 from modules.canonn_api import CanonnRealtimeAPI
@@ -24,25 +19,8 @@ from modules.lib.module import Module
 import myNotebook as nb
 
 
-def get_version() -> Version:
-    """Возвращает номер установленной версии плагина."""
-    return Version(settings.version)
-
-
-def init_context(
-    edmc_version: Version,
-    plugin_dir: str,
-    event_queue: Queue,
-    logger: logging.Logger,
-    tr_template: TranslateFunc
-):
-    """Инициализирует плагин с параметрами, предоставленными EDMC."""
-    PluginContext.logger = logger
-    Debug.setup(logger)
-    PluginContext.edmc_version = edmc_version
-    PluginContext.plugin_dir = plugin_dir
-    PluginContext._event_queue = event_queue
-    PluginContext._tr_template = tr_template
+def init_version():
+    Debug.setup(PluginContext.logger)
 
 
 def plugin_app(parent: tk.Misc) -> tk.Frame:

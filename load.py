@@ -328,29 +328,39 @@ class Updater:
 
         def __inner(self):
             logger.info("Loading local version the in main thread...")
+            if not Path(context.plugin_dir, "context.py").exists():
+                logger.error("`context` module not found. Aborting.")
+                context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
+                return
             if not Path(context.plugin_dir, "plugin_init.py").exists():
                 logger.error("`plugin_init` module not found. Aborting.")
+                context.status_label.set_text(_translate("Error: plugin files are corrupted. Unable to start the plugin."))
                 return
 
-            import plugin_init
-            context.plugin_version = plugin_init.get_version()
+            # сначала инициализируем контекст версии уже созданными объектами
+            from context import PluginContext as VersionContext
+            VersionContext.logger = logger
+            VersionContext.plugin_dir = context.plugin_dir
+            VersionContext.edmc_version = context.edmc_version
+            VersionContext._tr_template = _Translation.translate
+            VersionContext._event_queue = context.event_queue
+
+            version_mismatch = False
+            context.plugin_version = VersionContext.plugin_version
             if self.local_version != context.plugin_version:
                 logger.warning("Saved local version doesn't match the loaded one. This could be due to a manual update.")
                 edmc_config.set(self.LOCAL_VERSION_KEY, str(context.plugin_version))
                 self.local_version = context.plugin_version
                 logger.warning(f"Local version set to {context.plugin_version}.")
+                version_mismatch = True
 
+            # и лишь теперь мы можем стартовать саму версию
+            import plugin_init
             context.plugin_stop_hook = plugin_init.plugin_stop
             context.plugin_prefs_hook = plugin_init.plugin_prefs
             context.prefs_changed_hook = plugin_init.prefs_changed
 
-            plugin_init.init_context(
-                edmc_version=context.edmc_version,
-                plugin_dir=context.plugin_dir,
-                event_queue=context.event_queue,
-                logger=logger,
-                tr_template=_Translation.translate
-            )
+            plugin_init.init_version()
 
             context.status_label.clear()
             context.version_frame = VersionFrame(context.plugin_frame, context.plugin_version)
@@ -362,6 +372,8 @@ class Updater:
 
             context.plugin_loaded = True
             logger.info("Local version configured, running.")
+            if version_mismatch:
+                context.updater.restart_update_cycle()
 
 
         # фикс для development-версий: удостоверимся, что userdata всегда существует

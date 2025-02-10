@@ -1,9 +1,10 @@
 from abc import ABC, ABCMeta, abstractmethod
+from typing import Type, TypeVar, TYPE_CHECKING
 
-# для аннотаций типов:
-import tkinter as tk
-from modules.lib.journal import JournalEntry
-from typing import Type, TypeVar
+if TYPE_CHECKING:
+    # для аннотаций типов
+    import tkinter as tk
+    from modules.lib.journal import JournalEntry
 
 
 class ModuleMeta(ABCMeta):
@@ -41,7 +42,7 @@ class Module(ABC, metaclass=ModuleMeta):
         Вызывается при старте плагина.
         """
 
-    def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool, row: int):
+    def draw_settings(self, parent_widget: 'tk.Misc', cmdr: str, is_beta: bool, row: int) -> 'tk.Misc':
         """
         Вызывается при отрисовки окна настроек.
         """
@@ -52,7 +53,7 @@ class Module(ABC, metaclass=ModuleMeta):
         сохраняет настройки.
         """
 
-    def on_journal_entry(self, entry: JournalEntry):
+    def on_journal_entry(self, entry: 'JournalEntry'):
         """
         Вызывается при появлении новой записи в логах.
         """
@@ -67,7 +68,7 @@ class Module(ABC, metaclass=ModuleMeta):
         Вызывается при обновлении игрой status.json
         """
 
-    def on_chat_message(self, entry: JournalEntry):
+    def on_chat_message(self, entry: 'JournalEntry'):
         """
         Вызывается при появлении новой записи типа сообщения в логах.
         """
