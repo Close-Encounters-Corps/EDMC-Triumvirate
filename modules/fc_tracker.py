@@ -245,7 +245,7 @@ class FCModuleFrame(tk.Frame):
             text=_translate("<FC_TRACKER_FINISH_CONFIGURING_TEXT>")
         )
         self.finish_configuring_close_button = nb.Button(
-            self, command=self.__clear,
+            self, command=self.hide,
             text=_translate("Close")
         )
 
