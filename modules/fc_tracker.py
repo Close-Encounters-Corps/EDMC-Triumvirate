@@ -133,7 +133,7 @@ class FCInfoFrame(tk.Frame):
         self.notorious_access_label.grid(row=3, column=0, sticky="W")
         self.notorious_access_field.grid(row=3, column=1, padx=3, sticky="W")
 
-        self.optional_fields_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_OPTIONAL_FIELDS>"))
+        self.optional_fields_label = nb.Label(self, justify="left", text=_translate("<FC_TRACKER_SETTINGS_OPTIONAL_FIELDS>"))
         self.optional_fields_label.grid(row=4, column=0, columnspan=2, sticky="W")
 
         self.role_var = tk.StringVar(value=fc_data.role)
@@ -178,9 +178,12 @@ class SettingsFrame(tk.Frame):
 
         self.no_fc_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_NO_FC>"))
         self.fc_info_frame = FCInfoFrame(self, config)
-        self.info_missing_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_INFO_MISSING>"))
-        self.access_warning_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_ACCESS_WARNING>"))
-        self.decom_warning_label = nb.Label(self, text=_translate("<FC_TRACKER_SETTINGS_DECOM_WARNING> {TS}").format(TS=decom_timestamp))   # noqa: E501
+        self.info_missing_label = nb.Label(self, justify="left", text=_translate("<FC_TRACKER_SETTINGS_INFO_MISSING>"))
+        self.access_warning_label = nb.Label(self, justify="left", text=_translate("<FC_TRACKER_SETTINGS_ACCESS_WARNING>"))
+        self.decom_warning_label = nb.Label(
+            self, justify="left",
+            text=_translate("<FC_TRACKER_SETTINGS_DECOM_WARNING> {TS}").format(TS=decom_timestamp)
+        )
 
         if config.status in (FCStatus.NOT_BOUGHT, FCStatus.DECOMMISSIONED):
             self.no_fc_label.pack(side="top", anchor="w")
