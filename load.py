@@ -214,7 +214,7 @@ class Updater:
         if self.local_version == Version("0.0.0"):
             # первый запуск плагина после обновления до 1.12.0
             logger.info((
-                "No saved local version info found.",
+                "No saved local version info found."
                 "Assuming 1.12.0 or higher is installed for the first time, stopping the updating process."
             ))
             self.__use_local_version()
@@ -254,7 +254,7 @@ class Updater:
             self.__use_local_version()
         else:
             if latest_version < self.local_version:
-                logger.info((f"Remote version ({latest_version}) is lower than the local one ({self.local_version}). ",
+                logger.info((f"Remote version ({latest_version}) is lower than the local one ({self.local_version}). "
                              "A downgrade is required."))
             else:
                 logger.info(f"Found an update: {self.local_version} -> {latest_version}.")
@@ -423,18 +423,26 @@ class StatusLabel(tk.Label):
         super().__init__(parent, textvariable=self.textvar)
 
     def set_text(self, val: str):
-        self.show()
-        self.textvar.set(val)
+        def __inner(self, val):
+            self.show()
+            self.textvar.set(val)
+        self.after(0, __inner, self, val)
 
     def clear(self):
-        self.textvar.set("")
-        self.hide()
+        def __inner(self):
+            self.textvar.set("")
+            self.hide()
+        self.after(0, __inner, self)
 
     def show(self):
-        self.grid(row=self.row, column=0, sticky="NWS")
+        def __inner(self):
+            self.grid(row=self.row, column=0, sticky="NWS")
+        self.after(0, __inner, self)
 
     def hide(self):
-        self.grid_forget()
+        def __inner(self):
+            self.grid_forget()
+        self.after(0, __inner, self)
 
 
 class VersionFrame(tk.Frame):

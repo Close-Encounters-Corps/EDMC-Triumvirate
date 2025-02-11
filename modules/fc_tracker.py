@@ -385,9 +385,9 @@ class FC_Tracker(Module):
         self.fc_data.role = role
         self.fc_data.comment = comment
         self.save_fc_data()
-        debug(("[FC_Tracker] New config: ",
-               f"unsafe access warnings {'disabled' if self.disable_access_warnings else 'enabled'}, ",
-               "FC optional data: variant '{variant}', role '{role}', comment '{comment}'."))
+        debug(("[FC_Tracker] New config: "
+               f"unsafe access warnings {'disabled' if self.disable_access_warnings else 'enabled'}, "
+               f"FC optional data: variant '{variant}', role '{role}', comment '{comment}'."))
 
         del self.settings_frame
         self.check_docking_access()
