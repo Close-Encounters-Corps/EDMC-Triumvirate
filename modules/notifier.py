@@ -40,7 +40,7 @@ class _Message(tk.Frame):
     @classmethod
     def _set_image(cls):
         size = int(16 * (tk._default_root.winfo_screenheight() / 1080))
-        image = Image.open(Path(PluginContext.plugin_dir)/'icons'/'cross.png')
+        image = Image.open(Path(PluginContext.plugin_dir) / 'icons' / 'cross.png')
         image = image.resize((size, size))
         cls._cross_image = ImageTk.PhotoImage(image)
 
@@ -105,8 +105,7 @@ class Notifier(tk.Frame):
 
 
     def __show(self):
-        if len(self._pool) > 0:
-            self.grid(row=self.gridrow, column=0, sticky="NWSE")
+        self.grid(row=self.gridrow, column=0, sticky="NWSE")
 
     def __hide(self):
         self.grid_forget()
