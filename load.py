@@ -518,9 +518,6 @@ def plugin_start3(plugin_dir: str) -> str:
     if context.edmc_version < Version("5.11.0"):
         raise EnvironmentError(_translate("This plugin requires EDMC version 5.11.0 or later."))
 
-    context.updater = Updater()
-    context.updater.start_update_cycle(_check_now=True)
-
     return "Triumvirate"
 
 
@@ -541,6 +538,8 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     context.plugin_frame = tk.Frame(parent)
     context.status_label = StatusLabel(context.plugin_frame, 1)
     context.status_label.show()
+    context.updater = Updater()
+    context.updater.start_update_cycle(_check_now=True)
     return context.plugin_frame
 
 
