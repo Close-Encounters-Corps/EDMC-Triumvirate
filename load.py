@@ -211,6 +211,15 @@ class Updater:
             self.__use_local_version()
             return
 
+        if self.local_version == Version("0.0.0"):
+            # первый запуск плагина после обновления до 1.12.0
+            logger.info((
+                "No saved local version info found.",
+                "Assuming 1.12.0 or higher is installed for the first time, stopping the updating process."
+            ))
+            self.__use_local_version()
+            return
+
         # получаем список релизов
         try:
             res = requests.get("https://api.github.com/repos/" + self.REPOSITORY_PATH + "/releases")
