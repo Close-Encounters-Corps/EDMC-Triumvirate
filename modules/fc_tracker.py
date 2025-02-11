@@ -120,7 +120,7 @@ class FCInfoFrame(tk.Frame):
             FCDockingAccess.NONE: _translate("<DOCKING_ACCESS_NONE>")
         }
         self.access_label = nb.Label(self, text=_translate("Docking access:"))
-        self.access_field = nb.Label(self, text=self.access_localized[fc_data.docking_access])
+        self.access_field = nb.Label(self, text=self.access_localized.get(fc_data.docking_access, ""))
         self.access_label.grid(row=2, column=0, sticky="W")
         self.access_field.grid(row=2, column=1, padx=3, sticky="W")
 
@@ -129,7 +129,7 @@ class FCInfoFrame(tk.Frame):
             False: _translate("<NOTORIOUS_ACCESS_NOT_ALLOWED>")
         }
         self.notorious_access_label = nb.Label(self, text=_translate("Docking permission for notorious:"))
-        self.notorious_access_field = nb.Label(self, text=self.notorious_access_localized[fc_data.notorious_access])
+        self.notorious_access_field = nb.Label(self, text=self.notorious_access_localized.get(fc_data.notorious_access, ""))
         self.notorious_access_label.grid(row=3, column=0, sticky="W")
         self.notorious_access_field.grid(row=3, column=1, padx=3, sticky="W")
 

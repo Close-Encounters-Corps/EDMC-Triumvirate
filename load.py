@@ -503,7 +503,7 @@ class ReleaseTypeSettingFrame(tk.Frame):
             "Beta": _translate("<RELEASE_TYPE_DESCRIPTION_BETA>"),
             "Development": _translate("<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>")
         }
-        self.description_var = tk.StringVar(value=self.rt_descriptions[self.reltype_var.get()])
+        self.description_var = tk.StringVar(value=self.rt_descriptions.get(self.reltype_var.get(), ""))
         self.description_label = tk.Label(self, textvariable=self.description_var, justify="left", bg="white")
         self.description_label.pack(side="top", anchor="w")
 
