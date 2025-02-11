@@ -325,14 +325,14 @@ class Updater:
         # копируем userdata, чтобы человеки не ругались, что у них миссии между перезапусками трутся
         logger.info("Copying `userdata`...")
         try:
-            shutil.copytree(Path(context.plugin_dir, "userdata"), Path(new_ver_path, "userdata"))
+            shutil.copytree(Path(context.plugin_dir, "userdata"), Path(new_ver_path, "userdata"), dirs_exist_ok=True)
         except FileNotFoundError:
             logger.warning("Directory `userdata` not found, skipping.")
 
         # сносим старую версию и копируем на её место новую, удаляем временные файлы
         logger.info("Replacing plugin files...")
-        shutil.rmtree(context.plugin_dir)
-        shutil.copytree(new_ver_path, context.plugin_dir)
+        shutil.rmtree(context.plugin_dir, ignore_errors=True)
+        shutil.copytree(new_ver_path, context.plugin_dir, dirs_exist_ok=True)
         shutil.rmtree(tempdir)
 
         # обновляем запись о локальной версии
