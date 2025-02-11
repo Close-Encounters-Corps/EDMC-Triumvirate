@@ -6,6 +6,7 @@
         "Error: couldn't download an update.": "Error: couldn't download an update.",
         "Installing an update...": "Installing an update...",
         "The update is installed. Please restart EDMC.": "The update is installed. Please restart EDMC.",
+        "Error: plugin files are corrupted. Unable to start the plugin.": "Error: plugin files are corrupted. Unable to start the plugin.",
         "Version:": "Version:",
         "Release channel:": "Release channel:",
         "<RELEASE_TYPE_DESCRIPTION_STABLE>": "Official numbered versions of the plugin. In most cases, this is the recommended choice.",

@@ -6,6 +6,7 @@
         "Error: couldn't download an update.": "Ошибка: не удалось загрузить обновление.",
         "Installing an update...": "Установка обновления...",
         "The update is installed. Please restart EDMC.": "Обновление установлено. Требуется перезапуск EDMC.",
+        "Error: plugin files are corrupted. Unable to start the plugin.": "Ошибка: файлы плагина повреждены. Запуск невозможен.",
         "Version:": "Версия:",
         "Release channel:": "Канал обновлений:",
         "<RELEASE_TYPE_DESCRIPTION_STABLE>": "Stable - стабильные номерные версии плагина. В большинстве случаев - это ваш выбор.",
