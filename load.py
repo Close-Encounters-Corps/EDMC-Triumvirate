@@ -23,6 +23,7 @@ from time import sleep
 from tkinter import ttk
 from typing import Callable
 
+from l10n import Locale
 import myNotebook as nb
 from ttkHyperlinkLabel import HyperlinkLabel
 from config import appname, appversion
@@ -76,12 +77,23 @@ context = BasicContext()        # noqa: E305
 # Из-за ограничений механизма локализации EDMC будем использовать свой
 class _Translation:
     fallback_language = "en"
-    edmc_language: str = None
+    system_language: str = None
+    selected_language: str = None
     available_languages: list[str] = []
     _strings: dict[str, dict[str, dict[str, str]]] = {}
 
     @classmethod
     def setup(cls):
+        sys_lang: str = Locale.preferred_languages()[0]
+        if sys_lang.startswith("en-"):
+            cls.system_language = "en"
+            logger.debug("System language: en.")
+        elif sys_lang.startswith("ru-"):
+            cls.system_language = "ru"
+            logger.debug("System language: en.")
+        else:
+            logger.debug(f"Unsupported system language ({sys_lang}).")
+
         translations_dir = Path(context.plugin_dir) / "translations"
         if not translations_dir.exists():
             logger.error("Couldn't locate the directory with translations files.")
@@ -106,11 +118,18 @@ class _Translation:
         logger.info(f"{len(cls.available_languages)} available translation languages loaded.")
 
     @classmethod
+    def update_active_language(cls, new_lang: str | None):
+        if not new_lang:
+            new_lang = cls.system_language
+        if new_lang not in cls.available_languages:
+            new_lang = cls.fallback_language
+        cls.selected_language = new_lang
+        logger.info(f"Selected language set to {cls.selected_language}.")
+
+    @classmethod
     def translate(cls, x: str, filepath: str, lang: str = None):
-        if not lang:
-            lang = cls.edmc_language
         if lang not in cls.available_languages:
-            lang = cls.fallback_language
+            lang = cls.selected_language
 
         relative = str(Path(filepath).relative_to(context.plugin_dir))
         translation = cls._strings.get(lang, {}).get(relative, {}).get(x)
@@ -529,8 +548,8 @@ def plugin_start3(plugin_dir: str) -> str:
     Возвращаемое значение - строка, которой будет озаглавлена вкладка плагина в настройках.
     """
     context.plugin_dir = plugin_dir
-    _Translation.edmc_language = edmc_config.get_str("language") or _Translation.fallback_language
     _Translation.setup()
+    _Translation.update_active_language(edmc_config.get_str("language"))
 
     if context.edmc_version < Version("5.11.0"):
         raise EnvironmentError(_translate("This plugin requires EDMC version 5.11.0 or later."))
@@ -580,7 +599,7 @@ def prefs_changed(cmdr: str | None, is_beta: bool):
     """
     EDMC вызывает эту функцию при сохранении настроек пользователем.
     """
-    _Translation.edmc_language = edmc_config.get_str("language") or _Translation.fallback_language
+    _Translation.update_active_language(edmc_config.get_str("language"))
     new_reltype = context.settings_frame.get_selected_reltype()
     context.settings_frame = None
     if new_reltype == ReleaseType._DEVELOPMENT:
