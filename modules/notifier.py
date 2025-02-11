@@ -12,15 +12,14 @@ class _Message(tk.Frame):
 
     def __init__(self, master, text: str, timeout: int):
         super().__init__(master, relief="groove")
-        self.grid_columnconfigure(0, weight=1)
 
-        self._label = ttk.Label(self, text=text, wraplength=self._get_wraplength())
-        self._label.grid(row=0, column=0, pady=2, sticky="w")
+        self._label = tk.Label(self, text=text, wraplength=self._get_wraplength())
+        self._label.pack(side="left", fill="x", pady=2)
 
         if not self._cross_image:
             self._set_image()
         self._button = ttk.Button(self, image=self._cross_image, command=self._close)
-        self._button.grid(row=0, column=1, padx=5, pady=2, sticky="e")
+        self._button.pack(side="right", padx=5, pady=2)
 
         self.pack(side="top", fill="x")
 
@@ -48,7 +47,7 @@ class _Message(tk.Frame):
     def _get_wraplength():
         main_window: tk.Tk = tk._default_root
         main_window.update()
-        return 275 if main_window.winfo_width() <= 275 else main_window.winfo_width()
+        return max(main_window.winfo_width(), 275)
 
 
 class Notifier(tk.Frame):
