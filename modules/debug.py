@@ -12,15 +12,16 @@ _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 class Debug:
     log: logging.Logger = None
-    debugvar = tk.BooleanVar(value=(saved if ((saved := config.get_bool("CanonnDebug")) is not None) else True))
+    config_key: str = "EnableDebugging"
+    debugvar = tk.BooleanVar(value=(saved if ((saved := config.get_bool(config_key)) is not None) else True))
 
     @classmethod
     def setup(cls, log: logging.Logger):
         cls.log = log
         cls.log.setLevel(logging.DEBUG if (cls.debugvar.get() is True) else logging.INFO)
-        if config.get_bool("CanonnDebug") is None:
-            config.set('CanonnDebug', cls.debugvar.get())
-            cls.log.debug("CanonnDebug set to {}.".format(cls.debugvar.get()))
+        if config.get_bool(cls.config_key) is None:
+            config.set(cls.config_key, cls.debugvar.get())
+            cls.log.debug("Debugging mode set to {}.".format(cls.debugvar.get()))
 
     @classmethod
     def info(cls, value, *args):
@@ -61,7 +62,7 @@ class Debug:
     @classmethod
     def prefs_changed(cls):
         "Called when the user clicks OK on the settings dialog."
-        config.set('CanonnDebug', cls.debugvar.get())
+        config.set(cls.config_key, cls.debugvar.get())
         cls.log.setLevel(logging.DEBUG if (cls.debugvar.get() is True) else logging.INFO)
 
     @staticmethod

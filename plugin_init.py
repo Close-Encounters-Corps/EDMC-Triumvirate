@@ -17,10 +17,18 @@ from modules.lib import thread
 from modules.lib.module import Module
 
 import myNotebook as nb
+from config import config as edmc_config
 
 
 def init_version():
     Debug.setup(PluginContext.logger)
+    # очистка устаревших ключей конфигурации
+    edmc_config.delete("Triumvirate.Canonn:HideCodex", suppress=True)
+    edmc_config.delete("Triumvirate.Canonn", suppress=True)
+    # TODO: раскомментить после релиза 1.12.0
+    # edmc_config.delete("Triumvirate.CanonnDebug", suppress=True)
+    # edmc_config.delete("Triumvirate.DisableAutoUpdate", suppress=True)
+    # edmc_config.delete("Triumvirate.RemoveBackup", suppress=True)
 
 
 def plugin_app(parent: tk.Misc) -> tk.Frame:
