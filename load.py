@@ -173,7 +173,7 @@ class Updater:
     def __init__(self):
         self.updater_thread: UpdateCycle = None
 
-        self.release_type = edmc_config.get_str(self.RELEASE_TYPE_KEY)
+        self.release_type: str = edmc_config.get_str(self.RELEASE_TYPE_KEY)
         if self.release_type is None:
             self.release_type = ReleaseType.BETA             # TODO: изменить на stable после выпуска 1.12.0
             edmc_config.set(self.RELEASE_TYPE_KEY, self.release_type)
@@ -464,7 +464,10 @@ class ReleaseTypeSettingFrame(tk.Frame):
     def __init__(self, parent: tk.Misc):
         super().__init__(parent, bg="white")
         reltypes_list = [ReleaseType.STABLE.value, ReleaseType.BETA.value]
-        if context.updater.release_type == ReleaseType._DEVELOPMENT:
+        if (
+            context.updater.release_type == ReleaseType._DEVELOPMENT
+            or context.plugin_version is not None and context.plugin_version.build
+        ):
             reltypes_list.append(ReleaseType._DEVELOPMENT.value)
 
         self.topframe = tk.Frame(self, bg="white")
@@ -564,6 +567,8 @@ def prefs_changed(cmdr: str | None, is_beta: bool):
     _Translation.edmc_language = edmc_config.get_str("language") or _Translation.fallback_language
     new_reltype = context.settings_frame.get_selected_reltype()
     context.settings_frame = None
+    if new_reltype == ReleaseType._DEVELOPMENT:
+        context.status_label.clear()
     if new_reltype != context.updater.release_type:
         edmc_config.set(context.updater.RELEASE_TYPE_KEY, new_reltype)
         context.updater.release_type = new_reltype
