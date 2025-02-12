@@ -168,6 +168,17 @@ class UpdateCycle(threading.Thread):
         self._stop = True
 
     def run(self):
+        # прежде чем запускать процесс обновления, подождём, пока EDMC создаст своё окно
+        # увы, winfo_ismapped до этого момента работать тоже не будет, поэтому придётся поколхозничать
+        while True:
+            try:
+                tk._default_root.after(0, lambda: None)
+            except RuntimeError:
+                logger.debug("Tk isn't ready yet, waiting...")
+                sleep(1)
+            else:
+                break
+
         if self._check_now:
             self._updater_fn()
 
@@ -406,18 +417,9 @@ class Updater:
 
         # фикс для development-версий: удостоверимся, что userdata всегда существует
         Path(context.plugin_dir, "userdata").mkdir(exist_ok=True)
-
-        # Если у нас стоит актуальная версия, мы можем дойти до этого участка кода быстрее,
-        # чем EDMC успеет создать своё окно, и мы словим runtime error.
-        # winfo_ismapped до создания окна тоже бросает эксепшн, поэтому придётся делать по-уродски.
-        while True:
-            try:
-                tk._default_root.after(0, __inner, self)
-                logger.info("IGNORE THE SURROUNDING LOGGING ALERTS. They appear because of tkinter and EDMC logging implementations.")
-            except RuntimeError:
-                sleep(1)
-            else:
-                break
+        # грузим версию в главном потоке
+        logger.info("IGNORE THE FOLLOWING LOGGING ALERTS. They appear because of tkinter and EDMC logging implementations.")
+        tk._default_root.after(0, __inner, self)
 
 
     def __files_differ(self, file1: Path, file2: Path):
