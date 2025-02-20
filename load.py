@@ -279,7 +279,7 @@ class Updater:
         # сверяем с имеющейся версией
         latest_version = Version(latest["tag_name"])
         if latest_version == self.local_version:
-            logger.info("Local version matches the latest release. No updates required.")
+            logger.info(f"Local version ({self.local_version}) matches the latest release. No updates required.")
             context.status_label.clear()
             self.__use_local_version()
         else:
