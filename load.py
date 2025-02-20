@@ -392,6 +392,10 @@ class Updater:
                 self.local_version = context.plugin_version
                 logger.warning(f"Local version set to {context.plugin_version}.")
                 version_mismatch = True
+                if "dev" in context.plugin_version.prerelease:
+                    logger.info("Local version is of development release type, changing Updater settings.")
+                    edmc_config.set(context.updater.RELEASE_TYPE_KEY, ReleaseType._DEVELOPMENT)
+                    context.updater.release_type = ReleaseType._DEVELOPMENT
 
             # и лишь теперь мы можем стартовать саму версию
             import plugin_init
@@ -504,7 +508,7 @@ class ReleaseTypeSettingFrame(tk.Frame):
         reltypes_list = [ReleaseType.STABLE.value, ReleaseType.BETA.value]
         if (
             context.updater.release_type == ReleaseType._DEVELOPMENT
-            or context.plugin_version is not None and context.plugin_version.build
+            or context.plugin_version is not None and "dev" in context.plugin_version.prerelease
         ):
             reltypes_list.append(ReleaseType._DEVELOPMENT.value)
 
