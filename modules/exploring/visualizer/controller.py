@@ -35,24 +35,23 @@ class VisualizerController(Module):
         self.__model.add_module(module_instance)
 
 
-    def show(self, caller: Module, body: str, text: str, category: str = None) -> None:
+    def show(self, caller: Module, text: str, category: str = None, location: str | None = None) -> None:
         """
         Добавляет запись в список данных к отображению.
 
         caller : Module
             Просто передайте self
-        body : str
-            Тело, к которому относится запись
         text : str
             Текст записи; при необходимости перевода - эта часть на вашей совести
         category : str, optional
             Категория записи; при отсутствии будет назначена категорию по-умолчанию
+        location : str, optional
+            Местоположение POI
         """
         assert isinstance(caller, Module)
-        assert isinstance(body, str)
         assert isinstance(text, str)
         assert category in CATEGORIES or category is None
-        self.__model.add_data(caller, category, body, text)
+        self.__model.add_data(caller, category, location, text)
 
 
     def display_enabled_for(self, module: Module) -> bool:

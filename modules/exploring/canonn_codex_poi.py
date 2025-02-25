@@ -67,7 +67,7 @@ class CanonnCodexPOI(Module):
             if poi.get("scanned", False) in ('false', False):       # без понятия, почему оно (иногда?) даётся строкой
                 PluginContext.exp_visualizer.show(
                     caller=self,
-                    body=poi.get("body"),
+                    location=poi.get("body"),
                     text=poi.get("english_name"),
                     category=category
                 )

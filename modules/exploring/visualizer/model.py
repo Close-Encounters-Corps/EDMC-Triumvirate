@@ -35,14 +35,16 @@ class VisualizerModel:
         debug("[Visualizer] Module {} registered, display status: {}.", qualname, self.modules_display_status[qualname])
 
 
-    def add_data(self, module: Module, category: str, body: str, text: str):
+    def add_data(self, module: Module, category: str | None, location: str | None, text: str):
         assert module in self.registered_modules, "Module must be registered first. Refer to Visualizer.register()"
 
-        debug("[Visualizer] Got new data from {}: category '{}', body '{}', text '{}'.", module, category, body, text)
+        debug("[Visualizer] Got new data from {}: category '{}', location '{}', text '{}'.", module, category, location, text)
         if category is None:
             category = self.DEFAULT_CATEGORY
             debug("[Visualizer] Category was None, setting to default ('{}').", category)
-        data_item = _DataItem(module, category, body, text)
+        if location is None:
+            location = ""
+        data_item = _DataItem(module, category, location, text)
         self.data.append(data_item)
         if self.modules_display_status[data_item.m_qualname] is True:
             self.view.display(data_item)

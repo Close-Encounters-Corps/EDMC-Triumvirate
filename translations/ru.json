@@ -39,7 +39,7 @@
         "[No registered modules found]": "[Зарегистрированных модулей не найдено]",
         "Visualizer: No data yet.": "Визуализатор: данных к отображению пока нет.",
         "Displayed category:": "Выбранная категория:",
-        "Body": "Тело",
+        "Location": "Локация",
         "POI": "POI"
     },
     "modules\\fc_tracker.py": {

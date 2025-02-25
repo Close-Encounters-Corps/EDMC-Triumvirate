@@ -39,7 +39,7 @@
         "[No registered modules found]": "[No registered modules found]",
         "Visualizer: No data yet.": "Visualizer: No data yet.",
         "Displayed category:": "Displayed category:",
-        "Body": "Body",
+        "Location": "Location",
         "POI": "POI"
     },
     "modules\\fc_tracker.py": {

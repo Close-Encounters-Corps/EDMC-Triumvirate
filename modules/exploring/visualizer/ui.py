@@ -156,7 +156,7 @@ class VisualizerView(tk.Frame):
 
         # фрейм с данными по активной категории
         headers = [
-            _translate("Body"),
+            _translate("Location"),
             _translate("POI")
         ]
         self.details_frame = ttk.Frame(self)         # маппится в ___ при наличии данных к отображению
@@ -233,7 +233,7 @@ class VisualizerView(tk.Frame):
         self.active_category_var.set(categories_localized[self.active_category])
         data = sorted(self.data[self.active_category])
         for item in data:
-            self.details_table.insert(item.body, item.text)
+            self.details_table.insert(item.location, item.text)
         self.category_frame.pack(side="top", fill="x")
         self.details_frame.pack(side="top", fill="x")
 
