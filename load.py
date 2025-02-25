@@ -73,14 +73,14 @@ class BasicContext:
 context = BasicContext()        # noqa: E305
 
 
-# Функция перевода
+# Механизм перевода
 # Из-за ограничений механизма локализации EDMC будем использовать свой
 class _Translation:
     fallback_language = "en"
     system_language: str = None
     selected_language: str = None
     available_languages: list[str] = []
-    _strings: dict[str, dict[str, dict[str, str]]] = {}
+    _strings: dict[str, dict[str, dict[str, str]]] = {}     # {"lang": {"file": {"key": "value"}}}
 
     @classmethod
     def setup(cls):
@@ -90,32 +90,37 @@ class _Translation:
             logger.debug("System language: en.")
         elif sys_lang.startswith("ru-"):
             cls.system_language = "ru"
-            logger.debug("System language: en.")
+            logger.debug("System language: ru.")
         else:
             logger.debug(f"Unsupported system language ({sys_lang}).")
+            cls.system_language = sys_lang
 
         translations_dir = Path(context.plugin_dir) / "translations"
         if not translations_dir.exists():
-            logger.error("Couldn't locate the directory with translations files.")
+            logger.error("Couldn't find the directory with the translation files.")
             return
-        cls.available_languages = [
+        lang_files = [
             f.name.removesuffix(".json")
             for f in translations_dir.iterdir()
             if f.is_file() and f.name.endswith(".json")
         ]
-        for lang in cls.available_languages:
-            try:
-                with open(translations_dir / f"{lang}.json", 'r', encoding="utf-8") as f:
-                    data = json.load(f)
-            except json.JSONDecodeError as e:
-                logger.error(f"Couldn't parse language file '{lang}.json'.", exc_info=e)
-                cls.available_languages.remove(lang)
-            except Exception as e:
-                logger.error(f"Error while reading language file '{lang}.json'.", exc_info=e)
-                cls.available_languages.remove(lang)
-            else:
-                cls._strings[lang] = data
-        logger.info(f"{len(cls.available_languages)} available translation languages loaded.")
+        cls.available_languages = [lang for lang in lang_files if cls._load_language(translations_dir, lang)]
+        logger.info(f"Loaded {len(cls.available_languages)} languages: {cls.available_languages}")
+
+    @classmethod
+    def _load_language(cls, translations_dir: Path, lang: str) -> bool:
+        try:
+            with open(translations_dir / f"{lang}.json", 'r', encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError as e:
+            logger.error(f"Couldn't parse language file '{lang}.json'.", exc_info=e)
+            return False
+        except Exception as e:
+            logger.error(f"Error while reading language file '{lang}.json'.", exc_info=e)
+            return False
+        else:
+            cls._strings[lang] = data
+            return True
 
     @classmethod
     def update_active_language(cls, new_lang: str | None):
@@ -131,11 +136,10 @@ class _Translation:
         if lang not in cls.available_languages:
             lang = cls.selected_language
 
-        relative = str(Path(filepath).relative_to(context.plugin_dir))
-        translation = cls._strings.get(lang, {}).get(relative, {}).get(x)
-
+        relative_path = str(Path(filepath).relative_to(context.plugin_dir))
+        translation = cls._strings.get(lang, {}).get(relative_path, {}).get(x)
         if not translation:
-            logger.error(f"Missing translation: language '{lang}', file '{relative}', key \"{x}\".")
+            logger.error(f"Missing translation: language '{lang}', file '{relative_path}', key \"{x}\".")
             return x
         return translation.replace(r"\\", "\\").replace(r"\n", "\n")
 
@@ -244,7 +248,7 @@ class Updater:
         if self.local_version == Version("0.0.0"):
             # первый запуск плагина после обновления до 1.12.0
             logger.info((
-                "No saved local version info found."
+                "No saved local version info found. "
                 "Assuming 1.12.0 or higher is installed for the first time, stopping the updating process."
             ))
             self.__use_local_version()
