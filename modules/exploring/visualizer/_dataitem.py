@@ -20,7 +20,9 @@ class _DataItem:
         self.body       = body
         self.text       = text
 
-    def __lt__(self, other: '_DataItem') -> bool:
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, _DataItem):
+            return NotImplemented
         if self.category != other.category:
             return self.category < other.category
         if self.body != other.body:
