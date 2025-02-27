@@ -40,12 +40,12 @@ class DeliveryTracker(Module):
 
     def _report(self, delivered: dict[str, int]):
         debug(f"[ColonisationTracker] Detected colonisation delivery, cargo diff: {delivered}")
-        url = "https://docs.google.com/forms/d/e/1FAIpQLSfsuuX5OOfEhXQTwMfDagJzoZNFvQCFGyibRH_jE7FpJJ4s8A/formResponse?usp=pp_url"
+        url = "https://docs.google.com/forms/d/e/1FAIpQLSdbG8pQUHDryAkd1ReEIEo25zOs6LUPErUElytgwI8wmfWAUA/formResponse?usp=pp_url"
         for item, amount in delivered.items():
             params = {
-                "entry.966921821": GameState.cmdr,
-                "entry.1161293974": GameState.system,
-                "entry.2036966248": item,
-                "entry.1570101676": amount
+                "entry.1492553995": GameState.cmdr,
+                "entry.639938351": GameState.system,
+                "entry.173800538": item,
+                "entry.883168154": amount
             }
             GoogleReporter(url, params.copy()).start()
