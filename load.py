@@ -266,14 +266,13 @@ class Updater:
 
         # получаем последний релиз
         releases = res.json()
-        try:
-            # либо stable, либо beta при соответствующей настройке
-            latest = next(
-                r for r in releases
-                if not r["prerelease"]
-                or r["prerelease"] and self.release_type == ReleaseType.BETA
-            )
-        except StopIteration:
+        latest_stable = Version(next((r["tag_name"] for r in releases if not r["prerelease"]), "0.0.0"))
+        latest_beta = Version(next((r["tag_name"] for r in releases if r["prerelease"]), "0.0.0"))
+        if latest_beta < latest_stable:
+            latest_beta = latest_stable
+
+        latest = latest_stable if self.release_type == ReleaseType.STABLE else latest_beta
+        if latest == Version("0.0.0"):
             # никогда не должно произойти, если только кто-то не удалит все релизы с гитхаба
             logger.error("No suitable release found on GitHub. Something's wrong with the repository?")
             context.status_label.set_text(_translate("Error: couldn't check for updates."))
@@ -281,24 +280,23 @@ class Updater:
             return
 
         # сверяем с имеющейся версией
-        latest_version = Version(latest["tag_name"])
-        if latest_version == self.local_version:
+        if latest == self.local_version:
             logger.info(f"Local version ({self.local_version}) matches the latest release. No updates required.")
             context.status_label.clear()
             self.__use_local_version()
         else:
-            if latest_version < self.local_version:
-                logger.info((f"Remote version ({latest_version}) is lower than the local one ({self.local_version}). "
+            if latest < self.local_version:
+                logger.info((f"Remote version ({latest}) is lower than the local one ({self.local_version}). "
                              "A downgrade is required."))
             else:
-                logger.info(f"Found an update: {self.local_version} -> {latest_version}.")
+                logger.info(f"Found an update: {self.local_version} -> {latest}.")
 
             if not context.plugin_loaded:
-                self.__download_update(latest_version)
+                self.__download_update(latest)
             else:
                 logger.info("Notifying user.")
                 context.status_label.set_text(
-                    _translate("An update is available ({v}). Please restart EDMC.").format(v=str(latest_version))
+                    _translate("An update is available ({v}). Please restart EDMC.").format(v=str(latest))
                 )
 
 
