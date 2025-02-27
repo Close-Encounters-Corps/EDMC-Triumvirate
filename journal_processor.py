@@ -133,6 +133,7 @@ class JournalProcessor(Thread):
             systemAddress=GameState.system_address,
             station=GameState.station,
             data=entry,
+            state=state,
             x=x, y=y, z=z
         )
 

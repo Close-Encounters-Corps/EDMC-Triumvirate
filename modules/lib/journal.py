@@ -19,6 +19,7 @@ class JournalEntry:
         systemAddress: int,
         station: str,
         data: dict,
+        state: dict,
         x: float,
         y: float,
         z: float,
@@ -29,6 +30,7 @@ class JournalEntry:
         self.systemAddress = systemAddress
         self.station = station
         self.data = data
+        self.state = state
         self.coords = Coords(x, y, z)
 
     def as_dict(self):
@@ -39,6 +41,7 @@ class JournalEntry:
             "systemAddress": self.systemAddress,
             "station": self.station,
             "data": self.data,
+            "state": self.state,
             "coords": {
                 "x": self.coords.x,
                 "y": self.coords.y,
