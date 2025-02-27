@@ -5,6 +5,7 @@ from context import PluginContext
 from journal_processor import JournalProcessor
 from modules.bgs import BGS
 from modules.canonn_api import CanonnRealtimeAPI
+from modules.colonisation import DeliveryTracker
 from modules.debug import Debug
 from modules.fc_tracker import FC_Tracker
 from modules.notifier import Notifier
@@ -45,6 +46,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     # эти модули не имеют UI, но стартуем их здесь же
     PluginContext.bgs_module = BGS()
     PluginContext.canonn_api = CanonnRealtimeAPI()
+    PluginContext.colonisation_tracker = DeliveryTracker()
     PluginContext.systems_module = SystemsModule()
     PluginContext.sq_tracker = Squadron_Tracker()
     PluginContext.canonn_codex_poi = CanonnCodexPOI()

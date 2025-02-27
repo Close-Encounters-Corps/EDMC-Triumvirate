@@ -14,6 +14,9 @@
         "<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>": "Versions for developers, not intended for public use.\nIf you don't know why this option appeared in your menu, switch to the Stable update channel and report this bug to CEC.",
         "This plugin requires EDMC version 5.11.0 or later.": "This plugin requires EDMC version 5.11.0 or later."
     },
+    "modules\\colonisation.py": {
+        "Colonisation delivery tracker": "Colonisation delivery tracker"
+    },
     "modules\\debug.py": {
         "Enable debugging mode": "Enable debugging mode"
     },

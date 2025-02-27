@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from modules.notifier import Notifier
     from modules.bgs import BGS
     from modules.canonn_api import CanonnRealtimeAPI
+    from modules.colonisation import DeliveryTracker
     from modules.fc_tracker import FC_Tracker
     from modules.systems import SystemsModule
     from modules.squadron import Squadron_Tracker
@@ -71,6 +72,7 @@ class PluginContext:
     canonn_codex_poi: 'CanonnCodexPOI'  = None
     sq_tracker: 'Squadron_Tracker'  = None
     fc_tracker: 'FC_Tracker'        = None
+    colonisation_tracker: 'DeliveryTracker' = None
     friendfoe                       = None      # TODO: оживить
     systems_module: 'SystemsModule' = None
     patrol_module: 'PatrolModule'   = None

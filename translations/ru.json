@@ -14,6 +14,9 @@
         "<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>": "Development - версии для разработчиков, не предназначенные для публичного использования.\nЕсли вы не знаете, почему у вас в меню появился этот пункт - выберите стабильный канал обновлений и сообщите нам о баге.",
         "This plugin requires EDMC version 5.11.0 or later.": "Плагин поддерживает только версии EDMC старше 5.11.0."
     },
+    "modules\\colonisation.py": {
+        "Colonisation delivery tracker": "Трекер колонизации"
+    },
     "modules\\debug.py": {
         "Enable debugging mode": "Включить отладочные логи"
     },
