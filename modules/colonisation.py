@@ -22,7 +22,12 @@ class DeliveryTracker(Module):
             self.docked_on_cs = entry.data.get("Docked") is True and entry.data.get("StationName") == "System Colonisation Ship"
         elif event == "Docked":
             self.docked_on_cs = entry.data.get("StationName") == "System Colonisation Ship"
-        elif event == "Undocked":
+        # брабфанка: игра может затупить с обновлением груза и прописать его после отстыковки,
+        # поэтому вместо неё (event == "Undocked") будем отслеживать выход из инстанса
+        elif (
+            event in ("Shutdown", "Died", "SelfDestruct", "StartJump")
+            or event == "Music" and entry.data.get("MusicTrack") == "MainMenu"
+        ):
             self.docked_on_cs = False
         self.update_cargo(entry.state)
 
