@@ -42,7 +42,7 @@ def generate_template():
         json.dump(lines, f, ensure_ascii=False, indent=4)
 
 
-def compare_existing_with_template():
+def update_existing_with_template():
     lang_files = [
         f for f in translations_dir.iterdir()
         if f.is_file() and not f.is_symlink()
@@ -50,34 +50,54 @@ def compare_existing_with_template():
         and "template" not in f.name
     ]
     template: dict[str, dict[str, dict[str, str]]] = json.loads(template_file.read_text(encoding='utf-8'))
+    global_missing = set()
+
     for langfile in lang_files:
         lang: dict[str, dict[str, dict[str, str]]] = json.loads(langfile.read_text(encoding='utf-8'))
+        updated = lang.copy()
         print(f"Comparing the template with '{langfile}'...")
 
         for relative_path in lang:
             if relative_path not in template:
-                print(f"\t- Remove unused file: {relative_path}")
+                print(f"\t- Removed unused file: {relative_path}")
+                del updated[relative_path]
                 continue
             if not lang[relative_path]:
-                print(f"\t- Remove empty file: {relative_path}")
+                print(f"\t- Removed empty file: {relative_path}")
+                del updated[relative_path]
                 continue
             template_lines = set(template[relative_path].keys())
             lang_lines = set(lang[relative_path].keys())
-            missing = template_lines - lang_lines
             extra = lang_lines - template_lines
-            for line in missing:
-                print(f"\t- Add missing line: {relative_path} / '{line}'")
+            missing = template_lines - lang_lines
             for line in extra:
-                print(f"\t- Remove unused line: {relative_path} / '{line}'")
+                print(f"\t- Removed unused line: {relative_path} / '{line}'")
+                del updated[relative_path][line]
+            for line in missing:
+                updated[relative_path][line] = line
+                global_missing.add(f"{relative_path}: '{line}'")
 
         # missing files
         for relative_path in template:
             if relative_path not in lang:
-                print(f"\t- Add missing file: {relative_path}")
-                continue
+                updated[relative_path] = dict()
+                for line in template[relative_path]:
+                    updated[relative_path][line] = line
+                    global_missing.add(f"{relative_path}: '{line}'")
+
+        updated = dict(sorted(updated.items()))
+        for relpath in updated:
+            sorted_relpath = {key: updated[relpath][key] for key in template[relpath]}
+            updated[relpath] = sorted_relpath
+        with open(langfile, 'w', encoding='utf-8', newline='\n') as f:
+            json.dump(updated, f, ensure_ascii=False, indent=4)
+            f.write('\n')
+
+    if global_missing:
+        print("Missing translation lines:\n - ", end='')
+        print('\n - '.join(global_missing))
 
 
 if __name__ == "__main__":
     generate_template()
-    print()
-    compare_existing_with_template()
+    update_existing_with_template()
