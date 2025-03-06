@@ -8,7 +8,7 @@ from .table import Table
 from ._dataitem import _DataItem
 from modules.debug import debug
 
-import myNotebook as nb
+import myNotebook as nb             # type: ignore
 
 # Подключение функции перевода
 import functools

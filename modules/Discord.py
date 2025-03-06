@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 try:
     from .discord_webhook import DiscordWebhook, DiscordEmbed
-except:
+except ImportError:
     from discord_webhook import DiscordWebhook, DiscordEmbed
-import sys
 from .debug import debug
 import datetime
 

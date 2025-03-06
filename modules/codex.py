@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import myNotebook as nb
+import myNotebook as nb         # type: ignore
 import os
 import requests
 import threading

@@ -23,12 +23,12 @@ from time import sleep
 from tkinter import ttk
 from typing import Callable
 
-from l10n import Locale
-import myNotebook as nb
-from ttkHyperlinkLabel import HyperlinkLabel
-from config import appname, appversion
-from config import config as edmc_config
-from theme import theme
+from l10n import Locale                             # type: ignore
+import myNotebook as nb                             # type: ignore
+from ttkHyperlinkLabel import HyperlinkLabel        # type: ignore
+from config import appname, appversion              # type: ignore
+from config import config as edmc_config            # type: ignore
+from theme import theme                             # type: ignore
 
 
 # Дефолтная конфигурация логгера. Требование EDMC

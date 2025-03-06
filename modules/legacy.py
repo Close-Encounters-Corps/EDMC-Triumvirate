@@ -10,9 +10,9 @@ from context import PluginContext, GameState
 from .debug import debug, error
 from .lib.thread import BasicThread
 
-try:#py3
+try:    # py3
     from urllib.parse import quote_plus
-except:#py2
+except ImportError:     # py2
     from urllib import quote_plus
 
 

@@ -23,9 +23,9 @@ from urllib.parse import quote_plus
 
 import requests
 
-import myNotebook as nb
-from l10n import Locale
-from ttkHyperlinkLabel import HyperlinkLabel
+import myNotebook as nb                         # type: ignore
+from l10n import Locale                         # type: ignore
+from ttkHyperlinkLabel import HyperlinkLabel    # type: ignore
 import settings
 
 from context import PluginContext, GameState

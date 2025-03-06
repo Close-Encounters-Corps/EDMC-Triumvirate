@@ -17,8 +17,8 @@ from modules.exploring.visualizer import Visualizer
 from modules.lib import thread
 from modules.lib.module import Module
 
-import myNotebook as nb
-from config import config as edmc_config
+import myNotebook as nb                         # type: ignore
+from config import config as edmc_config        # type: ignore
 
 
 def init_version():

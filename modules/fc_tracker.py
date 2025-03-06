@@ -16,7 +16,7 @@ from modules.lib.journal import JournalEntry
 from modules.lib.module import Module
 from modules.lib.thread import BasicThread
 
-import myNotebook as nb
+import myNotebook as nb             # type: ignore
 
 # Подключение функции перевода
 import functools

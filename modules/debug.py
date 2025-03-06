@@ -1,6 +1,6 @@
 import tkinter as tk
 import logging
-import myNotebook as nb
+import myNotebook as nb         # type: ignore
 from sys import _getframe
 from .lib.conf import config
 
