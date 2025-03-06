@@ -410,8 +410,10 @@ class Updater:
             context.status_label.clear()
             context.version_frame = VersionFrame(context.plugin_frame, context.plugin_version)
             context.plugin_ui = plugin_init.plugin_app(context.plugin_frame)
-            theme.update(context.version_frame)
-            theme.update(context.plugin_ui)
+            # по непонятной мне причине theme.update срабатывает не всегда, поэтому придётся так
+            theme.register(context.version_frame)
+            theme.register(context.plugin_ui)
+            theme.apply(tk._default_root)
             context.version_frame.grid(row=0, column=0, sticky="NWS")
             context.plugin_ui.grid(row=2, column=0, sticky="NWSE")
 
