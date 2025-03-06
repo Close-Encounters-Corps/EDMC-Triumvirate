@@ -117,7 +117,9 @@ class JournalProcessor(Thread):
         if entry.get("event") == "FSDJump":
             GameState.body_name = None
             GameState.pending_jump_system = None
+            PluginContext.systems_module.add_system(entry)
 
+        # TODO: наверняка можно сделать лучше
         x, y, z = None, None, None
         if GameState.system:
             val = PluginContext.systems_module.get_system_coords(GameState.system)

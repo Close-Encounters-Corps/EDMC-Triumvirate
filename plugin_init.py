@@ -44,10 +44,10 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     PluginContext.fc_tracker = FC_Tracker(frame, 2)
 
     # эти модули не имеют UI, но стартуем их здесь же
+    PluginContext.systems_module = SystemsModule()
     PluginContext.bgs_module = BGS()
     PluginContext.canonn_api = CanonnRealtimeAPI()
     PluginContext.colonisation_tracker = DeliveryTracker()
-    PluginContext.systems_module = SystemsModule()
     PluginContext.sq_tracker = Squadron_Tracker()
     PluginContext.canonn_codex_poi = CanonnCodexPOI()
 
