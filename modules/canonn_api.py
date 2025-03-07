@@ -22,6 +22,9 @@ class CanonnReporter(BasicThread):
         self.payload = payload
 
     def run(self):
+        if None in self.payload.values():
+            error("[CanonnReporter] None detected in params! {}", self.payload)
+            return
         try:
             res = requests.post(
                 self.url,
