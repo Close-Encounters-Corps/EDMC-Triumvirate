@@ -6,7 +6,7 @@ from dataclasses import dataclass, fields, asdict
 from datetime import datetime, UTC
 from enum import Enum
 from tkinter import ttk
-from typing import Callable
+from typing import Callable, Any
 
 from context import GameState
 from modules.debug import debug, error, warning
@@ -17,6 +17,7 @@ from modules.lib.module import Module
 from modules.lib.thread import BasicThread
 
 import myNotebook as nb             # type: ignore
+from theme import theme             # type: ignore
 
 # Подключение функции перевода
 import functools
@@ -211,85 +212,87 @@ class FCModuleFrame(tk.Frame):
     """
     Фрейм модуля, отображаемый при необходимости в главном окне EDMC.
     """
-    def __init__(self, parent: tk.Misc, row: int, no_carrier_callback: Callable):
+    def __init__(self, parent: tk.Misc, row: int, no_carrier_callback: Callable[[tk.Event], Any]):
         super().__init__(parent)
         self.row = row
         self.no_carrier_callback = no_carrier_callback
-
-        # варианты отображения
-        # 1: у нас нет информации по флитаку
-        self.no_fc_info_label = tk.Label(
-            self, wraplength=400, justify="left",
-            text=_translate("<FC_TRACKER_NO_INFO_TEXT>")
-        )
-        self.no_fc_info_cancel_button = nb.Button(
-            self, command=self.no_carrier_callback,
-            text=_translate("I don't have a fleet carrier")
-        )
-
-        # 2: игрок купил флитак, и мы просим его зайти в панель флитака
-        self.carrier_bought_label = tk.Label(
-            self, wraplength=400, justify="left",
-            text=_translate("<FC_TRACKER_BOUGHT_TEXT>")
-        )
-
-        # 3: мы обнаружили аномалию в логах и просим игрока зайти в панель флитака
-        self.unexpected_event_label = tk.Label(
-            self, wraplength=400, justify="left",
-            text=_translate("<FC_TRACKER_UNEXPECTED_EVENT_TEXT>")
-        )
-
-        # 4: после 2 и 3 - мы получили инфу и предлагаем пользователю её проверить в настройках
-        self.finish_configuring_fc_label = tk.Label(
-            self, wraplength=400, justify="left",
-            text=_translate("<FC_TRACKER_FINISH_CONFIGURING_TEXT>")
-        )
-        self.finish_configuring_close_button = nb.Button(
-            self, command=self.hide,
-            text=_translate("Close")
-        )
-
-        # 5: предупреждение о небезопасном допуске к стыковке
-        self.unsafe_docking_access_label = tk.Label(
-            self, wraplength=400, justify="left",
-            text=_translate("<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>")
-        )
 
     @mainthread
     def show_no_fc_info_screen(self):
         debug("[FCModuleFrame] Showing 'No info' screen.")
         self.__clear()
-        self.no_fc_info_label.pack(side="top", fill="both")
-        self.no_fc_info_cancel_button.pack(side="top", fill="x")
+        frame = tk.Frame(self)
+        label = tk.Label(frame, wraplength=400, justify="left", text=_translate("<FC_TRACKER_NO_INFO_TEXT>"))
+        label.grid(row=0, column=0, sticky="NWSE")
+
+        button = nb.Button(frame, text=_translate("I don't have a fleet carrier"))
+        button_dark = tk.Label(frame, text=_translate("I don't have a fleet carrier"))
+        grid_params = {"row": 1, "column": 0, "sticky": "NSWE"}
+        theme.register_alternate(
+            (button, button_dark, button_dark),
+            grid_params
+        )
+        button.bind('<Button-1>', self.no_carrier_callback)
+        theme.button_bind(button_dark, self.no_carrier_callback)
+
+        if theme.active == theme.THEME_DEFAULT:         # светлая тема
+            button.grid(**grid_params)
+        else:
+            button_dark.grid(**grid_params)
+
+        theme.update(frame)
+        frame.pack(side="top", fill="x")
         self.show()
 
     @mainthread
     def show_carrier_bought_screen(self):
         debug("[FCModuleFrame] Showing 'Carrier bought' screen.")
         self.__clear()
-        self.carrier_bought_label.pack(side="top", fill="both")
+        label = tk.Label(self, wraplength=400, justify="left", text=_translate("<FC_TRACKER_BOUGHT_TEXT>"))
+        label.pack(side="top", fill="both")
         self.show()
 
     @mainthread
     def show_unexpected_event_screen(self):
         debug("[FCModuleFrame] Showing 'Unexpected event' screen.")
         self.__clear()
-        self.unexpected_event_label.pack(side="top", fill="both")
+        label = tk.Label(self, wraplength=400, justify="left", text=_translate("<FC_TRACKER_UNEXPECTED_EVENT_TEXT>"))
+        label.pack(side="top", fill="both")
         self.show()
 
     @mainthread
     def show_finish_configuring_screen(self):
         debug("[FCModuleFrame] Showing 'Finish configuring' screen.")
         self.__clear()
-        self.finish_configuring_fc_label.pack(side="top", fill="x")
-        self.finish_configuring_close_button.pack(side="top", fill="x")
+        frame = tk.Frame(self)
+        label = tk.Label(frame, wraplength=400, justify="left", text=_translate("<FC_TRACKER_FINISH_CONFIGURING_TEXT>"))
+        label.grid(row=0, column=0, sticky="NWSE")
+
+        button = nb.Button(frame, command=self.hide, text=_translate("Close"))
+        button_dark = tk.Label(frame, text=_translate("Close"))
+        grid_params = {"row": 1, "column": 0, "sticky": "NSWE"}
+        theme.register_alternate(
+            (button, button_dark, button_dark),
+            grid_params
+        )
+        button.bind('<Button-1>', self.hide)
+        theme.button_bind(button_dark, self.hide)
+
+        if theme.active == theme.THEME_DEFAULT:         # светлая тема
+            button.grid(**grid_params)
+        else:
+            button_dark.grid(**grid_params)
+
+        theme.update(frame)
+        frame.pack(side="top", fill="x")
         self.show()
 
     @mainthread
     def show_unsafe_docking_access_warning(self):
         debug("[FCModuleFrame] Showing unsafe docking access warning.")
         self.__clear()
-        self.unsafe_docking_access_label.pack(side="top", fill="both")
+        label = tk.Label(self, wraplength=400, justify="left", text=_translate("<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>"))
+        label.pack(side="top", fill="both")
         self.show()
 
     def __clear(self):
@@ -303,7 +306,7 @@ class FCModuleFrame(tk.Frame):
         self.grid(column=0, row=self.row, sticky="NWSE")
 
     @mainthread
-    def hide(self):
+    def hide(self, event: tk.Event = None):
         if not self.is_shown:
             return
         debug("[FCModuleFrame] Hidden.")
@@ -617,7 +620,7 @@ class FC_Tracker(Module):
 
     # danger zone: эти методы вызывает UI на действия пользователя
 
-    def __no_carrier_callback(self):        # noqa: E301
+    def __no_carrier_callback(self, event: tk.Event):        # noqa: E301
         # пользователь указал, что флитака во владении не имеет
         debug("[FC_Tracker] User claims not to own a fleet carrier.")
         cmdr = self.fc_data.cmdr
