@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import font as tk_font
 
+from theme import theme         # type: ignore
+
 
 class Table(tk.Frame):
     """
@@ -11,23 +13,17 @@ class Table(tk.Frame):
 
     def __init__(self, parent: tk.Misc, headers: list[str], *args, **kwargs):
         self.tkfont_instance = tk_font.Font()
+        self.border_color = kwargs.get("border_color", "black")
 
-        self.bg = kwargs.get("bg") or kwargs.get("background") or "white"
-        self.relief = "solid"
-        kwargs.pop("bg", None)
-        kwargs.pop("background", None)
-        kwargs.pop("relief", None)
-        kwargs.pop("borderwidth", None)
-
-        super().__init__(parent, bg=self.bg, relief=self.relief, borderwidth=1, *args, **kwargs)
+        super().__init__(parent, highlightthickness=1, highlightbackground=self.border_color, *args, **kwargs)
 
         self.headers = headers
         self.__columns: list[tk.Label] = []
         for i in range(len(headers)):
             self.columnconfigure(i, weight=1)
-            f = tk.Frame(self, bg=self.bg, relief=self.relief, borderwidth=1)
+            f = tk.Frame(self, highlightthickness=1, highlightbackground=self.border_color)
             f.grid(row=0, column=i, sticky="NWSE")
-            self.__columns.append(tk.Label(f, text=headers[i], bg=self.bg))
+            self.__columns.append(tk.Label(f, text=headers[i]))
             self.__columns[i].pack(padx=3, fill="both")
 
         self.__n_columns = len(self.__columns)
@@ -45,15 +41,16 @@ class Table(tk.Frame):
         used_width = 0
 
         for i, val in enumerate(values):
-            frame = tk.Frame(self, bg=self.bg, relief=self.relief, borderwidth=1)
-            frame.grid(row=self.__current_row, column=i, sticky="NWSE")
+            frame = tk.Frame(self, highlightthickness=1, highlightbackground=self.border_color)
 
             if i == len(values) - 1:
                 max_string_len = max(max_string_len, max_width - used_width)
-            label = tk.Label(frame, text=val, bg=self.bg, wraplength=max_string_len)
-            label.pack(padx=3, expand=True)
-
+            label = tk.Label(frame, text=val, wraplength=max_string_len)
+            label.pack(padx=3, fill="x")
             used_width += self.measure_longest_line(label["text"])
+
+            frame.grid(row=self.__current_row, column=i, sticky="NWSE")
+            theme.update(frame)
             self.__cells.append(frame)
 
         self.__current_row += 1

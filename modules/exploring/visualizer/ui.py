@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, PhotoImage
 from pathlib import Path
+from typing import Callable, Any
 
 from context import PluginContext
 from settings import poi_categories as CATEGORIES
@@ -9,6 +10,7 @@ from ._dataitem import _DataItem
 from modules.debug import debug
 
 import myNotebook as nb             # type: ignore
+from theme import theme             # type: ignore
 
 # Подключение функции перевода
 import functools
@@ -105,8 +107,8 @@ class VSettingsFrame(tk.Frame):
 
 
 
-class _IconButton(nb.Button):
-    def __init__(self, parent, category, callback):
+class _IconButton(tk.Frame):
+    def __init__(self, parent: tk.Misc, category: str, callback: Callable[[str], Any]):
         super().__init__(parent)
         self.category = category
         self.__callback = callback
@@ -115,16 +117,26 @@ class _IconButton(nb.Button):
         self.active_icon = PhotoImage(file=icons_path / f"{category}.gif")
         self.grey_icon = PhotoImage(file=icons_path / f"{category}_grey.gif")
 
+        self.__button = nb.Button(self)
+        self.__dark_button = tk.Label(self)
+        theme.register_alternate(
+            (self.__button, self.__dark_button, self.__dark_button),
+            {"row": 0, "column": 0, "sticky": "NWSE"}
+        )
+        self.__button.bind('<Button-1>', self.__on_click)
+        theme.button_bind(self.__dark_button, self.__on_click)
+
         self.deactivate()
-        self.configure(command=self.__on_click)
 
     def activate(self):
-        self.configure(image=self.active_icon)
+        self.__button.configure(image=self.active_icon)
+        self.__dark_button.configure(image=self.active_icon)
 
     def deactivate(self):
-        self.configure(image=self.grey_icon)
+        self.__button.configure(image=self.grey_icon)
+        self.__dark_button.configure(image=self.grey_icon)
 
-    def __on_click(self):
+    def __on_click(self, event: tk.Event):
         self.__callback(self.category)
 
 
@@ -147,7 +159,7 @@ class VisualizerView(tk.Frame):
         self.buttons_frame.pack(side='top', fill='x')
 
         # фрейм с названием отображаемой категории
-        self.category_frame = ttk.Frame(self)       # маппится в ___ при наличии данных к отображению
+        self.category_frame = tk.Frame(self)       # маппится в ___ при наличии данных к отображению
         self.category_text_label = tk.Label(self.category_frame, text=_translate("Displayed category:"))
         self.category_text_label.pack(side='left')
         self.active_category_var = tk.StringVar(value="")
@@ -159,7 +171,7 @@ class VisualizerView(tk.Frame):
             _translate("Location"),
             _translate("POI")
         ]
-        self.details_frame = ttk.Frame(self)         # маппится в ___ при наличии данных к отображению
+        self.details_frame = tk.Frame(self)         # маппится в ___ при наличии данных к отображению
         self.details_table = Table(self.details_frame, headers)
         self.details_table.pack(side="top", fill="x")
 

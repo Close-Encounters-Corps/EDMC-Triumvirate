@@ -7,6 +7,8 @@ from modules.lib.conf import config as plugin_config
 from ._dataitem import _DataItem
 from .ui import VisualizerView, VSettingsFrame
 
+from theme import theme         # type: ignore
+
 
 class VisualizerModel:
     PLUGIN_CONFIG_KEY   = "Visualizer.config"
@@ -82,6 +84,10 @@ class VisualizerModel:
         self._save_config()
 
         self.view.clear()
+        if theme.active == theme.THEME_DEFAULT:         # светлая тема
+            self.view.details_table.border_color = "black"
+        else:
+            self.view.details_table.border_color = "#ff8000"
         data_for_display = [item for item in self.data if self.modules_display_status[item.m_qualname] is True]
         if len(data_for_display) > 0:
             self.view.display(data_for_display)
