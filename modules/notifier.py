@@ -1,10 +1,12 @@
 import tkinter as tk
-from tkinter import ttk
 from pathlib import Path
 from PIL import Image, ImageTk
 
 from context import PluginContext
 from modules.lib.timer import Timer
+
+from theme import theme         # type: ignore
+import myNotebook as nb         # type: ignore
 
 
 class _Message(tk.Frame):
@@ -12,14 +14,21 @@ class _Message(tk.Frame):
 
     def __init__(self, master, text: str, timeout: int):
         super().__init__(master, relief="groove")
+        self.grid_columnconfigure(0, weight=1)
 
         self._label = tk.Label(self, text=text, wraplength=self._get_wraplength())
-        self._label.pack(side="left", fill="x", pady=2)
+        self._label.grid(row=0, column=0, pady=2)
 
         if not self._cross_image:
             self._set_image()
-        self._button = ttk.Button(self, image=self._cross_image, command=self._close)
-        self._button.pack(side="right", padx=5, pady=2)
+        self._button = nb.Button(self, image=self._cross_image)
+        self._button_dark = tk.Label(self, image=self._cross_image)
+        theme.register_alternate(
+            (self._button, self._button_dark, self._button_dark),
+            {"row": 0, "column": 1, "padx": 5, "pady": 2}
+        )
+        self._button.bind('<Button-1>', self._close)
+        theme.button_bind(self._button_dark, self._close)
 
         self.pack(side="top", fill="x")
 
@@ -29,8 +38,7 @@ class _Message(tk.Frame):
         else:
             self._timer = None
 
-
-    def _close(self):
+    def _close(self, event: tk.Event):
         if self._timer:
             self._timer.kill()      # на случай, если уведомление скрыто раньше времени
         self.destroy()
