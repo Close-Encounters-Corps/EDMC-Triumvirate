@@ -585,6 +585,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     отображаемого в окне программы.
     """
     context.plugin_frame = tk.Frame(parent)
+    context.plugin_frame.grid_columnconfigure(0, weight=1)
     context.status_label = StatusLabel(context.plugin_frame, 1)
     context.status_label.show()
     context.updater = Updater()

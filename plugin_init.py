@@ -38,6 +38,7 @@ def plugin_app(parent: tk.Misc) -> tk.Frame:
     который затем будет размещён в главном окне EDMC.
     """
     frame = tk.Frame(parent)
+    frame.grid_columnconfigure(0, weight=1)
     PluginContext.notifier = Notifier(frame, 3)    # его надо инициализировать первым, но маппить в самый низ
     PluginContext.exp_visualizer = Visualizer(frame, 0)
     PluginContext.patrol_module = PatrolModule(frame, 1)
