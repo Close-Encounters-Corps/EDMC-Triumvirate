@@ -1,5 +1,4 @@
 import requests
-import traceback
 import json
 from datetime import datetime, timedelta
 
@@ -309,34 +308,54 @@ class CanonnRealtimeAPI(Module):
         return gamestate
 
 
-
 class WhitelistUpdater(Thread):
+    STANDARD_RETRY_DELAY = 20
+    LONG_RETRY_DELAY = 10 * 60
+
     def __init__(self):
         super().__init__(name="Canonn whitelist updater")
 
     def do_run(self):
         url = "https://api.github.com/gists/5b993467bf6be84b392418ddc9fcb6d3"
-        attempts = 0
+        count = 0
         while True:
-            attempts += 1
+            count += 1
             try:
                 response = requests.get(url)
-            except Exception:
-                error(traceback.format_exc())
-                return
+            except requests.RequestException as e:
+                PluginContext.logger.error((
+                    f"Coudn't get the whitelist - network error ({count} attempts). "
+                    f"Retrying in {self.STANDARD_RETRY_DELAY} seconds. Additional info:"),
+                    exc_info=e
+                )
+                self.sleep(self.STANDARD_RETRY_DELAY)
+                continue
 
-            if response.status_code == 200:
-                info("[CanonnRealtimeAPI]: Got list of events to track.")
+            if response.ok:
+                info("Got list of events to track.")
                 CanonnRealtimeAPI.whitelist = json.loads(response.json()["files"]["canonn_whitelist.json"]["content"])
                 return
-            else:
-                error(
-                    "[CanonnRealtimeAPI] Couldn't get list of systems to track, response code {} ({} attempts)",
-                    response.status_code,
-                    attempts
-                )
-                self.sleep(10)
 
+            elif response.status_code == 403 and b"rate limit exceeded" in response.content:
+                error((f"Couldn't get the whitelist - too many requests ({count} attempts). "
+                       f"Retrying in {self.LONG_RETRY_DELAY} seconds."))
+                self.sleep(self.LONG_RETRY_DELAY)
+
+            elif response.status_code == 408:
+                # таймаут - есть смысл попытаться ещё
+                error(f"Couldn't get the whitelist - 408 Timeout ({count} attempts).")
+                self.sleep(self.STANDARD_RETRY_DELAY)
+
+            elif response.status_code < 500:
+                # остальные 4XX повторять смысла нет
+                error(f"Couldn't get the whitelist - response code {response.status_code}. Aborting.")
+                return
+
+            else:
+                # остаются 5XX, их можно попробовать повторить
+                error((f"Couldn't get the whitelist - response code {response.status_code}. "
+                       f"Retrying in {self.STANDARD_RETRY_DELAY} seconds."))
+                self.sleep(self.STANDARD_RETRY_DELAY)
 
 
 def is_cec_fleetcarrier(signalName: str) -> bool:
