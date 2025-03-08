@@ -33,7 +33,7 @@ class CanonnReporter(BasicThread):
             res.raise_for_status()
         except requests.RequestException as e:
             PluginContext.logger.error(
-                "[CanonnReporter] Couldn't send data to Canonn Cloud. Url: {}, payload: {}.".format(self.url, self.payload),
+                f"[CanonnReporter] Couldn't send data to Canonn Cloud. Url: {self.url}, payload: {self.payload} Exception info:",
                 exc_info=e
             )
         else:
@@ -325,7 +325,7 @@ class WhitelistUpdater(Thread):
             except requests.RequestException as e:
                 PluginContext.logger.error((
                     f"Coudn't get the whitelist - network error ({count} attempts). "
-                    f"Retrying in {self.STANDARD_RETRY_DELAY} seconds. Additional info:"),
+                    f"Retrying in {self.STANDARD_RETRY_DELAY} seconds. Exception info:"),
                     exc_info=e
                 )
                 self.sleep(self.STANDARD_RETRY_DELAY)

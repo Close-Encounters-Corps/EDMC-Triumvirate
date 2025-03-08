@@ -113,10 +113,10 @@ class _Translation:
             with open(translations_dir / f"{lang}.json", 'r', encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError as e:
-            logger.error(f"Couldn't parse language file '{lang}.json'.", exc_info=e)
+            logger.error(f"Couldn't parse language file '{lang}.json'. Exception info:", exc_info=e)
             return False
         except Exception as e:
-            logger.error(f"Error while reading language file '{lang}.json'.", exc_info=e)
+            logger.error(f"Error while reading language file '{lang}.json'. Exception info:", exc_info=e)
             return False
         else:
             cls._strings[lang] = data
@@ -259,7 +259,7 @@ class Updater:
             res = requests.get("https://api.github.com/repos/" + self.REPOSITORY_PATH + "/releases")
             res.raise_for_status()
         except requests.RequestException as e:
-            logger.error("Couldn't get the list of versions from GitHub.", exc_info=e)
+            logger.error("Couldn't get the list of versions from GitHub. Exception info:", exc_info=e)
             context.status_label.set_text(_translate("Error: couldn't check for updates."))
             self.__use_local_version()
             return
@@ -320,7 +320,7 @@ class Updater:
                     for chunk in r.iter_content(chunk_size=65536):
                         f.write(chunk)
         except requests.RequestException as e:
-            logger.error("Couldn't download the version archive from GitHub.", exc_info=e)
+            logger.error("Couldn't download the version archive from GitHub. Exception info:", exc_info=e)
             context.status_label.set_text(_translate("Error: couldn't download an update."))
             self.__use_local_version()
             return

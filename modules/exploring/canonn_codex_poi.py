@@ -45,7 +45,7 @@ class CanonnCodexPOI(Module):
             res = requests.get(self.URL, params=params)
             res.raise_for_status()
         except requests.RequestException as e:
-            PluginContext.logger.error("[Codex] Couldn't fetch system POIs from Canonn.", exc_info=e)
+            PluginContext.logger.error("[Codex] Couldn't fetch system POIs from Canonn. Exception info:", exc_info=e)
             return
 
         data: list[dict] = res.json().get("codex")
