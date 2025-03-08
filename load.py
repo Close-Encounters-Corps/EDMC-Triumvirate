@@ -174,7 +174,7 @@ class UpdateCycle(threading.Thread):
     def run(self):
         # прежде чем запускать процесс обновления, подождём, пока EDMC создаст своё окно
         # увы, winfo_ismapped до этого момента работать тоже не будет, поэтому придётся поколхозничать
-        while True:
+        while not self._stop:
             try:
                 tk._default_root.after(0, lambda: None)
             except RuntimeError:
@@ -274,6 +274,7 @@ class Updater:
         latest = latest_stable if self.release_type == ReleaseType.STABLE else latest_beta
         if latest == Version("0.0.0"):
             # никогда не должно произойти, если только кто-то не удалит все релизы с гитхаба
+            # UPD: на практике выяснилось, что сбои у гитхаба могут также давать пустой список с кодом 200
             logger.error("No suitable release found on GitHub. Something's wrong with the repository?")
             context.status_label.set_text(_translate("Error: couldn't check for updates."))
             self.__use_local_version()
