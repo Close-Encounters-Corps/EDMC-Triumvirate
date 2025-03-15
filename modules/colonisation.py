@@ -17,11 +17,17 @@ class DeliveryTracker(Module):
         self.cargo: dict[str, int] = dict()
 
     def on_journal_entry(self, entry: JournalEntry):
+        def on_colonisation_ship():
+            station_name: str = entry.data.get("StationName", "")
+            return station_name == "System Colonisation Ship" or "$EXT_PANEL_ColonisationShip" in station_name
+
         event: str = entry.data["event"]
         if event == "Location":
-            self.docked_on_cs = entry.data.get("Docked") is True and entry.data.get("StationName") == "System Colonisation Ship"
+            docked = entry.data.get("Docked", False)
+            colonisation_ship = on_colonisation_ship()
+            self.docked_on_cs = docked and colonisation_ship
         elif event == "Docked":
-            self.docked_on_cs = entry.data.get("StationName") == "System Colonisation Ship"
+            self.docked_on_cs = on_colonisation_ship()
         # брабфанка: игра может затупить с обновлением груза и прописать его после отстыковки,
         # поэтому вместо неё (event == "Undocked") будем отслеживать выход из инстанса
         elif (
