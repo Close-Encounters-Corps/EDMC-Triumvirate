@@ -17,7 +17,7 @@ class _Message(tk.Frame):
         super().__init__(master)
         self.grid_columnconfigure(0, weight=1)
 
-        self._label = tk.Label(self, text=text, wraplength=self._get_wraplength())
+        self._label = tk.Label(self, text=text, justify="left", wraplength=self._get_wraplength())
         self._label.grid(row=0, column=0, pady=2, sticky="W")
 
         self._button = nb.Button(self, image=self._cross_image)
