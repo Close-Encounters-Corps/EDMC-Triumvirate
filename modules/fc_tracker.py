@@ -600,7 +600,7 @@ class FC_Tracker(Module):
             res = requests.get(url, allow_redirects=False)
         except requests.RequestException:
             error("[FC_Tracker] Couldn't check for account on fleetcarrier.space:\n" + traceback.format_exc())
-            fc_account_link = "[UNKNOWN]"
+            fc_account_link = ""
         else:
             if res.status_code == 200:
                 debug("[FC_Tracker] Account on fleetcarrier.space wan't found.")
@@ -613,9 +613,11 @@ class FC_Tracker(Module):
                     "[FC_Tracker] Unexpected status code {} when checking for account on fleetcarrier.space:\n{}",
                     res.status_code, res.text
                 )
-                fc_account_link = "[UNKNOWN]"
+                fc_account_link = ""
 
         self.fc_data._fcspace_link = fc_account_link
+        # вызывать self.save_fc_data нельзя, иначе мы дважды отправим данные в табличку
+        plugin_config.set(self.FC_DATA_KEY, json.dumps(self.fc_data.asjson(), ensure_ascii=False))
 
 
     # danger zone: эти методы вызывает UI на действия пользователя
