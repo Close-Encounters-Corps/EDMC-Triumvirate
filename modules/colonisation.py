@@ -19,17 +19,22 @@ class DeliveryTracker(Module):
 
     def on_journal_entry(self, entry: JournalEntry):
         def _get_construction_type() -> str | None:
+            # колонизационный корабль
             station_name: str = entry.data.get("StationName", "")
             if station_name == "System Colonisation Ship" or "$EXT_PANEL_ColonisationShip" in station_name:
                 debug(f"Detected '{event}' on a colonisation ship (primary port construction site).")
                 return "Primary port"
-            # TODO: проверить на других локализациях
+            # орбитальные постройки
             station_type: str = entry.data.get("StationType", "")
             if station_type == "SpaceConstructionDepot":
                 future_name = station_name.split(': ')[1]
                 debug(f"Detected '{event}' on an orbital construction site; construction name - {future_name}.")
                 return f"Space construction: {future_name}"
-            # TODO: наземные постройки
+            # наземные постройки
+            if station_type == "PlanetaryConstructionDepot":
+                future_name = station_name.split(': ')[1]
+                debug(f"Detected '{event}' on a planetary construction site; construction name - {future_name}.")
+                return f"Planetary construction: {future_name}"
             return None
 
         event: str = entry.data["event"]
