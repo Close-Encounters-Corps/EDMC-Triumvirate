@@ -77,19 +77,19 @@ Collecte et traite les informations relatives au navire transporteur d'un pilote
 
 ## Instructions d'installation:
 
-1) Téléchargez et installez la dernière version de [EDMarketConnector] (https://github.com/Marginal/EDMarketConnector/blob/rel-342/README.md#installation) (si elle est déjà installée, assurez-vous de vérifier les mises à jour de l'EDMC).
+1) Téléchargez et installez la dernière version de [EDMarketConnector](https://github.com/Marginal/EDMarketConnector/blob/rel-342/README.md#installation) (si elle est déjà installée, assurez-vous de vérifier les mises à jour d'EDMC)
 
-2) Téléchargez la dernière version de [EDMC-Triumvirate] (https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest) en cliquant sur Source code(zip)
+2) Téléchargez la dernière version du plugin [EDMC-Triumvirate](https://github.com/Close-Encounters-Corps/EDMC-Triumvirate/releases/latest) en cliquant sur "Code source (zip)"
 
-3) Décompressez le dossier du plugin dans %USERPROFILE%\AppData\Local\EDMarketConnector\plugins (vous pouvez le coller dans la barre d'adresse de l'explorateur).
+3) Décompressez le dossier du plugin dans `%USERPROFILE%\AppData\Local\EDMarketConnector\plugins` (vous pouvez le coller dans la barre d'adresse de l'explorateur).
 
-4) Lancez EDMC, si la fenêtre [such](https://cdn.discordapp.com/attachments/518418556615000074/590004329692397579/unknown.png) apparaît, passez à l'étape 5, sinon vous devrez valider l'installation.
+4) Lancez EDMC. Si vous voyez une fenêtre [comme celle-ci](https://cdn.discordapp.com/attachments/518418556615000074/590004329692397579/unknown.png), passez à l'étape 5, sinon vous devrez vérifier que l'installation est correcte.
 
 5) ***Vous êtes génial!***
 
 ## Développement
 
-Le plugin, comme l'EDMC en général, fonctionne actuellement sous Python 3.7, mais il est possible de passer à des versions plus récentes de Python.
+Le plugin fonctionne sur la version Python fournie par EDMC ; actuellement, c'est Python 3.11.
 Comment préparer l'environnement pour le développement :
 
 ```bash

@@ -73,18 +73,18 @@ Functions for changing the design style of the plugin window to match the style 
 
 ## Installation Instructions:
 
-1) Download and install the latest version of[EDMarketConnector] (https://github.com/Marginal/EDMarketConnector/blob/rel-342/README.md#installation) (if it is already installed, be sure to check EDMC for updates)
+1) Download and install the latest version of [EDMarketConnector](https://github.com/Marginal/EDMarketConnector/blob/rel-342/README.md#installation) (if it is already installed, be sure to check EDMC for updates)
 
-2) Download the latest [EDMC-Triumvirate] plugin release (https://github.com/VAKazakov/EDMC-Triumvirate/releases/latest) by clicking Source code(zip)
+2) Download the latest [EDMC-Triumvirate](https://github.com/Close-Encounters-Corps/EDMC-Triumvirate/releases/latest) plugin release by clicking "Source code (zip)"
 
-3) Unzip the folder with the plugin to %USERPROFILE%\AppData\Local\EDMarketConnector\plugins (you can paste it into explorer address bar)
+3) Unpack the downloaded archive into the folder `%USERPROFILE%\AppData\Local\EDMarketConnector\plugins` (you can paste this into the file explorer address bar)
 
-4) Launch EDMC, if you see a window [like this](https://cdn.discordapp.com/attachments/518418556615000074/590004329692397579/unknown.png) then go to step 5, otherwise you will need to verify the installation is correct
+4) Launch EDMC. If you see a window [like this](https://cdn.discordapp.com/attachments/518418556615000074/590004329692397579/unknown.png) then go to step 5, otherwise you will need to verify the installation is correct
 
 5) ***You're awesome!***
 
 ## Development
-At the moment the plugin, as well as EDMC in general, runs on Python 3.7., but, further transition to more recent versions of Python is possible.
+The plugin works on the Python version provided by EDMC; currently it's Python 3.11.
 How to prepare the environment for development:
 ```bash
 pip install -r requirements-dev.txt
@@ -94,9 +94,9 @@ pre-commit install
 ## Disclaimer
 EDMC-Triumvirate was created using assets and imagery from Elite Dangerous, with the permission of Frontier Developments plc, for non-commercial purposes. It is not endorsed by nor reflects the views or opinions of Frontier Developments and no employee of Frontier Developments was involved in the making of it.
 
-EDMC-Triumvirate use data from [Canonn API V2](https://docs.canonn.tech), [ED Star Map (EDSM)](https://www.edsm.net/), [Elite BGS](https://elitebgs.app/), with permision of their owners.
+EDMC-Triumvirate uses data from [Canonn API V2](https://docs.canonn.tech), [ED Star Map (EDSM)](https://www.edsm.net/), [Elite BGS](https://elitebgs.app/), with permision of their owners.
 
-EDMC-Triumvirate based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), with permission of initial developers.
+EDMC-Triumvirate is based on [EDMC-Canonn](https://github.com/canonn-science/EDMC-Canonn), with permission of initial developers.
 
 All Contents Copyright ©️ 2016-2025 Close Encounters Corps, Triumvirate. KAZAK0V, AntonyVern, Osmium, Elcy (rinkulu), Evil-Horse, Art-py. All Rights Reserved.
 
