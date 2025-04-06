@@ -21,6 +21,7 @@ import myNotebook as nb
 import plug
 import edmc_data
 from config import appname
+from config import config as edmc_config
 
 ### модули плагина ###
 from modules import canonn_api, codex
@@ -38,6 +39,7 @@ from modules.lib import context as contextlib
 from modules.lib import journal, thread
 from modules.release import Release
 from modules.systems import SystemsModule
+from modules.colonisation import DeliveryTracker
 import settings
 
 _ = functools.partial(l10n.Translations.translate, context=__file__)
@@ -98,6 +100,11 @@ this.fuel = 0
 this.fuel_cons = 0.0
 context.help_page_opened = False
 context.latest_dashboard_entry = None
+
+
+# фикс для старой ошибки конфига на линуксе
+edmc_config.delete("Triumvirate.Canonn:HideCodex", suppress=True)
+edmc_config.delete("Triumvirate.Canonn", suppress=True)
 
 
 def plugin_prefs(parent, cmdr, is_beta):
@@ -232,12 +239,14 @@ def plugin_app(parent):
     rel = release.Release(this.plugin_dir, table, this.version, 1)
     this.patrol = patrol.PatrolModule(table, 2)
     this.bgs_module = bgs.BGS()
+    this.colonisation_tracker = DeliveryTracker()
     this.modules = [
         rel,
         this.patrol,
         this.systems_module,
         this.bgs_module,
-        this.canonn_rt_api
+        this.canonn_rt_api,
+        this.colonisation_tracker
     ]
 
     # лейбл, в котором содержится текст из вывода модулей

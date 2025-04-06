@@ -91,7 +91,7 @@ class CodexTypes(Frame):
 
         self.parent = parent
         self.bind('<<POIData>>', self.evisualise)
-        self.hidecodexbtn = tk.IntVar(value=config.getint("Canonn:HideCodex"))
+        self.hidecodexbtn = tk.IntVar(value=config.getint("CanonnHideCodex"))
         self.hidecodex = self.hidecodexbtn.get()
 
         self.container = Frame(self)
@@ -642,7 +642,7 @@ class CodexTypes(Frame):
     def plugin_prefs(self, parent, cmdr, is_beta, gridrow):
         "Called to get a tk Frame for the settings dialog."
 
-        self.hidecodexbtn = tk.IntVar(value=config.getint("Canonn:HideCodex"))
+        self.hidecodexbtn = tk.IntVar(value=config.getint("CanonnHideCodex"))
 
         self.hidecodex = self.hidecodexbtn.get()
 
@@ -657,7 +657,7 @@ class CodexTypes(Frame):
 
     def prefs_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."
-        config.set('Canonn:HideCodex', self.hidecodexbtn.get())
+        config.set('CanonnHideCodex', self.hidecodexbtn.get())
 
         self.hidecodex = self.hidecodexbtn.get()
 

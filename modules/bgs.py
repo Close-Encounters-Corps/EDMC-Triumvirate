@@ -779,7 +779,7 @@ class CZ_Tracker:
                 "Фракция {}\n".format(actual_winner) +
                 "{} интенсивность.".format(intensity)
             )
-            Timer(60, global_context.message_label.clear)
+            Timer(60, global_context.message_label.clear).start()
 
             self._send_results(self.info, presumed_winner, actual_winner)
         
