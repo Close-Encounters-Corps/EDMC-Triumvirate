@@ -336,12 +336,18 @@ def GusonExpeditions(cmdr, is_beta, system, entry):
 
 
 def report_version():
-    ip = requests.get('https://api.ipify.org').text
+    try:
+        resp = requests.get('https://api.ipify.org')
+        resp.raise_for_status()
+        ip = resp.text
+    except requests.RequestException as e:
+        PluginContext.logger.error("Couldn't fetch IP address. Exception info:", exc_info=e)
+        return
     try:
         ip6 = requests.get('https://api6.ipify.org').text
     except requests.RequestException:
         ip6 = None
-    
+
     url = "https://docs.google.com/forms/d/1h7LG5dEi07ymJCwp9Uqf_1phbRnhk1R3np7uBEllT-Y/formResponse?usp=pp_url"
     params = {
         "entry.1181808218": GameState.cmdr,
