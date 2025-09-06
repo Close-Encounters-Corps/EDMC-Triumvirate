@@ -360,6 +360,8 @@ class FC_Tracker(Module):
     # Методы модуля
 
     def on_journal_entry(self, journal_entry: JournalEntry):        # noqa: E301
+        if journal_entry.data.get("CarrierType") != "FleetCarrier":
+            return
         event = journal_entry.data["event"]
         match event:
             case "CarrierBuy":                  self.carrier_bought(journal_entry)
