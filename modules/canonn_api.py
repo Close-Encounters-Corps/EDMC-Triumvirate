@@ -258,26 +258,40 @@ class CanonnRealtimeAPI(Module):
 
 
 class WhitelistUpdater(Thread):
+    STANDARD_RETRY_DELAY = 20
+    LONG_RETRY_DELAY = 10 * 60
+
     def __init__(self):
         super().__init__(name="Canonn whitelist updater")
+
     def do_run(self):
-        url = "https://api.github.com/gists/5b993467bf6be84b392418ddc9fcb6d3"
         attempts = 0
         while True:
             attempts += 1
-            try: response = requests.get(url)
-            except:
-                error(traceback.format_exc())
-                return
-            
-            if response.status_code == 200:
-                info("[CanonnRealtimeAPI]: Got list of events to track.")
+            debug(f"Trying to retrieve the list of tracked events, attempt {attempts}")
+            url = "https://api.github.com/gists/5b993467bf6be84b392418ddc9fcb6d3"
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+            except requests.RequestException:
+                error("Couldnt't get the list of tracked events from GitHub")
+            else:
+                info("Got the list of tracked events from GitHub.")
                 CanonnRealtimeAPI.whitelist = json.loads(response.json()["files"]["canonn_whitelist.json"]["content"])
                 return
+            # вторая попытка аналогично из другого источника
+            url = "https://gitlab.com/api/v4/snippets/4888707/raw"
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+            except requests.RequestException:
+                error("Couldn't get the list of tracked events from GitLab either")
+                self.sleep(self.STANDARD_RETRY_DELAY)
+                continue
             else:
-                error("[CanonnRealtimeAPI] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempts)
-                self.sleep(10)
-
+                info("Got the list of tracked events from GitLab.")
+                CanonnRealtimeAPI.whitelist = json.loads(response.text)
+                return
 
 
 def is_cec_fleetcarrier(signalName: str):
