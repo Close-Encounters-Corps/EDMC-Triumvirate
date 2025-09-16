@@ -316,46 +316,35 @@ class WhitelistUpdater(Thread):
         super().__init__(name="Canonn whitelist updater")
 
     def do_run(self):
-        url = "https://api.github.com/gists/5b993467bf6be84b392418ddc9fcb6d3"
-        count = 0
+        attempts = 0
         while True:
-            count += 1
+            attempts += 1
+            PluginContext.logger.debug(f"Trying to retrieve the list of tracked events, attempt {attempts}")
+            url = "https://api.github.com/gists/5b993467bf6be84b392418ddc9fcb6d3"
             try:
                 response = requests.get(url)
+                response.raise_for_status()
             except requests.RequestException as e:
-                PluginContext.logger.error((
-                    f"Coudn't get the whitelist - network error ({count} attempts). "
-                    f"Retrying in {self.STANDARD_RETRY_DELAY} seconds. Exception info:"),
-                    exc_info=e
+                PluginContext.logger.error("Couldnt't get the list of tracked events from GitHub, exception info:", exc_info=e)
+            else:
+                PluginContext.logger.info("Got the list of tracked events from GitHub.")
+                CanonnRealtimeAPI.whitelist = json.loads(response.json()["files"]["canonn_whitelist.json"]["content"])
+                return
+            # вторая попытка аналогично из другого источника
+            url = "https://gitlab.com/api/v4/snippets/4888707/raw"
+            try:
+                response = requests.get(url)
+                response.raise_for_status()
+            except requests.RequestException as e:
+                PluginContext.logger.error(
+                    "Couldn't get the list of tracked events from GitLab either, expection info:", exc_info=e
                 )
                 self.sleep(self.STANDARD_RETRY_DELAY)
                 continue
-
-            if response.ok:
-                info("Got list of events to track.")
-                CanonnRealtimeAPI.whitelist = json.loads(response.json()["files"]["canonn_whitelist.json"]["content"])
-                return
-
-            elif response.status_code == 403 and b"rate limit exceeded" in response.content:
-                error((f"Couldn't get the whitelist - too many requests ({count} attempts). "
-                       f"Retrying in {self.LONG_RETRY_DELAY} seconds."))
-                self.sleep(self.LONG_RETRY_DELAY)
-
-            elif response.status_code == 408:
-                # таймаут - есть смысл попытаться ещё
-                error(f"Couldn't get the whitelist - 408 Timeout ({count} attempts).")
-                self.sleep(self.STANDARD_RETRY_DELAY)
-
-            elif response.status_code < 500:
-                # остальные 4XX повторять смысла нет
-                error(f"Couldn't get the whitelist - response code {response.status_code}. Aborting.")
-                return
-
             else:
-                # остаются 5XX, их можно попробовать повторить
-                error((f"Couldn't get the whitelist - response code {response.status_code}. "
-                       f"Retrying in {self.STANDARD_RETRY_DELAY} seconds."))
-                self.sleep(self.STANDARD_RETRY_DELAY)
+                PluginContext.logger.info("Got the list of tracked events from GitLab.")
+                CanonnRealtimeAPI.whitelist = json.loads(response.text)
+                return
 
 
 def is_cec_fleetcarrier(signalName: str) -> bool:

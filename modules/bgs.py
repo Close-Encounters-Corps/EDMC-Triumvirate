@@ -154,25 +154,48 @@ class BGS(Module):
                     PluginContext.notifier.send(
                         "Конфигурация {!r} была сброшена в состояние по-умолчанию (файл не был найден). ".format(sound_config["displayed_name"]) +
                         "Проверьте настройки плагина для внесения изменений.")
-        
+
         cls._sounds_config: list[dict] = sounds["sounds"]
+
 
     class Systems_Updater(Thread):
         def __init__(self):
             super().__init__(name="BGS systems list updater")
+
         def do_run(self):
-            url = "https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140"
             attempts = 0
             while True:
                 attempts += 1
-                response = requests.get(url)
-                if response.status_code == 200:
-                    BGS._systems = str(response.json()["files"]["systems"]["content"]).split('\n')
-                    info("[BGS.setup] Got list of systems to track.")
+                PluginContext.logger.debug(f"Trying to retrieve the list of tracked systems, attempt {attempts}")
+                url = "https://api.github.com/gists/7455b2855e44131cb3cd2def9e30a140"
+                try:
+                    response = requests.get(url)
+                    response.raise_for_status()
+                except requests.RequestException as e:
+                    PluginContext.logger.error("Couldnt't get the list of tracked systems from GitHub, exception info:", exc_info=e)
+                else:
+                    PluginContext.logger.info("Got the list of tracked systems from GitHub.")
+                    BGS._systems = str(response.json()["files"]["systems"]["content"]).splitlines()
                     BGS._send_all()
                     return
-                error("[BGS.setup] Couldn't get list of systems to track, response code {} ({} attempts)", response.status_code, attempts)
-                self.sleep(10)
+                # вторая попытка аналогично из другого источника
+                url = "https://gitlab.com/api/v4/snippets/4888705/raw"
+                try:
+                    response = requests.get(url)
+                    response.raise_for_status()
+                except requests.RequestException as e:
+                    PluginContext.logger.error(
+                        "Couldn't get the list of tracked systems from GitLab either, expection info:", exc_info=e
+                    )
+                    self.sleep(10)
+                    continue
+                else:
+                    PluginContext.logger.info("Got the list of tracked systems from GitLab.")
+                    BGS._systems = str(response.text.split('\n'))
+                    BGS._send_all()
+                    return
+
+
 
     @classmethod
     def on_journal_entry(cls, journalEntry: JournalEntry):
