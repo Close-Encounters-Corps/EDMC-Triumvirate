@@ -74,8 +74,8 @@ class DeliveryTracker(Module):
         for item, amount in delivered.items():
             params = {
                 "entry.1492553995": GameState.cmdr,
-                "entry.639938351": GameState.system,
-                "entry.1059020094": self.construction_type,
+                "entry.639938351": GameState.system.replace("'", "’"),
+                "entry.1059020094": self.construction_type.replace("'", "’"),
                 "entry.173800538": item,
                 "entry.883168154": amount
             }
