@@ -42,9 +42,9 @@ class DeliveryTracker(Module):
         ):
             self.docked_on_cs = False
             self.construction_site = None
-        self.update_cargo(entry.state)
+        self.update_cargo(entry.state, entry.cmdr, entry.system)
 
-    def update_cargo(self, state: dict):
+    def update_cargo(self, state: dict, cmdr: str, system: str):
         new_cargo = state.get("Cargo", {})
         if self.docked_on_cs:
             diff: dict[str, int] = {
@@ -53,7 +53,7 @@ class DeliveryTracker(Module):
                 if self.cargo[item] != new_cargo.get(item, 0)
             }
             if diff:
-                self._report(diff)
+                self._report(diff, cmdr, system)
         self.cargo = new_cargo
 
     def _report(self, delivered: dict[str, int], cmdr: str, system: str):
@@ -68,7 +68,7 @@ class DeliveryTracker(Module):
             params = {
                 "entry.1492553995": cmdr,
                 "entry.639938351": system.replace("'", "’"),
-                "entry.1059020094": self.construction_type.replace("'", "’"),
+                "entry.1059020094": self.construction_type.replace("'", "’"),  # type: ignore
                 "entry.173800538": item,
                 "entry.883168154": amount
             }
