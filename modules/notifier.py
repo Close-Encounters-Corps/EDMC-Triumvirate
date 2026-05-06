@@ -51,7 +51,7 @@ class _Message(tk.Frame):
         # Это сделано для обхода бага в EDMC 6.0 - https://github.com/EDCD/EDMarketConnector/issues/2555
         # TODO: вернуть destroy с версии, когда будет выпущен фикс
         if PluginContext.edmc_version >= Version("6.0.0"):
-            self.grid_forget()
+            self.pack_forget()
         else:
             self.destroy()
 
