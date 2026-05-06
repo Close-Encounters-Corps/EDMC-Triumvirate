@@ -9,14 +9,14 @@ from PIL import Image, ImageTk
 from semantic_version import Version
 
 from context import PluginContext, GameState
-from .debug import debug, error, info
+from .debug import debug, error, info, warning
 from .lib.journal import JournalEntry
 from .lib.module import Module
 from .lib.conf import config as plugin_config
 from .lib.thread import Thread, BasicThread
 from .legacy import GoogleReporter, URL_GOOGLE
 
-import myNotebook as nb
+import myNotebook as nb  # type: ignore
 
 
 class _SoundGroup:
@@ -47,7 +47,7 @@ class _SoundGroup:
     @property
     def path(self) -> str:
         return self.path_var.get()
-    
+
     @path.setter
     def path(self, new_path: str):
         self.path_var.set(new_path)
@@ -63,7 +63,7 @@ class _SoundGroup:
         }
 
     def _change_state(self):
-        new_state = "normal" if self.checkbox_var.get() == True else "disabled"
+        new_state = "normal" if self.checkbox_var.get() is True else "disabled"
         self.name_label.configure(state=new_state)
         self.path_label.configure(state=new_state)
         self.change_path_button.configure(state=new_state)
@@ -73,7 +73,7 @@ class _SoundGroup:
         path = filedialog.askopenfilename(filetypes=(("WAV files", "*.wav"),))
         if not path:
             return
-        
+
         path = os.path.normpath(path)
         filename = os.path.basename(path)
         # зачем нам копировать то, что уже у нас есть?
@@ -97,8 +97,8 @@ class _SoundGroup:
 
 
 class BGS(Module):
-    _missions_tracker = None
-    _cz_tracker = None
+    _missions_tracker: 'Missions_Tracker'
+    _cz_tracker: 'CZ_Tracker'
     _systems = list()
     _data_send_queue = deque()      # по логике нужна queue, но не хочу ещё один импорт тащить
     _default_sounds_config = {
@@ -134,8 +134,8 @@ class BGS(Module):
             sounds = None
         if (
             not sounds
-            or type(sounds) == list                 # TODO: замена конфига для обновившихся с бета 1.11.0 - убрать в 1.11.1
-            or sounds.get("version") == None        # TODO: замена конфига для обновившихся с бета 1.11.0 - убрать в 1.11.1
+            or isinstance(sounds, list)             # TODO: замена конфига для обновившихся с бета 1.11.0 - убрать в 1.11.1
+            or sounds.get("version") is None        # TODO: замена конфига для обновившихся с бета 1.11.0 - убрать в 1.11.1
             or Version(sounds["version"]) < Version(cls._default_sounds_config["version"])
         ):
             sounds = cls._default_sounds_config
@@ -144,7 +144,7 @@ class BGS(Module):
             PluginContext.notifier.send(
                 "Конфигурация звуковых уведомлений была сброшена в состояние по-умолчанию (несовместимое обновление). " +
                 "Проверьте настройки плагина для внесения изменений.")
-        
+
         else:
             # нам всё ещё надо проверить, что звуки на ожидаемом от них месте
             for sound_config in sounds["sounds"]:
@@ -231,7 +231,7 @@ class BGS(Module):
         nb.Label(main_frame, text="При изменении звука на свой - выбранный файл будет скопирован в папку плагина.").grid(row=2, column=0, sticky="NWS")
 
         main_frame.grid(column=0, row=position, sticky="NWSE")
-    
+
     @classmethod
     def on_settings_changed(cls, cmdr, is_beta):
         new_config = {
@@ -246,7 +246,7 @@ class BGS(Module):
 
         debug("[BGS.on_settings_changed] New sounds config: {}", cls._sounds_config)
         del cls._sound_groups
-    
+
 
     @classmethod
     def _send(cls, url: str, params: dict, affected_systems: list):
@@ -262,7 +262,7 @@ class BGS(Module):
                 if system in cls._systems:
                     # временно: для работы гугл.таблиц. убрать при переходе на БД
                     for key, value in params.items():
-                        if type(value) == str:
+                        if isinstance(value, str):
                             params[key] = value.replace("'", "’")
                     GoogleReporter(url, params).start()
                     info("[BGS.send]: BGS information sent.")
@@ -278,14 +278,14 @@ class BGS(Module):
                     params: dict = entry["params"]
                     # временно: для работы гугл.таблиц. убрать при переходе на БД
                     for key, value in params.items():
-                        if type(value) == str:
+                        if isinstance(value, str):
                             params[key] = value.replace("'", "’")
                     GoogleReporter(url, params).start()
                     counter += 1
                     break
         info(f"[BGS.send_all] {counter} pending entries sent.")
         cls._data_send_queue.clear()
-    
+
     # временное решение: громкость зависит от таковой для системных звуков
     # TODO: добавить в playsound.py возможность регулировки громкости, переделать на его использование
     @classmethod
@@ -298,11 +298,11 @@ class BGS(Module):
         if not sound_config:
             error("Sound named {!r} wasn't found in the config", name)
             return
-        
+
         if not sound_config["enabled"]:
             debug("[BGS._playsound] The {!r} sound was requested to play, but it's disabled.", name)
             return
-        
+
         from ctypes import windll
         path = os.path.join(cls._plugin_dir, "sounds", sound_config["path"])
         winmm = windll.winmm
@@ -316,11 +316,6 @@ class BGS(Module):
 
 
 class Missions_Tracker:
-    def __new__(cls):
-        if BGS._missions_tracker is None:
-            BGS._missions_tracker = super().__new__(cls)
-        return BGS._missions_tracker
-    
     def __init__(self):
         path = os.path.join(BGS._plugin_dir, "userdata", "missions.db")
         self.db = sqlite3.connect(path, check_same_thread=False)
@@ -332,7 +327,7 @@ class Missions_Tracker:
     def stop(self):
         self._prune_expired()
         self.db.close()
-    
+
     def _query(self, query: str, *args, fetchall: bool = False):
         with self.lock:
             cur = self.db.cursor()
@@ -348,7 +343,7 @@ class Missions_Tracker:
                 self.db.commit()
             cur.close()
         return result if q_type == "SELECT" else None
-    
+
     def _prune_expired(self):
         info("[BGS.prune_expired] Clearing the database from expired missions.")
         expired_missions = []
@@ -371,7 +366,7 @@ class Missions_Tracker:
         event = entry["event"]
 
         # стыковка/вход в игру на станции
-        if event == "Docked" or (event == "Location" and entry["Docked"] == True):
+        if event == "Docked" or (event == "Location" and entry["Docked"] is True):
             self._docked(entry)
         # принятие миссии
         elif event == "MissionAccepted" and (
@@ -400,7 +395,7 @@ class Missions_Tracker:
             or not BGS._systems
         ):
             self._exploration_data(entry, cmdr, system, station)
-        
+
 
     def _docked(self, entry):
         self.station_owner = entry["StationFaction"]["Name"]
@@ -443,7 +438,7 @@ class Missions_Tracker:
             inf_changes[item["Faction"]] = len(item["Influence"][0]["Influence"])
             if item["Influence"][0]["Trend"] == "DownBad":
                 inf_changes[item["Faction"]] *= -1
-        
+
         url = f'{URL_GOOGLE}/1FAIpQLSdlMUq4bcb4Pb0bUTx9C6eaZL6MZ7Ncq3LgRCTGrJv5yNO2Lw/formResponse'
         url_params = {
             "entry.1839270329": cmdr,
@@ -492,7 +487,7 @@ class Missions_Tracker:
         if result is None:
             debug("[BGS.mission_abandoned] Mission {!r} was abandoned, but not found in the database.", mission_id)
             return
-        
+
         mission = json.loads(result[0])
         if "Megaship" not in mission["type"]:
             self._query("DELETE FROM missions WHERE id = ?", mission_id)
@@ -501,12 +496,13 @@ class Missions_Tracker:
 
     def _redeem_voucher(self, entry, cmdr, system):
         # Игнорируем флитаки, юристов и лишние типы выплат.
-        if (self.station_owner == "FleetCarrier"
+        if (
+            self.station_owner == "FleetCarrier"
             or "BrokerPercentage" in entry
             or entry["Type"] not in ("bounty", "CombatBond")
         ):
             return
-        
+
         url = f'{URL_GOOGLE}/1FAIpQLSenjHASj0A0ransbhwVD0WACeedXOruF1C4ffJa_t5X9KhswQ/formResponse'
         if entry["Type"] == "bounty":
             debug("[BGS.redeem_voucher] Redeeming bounties:")
@@ -551,18 +547,14 @@ class Missions_Tracker:
                 "entry.351553038": entry["TotalEarnings"],
                 "usp": "pp_url"
             }
-            debug("[BGS.exploration_data]: Sold exploration data for {} credits, station's owner: {!r}",
-                entry["TotalEarnings"],
-                self.station_owner)
+            debug(
+                "[BGS.exploration_data]: Sold exploration data for {} credits, station's owner: {!r}",
+                entry["TotalEarnings"], self.station_owner
+            )
             BGS._send(url, url_params, [system])
 
 
 class CZ_Tracker:
-    def __new__(cls):
-        if BGS._cz_tracker is None:
-            BGS._cz_tracker = super().__new__(cls)
-        return BGS._cz_tracker
-    
     def __init__(self):
         self.in_conflict = False
         self.safe = False       # на случай, если плагин запускается посреди игры, и мы не знаем режим
@@ -581,44 +573,67 @@ class CZ_Tracker:
         # релог в пеших кз
         # ApproachSettlement в логах идёт раньше Location, и EDMC отдаёт system = None в этот момент
         # в самом ApproachSettlement названия системы нет, но есть название тела
-        if event == "ApproachSettlement" and system == None:
+        if event == "ApproachSettlement" and system is None:
             pattern = r"\s([A-Z]\s)?\d{1,3}(\s[a-z])?$"
             system = re.sub(pattern, "", entry["BodyName"])
-        
-        if system in BGS._systems or not BGS._systems:
-            if not self.in_conflict:
-                # начало конфликта (космос)
-                if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
-                    self._start_conflict(cmdr, system, entry, "Space")
-                # начало конфликта (ноги)
-                elif (event == "ApproachSettlement"
-                    and entry["StationFaction"].get("FactionState", "") in ("War", "CivilWar")
-                    and "dock" not in entry["StationServices"]):
-                    self._start_conflict(cmdr, system, entry, "Foot")
-            else:
-                # убийство
-                if event == "FactionKillBond":
-                    self._kill(entry)
-                # сканирование корабля
-                elif event == "ShipTargeted" and entry["TargetLocked"] == True and entry["ScanStage"] == 3:
-                    self._ship_scan(entry)
-                # отслеживание сообщений, потенциальное завершение конфликта | УДАЛЕНО: см. BGS.on_chat_message()
+            debug(f"[CZ_Tracker] Extracted system from body {entry['BodyName']} in ApproachSettlement: {system}")
 
-                # завершение конфликта: прыжок
-                elif event == "StartJump":
-                    self._end_conflict()
-                # завершение конфликта: возврат на шаттле (ноги)
-                elif event == "BookDropship" and entry["Retreat"] == True:
-                    self._end_conflict()
-                # релог в пешей кз
-                elif event == "Music" and entry["MusicTrack"] == "MainMenu" and (GameState.on_foot or GameState.in_srv):
-                    self._end_conflict()
-                # досрочный выход
-                elif (event in ("Shutdown", "Died", "SelfDestruct") or        # это для любых кз
-                        event == "Music" and entry["MusicTrack"] == "MainMenu"):      # а это уже только в космосе будет работать
+        # начало конфликта (космос)
+        if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
+            if self.in_conflict:
+                warning("[CZ_Tracker] Got SupercruiseDestinationDrop while presumably already being in conflict! Clearing data.")
+                self._reset()
+            self._start_conflict(cmdr, system, entry, "Space")
+        # начало конфликта (ноги)
+        elif (
+            event == "ApproachSettlement"
+            and entry["StationFaction"].get("FactionState", "") in ("War", "CivilWar")
+            and "dock" not in entry["StationServices"]
+        ):
+            if self.in_conflict:
+                if self.info.get("location") == entry["Name"]:
+                    debug("[CZ_Tracker] Got ApproachSettlement matching the current conflict, ignoring.")
+                    return
+                else:
+                    warning("[CZ_Tracker] Got ApproachSettlement not matching the current conflict location! Clearing data.")
                     self._reset()
-    
-    
+            self._start_conflict(cmdr, system, entry, "Foot")
+        # убийство
+        elif event == "FactionKillBond":
+            if not self.in_conflict:
+                error("[CZ_Tracker] Got FactionKillBond without known conflict data!")
+                return
+            self._kill(entry)
+        # сканирование корабля
+        elif event == "ShipTargeted" and entry["TargetLocked"] is True and entry["ScanStage"] == 3:
+            if self.in_conflict:
+                self._ship_scan(entry)
+        # отслеживание сообщений, потенциальное завершение конфликта | УДАЛЕНО: см. BGS.on_chat_message()
+
+        # завершение конфликта: прыжок
+        elif event == "StartJump":
+            if self.in_conflict:
+                self._end_conflict()
+        # завершение конфликта: возврат на шаттле (ноги)
+        elif event == "BookDropship" and entry["Retreat"] is True:
+            if not self.in_conflict:
+                error("[CZ_Tracker] Got retreating BookDropship without known conflict data!")
+                return
+            self._end_conflict()
+        # релог в пешей кз
+        elif event == "Music" and entry["MusicTrack"] == "MainMenu" and (GameState.on_foot or GameState.in_srv):
+            if self.in_conflict:
+                self._end_conflict()
+        # досрочный выход
+        elif (
+            event in ("Shutdown", "Died", "SelfDestruct")  # это для любых кз
+            or event == "Music" and entry["MusicTrack"] == "MainMenu"  # а это уже только в космосе будет работать
+        ):
+            if self.in_conflict:
+                debug(f"[CZ_Tracker] Got {event} event, assuming early leave.")
+                self._reset()
+
+
     def _start_conflict(self, cmdr, system, entry, conflict_type):
         debug("CZ_Tracker: detected entering a conflict zone, {!r} type.", conflict_type)
         self.in_conflict = True
@@ -682,7 +697,7 @@ class CZ_Tracker:
                 entry["AwardingFaction"],
                 entry["VictimFaction"],
                 self.info["kills"])
-            
+
         # определение интенсивности пешей кз
         if (
             not self.info["intensity"]
@@ -697,7 +712,7 @@ class CZ_Tracker:
             elif 39642 <= reward <= 87362:
                 self.info["intensity"] = "High"
             debug("CZ_Tracker: intensity set to {!r}", self.info["intensity"])
-    
+
 
     def _ship_scan(self, entry):
         if "$ShipName_Military" in entry["PilotName"]:
@@ -707,7 +722,7 @@ class CZ_Tracker:
                 self.info["allegiances"][conflict_side] = allegiance
                 debug("CZ_Tracker: detected military ship scan. Faction {!r} added to the list, allegiance {!r}.", conflict_side, allegiance)
 
-    
+
     def _patrol_message(self, entry):
         # Логика следующая: получаем 5 "патрулирующих" сообщений от одной стороны за 15 секунд - считаем конфликт завершённым.
         # По имени фильтруем, чтобы случайно не поймать последним такое сообщение, например, от спецкрыла
@@ -722,7 +737,7 @@ class CZ_Tracker:
                     self.end_messages[allegiance] = deque(5*[None], 5)
                 queue = self.end_messages[allegiance]
                 queue.append(timestamp)
-                
+
                 if queue[0] != None:
                     if (queue[4] - queue[0]).seconds <= 15:
                         debug("CZ_Tracker: got 5 patrol messages in 15 seconds.")
@@ -739,6 +754,11 @@ class CZ_Tracker:
 
 
     def _end_conflict(self, winners_allegiance: str | None = None):
+        if not ((system := self.info["system"]) in BGS._systems or not BGS._systems):
+            debug(f"[CZ_Tracker] Conflict ended, but system {system} is not in the tracked list. Clearing data.")
+            self._reset()
+            return
+
         debug("CZ_Tracker: END_CONFLICT called, calculating the result.")
         self.info["end_time"] = datetime.now(timezone.utc)
         factions_list = list(self.info["allegiances"].items())
@@ -762,14 +782,14 @@ class CZ_Tracker:
                             presumed_winner = factions_list[index][0]
                 else:
                     for index, faction in enumerate(factions_list):
-                        if faction[1] != None and faction[1] != winners_allegiance:
+                        if faction[1] is not None and faction[1] != winners_allegiance:
                             presumed_winner = factions_list[index-1][0]         # index-1 будет либо 0, либо -1, что при двух фракциях == 1
 
         elif self.info["kills"] < self.info["minimum_kills"]:
             debug("CZ_Tracker: not enough kills ({}/{}), resetting.", self.info["kills"], self.info["minimum_kills"])
             self._reset()
             return
-        
+
         # предсказание победителя
         # мы не можем наверняка сказать, что фракция игрока победила, но будем *предполагать* такой исход
         if (
@@ -796,20 +816,20 @@ class CZ_Tracker:
                 case "Low":     intensity = "Низкая"
             PluginContext.notifier.send(
                 "Засчитана победа в зоне конфликта:\n" +
-                "Система {}\n".format(self.info["system"])+
+                "Система {}\n".format(self.info["system"]) +
                 "Фракция {}\n".format(actual_winner) +
                 "{} интенсивность.".format(intensity)
             )
 
             self._send_results(self.info, presumed_winner, actual_winner)
-        
+
         self._reset()
 
 
     @staticmethod
     def _ask_user(cz_info: dict, presumed_winner: str):
         BasicThread(target=lambda: CZ_Tracker.Notification(cz_info, presumed_winner), name="cz notification").start()
-    
+
 
     @staticmethod
     def _send_results(cz_info: dict, presumed: str, actual: str):
@@ -820,18 +840,18 @@ class CZ_Tracker:
             case _:         weight = 0.25
         url = f'{URL_GOOGLE}/1FAIpQLSepTjgu1U8NZXskFbtdCPLuAomLqmkMAYCqk1x0JQG9Btgb9A/formResponse'
         url_params = {
-                "entry.1673815657": cz_info["start_time"].strftime("%d.%m.%Y %H:%M:%S"),
-                "entry.1896400912": cz_info["end_time"].strftime("%d.%m.%Y %H:%M:%S"),
-                "entry.1178049789": cz_info["cmdr"],
-                "entry.721869491": cz_info["system"],
-                "entry.1671504189": cz_info["conflict_type"],
-                "entry.461250117": cz_info.get("location", ""),
-                "entry.428944810": cz_info.get("intensity", ""),
-                "entry.1396326275": str(weight).replace('.', ','),
-                "entry.1674382418": presumed,
-                "entry.1383403456": actual,
-                "usp": "pp_url",
-            }
+            "entry.1673815657": cz_info["start_time"].strftime("%d.%m.%Y %H:%M:%S"),
+            "entry.1896400912": cz_info["end_time"].strftime("%d.%m.%Y %H:%M:%S"),
+            "entry.1178049789": cz_info["cmdr"],
+            "entry.721869491": cz_info["system"],
+            "entry.1671504189": cz_info["conflict_type"],
+            "entry.461250117": cz_info.get("location", ""),
+            "entry.428944810": cz_info.get("intensity", ""),
+            "entry.1396326275": str(weight).replace('.', ','),
+            "entry.1674382418": presumed,
+            "entry.1383403456": actual,
+            "usp": "pp_url",
+        }
         BGS._send(url, url_params, [cz_info["system"]])
         BGS._playsound("success")
 
@@ -913,7 +933,7 @@ class CZ_Tracker:
             self.rightbutton.grid(row=0, column=1, sticky="NSWE")
             self.cancelbutton.grid(row=1, column=0, columnspan=2, sticky="NSWE")
 
-        
+
         def _get_msgframe(self, parent) -> ttk.Frame:
             frame = ttk.Frame(parent)
             frame.columnconfigure(0, weight=1)
@@ -935,7 +955,7 @@ class CZ_Tracker:
             ).grid(row=0, column=0, columnspan=2, sticky="W")
 
             leftframe = tk.Frame(frame)
-            rightframe= tk.Frame(frame)
+            rightframe = tk.Frame(frame)
 
             # левый столбец
             ttk.Label(leftframe, style="msgtext.TLabel", text="Система:").grid(row=0, column=0, sticky="NW")
@@ -972,8 +992,8 @@ class CZ_Tracker:
             self.canvas.grid(row=1, column=2, sticky="NSWE", padx=int(15*self.scale))
 
             return frame
-        
-        
+
+
         def _result(self, actual_winner: str = None):
             if actual_winner:
                 debug("CZ_Tracker: actual winner set to {!r}.", actual_winner)
