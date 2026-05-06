@@ -228,7 +228,8 @@ class Updater:
         if not self.updater_thread:
             return
         self.updater_thread.stop()
-        self.updater_thread.join()
+        if self.updater_thread is not threading.current_thread():
+            self.updater_thread.join()
         self.updater_thread = None
         logger.debug("UpdateCycle stopped.")
 
