@@ -90,8 +90,8 @@ class JournalProcessor(Thread):
             and entry["event"] not in ("NavRoute", "FSDTarget")
         ):
             PluginContext.logger.debug(
-                "Detected SystemAddress mismatch: current {}, from entry {}.".format(
-                    GameState.system_address, entry["SystemAddress"]
+                "Detected SystemAddress mismatch: current {}, from event {} {}.".format(
+                    GameState.system_address, entry["event"], entry["SystemAddress"]
                 ))
             if entry["event"] == "StartJump":
                 # мы ещё в актуальной системе, но сохраним ту, в которую прыгаем
@@ -103,7 +103,11 @@ class JournalProcessor(Thread):
             else:
                 # мы уже прыгнули, но FSDJump в логах пока не получили
                 GameState.system_address = entry["SystemAddress"]
-                GameState.system = GameState.pending_jump_system or system
+                GameState.system = (
+                    GameState.pending_jump_system
+                    or system
+                    or PluginContext.systems_module.get_system_name(GameState.system_address)
+                )
                 PluginContext.logger.debug(
                     "We jumped to another system; system_address set to {}, system set to {}.".format(
                         GameState.system_address, GameState.system

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from email.charset import UNKNOWN8BIT
 from enum import Enum, IntFlag, auto
 from semantic_version import Version
 from typing import Protocol, TYPE_CHECKING
@@ -215,3 +216,6 @@ class Flags2(IntFlag):
     TELEPRESENCE_MULTICREW  = auto()
     PHYSICAL_MULTICREW      = auto()
     FSD_HYPERDRIVE_CHARGING = auto()
+    SUPERCRUISE_OVERCHARGE  = auto()
+    SUPERCRUISE_ASSIST      = auto()
+    NPC_CREW_ACTIVE         = auto()
