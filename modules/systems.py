@@ -89,7 +89,7 @@ class SystemsModule:
     def fetch_system_data_from_id(self, sysid: int):
         try:
             resp = requests.get(
-                url="https://www.spansh.co.uk/api/system/{sysid}",
+                url=f"https://www.spansh.co.uk/api/system/{sysid}",
                 timeout=5,
             )
             resp.raise_for_status()

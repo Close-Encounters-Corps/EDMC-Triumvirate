@@ -105,8 +105,8 @@ class JournalProcessor(Thread):
                 GameState.system_address = entry["SystemAddress"]
                 GameState.system = (
                     GameState.pending_jump_system
-                    or system
                     or PluginContext.systems_module.get_system_name(GameState.system_address)
+                    or system
                 )
                 PluginContext.logger.debug(
                     "We jumped to another system; system_address set to {}, system set to {}.".format(

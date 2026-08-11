@@ -1,4 +1,4 @@
-import requests, json, os, sqlite3, re, threading
+import requests, json, os, sqlite3, threading
 import tkinter as tk
 
 from datetime import datetime, timezone
@@ -558,6 +558,7 @@ class CZ_Tracker:
     def __init__(self):
         self.in_conflict = False
         self.safe = False       # на случай, если плагин запускается посреди игры, и мы не знаем режим
+        self.info = None
 
 
     def process_entry(self, journalEntry: JournalEntry):
@@ -572,11 +573,15 @@ class CZ_Tracker:
 
         # релог в пеших кз
         # ApproachSettlement в логах идёт раньше Location, и EDMC отдаёт system = None в этот момент
-        # в самом ApproachSettlement названия системы нет, но есть название тела
+        # в самом ApproachSettlement названия системы нет, но есть её ID
+        # в JournalProcessor делается попытка найти по нему имя, но она зависит от сети и может провалиться
         if event == "ApproachSettlement" and system is None:
-            pattern = r"\s([A-Z]\s)?\d{1,3}(\s[a-z])?$"
-            system = re.sub(pattern, "", entry["BodyName"])
-            debug(f"[CZ_Tracker] Extracted system from body {entry['BodyName']} in ApproachSettlement: {system}")
+            warning("[CZ_Tracker] Got ApproachSettlement, but `system` was None.")
+
+        # поэтому при старте конфликта придётся записать систему None, а дальше заменить, как только местоположение будет выяснено
+        if system is not None and self.info and self.info["system"] is None:
+            warning(f"Got location info, setting previously None-d system to {system!r}.")
+            self.info["system"] = system
 
         # начало конфликта (космос)
         if event == "SupercruiseDestinationDrop" and "$Warzone_PointRace" in entry["Type"]:
