@@ -322,7 +322,8 @@ class Missions_Tracker:
         self.lock = threading.Lock()
         self._query("CREATE TABLE IF NOT EXISTS missions (id, payload)")
         self.station_owner = ""
-        self.redeemed_factions = []
+        self.system_factions: list[str] = list()
+        self.redeemed_factions: list[str] = list()
 
     def stop(self):
         self._prune_expired()
@@ -365,8 +366,12 @@ class Missions_Tracker:
         cmdr, system, station, entry = journalEntry.cmdr, journalEntry.system, journalEntry.station, journalEntry.data
         event = entry["event"]
 
+        # вход в игру/прыжок в систему
+        if event in ("Location", "FSDJump", "CarrierJump"):
+            self.system_factions = [fct.get("Name", "") for fct in entry.get("Factions", [])]
+            debug(f"Factions in system: {self.system_factions}")
         # стыковка/вход в игру на станции
-        if event == "Docked" or (event == "Location" and entry["Docked"] is True):
+        elif event == "Docked" or (event == "Location" and entry["Docked"] is True):
             self._docked(entry)
         # принятие миссии
         elif event == "MissionAccepted" and (
@@ -509,6 +514,9 @@ class Missions_Tracker:
             for faction in entry["Factions"]:
                 name = faction["Faction"]
                 if name != "" and name not in self.redeemed_factions:
+                    if name not in self.system_factions:
+                        debug(f"[BGS.redeem_voucher] Ignoring faction {name} - not present in the system")
+                        continue
                     debug("[BGS.redeem_voucher] Faction {!r}, amount: {}", name, faction["Amount"])
                     url_params = {
                         "entry.503143076": cmdr,
@@ -522,6 +530,9 @@ class Missions_Tracker:
                     self.redeemed_factions.append(name)
                     BGS._send(url, url_params, [system])
         else:
+            if (name := entry["Faction"]) not in self.system_factions:
+                debug(f"[BGS.redeem_voucher] Ignoring bonds for faction {name} - not present in the system")
+                return
             debug("[BGS.redeem_voucher] Redeeming bonds: faction {!r}, amount: {}", entry["Faction"], entry["Amount"])
             url_params = {
                 "entry.503143076": cmdr,
