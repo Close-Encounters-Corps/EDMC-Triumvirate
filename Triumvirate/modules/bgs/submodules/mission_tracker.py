@@ -171,7 +171,7 @@ class MissionTracker(Module, BGSSubmodule):
 
     def on_missions_event(self, entry: dict):
         cur = self.core.database.cursor()
-        now = datetime.now(UTC).replace(microsecond=0)
+        current_ts = datetime.fromisoformat(entry["timestamp"])
         active_missions: list[dict] = entry.get("Active", [])
         failed_missions: list[dict] = entry.get("Failed", [])
         PluginContext.logger.debug("Processing 'Missions' event...")
@@ -193,7 +193,7 @@ class MissionTracker(Module, BGSSubmodule):
                 if (expires_sec := mission["Expires"]) != 0:
                     cur.execute(
                         "UPDATE missions SET timestamp_expires = ? WHERE mission_id = ?",
-                        (datetime.isoformat(now + timedelta(seconds=expires_sec)), mid)
+                        (datetime.isoformat(current_ts + timedelta(seconds=expires_sec)), mid)
                     )
                 PluginContext.logger.debug(f"Unknown active mission reported by the game (ID {mid}). Saved to the database.")
 
@@ -205,13 +205,13 @@ class MissionTracker(Module, BGSSubmodule):
             if res is None:
                 cur.execute(
                     "INSERT INTO missions (mission_id, cmdr, status, mission_type, timestamp_finished) VALUES (?,?,?,?,?)",
-                    (mid, GameState.cmdr, MissionStatus.FAILED, mission["Name"], now.isoformat())
+                    (mid, GameState.cmdr, MissionStatus.FAILED, mission["Name"], current_ts.isoformat())
                 )
                 PluginContext.logger.debug(f"Unknown failed mission reported by the game (ID {mid}). Saved to the database.")
             elif res[0] == MissionStatus.ACTIVE:
                 cur.execute(
                     "UPDATE missions SET status = ?, timestamp_finished = ? WHERE mission_id = ?",
-                    (MissionStatus.FAILED, now.isoformat(), mid)
+                    (MissionStatus.FAILED, current_ts.isoformat(), mid)
                 )
                 PluginContext.logger.debug(f"Mission {mid} reported as failed. Local record updated.")
 
