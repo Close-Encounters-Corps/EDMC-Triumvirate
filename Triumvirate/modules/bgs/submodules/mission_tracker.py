@@ -95,7 +95,7 @@ class MissionTracker(Module, BGSSubmodule):
             origin_faction=entry["Faction"]
         )
         self._insert_or_update(mission_obj)
-        PluginContext.logger.debug(f"Mission {mission_id} accepted and saved to the database.")
+        PluginContext.logger.debug(f"Mission {mission_id} was accepted and saved to the database.")
 
 
     def mission_completed(self, entry: dict):
@@ -146,7 +146,7 @@ class MissionTracker(Module, BGSSubmodule):
 
     def mission_abandoned(self, entry: dict):
         mission_id = entry["MissionID"]
-        PluginContext.logger.debug(f"Mission {mission_id} abandoned.")
+        PluginContext.logger.debug(f"Mission {mission_id} was abandoned.")
         res = self._select_by_id(mission_id)
         if res is None:
             PluginContext.logger.debug(f"Mission {mission_id} not found in the database. Unable to mark as abandoned.")
@@ -159,7 +159,7 @@ class MissionTracker(Module, BGSSubmodule):
 
     def mission_failed(self, entry: dict):
         mission_id = entry["MissionID"]
-        PluginContext.logger.debug(f"Mission {mission_id} failed.")
+        PluginContext.logger.debug(f"Mission {mission_id} was failed.")
         res = self._select_by_id(mission_id)
         if res is None:
             PluginContext.logger.error(f"Mission {mission_id} not found in the database. Unable to determine the affected faction.")
@@ -243,24 +243,34 @@ class MissionTracker(Module, BGSSubmodule):
         self.core.database.execute(f"INSERT OR IGNORE INTO missions (mission_id) VALUES ({mission.mission_id})")
         self.core.database.execute(
             """
-            UPDATE missions
-            SET
-                cmdr = ?,
-                status = ?,
-                mission_type = ?,
-                timestamp_accepted = ?,
-                timestamp_expires = ?,
-                timestamp_finished = ?,
-                origin_system = ?,
-                origin_system_id = ?,
-                origin_faction = ?
-            WHERE mission_id = ?
+            INSERT INTO missions (
+                mission_id, cmdr, status, mission_type,
+                origin_system, origin_system_id, origin_faction,
+                timestamp_accepted, timestamp_expires, timestamp_finished
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(mission_id) DO UPDATE SET
+                cmdr = excluded.cmdr,
+                status = excluded.status,
+                mission_type = excluded.mission_type,
+                origin_system = COALESCE(excluded.origin_system, missions.origin_system),
+                origin_system_id = COALESCE(excluded.origin_system_id, missions.origin_system_id),
+                origin_faction = COALESCE(excluded.origin_faction, missions.origin_faction),
+                timestamp_accepted = COALESCE(excluded.timestamp_accepted, missions.timestamp_accepted),
+                timestamp_expires = COALESCE(excluded.timestamp_expires, missions.timestamp_expires),
+                timestamp_finished = COALESCE(excluded.timestamp_finished, missions.timestamp_finished)
             """,
             (
-                mission.cmdr, mission.status, mission.mission_type, mission.timestamp_accepted, mission.timestamp_expires,
-                mission.timestamp_finished, mission.origin_system, mission.origin_system_id, mission.origin_faction,
-                mission.mission_id
-            )
+                mission.mission_id,
+                mission.cmdr,
+                mission.status,
+                mission.mission_type,
+                mission.origin_system,
+                mission.origin_system_id,
+                mission.origin_faction,
+                mission.timestamp_accepted,
+                mission.timestamp_expires,
+                mission.timestamp_finished,
+            ),
         )
         self.core.database.commit()
 
