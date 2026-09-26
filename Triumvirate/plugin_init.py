@@ -39,6 +39,10 @@ def initialize(
     )
 
     # 1.5) Подготовка UI
+    # Порядок рядов такой:
+    # 0 - предупреждения от обработчика логов
+    # 1 - UI модулей
+    # 2 - уведомления
     app_frame = tk.Frame(ui_parent)
     modules_frame = tk.Frame(app_frame)
 
@@ -47,10 +51,10 @@ def initialize(
     from Triumvirate.core.notifier import Notifier
     from Triumvirate.core.sound_player import SoundPlayer
     from Triumvirate.core.systems import SystemsCache
-    PluginContext.systems_cache = SystemsCache(app_frame, 0)
-    PluginContext.notifier = Notifier(app_frame, 2)  # на 1 ряду будут модули
+    PluginContext.notifier = Notifier(app_frame, 2)
+    PluginContext.systems_cache = SystemsCache()
     PluginContext.sound_player = SoundPlayer()
-    PluginContext.journal_processor = JournalProcessor(event_queue)
+    PluginContext.journal_processor = JournalProcessor(event_queue, app_frame, 0)
 
     # 3) Создание модулей
     from Triumvirate.modules.bgs import BGS

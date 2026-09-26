@@ -1,17 +1,9 @@
 import requests
 import sqlite3
-import tkinter as tk
 from dataclasses import dataclass
 
 from Triumvirate.core.context import PluginContext
 from Triumvirate.lib.journal import Coords
-
-
-# функция перевода
-# isort: off
-import functools
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
-# isort: on
 
 
 @dataclass
@@ -21,13 +13,8 @@ class _SystemData:
     coords: Coords
 
 
-class SystemsCache(tk.Frame):
-    def __init__(self, master: tk.Misc, row: int):
-        super().__init__(master)
-        self._row = row
-        self._mapped = False    # вместо winfo_mapped, чтобы без задержек между потоками
-        self._message = tk.Label(self, text=_translate("<SYSTEMS_MODULE_NO_COORDS_WARNING>"))
-        self._message.pack(side="left")
+class SystemsCache:
+    def __init__(self):
         self._cache = sqlite3.connect(PluginContext.paths.userdata_dir / "cache.db", check_same_thread=False)
         self._cache.execute("CREATE TABLE IF NOT EXISTS systems (id INTEGER PRIMARY KEY, name TEXT, x REAL, y REAL, z REAL)")
         self._cache.execute("CREATE INDEX IF NOT EXISTS idx_systems_name ON systems(name)")
@@ -54,19 +41,6 @@ class SystemsCache(tk.Frame):
     def get_system_id(self, system_name: str) -> int | None:
         data = self._get_system_by_name(system_name)
         return data.sid if data else None
-
-    def show_coords_warning(self):
-        def inner(self: SystemsCache):
-            self.grid(column=0, row=self._row, sticky="NSWE")
-        self._mapped = True
-        self.after(0, inner, self)
-
-    def hide_coords_warning(self):
-        self._mapped = False
-        self.after(0, self.grid_forget)
-
-    def coords_warning_shown(self) -> bool:
-        return self._mapped
 
 
     def _db_add_system(self, data: _SystemData):

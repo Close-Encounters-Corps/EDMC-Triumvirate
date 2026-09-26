@@ -1,5 +1,5 @@
-import types
 import sys
+import types
 from typing import TYPE_CHECKING
 
 from Triumvirate.core.context import PluginContext

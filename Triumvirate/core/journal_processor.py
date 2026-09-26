@@ -1,17 +1,92 @@
+import functools
+import tkinter as tk
+from PIL import Image, ImageTk
 from queue import Empty, Queue
 from threading import Event, Thread
 
-from Triumvirate.core.context import GameState, PluginContext, GameMode
+from config import config as edmc_config  # type: ignore
+
+from Triumvirate.core.context import GameMode, GameState, PluginContext
+from Triumvirate.core.shortcuts import _translate
 from Triumvirate.lib.journal import Coords, JournalEntry
 from Triumvirate.modules import legacy
+
+
+def mainthread(func):
+    @functools.wraps(func)
+    def wrapper(self: tk.Misc, *args):
+        self.after(0, func, *args)
+    return wrapper
+
+
+class _WarningFrame(tk.Frame):
+    warning_icon: ImageTk.PhotoImage
+
+    @classmethod
+    def load_icon(cls, scale: int):
+        size = int(24 * scale / 100)
+        image = Image.open(PluginContext.paths.assets_dir / 'icons' / 'core_warning_128.png').resize((size, size))
+        cls.warning_icon = ImageTk.PhotoImage(image)
+
+    def __init__(self, parent: 'JPWarnings', text: str, row: int):
+        self.__row = row
+        self.__parent = parent
+        self.__shown = False
+        super().__init__(parent)
+        self.grid_columnconfigure(1, weight=1)
+        self.__icon_label = tk.Label(self, image=self.warning_icon)
+        self.__text_label = tk.Label(self, text=text)
+        self.__icon_label.grid(row=0, column=0, pady=2, padx=5, sticky='W')
+        self.__text_label.grid(row=0, column=1, pady=2, sticky='E')
+
+    @mainthread
+    def show(self):
+        if self.__shown:
+            return
+        self.__shown = True
+        self.grid(row=self.__row, column=0, sticky="NWSE")
+        self.__parent._on_child_shown()
+
+    @mainthread
+    def hide(self):
+        if not self.__shown:
+            return
+        self.__shown = False
+        self.grid_remove()
+        self.__parent._on_child_hidden()
+
+    def is_shown(self):
+        return self.__shown
+
+
+class JPWarnings(tk.Frame):
+    def __init__(self, parent: tk.Misc, row: int):
+        super().__init__(parent)
+        self.__row = row
+        self.__displayed_warnings = 0
+        _WarningFrame.load_icon(edmc_config.get_int("ui_scale", default=100))
+        self.incomplete_system_data = _WarningFrame(self, _translate("<WARNING_INCOMPLETE_SYSTEM_INFO>"), 0)
+        self.operation_gamemode = _WarningFrame(self, _translate("<WARNING_OPERATION_GAMEMODE>"), 1)
+        self.unknown_gamemode = _WarningFrame(self, _translate("<WARNING_UNKNOWN_GAMEMODE>"), 2)
+
+    def _on_child_shown(self):
+        self.__displayed_warnings += 1
+        if self.__displayed_warnings == 1:
+            self.grid(column=0, row=self.__row)
+
+    def _on_child_hidden(self):
+        self.__displayed_warnings -= 1
+        if self.__displayed_warnings == 0:
+            self.grid_remove()
 
 
 # Будем использовать threading.Thread вместо кастомного modules.lib.thread.Thread,
 # чтобы избежать остановки обработчика до того, как он закончит разбирать очередь.
 
 class JournalProcessor(Thread):
-    def __init__(self, event_queue: Queue[dict]):
+    def __init__(self, event_queue: Queue[dict], app_frame: tk.Frame, row: int):
         super().__init__(name="Triumvirate journal entry processor")
+        self.warnings = JPWarnings(app_frame, row)
         self.queue = event_queue
         self._startup = True
         self._stop = Event()  # флаг остановки потока
@@ -200,12 +275,12 @@ class JournalProcessor(Thread):
 
         # ПРОВЕРКА ЛОКАЦИИ
         system_data = self.update_location(entry, state)
-        if None in system_data and not PluginContext.systems_cache.coords_warning_shown():
+        if None in system_data and not self.warnings.incomplete_system_data.is_shown():
             PluginContext.logger.debug("System data incomplete, showing user warning.")
-            PluginContext.systems_cache.show_coords_warning()
-        elif None not in system_data and PluginContext.systems_cache.coords_warning_shown():
+            self.warnings.incomplete_system_data.show()
+        elif None not in system_data and self.warnings.incomplete_system_data.is_shown():
             PluginContext.logger.debug("Hiding incomplete system data warning.")
-            PluginContext.systems_cache.hide_coords_warning()
+            self.warnings.incomplete_system_data.hide()
         GameState.system, GameState.system_address, GameState.system_coords = system_data
 
         # ПЕРЕДАЧА ДАННЫХ МОДУЛЯМ
