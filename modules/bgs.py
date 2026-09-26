@@ -331,7 +331,7 @@ class Missions_Tracker:
         self.redeemed_factions: list[str] = list()
 
     def stop(self):
-        self._prune_expired()
+        # self._prune_expired()
         self.db.close()
     
     def _query(self, query: str, *args, fetchall: bool = False):
