@@ -58,6 +58,8 @@ class MissionTracker(Module, BGSSubmodule):
 
 
     def on_journal_entry(self, entry: JournalEntry):
+        if GameState.gamemode != 'MainGame':
+            return
         raw = entry.data
         match raw["event"]:
             case "Missions": self.on_missions_event(raw)

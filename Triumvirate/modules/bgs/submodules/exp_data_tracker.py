@@ -15,6 +15,9 @@ class ExpDataTracker(Module, BGSSubmodule):
         self.station_owner: str | None = None
 
     def on_journal_entry(self, entry: JournalEntry):
+        if GameState.gamemode != 'MainGame':
+            return
+
         raw = entry.data
         event = raw["event"]
         if event == "Docked" or (event == "Location" and raw["Docked"] is True):

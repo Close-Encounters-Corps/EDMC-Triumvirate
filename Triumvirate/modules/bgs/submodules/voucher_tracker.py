@@ -17,6 +17,9 @@ class VoucherTracker(Module, BGSSubmodule):
         self.redeemed_factions: list[str] = list()  # there's a game bug that would duplicate faction entries in certain conditions
 
     def on_journal_entry(self, entry: JournalEntry):
+        if GameState.gamemode != 'MainGame':
+            return
+
         raw = entry.data
         event = raw["event"]
         if event in ("Location", "FSDJump", "CarrierJump"):
