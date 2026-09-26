@@ -151,7 +151,7 @@ class JournalProcessor(Thread):
                 return
 
             elif (event in ('Shutdown', 'Died', 'SelfDestruct')
-                  or event == "Music" and data["MusicTrack"] == "MainMenu"):
+                    or event == "Music" and data["MusicTrack"] == "MainMenu"):
                 text = "game" if event == 'Shutdown' else "session"
                 PluginContext.logger.debug(f"Detected exit from the {text} ({event} event).")
                 if self.awaiting_gamemode:
@@ -213,11 +213,17 @@ class JournalProcessor(Thread):
                     PluginContext.logger.warning("Got GameModeChange event, but `awaiting_gamemode` was False.")
                 raw_gm = data["GameMode"]
                 match raw_gm:
-                    case "MainGame": gm = GameMode.MainGame
-                    case "Operation": gm = GameMode.Operation
+                    case "MainGame":
+                        gm = GameMode.MainGame
+                        self.warnings.operation_gamemode.hide()
+                        self.warnings.unknown_gamemode.hide()
+                    case "Operation":
+                        gm = GameMode.Operation
+                        self.warnings.operation_gamemode.show()
                     case _:
                         PluginContext.logger.warning(f"Received GameModeChange event with unknown GameMode value: {raw_gm!r}!")
                         gm = GameMode.unknown
+                        self.warnings.unknown_gamemode.show()
                 GameState.gamemode = gm
                 PluginContext.logger.debug(f"Gamemode set to {gm}. Processing the delayed events.")
                 self.awaiting_gamemode = False
