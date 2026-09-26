@@ -104,9 +104,8 @@ class MissionTracker(Module, BGSSubmodule):
         mission_id = entry["MissionID"]
         PluginContext.logger.debug(f"Processing completion of mission {mission_id}:")
 
-        res = self._select_by_id(mission_id)
-        if res is not None:
-            mission_obj = Mission(*res)
+        mission_obj = self._select_by_id(mission_id)
+        if mission_obj is not None:
             mission_obj.status = MissionStatus.COMPLETED
             mission_obj.timestamp_finished = int(datetime.fromisoformat(entry["timestamp"]).timestamp())
         else:
@@ -149,11 +148,10 @@ class MissionTracker(Module, BGSSubmodule):
     def mission_abandoned(self, entry: dict):
         mission_id = entry["MissionID"]
         PluginContext.logger.debug(f"Mission {mission_id} was abandoned.")
-        res = self._select_by_id(mission_id)
-        if res is None:
+        mission_obj = self._select_by_id(mission_id)
+        if mission_obj is None:
             PluginContext.logger.debug(f"Mission {mission_id} not found in the database. Unable to mark as abandoned.")
             return
-        mission_obj = Mission(*res)
         mission_obj.timestamp_finished = int(datetime.fromisoformat(entry["timestamp"]).timestamp())
         mission_obj.status = MissionStatus.ABANDONED
         self._insert_or_update(mission_obj)
@@ -162,11 +160,10 @@ class MissionTracker(Module, BGSSubmodule):
     def mission_failed(self, entry: dict):
         mission_id = entry["MissionID"]
         PluginContext.logger.debug(f"Mission {mission_id} was failed.")
-        res = self._select_by_id(mission_id)
-        if res is None:
+        mission_obj = self._select_by_id(mission_id)
+        if mission_obj is None:
             PluginContext.logger.error(f"Mission {mission_id} not found in the database. Unable to determine the affected faction.")
             return
-        mission_obj = Mission(*res)
         mission_obj.timestamp_finished = int(datetime.fromisoformat(entry["timestamp"]).timestamp())
         mission_obj.status = MissionStatus.FAILED
         self._insert_or_update(mission_obj)
@@ -190,8 +187,8 @@ class MissionTracker(Module, BGSSubmodule):
             if "Colonisation_Initial" in mission["Name"]:
                 PluginContext.logger.debug(f"Skipping the mission to construct colonisation primary port (id {mid})")
                 continue
-            res = self._select_by_id(mid)
-            if res is None:
+            mission_obj = self._select_by_id(mid)
+            if mission_obj is None:
                 if GameState.cmdr is None:
                     PluginContext.logger.warning(
                         f"Discovered unknown active mission (ID {mid}), but can't save it to the database: missing CMDR info."
@@ -211,8 +208,8 @@ class MissionTracker(Module, BGSSubmodule):
         # 2 - проваленные миссии, которые у нас либо отсутствуют, либо всё ещё числятся активными
         for mission in failed_missions:
             mid = mission["MissionID"]
-            res = self._select_by_id(mid)
-            if res is None:
+            mission_obj = self._select_by_id(mid)
+            if mission_obj is None:
                 if GameState.cmdr is None:
                     PluginContext.logger.warning(
                         f"Discovered unknown failed mission (ID {mid}), but can't save it to the database: missing CMDR info."
@@ -227,14 +224,12 @@ class MissionTracker(Module, BGSSubmodule):
                     )
                 self._insert_or_update(mission_obj)
                 PluginContext.logger.debug(f"Unknown failed mission reported by the game (ID {mid}). Saved to the database.")
-            else:
-                mission_obj = Mission(*res)
-                if mission_obj.status != MissionStatus.FAILED:
-                    old_status = mission_obj.status
-                    mission_obj.status = MissionStatus.FAILED
-                    mission_obj.timestamp_finished = current_ts
-                    self._insert_or_update(mission_obj)
-                    PluginContext.logger.debug(f"Mission {mid} reported as failed (was {old_status}). Local record updated.")
+            elif mission_obj.status != MissionStatus.FAILED:
+                old_status = mission_obj.status
+                mission_obj.status = MissionStatus.FAILED
+                mission_obj.timestamp_finished = current_ts
+                self._insert_or_update(mission_obj)
+                PluginContext.logger.debug(f"Mission {mid} reported as failed (was {old_status}). Local record updated.")
 
         # 3 - миссии, отсутствующие в ивенте, но у нас числющиеся как активные
         cur = self.core.database.cursor()
@@ -252,10 +247,12 @@ class MissionTracker(Module, BGSSubmodule):
         PluginContext.logger.debug("All changes from 'Missions' event have been processed.")
 
 
-    def _select_by_id(self, mission_id: int) -> tuple | None:
+    def _select_by_id(self, mission_id: int) -> Mission | None:
         cur = self.core.database.execute("SELECT * FROM missions WHERE mission_id = ?", (mission_id,))
         res = cur.fetchone()
-        return res
+        if res is None:
+            return None
+        return Mission(*res)
 
 
     def _insert_or_update(self, mission: Mission):
