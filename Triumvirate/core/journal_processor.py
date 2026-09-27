@@ -15,7 +15,7 @@ from Triumvirate.modules import legacy
 def mainthread(func):
     @functools.wraps(func)
     def wrapper(self: tk.Misc, *args):
-        self.after(0, func, *args)
+        self.after(0, func, self, *args)
     return wrapper
 
 
