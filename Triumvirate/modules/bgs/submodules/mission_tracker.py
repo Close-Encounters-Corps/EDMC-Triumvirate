@@ -256,7 +256,6 @@ class MissionTracker(Module, BGSSubmodule):
 
 
     def _insert_or_update(self, mission: Mission):
-        self.core.database.execute(f"INSERT OR IGNORE INTO missions (mission_id) VALUES ({mission.mission_id})")
         self.core.database.execute(
             """
             INSERT INTO missions (
