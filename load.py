@@ -431,9 +431,8 @@ class Updater:
             context.plugin_version = self.local_version
             logger.info(f"Local version {self.local_version} configured, running.")
 
-        # фикс для development-версий: удостоверимся, что userdata всегда существует
-        Path(context.plugin_dir, "userdata").mkdir(exist_ok=True)
         # грузим версию в главном потоке
+        Path(context.plugin_dir, "userdata").mkdir(exist_ok=True)
         context.plugin_frame.after_idle(__inner)
 
 
