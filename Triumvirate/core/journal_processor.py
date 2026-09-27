@@ -168,32 +168,6 @@ class JournalProcessor(Thread):
                 PluginContext.logger.debug(f"Gamemode set to {GameMode.not_in_game}.")
                 return
 
-            elif event == 'ShutDown':
-                # EDMC синтезирует этот ивент и при выходе в главное меню, и при закрытии игры,
-                # по сути дублируя соответствующие ивенты от самой Элиты. Нам оно такое нужно? Нет.
-                if GameState.gamemode == GameMode.not_in_game:
-                    return
-                # Однако ещё они посылают его плагинам, если замечают краш игры, и вот это нам уже полезно.
-                # Чтобы не заморачиваться в модулях, подменим его на обычный "Shutdown".
-                PluginContext.logger.debug(
-                    "Detected synthesized ShutDown event without an in-game pair. Game crashed? "
-                    "Passing it further as a regular `Shutdown`."
-                )
-                entry["data"][4]["event"] = "Shutdown"
-                if self.awaiting_gamemode:
-                    # А тут вполне возможный сценарий уже
-                    PluginContext.logger.warning(
-                        "Unexpected ShutDown event while awaiting for GameModeChange. "
-                        "Processing the remaining queue with unknown gamemode."
-                    )
-                    self.awaiting_gamemode = False
-                    while not self.gamemode_queue.empty():
-                        self.route_entry(self.gamemode_queue.get_nowait())
-                self.route_entry(entry)
-                GameState.gamemode = GameMode.not_in_game
-                PluginContext.logger.debug(f"Gamemode set to {GameMode.not_in_game}.")
-                return
-
             elif event == "Commander":
                 if self.awaiting_gamemode:
                     PluginContext.logger.warning(
