@@ -358,14 +358,14 @@ def report_version():
         resp.raise_for_status()
         ipv4 = resp.text
     except requests.RequestException as e:
-        error("Couldn't fetch IPv4 address. Exception info:", exc_info=e)
+        error(f"Couldn't fetch IPv4 address: {e}")
         ipv4 = None
     try:
         resp = requests.get('https://api6.ipify.org', timeout=3)
         resp.raise_for_status()
         ipv6 = resp.text
     except requests.RequestException as e:
-        debug("Couldn't fetch IPv6 address. Exception info:", exc_info=e)
+        debug(f"Couldn't fetch IPv6 address. Exception info: {e}")
         ipv6 = None
     if ipv4 is None and ipv6 is None:
         error("Neither IPv4 nor IPv6 are determined. Skipping sending plugin version report.")
