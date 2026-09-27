@@ -1,6 +1,8 @@
 {
-    "Triumvirate/core/systems.py": {
-        "<SYSTEMS_MODULE_NO_COORDS_WARNING>": "System coordinates unknown; operability not guaranteed. An FSD jump or relog should resolve this issue."
+    "Triumvirate/core/journal_processor.py": {
+        "<WARNING_INCOMPLETE_SYSTEM_INFO>": "Current system's data is incomplete; plugin operability is not guaranteed. An FSD jump or a relog should resolve this issue.",
+        "<WARNING_OPERATION_GAMEMODE>": "You are currently in the Operation game mode. Plugin functionality might be limited.",
+        "<WARNING_UNKNOWN_GAMEMODE>": "Plugin could not determine your current game mode. Functionality might be limited."
     },
     "Triumvirate/modules/bgs/core.py": {
         "BGS module": "BGS module"
@@ -13,7 +15,7 @@
         "Winner": "Winner",
         "Choose": "Choose",
         "<FACTIONS_UNKNOWN_LABEL_TEXT>": "The factions participating in this conflict are yet unknown. This should be resolved after your first kill.",
-        "<INTENSITY_UNKNOWN_LABEL_TEXT>": "This intensity of this conflict is yet unknown. This should be resolved after your first kill.",
+        "<INTENSITY_UNKNOWN_LABEL_TEXT>": "The intensity of this conflict is yet unknown. This should be resolved after your first kill.",
         "<WINNER_UNKNOWN_LABEL_TEXT>": "The plugin failed to determine the winner of this conflict; perhaps you are in Open?",
         "IN CONFLICT": "IN CONFLICT",
         "{n} deaths": "{n} deaths",
