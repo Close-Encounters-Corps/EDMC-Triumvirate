@@ -19,9 +19,9 @@ if TYPE_CHECKING:
     from Triumvirate.lib.module import Module
     from Triumvirate.modules.bgs import BGS
     from Triumvirate.modules.canonn_api import CanonnRealtimeAPI
+    from Triumvirate.modules.codex.providers.canonn_poi import CanonnPOI
+    from Triumvirate.modules.codex.ui import CodexUI
     from Triumvirate.modules.colonisation import DeliveryTracker
-    from Triumvirate.modules.exploring.canonn_codex_poi import CanonnCodexPOI
-    from Triumvirate.modules.exploring.visualizer import Visualizer
     from Triumvirate.modules.fc_tracker import FC_Tracker
     from Triumvirate.modules.patrol import PatrolModule
     from Triumvirate.modules.squadron import SquadronTracker
@@ -79,12 +79,12 @@ class PluginContext:
     # модули
     bgs_module: 'BGS'
     canonn_api: 'CanonnRealtimeAPI'
-    canonn_codex_poi: 'CanonnCodexPOI'
+    codex_ui: 'CodexUI'
+    codex_canonn_poi: 'CanonnPOI'
     sq_tracker: 'SquadronTracker'
     fc_tracker: 'FC_Tracker'
     colonisation_tracker: 'DeliveryTracker'
     patrol_module: 'PatrolModule'
-    exp_visualizer: 'Visualizer'
 
     @_ClassProperty
     def active_modules(cls) -> list['Module']:

@@ -9,9 +9,9 @@ from theme import theme  # type: ignore
 from Triumvirate.core.context import PluginContext
 from Triumvirate.core.settings import poi_categories as CATEGORIES
 from Triumvirate.core.shortcuts import debug
+from Triumvirate.lib.tkinter_table import Table
 
 from ._dataitem import _DataItem
-from .table import Table
 
 
 # isort: off
@@ -62,7 +62,7 @@ class _ModuleSettingsGroup(ttk.Frame):
         return self.__m_qualname
 
 
-class VSettingsFrame(tk.Frame):
+class SettingsFrame(tk.Frame):
     def __init__(self, parent: tk.Misc, row: int, vslz_shown: bool, modules_config: list[tuple[str, str, bool]]):
         super().__init__(parent, bg="white")
 
@@ -143,7 +143,7 @@ class _IconButton(tk.Frame):
         self.__callback(self.category)
 
 
-class VisualizerView(tk.Frame):
+class CodexUIView(tk.Frame):
     def __init__(self, parent: tk.Misc, row: int):
         self.__active_ctg: str | None = None
         # забудьте, что видели этот атрибут. всё взаимодействие через self.active_category

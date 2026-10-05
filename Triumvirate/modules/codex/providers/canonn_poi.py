@@ -13,7 +13,7 @@ _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 # isort: on
 
 
-class CanonnCodexPOI(Module):
+class CanonnPOI(Module):
     URL = f"{canonn_cloud_url_us_central}/query/getSystemPoi"
 
     @property
@@ -21,12 +21,12 @@ class CanonnCodexPOI(Module):
         return _translate("Codex module")
 
     def __init__(self):
-        PluginContext.exp_visualizer.register(self)
+        PluginContext.codex_ui.register(self)
         self.destination_system: str | None = None
 
 
     def on_journal_entry(self, entry: JournalEntry):
-        if not PluginContext.exp_visualizer.display_enabled_for(self):
+        if not PluginContext.codex_ui.display_enabled_for(self):
             return
         if GameState.gamemode != 'MainGame':
             return
@@ -73,7 +73,7 @@ class CanonnCodexPOI(Module):
                 warning(f"Unexpected POI category in Canonn data: {poi}")
                 continue
             if poi.get("scanned", False) in ('false', False):  # без понятия, почему оно (иногда?) даётся строкой
-                PluginContext.exp_visualizer.show(
+                PluginContext.codex_ui.show(
                     caller=self,
                     location=poi.get("body"),
                     text=poi.get("english_name"),  # pyright: ignore[reportArgumentType]

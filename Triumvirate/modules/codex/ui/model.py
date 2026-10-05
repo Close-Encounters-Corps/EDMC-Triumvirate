@@ -7,14 +7,14 @@ from Triumvirate.core.shortcuts import debug
 from Triumvirate.lib.module import Module
 
 from ._dataitem import _DataItem
-from .ui import VisualizerView, VSettingsFrame
+from .view import CodexUIView, SettingsFrame
 
 
-class VisualizerModel:
+class CodexUIModel:
     PLUGIN_CONFIG_KEY = "Visualizer.config"
     DEFAULT_CATEGORY = "None"
 
-    def __init__(self, view_instance: VisualizerView):
+    def __init__(self, view_instance: CodexUIView):
         self.view = view_instance
         self.registered_modules: list[Module] = list()
 
@@ -74,7 +74,7 @@ class VisualizerModel:
             name = mod.localized_name
             enabled = self.modules_display_status[qualname]
             config.append((qualname, name, enabled))
-        self.__settings_frame = VSettingsFrame(parent, row, shown, config)
+        self.__settings_frame = SettingsFrame(parent, row, shown, config)
 
 
     def update_user_settings(self):

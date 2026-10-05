@@ -59,20 +59,20 @@ def initialize(
     # 3) Создание модулей
     from Triumvirate.modules.bgs import BGS
     from Triumvirate.modules.canonn_api import CanonnRealtimeAPI
+    from Triumvirate.modules.codex.providers.canonn_poi import CanonnPOI
+    from Triumvirate.modules.codex.ui import CodexUI
     from Triumvirate.modules.colonisation import DeliveryTracker
-    from Triumvirate.modules.exploring.canonn_codex_poi import CanonnCodexPOI
-    from Triumvirate.modules.exploring.visualizer import Visualizer
     from Triumvirate.modules.fc_tracker import FC_Tracker
     from Triumvirate.modules.patrol import PatrolModule
     from Triumvirate.modules.squadron import SquadronTracker
-    PluginContext.exp_visualizer = Visualizer(modules_frame, 0)
+    PluginContext.codex_ui = CodexUI(modules_frame, 0)
     PluginContext.patrol_module = PatrolModule(modules_frame, 1)
     PluginContext.fc_tracker = FC_Tracker(modules_frame, 2)
     PluginContext.bgs_module = BGS(modules_frame, 3)
     PluginContext.canonn_api = CanonnRealtimeAPI()
     PluginContext.colonisation_tracker = DeliveryTracker()
     PluginContext.sq_tracker = SquadronTracker()
-    PluginContext.canonn_codex_poi = CanonnCodexPOI()
+    PluginContext.codex_canonn_poi = CanonnPOI()
 
     # 4) Запуск обработки событий
     clear_old_config_keys()

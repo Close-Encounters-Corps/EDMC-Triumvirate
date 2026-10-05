@@ -6,14 +6,14 @@ from Triumvirate.core.settings import poi_categories as CATEGORIES
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 
-from .model import VisualizerModel
-from .ui import VisualizerView
+from .model import CodexUIModel
+from .view import CodexUIView
 
 
 _translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
-class VisualizerController(Module):
+class CodexUIController(Module):
     """
     Модуль для объединённого вывода информации по текущей системе
     из исследовательских модулей с разбивкой инфы по категориям.
@@ -27,8 +27,8 @@ class VisualizerController(Module):
 
     def __init__(self, parent: tk.Misc, row: int):
         super().__init__()
-        self.__view = VisualizerView(parent, row)
-        self.__model = VisualizerModel(self.__view)
+        self.__view = CodexUIView(parent, row)
+        self.__model = CodexUIModel(self.__view)
 
 
     # а-ля публичный интерфейс: методы для вызова из других модулей
