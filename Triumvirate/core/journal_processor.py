@@ -260,6 +260,14 @@ class JournalProcessor(Thread):
             self.warnings.incomplete_system_data.hide()
         GameState.system, GameState.system_address, GameState.system_coords = system_data
 
+        if entry["event"] == "NavRoute":
+            PluginContext.logger.debug("Processing NavRoute event:")
+            route: list[dict] = entry["Route"]
+            for item in route:
+                system_id, system_name, coords = item["SystemAddress"], item["StarSystem"], Coords(*item["StarPos"])
+                PluginContext.systems_cache.add_system(system_id, system_name, coords)
+            PluginContext.logger.debug(f"Processed {len(route)} waypoints.")
+
         # ПЕРЕДАЧА ДАННЫХ МОДУЛЯМ
         # Как видно, после перехода на GameState - JournalEntry как таковой стал не нужен.
         # TODO: отказ от него будет долгим и болезненным, но надо.
@@ -323,8 +331,8 @@ class JournalProcessor(Thread):
         # Проверка локации - комплексная тема, тут может быть несколько сценариев.
         # 1) Обычный вход в игру или прыжок
         if entry["event"] in ("Location", "FSDJump", "CarrierJump"):
-            PluginContext.systems_cache.cache_system(entry)
             system, address, coords = entry["StarSystem"], entry["SystemAddress"], Coords(*entry["StarPos"])
+            PluginContext.systems_cache.add_system(system, address, coords)
             GameState.pending_jump_system = None
             GameState.pending_jump_system_id = None
             PluginContext.logger.debug(

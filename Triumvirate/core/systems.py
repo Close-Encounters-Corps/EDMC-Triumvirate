@@ -24,11 +24,8 @@ class SystemsCache:
         self._cache.close()
 
 
-    def cache_system(self, entry: dict):
-        sid = entry["SystemAddress"]
-        name = entry["StarSystem"]
-        coords = Coords(*entry["StarPos"])
-        self._db_add_system(_SystemData(sid, name, coords))
+    def add_system(self, system_id64: int, system_name: str, coords: Coords):
+        self._db_add_system(_SystemData(system_id64, system_name, coords))
 
     def get_system_coords(self, system: str | int) -> Coords | None:
         data = self._get_system_by_id(system) if isinstance(system, int) else self._get_system_by_name(system)
