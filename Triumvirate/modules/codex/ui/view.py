@@ -60,12 +60,12 @@ class SettingsFrame(tk.Frame):
     def __init__(self, parent: tk.Misc, row: int, vslz_shown: bool, modules_config: list[tuple[str, str, bool]]):
         super().__init__(parent, bg="white")
 
-        self.module_name_label = nb.Label(self, text=_translate("Visualizer settings:"))
+        self.module_name_label = nb.Label(self, text=_translate("Codex module settings:"))
         self.module_name_label.pack(side="top", anchor="w")
 
         # практически _ModuleSettingsGroup, только для визуализатора целиком
         self.vis_frame = tk.Frame(self, bg="white")
-        self.vis_label = nb.Label(self.vis_frame, text=_translate("Show visualizer module:"))
+        self.vis_label = nb.Label(self.vis_frame, text=_translate("Display Codex data:"))
         self.vis_checkbox_var = tk.BooleanVar(self.vis_frame, value=vslz_shown)
         self.vis_checkbox = nb.Checkbutton(self.vis_frame, variable=self.vis_checkbox_var, command=self.change_groups_state)
         self.vis_label.grid(column=0, row=0)
@@ -148,7 +148,7 @@ class CodexUIView(tk.Frame):
 
         # фрейм с кнопками-иконками категорий
         self.buttons_frame = tk.Frame(self)
-        self.buttons_dummy_label = tk.Label(self.buttons_frame, text=_translate("Visualizer: No data yet."))
+        self.buttons_dummy_label = tk.Label(self.buttons_frame, text=_translate("Codex: No data yet."))
         self.buttons_dummy_label.pack(side='left', fill='x')
         self.buttons: dict[str, _IconButton] = {}
         for ctg in CATEGORIES:

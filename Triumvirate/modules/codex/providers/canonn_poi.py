@@ -12,7 +12,7 @@ class CanonnPOI(Module):
 
     @property
     def localized_name(self) -> str:
-        return _translate("Codex module")
+        return _translate("Codex provider: Canonn POI")
 
     def __init__(self):
         PluginContext.codex_ui.register(self)

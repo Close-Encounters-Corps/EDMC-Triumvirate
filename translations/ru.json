@@ -39,36 +39,13 @@
     "Triumvirate/modules/canonn_api.py": {
         "Canonn API client": "Клиент Canonn API"
     },
-    "Triumvirate/modules/codex.py": {
-        "Geology: Gas vents and fumaroles": "Геология: Газовые воронки и фумаролы",
-        "Lagrange Clouds": "Облака Лагранжа",
-        "Anomalous stellar phenomena": "Аномальные звёздные феномены",
-        "Thargoid sites or barnacles": "Таргоидские объекты и «Наросты»",
-        "Biological surface signals": "Биологические планетарные сигналы",
-        "Guardian sites": "Объекты Стражей",
-        "Unclassified codex entry": "Неуточнённая запись Кодекса",
-        "Human sites": "Человеческие объекты",
-        "Planetary ring resources": "Ресурсы планетарных колец",
-        "Other sites": "Другие наземные объекты",
-        "Valuable planets": "Ценные планеты",
-        "Tourist information": "Туристическая информация",
-        "Metal-rich body": "Богатый металлами мир",
-        "Earthlike world": "Землеподобная планета",
-        "Water world": "Водная планета",
-        "Ammonia world": "Аммиачный мир",
-        "Настройки Кодекса": "Настройки Кодекса",
-        "Скрыть иконки кодекса": "Скрыть иконки кодекса"
+    "Triumvirate/modules/codex/providers/canonn_poi.py": {
+        "Codex provider: Canonn POI": "Кодекс: источник Canonn POI"
     },
-    "Triumvirate/modules/colonisation.py": {
-        "Colonisation deliveries tracker": "Трекер колонизационных доставок"
+    "Triumvirate/modules/codex/ui/controller.py": {
+        "Codex module": "Модуль Кодекса"
     },
-    "Triumvirate/modules/exploring/canonn_codex_poi.py": {
-        "Codex module": "Модуль кодекса"
-    },
-    "Triumvirate/modules/exploring/visualizer/controller.py": {
-        "Visualizer": "Визуализатор"
-    },
-    "Triumvirate/modules/exploring/visualizer/ui.py": {
+    "Triumvirate/modules/codex/ui/view.py": {
         "Anomaly": "Аномалии",
         "Biology": "Биология",
         "Cloud": "Облака",
@@ -81,14 +58,17 @@
         "Thargoid": "Таргоиды",
         "Tourist": "Туризм",
         "None": "Без категории",
-        "Visualizer settings:": "Настройки визуализатора:",
-        "Show visualizer module:": "Включить визуализатор:",
+        "Codex module settings:": "Настройки модуля Кодекса:",
+        "Display Codex data:": "Включить отображение данных Кодекса:",
         "Show output from selected modules only:": "Модули, для которых включено отображение:",
         "[No registered modules found]": "[Зарегистрированных модулей не найдено]",
-        "Visualizer: No data yet.": "Визуализатор: данных к отображению пока нет.",
+        "Codex: No data yet.": "Кодекс: данных к отображению пока нет.",
         "Displayed category:": "Выбранная категория:",
         "Location": "Локация",
         "POI": "POI"
+    },
+    "Triumvirate/modules/colonisation.py": {
+        "Colonisation deliveries tracker": "Трекер колонизационных доставок"
     },
     "Triumvirate/modules/fc_tracker.py": {
         "unknown": "неизвестно",
@@ -121,6 +101,26 @@
         "Close": "Закрыть",
         "<FC_TRACKER_UNSAFE_DOCKING_ACCESS_TEXT>": "ВНИМАНИЕ: стыковка на корабле-носителе разрешена для всех пилотов! Для обеспечения безопасности носителя понизьте уровень доступа к стыковке!",
         "Fleet carrier tracker": "Трекер корабля-носителя"
+    },
+    "Triumvirate/modules/old_codex.py": {
+        "Geology: Gas vents and fumaroles": "Геология: Газовые воронки и фумаролы",
+        "Lagrange Clouds": "Облака Лагранжа",
+        "Anomalous stellar phenomena": "Аномальные звёздные феномены",
+        "Thargoid sites or barnacles": "Таргоидские объекты и «Наросты»",
+        "Biological surface signals": "Биологические планетарные сигналы",
+        "Guardian sites": "Объекты Стражей",
+        "Unclassified codex entry": "Неуточнённая запись Кодекса",
+        "Human sites": "Человеческие объекты",
+        "Planetary ring resources": "Ресурсы планетарных колец",
+        "Other sites": "Другие наземные объекты",
+        "Valuable planets": "Ценные планеты",
+        "Tourist information": "Туристическая информация",
+        "Metal-rich body": "Богатый металлами мир",
+        "Earthlike world": "Землеподобная планета",
+        "Water world": "Водная планета",
+        "Ammonia world": "Аммиачный мир",
+        "Настройки Кодекса": "Настройки Кодекса",
+        "Скрыть иконки кодекса": "Скрыть иконки кодекса"
     },
     "Triumvirate/modules/patrol/patrol_module.py": {
         "Patrol module": "Модуль Патруля"

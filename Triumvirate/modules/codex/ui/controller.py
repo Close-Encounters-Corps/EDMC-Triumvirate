@@ -18,7 +18,7 @@ class CodexUIController(Module):
 
     @property
     def localized_name(self) -> str:
-        return _translate("Visualizer")
+        return _translate("Codex module")
 
 
     def __init__(self, parent: tk.Misc, row: int):
@@ -32,7 +32,7 @@ class CodexUIController(Module):
     def register(self, module_instance: Module) -> None:         # noqa: E301
         """
         Добавляет модуль в список к отображению.
-        Обязательно к использованию ДО вызова Visualizer.show(),
+        Обязательно к использованию ДО вызова CodexUI.show(),
         в идеале во время инициализации модуля.
 
         module : Module

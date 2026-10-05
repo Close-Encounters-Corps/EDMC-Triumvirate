@@ -11,7 +11,7 @@ from .view import CodexUIView, SettingsFrame
 
 
 class CodexUIModel:
-    PLUGIN_CONFIG_KEY = "Visualizer.config"
+    PLUGIN_CONFIG_KEY = "CodexUI.config"
     DEFAULT_CATEGORY = "None"
 
     def __init__(self, view_instance: CodexUIView):
@@ -19,8 +19,8 @@ class CodexUIModel:
         self.registered_modules: list[Module] = list()
 
         self.__saved_config = self._load_config()       # это меняется ТОЛЬКО в _save_config()
-        self.visualizer_shown: bool = self.__saved_config["visualizer_shown"]
-        self.view.change_visibility(self.visualizer_shown)
+        self.ui_shown: bool = self.__saved_config["ui_shown"]
+        self.view.change_visibility(self.ui_shown)
         # копируем, чтобы __saved_config не менялся
         self.modules_display_status: dict[str, bool] = self.__saved_config["modules_display_status"].copy()
 
@@ -38,7 +38,7 @@ class CodexUIModel:
 
 
     def add_data(self, module: Module, category: str | None, location: str | None, text: str):
-        assert module in self.registered_modules, "Module must be registered first. Refer to Visualizer.register()"
+        assert module in self.registered_modules, "Module must be registered first. Refer to CodexUI.register()"
 
         debug(f"Got new data from {module!r}: category {category!r}, location {location!r}, text {text!r}.")
         if category is None:
@@ -53,7 +53,7 @@ class CodexUIModel:
 
 
     def is_data_shown_from(self, module: Module):
-        assert module in self.registered_modules, "Module must be registered first. Refer to Visualizer.register()"
+        assert module in self.registered_modules, "Module must be registered first. Refer to CodexUI.register()"
         qualname = module.__class__.__qualname__
         return self.modules_display_status[qualname]
 
@@ -67,7 +67,7 @@ class CodexUIModel:
 
 
     def draw_settings_frame(self, parent, row):
-        shown = self.visualizer_shown
+        shown = self.ui_shown
         config: list[tuple[str, str, bool]] = list()    # (Module.__qualname__, Module.localized_name, статус)
         for mod in self.registered_modules:
             qualname = mod.__class__.__qualname__
@@ -79,7 +79,7 @@ class CodexUIModel:
 
     def update_user_settings(self):
         shown, config = self.__settings_frame.get_current_config()
-        self.visualizer_shown = shown
+        self.ui_shown = shown
         self.modules_display_status = config
         self._save_config()
 
@@ -92,7 +92,7 @@ class CodexUIModel:
         if len(data_for_display) > 0:
             self.view.display(data_for_display)
 
-        self.view.change_visibility(self.visualizer_shown)
+        self.view.change_visibility(self.ui_shown)
 
 
     def clear(self):
@@ -104,7 +104,7 @@ class CodexUIModel:
         config = plugin_config.get_str(self.PLUGIN_CONFIG_KEY)
         if not config:
             config = {
-                "visualizer_shown": True,
+                "ui_shown": True,
                 "modules_display_status": {}
             }
             debug("No saved config found, setting to default.")
@@ -117,7 +117,7 @@ class CodexUIModel:
 
     def _save_config(self):
         config = {
-            "visualizer_shown": self.visualizer_shown,
+            "ui_shown": self.ui_shown,
             "modules_display_status": self.modules_display_status
         }
         plugin_config.set(self.PLUGIN_CONFIG_KEY, json.dumps(config))
