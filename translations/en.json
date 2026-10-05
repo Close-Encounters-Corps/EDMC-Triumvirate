@@ -2,7 +2,8 @@
     "Triumvirate/core/journal_processor.py": {
         "<WARNING_INCOMPLETE_SYSTEM_INFO>": "Current system's data is incomplete; plugin operability is not guaranteed. An FSD jump or a relog should resolve this issue.",
         "<WARNING_OPERATION_GAMEMODE>": "You are currently in the Operation game mode. Plugin functionality might be limited.",
-        "<WARNING_UNKNOWN_GAMEMODE>": "Plugin could not determine your current game mode. Functionality might be limited."
+        "<WARNING_UNKNOWN_GAMEMODE>": "Plugin could not determine your current game mode. Functionality might be limited.",
+        "<WARNING_LOGS_DESYNC>": "A significant delay in processing game logs has been detected. This may be caused by EDMC losing track of the current logfile (in which case this warning will soon disappear) or by network issues: please check the availability of EDDN, EDSM, and Inara if you have data submission to these services enabled in your EDMC settings."
     },
     "Triumvirate/modules/bgs/core.py": {
         "BGS module": "BGS module"

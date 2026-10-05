@@ -1,5 +1,6 @@
 import functools
 import tkinter as tk
+from datetime import UTC, datetime
 from PIL import Image, ImageTk
 from queue import Empty, Queue
 from threading import Event, Thread
@@ -68,6 +69,7 @@ class JPWarnings(tk.Frame):
         self.incomplete_system_data = _WarningFrame(self, _translate("<WARNING_INCOMPLETE_SYSTEM_INFO>"), 0)
         self.operation_gamemode = _WarningFrame(self, _translate("<WARNING_OPERATION_GAMEMODE>"), 1)
         self.unknown_gamemode = _WarningFrame(self, _translate("<WARNING_UNKNOWN_GAMEMODE>"), 2)
+        self.logs_desync = _WarningFrame(self, _translate("<WARNING_LOGS_DESYNC>"), 3)
 
     def _on_child_shown(self):
         self.__displayed_warnings += 1
@@ -86,10 +88,12 @@ class JPWarnings(tk.Frame):
 class JournalProcessor(Thread):
     def __init__(self, event_queue: Queue[dict], app_frame: tk.Frame, row: int):
         super().__init__(name="Triumvirate journal entry processor")
+        self._stop = Event()  # флаг остановки потока
         self.warnings = JPWarnings(app_frame, row)
         self.queue = event_queue
-        self._startup = True
-        self._stop = Event()  # флаг остановки потока
+
+        self._startup = True  # флаг до первого полученного journal_entry с известным командиром для репорта запуска плагина
+        self._ts_diff: int = 0  # разница между текущим временем и полученным из логов для детекта рассинхрона
 
         # После выхода Operations фронтиры добавили ивент GameModeChange, который показывает,
         # входит игрок в основную игру или операцию. Однако он прописывается после ивентов Commander и LoadGame,
@@ -224,6 +228,7 @@ class JournalProcessor(Thread):
         GameState.game_in_beta = is_beta
         GameState.station = station
         GameState.odyssey = state["Odyssey"]
+        self.check_timestamp(entry)
 
         # ПРОВЕРКА КОМАНДИРА
         new_cmdr = GameState.cmdr
@@ -329,6 +334,22 @@ class JournalProcessor(Thread):
         GameState.game_in_beta = is_beta
         for mod in PluginContext.active_modules:
             mod.on_cmdr_data(data, is_beta)
+
+
+    def check_timestamp(self, entry: dict):
+        now = datetime.now(UTC)
+        entry_ts = datetime.fromisoformat(entry["timestamp"])
+        diff = int((now - entry_ts).total_seconds())
+        if diff > 60:
+            if not self.warnings.logs_desync.is_shown():
+                PluginContext.logger.warning(f"Logs desync detected! Current timestamp diff: {diff} seconds.")
+                self.warnings.logs_desync.show()
+            elif diff != self._ts_diff:
+                PluginContext.logger.debug(f"Current timestamp desync diff: {diff} seconds.")
+        elif diff < 3 and self.warnings.logs_desync.is_shown():
+            PluginContext.logger.info("Timestamp desync diff less than 3 seconds, considering the incident closed.")
+            self.warnings.logs_desync.hide()
+        self._ts_diff = diff
 
 
     def update_location(self, entry: dict, state: dict) -> tuple[str | None, int | None, Coords | None]:
