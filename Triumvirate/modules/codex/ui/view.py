@@ -9,7 +9,7 @@ from theme import theme  # type: ignore
 from Triumvirate.core.context import PluginContext
 from Triumvirate.core.settings import poi_categories as CATEGORIES
 from Triumvirate.core.shortcuts import _translate, debug
-from Triumvirate.lib.tkinter_table import Table
+from Triumvirate.lib.ui_utils import Table
 
 from ._dataitem import _DataItem
 
