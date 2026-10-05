@@ -67,27 +67,3 @@ class Table(tk.Frame):
         lines = text.split('\n')
         measures = [self.tkfont_instance.measure(line) for line in lines]
         return max(measures)
-
-
-    def wrap_text(self, text: str, max_width: int) -> str:
-        """
-        Аналог wraplength из tk.Label, но для случаев, где его применение невозможно.
-        Бьёт текст на строки так, чтобы они не превышали по ширине заданного значения.
-        """
-        words = text.split()
-        result = ''
-        current_line = ''
-        for word in words:
-            test_line = current_line + ('' if current_line == '' else ' ') + word
-            if self.tkfont_instance.measure(test_line) > max_width:
-                # проверка на исключительный случай
-                if self.tkfont_instance.measure(word) > max_width:
-                    # кто-то балуется с нечитаемо длинным текстом
-                    result += current_line + ('' if current_line == '' else '\n') + word + '\n'
-                else:
-                    result += current_line + '\n'
-                    current_line = word
-            else:
-                current_line = test_line
-        result += current_line
-        return result
