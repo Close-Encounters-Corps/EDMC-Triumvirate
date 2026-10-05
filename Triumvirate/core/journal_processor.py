@@ -10,6 +10,7 @@ from config import config as edmc_config  # type: ignore
 from Triumvirate.core.context import GameMode, GameState, PluginContext
 from Triumvirate.core.shortcuts import _translate
 from Triumvirate.lib.journal import Coords, JournalEntry
+from Triumvirate.lib.ui_utils import AutohidingFrame
 from Triumvirate.modules import legacy
 
 
@@ -31,7 +32,6 @@ class _WarningFrame(tk.Frame):
 
     def __init__(self, parent: 'JPWarnings', text: str, row: int):
         self.__row = row
-        self.__parent = parent
         self.__shown = False
         super().__init__(parent)
         self.grid_columnconfigure(1, weight=1)
@@ -46,7 +46,6 @@ class _WarningFrame(tk.Frame):
             return
         self.__shown = True
         self.grid(row=self.__row, column=0, sticky="NWSE")
-        self.__parent._on_child_shown()
 
     @mainthread
     def hide(self):
@@ -54,32 +53,19 @@ class _WarningFrame(tk.Frame):
             return
         self.__shown = False
         self.grid_remove()
-        self.__parent._on_child_hidden()
 
     def is_shown(self):
         return self.__shown
 
 
-class JPWarnings(tk.Frame):
+class JPWarnings(AutohidingFrame):
     def __init__(self, parent: tk.Misc, row: int):
-        super().__init__(parent)
-        self.__row = row
-        self.__displayed_warnings = 0
+        super().__init__(parent, grid_options={'row': row, 'sticky': 'NWSE'})
         _WarningFrame.load_icon(edmc_config.get_int("ui_scale", default=100))
         self.incomplete_system_data = _WarningFrame(self, _translate("<WARNING_INCOMPLETE_SYSTEM_INFO>"), 0)
         self.operation_gamemode = _WarningFrame(self, _translate("<WARNING_OPERATION_GAMEMODE>"), 1)
         self.unknown_gamemode = _WarningFrame(self, _translate("<WARNING_UNKNOWN_GAMEMODE>"), 2)
         self.logs_desync = _WarningFrame(self, _translate("<WARNING_LOGS_DESYNC>"), 3)
-
-    def _on_child_shown(self):
-        self.__displayed_warnings += 1
-        if self.__displayed_warnings == 1:
-            self.grid(column=0, row=self.__row)
-
-    def _on_child_hidden(self):
-        self.__displayed_warnings -= 1
-        if self.__displayed_warnings == 0:
-            self.grid_remove()
 
 
 # Будем использовать threading.Thread вместо кастомного modules.lib.thread.Thread,

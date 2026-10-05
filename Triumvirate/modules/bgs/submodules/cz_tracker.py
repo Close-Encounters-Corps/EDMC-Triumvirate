@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from tkinter import ttk
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from Triumvirate.core.context import GameState, PluginContext
 from Triumvirate.core.shortcuts import _translate
@@ -12,10 +12,6 @@ from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.modules.bgs.submodules.base import BGSSubmodule
 from Triumvirate.modules.legacy import URL_GOOGLE
-
-
-if TYPE_CHECKING:
-    from modules.bgs.core import BgsUiFrame
 
 
 def mainthread(func):
@@ -126,7 +122,7 @@ class DisplayTimer:
 
 
 class ConflictInfoFrame(tk.Frame):
-    def __init__(self, parent: 'BgsUiFrame', row: int):
+    def __init__(self, parent: tk.Widget, row: int):
         super().__init__(parent)
         self.row = row
         self._enabled = True
@@ -345,12 +341,8 @@ class ConflictInfoFrame(tk.Frame):
                 child.grid_forget()
         self.master.update()
 
-
     def __show(self):
-        self.master: 'BgsUiFrame'  # pyright: ignore[reportIncompatibleVariableOverride]
-        self.master.show()
         self.grid(row=self.row, column=0, sticky="NWSE")
-
 
     def __hide(self):
         self.grid_forget()

@@ -2,6 +2,7 @@ import tkinter as tk
 from PIL import Image, ImageTk
 from semantic_version import Version
 
+from Triumvirate.lib.ui_utils import AutohidingFrame
 import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
@@ -55,7 +56,7 @@ class _Message(tk.Frame):
         else:
             self.destroy()
 
-        self._notifier._message_destroyed(self)
+        self._notifier._pool.remove(self)
 
     @classmethod
     def _set_images(cls):
@@ -71,10 +72,10 @@ class _Message(tk.Frame):
     def _get_wraplength():
         main_window: tk.Tk = tk._default_root  # pyright: ignore[reportAttributeAccessIssue]
         main_window.update()
-        return max(main_window.winfo_width(), 275)
+        return max(main_window.winfo_width(), 300)
 
 
-class Notifier(tk.Frame):
+class Notifier(AutohidingFrame):
     """
     Фрейм с текстовыми уведомлениями пользователю. Замена древней message_label.
     Поддерживает несколько одновременных уведомлений, их скрытие пользователем по нажатию кнопки
@@ -83,11 +84,10 @@ class Notifier(tk.Frame):
 
     MAX_NOTIFICATIONS = 5
 
-    def __init__(self, parent, row):
-        super().__init__(parent)
+    def __init__(self, parent: tk.Widget, row: int):
+        super().__init__(parent, grid_options={'row': row, 'column': 0, 'sticky': 'NWSE'})
         _Message._set_images()
-        self.gridrow = row
-        self._pool: list[_Message] = list()
+        self._pool: list[_Message] = []
 
 
     def display(self, text: str, timeout: int = 60):
@@ -108,28 +108,10 @@ class Notifier(tk.Frame):
 
 
     def __display(self, text, timeout):
-        if len(self._pool) == 0:
-            self.__show()
-        elif len(self._pool) == self.MAX_NOTIFICATIONS:
+        if len(self._pool) == self.MAX_NOTIFICATIONS:
             self._pool[0]._close()
         self._pool.append(_Message(self, text, timeout))
-
 
     def __clear(self):
         for message in self._pool:
             message._close()
-        self.__hide()
-
-
-    def _message_destroyed(self, message: _Message):
-        """Метод, вызываемый скрытыми сообщения при удаления их из списка."""
-        self._pool.remove(message)
-        if len(self._pool) == 0:
-            self.__hide()
-
-
-    def __show(self):
-        self.grid(row=self.gridrow, column=0, sticky="NWSE")
-
-    def __hide(self):
-        self.grid_forget()

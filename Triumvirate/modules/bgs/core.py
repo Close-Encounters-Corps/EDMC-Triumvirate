@@ -11,6 +11,7 @@ from Triumvirate.core.context import PluginContext
 from Triumvirate.core.shortcuts import _translate
 from Triumvirate.lib.module import Module
 from Triumvirate.lib.thread import Thread
+from Triumvirate.lib.ui_utils import AutohidingFrame
 from Triumvirate.modules.legacy import GoogleReporter
 
 from .submodules import BGSSubmodule, CZTracker, ExpDataTracker, MissionTracker, VoucherTracker
@@ -22,44 +23,6 @@ class BGSReport:
     url: str
     params: dict
     affected_systems: list[str]
-
-
-class BgsUiFrame(tk.Frame):
-    """
-    `tk.Frame`, но скрывает себя, если всего его наследники окажутся скрыты (`<manager>_remove/forget()`).
-    Обычный `Frame` в таком случае остаётся пустым местом на экране и не обновляет свой размер.
-
-    Наследники **обязаны** вызывать `BgsUiFrame.show`, когда они помещаются на экран.
-    В противном случае, если сам `BgsUiFrame` будет в этот момент скрыт, tkinter не сгенерирует
-    ивент `<Map>`, и фрейм не узнает, что ему надо замаппить себя.
-    """
-    def __init__(self, parent: tk.Misc, row: int, column: int):
-        super().__init__(parent)
-        self._children_mapped = 0
-        self._grid_row = row
-        self._grid_column = column
-        self.bind_all("<Map>", self.__on_event_map, add="+")
-        self.bind_all("<Unmap>", self.__on_event_unmap, add="+")
-
-    def show(self):
-        self.grid(row=self._grid_row, column=self._grid_column)
-
-    def __on_event_map(self, event: tk.Event):
-        # микрооптимизация - так быстрее, чем через winfo_children
-        if getattr(event.widget, "master", None) is self:
-            self._children_mapped += 1
-            self.grid(row=self._grid_row, column=self._grid_column)
-
-    def __on_event_unmap(self, event: tk.Event):
-        # при закрытии EDMC виджет получает unmap-ивент в том числе на самого себя и бросает эксепшен
-        if not self.winfo_exists():
-            return
-        # микрооптимизация - так быстрее, чем через winfo_children
-        if getattr(event.widget, "master", None) is not self:
-            return
-        self._children_mapped -= 1
-        if self._children_mapped == 0:
-            self.grid_remove()
 
 
 class FilterUpdater(Thread):
@@ -164,7 +127,7 @@ class BGSCore(Module):
     def __init__(self, parent: tk.Misc, row: int):
         self.filter = Filter()
         self.database = sqlite3.connect(self.DB_PATH, check_same_thread=False)
-        self.ui_frame = BgsUiFrame(parent, row, 0)
+        self.ui_frame = AutohidingFrame(parent, grid_options={'row': row, 'sticky': 'NWSE'})
         BGSSubmodule.core = self
         self.submodules = [
             CZTracker(ui_row=0),
