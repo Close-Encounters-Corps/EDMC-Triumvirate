@@ -135,10 +135,15 @@ def plugin_stop():
     EDMC вызывает эту функцию при закрытии.
     """
     PluginContext.logger.info("Stopping the plugin.")
+    # 1: Завершаем обработку очереди событий. Обработчик пройдёт по ней до конца перед выходом
     PluginContext.journal_processor.set_stop()
     PluginContext.journal_processor.join()
+    PluginContext.logger.debug("Journal processor stopped.")
+    # 2: Завершаем работу модулей
     for mod in PluginContext.active_modules:
         mod.on_close()
     PluginContext.logger.debug("Joining threads...")
     thread.BasicThread.join_all()
+    # 3: Завершаем работу объектов ядра
+    PluginContext.systems_cache.on_close()
     PluginContext.logger.debug("Done, exiting.")

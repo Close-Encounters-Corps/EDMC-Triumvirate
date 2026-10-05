@@ -124,9 +124,6 @@ class JournalProcessor(Thread):
                     timeout=0
                 )
 
-        # log on exit
-        PluginContext.logger.debug("Journal processor stopped.")
-
 
     def process_entry(self, entry: dict):
         # Здесь в основном расположена логика обработки GameMode, потому что она требует
