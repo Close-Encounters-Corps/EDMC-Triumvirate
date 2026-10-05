@@ -21,7 +21,7 @@ class Timer(Thread):
         target: Callable[[], Any],
         run_on_closing: bool = True,
         run_in_the_main_thread: bool = False,
-        _name: str | None = None,
+        name: str | None = None,
         *args, **kwargs
     ):
         """
@@ -33,7 +33,7 @@ class Timer(Thread):
         :param run_in_the_main_thread: Если True, объект будет вызван при помощи tk.after.\
             ОБЯЗАТЕЛЬНО используйте для операций с GUI, но НЕ используйте для длительных операций,\
             особенно включающих сетевое взаимодействие - EDMC тупо зависнет на время их выполнения.
-        :param _name: Позволяет переопределить имя потока таймера, в противном случае будет назначено имя по-умолчанию.
+        :param name: Позволяет переопределить имя потока таймера, в противном случае будет назначено имя по-умолчанию.
         :param args: Дополнительные позиционные параметры будут переданы в вызываемый объект.
         :param kwargs: Дополнительные именованные параметры будут переданы в вызываемый объект.\
             НЕСОВМЕСТИМО С *run_in_the_main_thread = True*.
@@ -50,8 +50,7 @@ class Timer(Thread):
         if secs < 0:
             raise ValueError("duration can't be negative")
 
-        self.name = _name or f"Timer before {target.__qualname__}"
-        super().__init__(name=self.name)
+        super().__init__(name=(name or f"Timer before {target.__qualname__}"))
         self.duration = secs
         self.target = target
         self.run_on_closing = run_on_closing
