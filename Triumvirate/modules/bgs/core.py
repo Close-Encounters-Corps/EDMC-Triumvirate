@@ -8,17 +8,12 @@ from threading import Lock
 from typing import Any
 
 from Triumvirate.core.context import PluginContext
+from Triumvirate.core.shortcuts import _translate
 from Triumvirate.lib.module import Module
 from Triumvirate.lib.thread import Thread
 from Triumvirate.modules.legacy import GoogleReporter
 
 from .submodules import BGSSubmodule, CZTracker, ExpDataTracker, MissionTracker, VoucherTracker
-
-
-# isort: off
-import functools
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
-# isort: on
 
 
 @dataclass

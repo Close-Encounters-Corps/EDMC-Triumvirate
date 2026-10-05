@@ -8,16 +8,10 @@ from theme import theme  # type: ignore
 
 from Triumvirate.core.context import PluginContext
 from Triumvirate.core.settings import poi_categories as CATEGORIES
-from Triumvirate.core.shortcuts import debug
+from Triumvirate.core.shortcuts import _translate, debug
 from Triumvirate.lib.tkinter_table import Table
 
 from ._dataitem import _DataItem
-
-
-# isort: off
-import functools
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
-# isort: on
 
 
 categories_localized = {

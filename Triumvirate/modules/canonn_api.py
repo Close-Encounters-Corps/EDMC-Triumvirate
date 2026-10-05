@@ -1,18 +1,14 @@
-import functools
 import json
 import requests
 from datetime import datetime, timedelta
 
 from Triumvirate.core.context import GameState, PluginContext
 from Triumvirate.core.settings import canonn_cloud_url_europe_west, canonn_cloud_url_us_central
-from Triumvirate.core.shortcuts import debug, error, info, warning
+from Triumvirate.core.shortcuts import _translate, debug, error, info, warning
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.lib.thread import BasicThread, Thread
 from Triumvirate.lib.timer import Timer
-
-
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 class CanonnReporter(BasicThread):

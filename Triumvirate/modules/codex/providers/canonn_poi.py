@@ -2,15 +2,9 @@ import requests
 
 from Triumvirate.core.context import GameState, PluginContext
 from Triumvirate.core.settings import canonn_cloud_url_us_central, poi_categories
-from Triumvirate.core.shortcuts import debug, error, warning
+from Triumvirate.core.shortcuts import _translate, debug, error, warning
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
-
-
-# isort: off
-import functools
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
-# isort: on
 
 
 class CanonnPOI(Module):

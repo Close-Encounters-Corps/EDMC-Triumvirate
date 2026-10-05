@@ -1,14 +1,8 @@
 from Triumvirate.core.context import GameState, PluginContext
-from Triumvirate.core.shortcuts import debug
+from Triumvirate.core.shortcuts import _translate, debug
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.modules.legacy import GoogleReporter
-
-
-# isort: off
-import functools
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
-# isort: on
 
 
 class DeliveryTracker(Module):

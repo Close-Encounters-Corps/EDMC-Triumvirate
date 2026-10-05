@@ -1,16 +1,12 @@
-import functools
 import tkinter as tk
 
-from Triumvirate.core.context import PluginContext
 from Triumvirate.core.settings import poi_categories as CATEGORIES
+from Triumvirate.core.shortcuts import _translate
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 
 from .model import CodexUIModel
 from .view import CodexUIView
-
-
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 class CodexUIController(Module):

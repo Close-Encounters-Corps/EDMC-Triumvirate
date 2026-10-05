@@ -1,14 +1,9 @@
-import functools
-
-from Triumvirate.core.context import GameState, PluginContext
+from Triumvirate.core.context import GameState
 from Triumvirate.core.plugin_config import plugin_config
-from Triumvirate.core.shortcuts import debug
+from Triumvirate.core.shortcuts import _translate, debug
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.modules import legacy
-
-
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 class SquadronTracker(Module):

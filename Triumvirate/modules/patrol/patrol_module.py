@@ -13,7 +13,6 @@
 все галочки патруля.
 """
 
-import functools
 import json
 import math
 import requests
@@ -30,6 +29,7 @@ from ttkHyperlinkLabel import HyperlinkLabel  # type: ignore
 from Triumvirate.core import settings
 from Triumvirate.core.context import GameState, PluginContext
 from Triumvirate.core.plugin_config import plugin_config
+from Triumvirate.core.shortcuts import _translate
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.lib.thread import Thread, ThreadExit
@@ -39,9 +39,6 @@ from .canonn import CanonnPatrols
 from .edsm import get_edsm_patrol
 from .exclusions import PatrolExclusions
 from .patrol import build_patrol
-
-
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
 
 
 CYCLE = 60 * 1000 * 60  # 60 minutes
@@ -94,8 +91,7 @@ class PatrolLink(HyperlinkLabel):
             # in __configure_event below
             anchor=tk.NW,
         )
-        self.bind('<Configure>',
-        self.__configure_event)
+        self.bind('<Configure>', self.__configure_event)
 
     def __configure_event(self, event):
         "Handle resizing."
@@ -164,8 +160,7 @@ class PatrolModule(Frame, Module):
         self.columnconfigure(4, weight=4)
         self.grid(row=gridrow, column=0, sticky="NSEW", columnspan=2)
 
-        ## Text Instructions for the
-        ## patrol
+        # Text Instructions for the patrol
         self.label = tk.Label(self, text="Патруль:")
         self.label.grid(row=0, column=0, sticky=sticky)
 
@@ -175,8 +170,7 @@ class PatrolModule(Frame, Module):
         self.distance.grid(row=0, column=3, sticky="NSEW")
         self.distance.grid_remove()
 
-        ## Text Instructions for the
-        ## patrol
+        # Text Instructions for the patrol
         self.infolink = InfoLink(self)
         self.infolink.grid(row=1, column=0, sticky="NSEW", columnspan=5)
         self.infolink.grid_remove()
@@ -218,9 +212,9 @@ class PatrolModule(Frame, Module):
         self.sqid_evt = threading.Event()
         self.update_thread = None
 
-    ########################################
-    ############# MODULE HOOKS #############
-    ########################################
+    ################
+    # MODULE HOOKS #
+    ################
 
     def draw_settings(self, parent_widget, cmdr, is_beta, row):
         "Called to get a tk Frame for the settings dialog."
@@ -372,7 +366,8 @@ class PatrolModule(Frame, Module):
             if ship_count == 1:
                 ship = ships[0]
                 ship_type = get_ship_type(ship.get("name"))
-                ship_info = "Ваш{}, {} пристыкован(а) к {}".format(  #Тип пишется вплотную, потому что в подстановке названия кораблей идут с доп символом в начале, если тип женскогго рода
+                # Тип пишется вплотную, потому что в подстановке названия кораблей идут с доп символом в начале, если тип женского рода
+                ship_info = "Ваш{}, {} пристыкован(а) к {}".format(
                     ship_type, ship.get("shipName"), ship["station"].get("name")
                 )
             else:
@@ -399,9 +394,9 @@ class PatrolModule(Frame, Module):
     def enabled(self):
         return self.isvisible
 
-    ########################################
-    ############## INTERNALS ###############
-    ########################################
+    #############
+    # INTERNALS #
+    #############
 
     def start_background_thread(self):
         """
@@ -440,10 +435,10 @@ class PatrolModule(Frame, Module):
         if self.CopyPatrolAdr == 1:
             copyclip(self.nearest.get("system"))
 
-    #def update_ui(self, event=None):
-    #    # rerun every 5 seconds
-    #    self.after(5000, self.update_ui)
-    #    self.update()
+    # def update_ui(self, event=None):
+    #     # rerun every 5 seconds
+    #     self.after(5000, self.update_ui)
+    #     self.update()
 
     def update(self, event=None):
         if not self.enabled:
@@ -508,6 +503,7 @@ class PatrolModule(Frame, Module):
                 super().__init__(**kwargs)
                 self.j = j
                 self.patrol = patrol
+
             def do_run(self):
                 for bgs in self.j.get("docs")[0].get("faction_presence"):
                     if self.STOP:

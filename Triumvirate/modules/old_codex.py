@@ -10,14 +10,8 @@ import myNotebook as nb  # type: ignore
 from Triumvirate.core.context import GameState, PluginContext
 from Triumvirate.core.plugin_config import plugin_config
 from Triumvirate.core.settings import canonn_cloud_url_us_central, edsm_url
-from Triumvirate.core.shortcuts import debug, error
+from Triumvirate.core.shortcuts import _translate, debug, error
 
-
-# isort: off
-# функция перевода
-import functools
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
-# isort: on
 
 nvl = lambda a, b: a or b
 

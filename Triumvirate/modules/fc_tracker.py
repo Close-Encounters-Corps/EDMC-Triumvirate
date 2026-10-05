@@ -1,3 +1,4 @@
+import functools
 import json
 import requests
 import tkinter as tk
@@ -12,18 +13,11 @@ import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
 from Triumvirate.core.plugin_config import plugin_config
-from Triumvirate.core.shortcuts import debug, error, warning
+from Triumvirate.core.shortcuts import _translate, debug, error, warning
 from Triumvirate.lib.journal import JournalEntry
 from Triumvirate.lib.module import Module
 from Triumvirate.lib.thread import BasicThread
 from Triumvirate.modules.legacy import GoogleReporter
-
-
-# isort: off
-import functools
-from Triumvirate.core.context import PluginContext
-_translate = functools.partial(PluginContext._tr_template, filepath=__file__)
-# isort: on
 
 
 # Эксперимент: декоратор для UI методов, чтобы везде tk.after не пихать
