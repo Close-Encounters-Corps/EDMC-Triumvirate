@@ -2,12 +2,12 @@ import tkinter as tk
 from PIL import Image, ImageTk
 from semantic_version import Version
 
-from Triumvirate.lib.ui_utils import AutohidingFrame
 import myNotebook as nb  # type: ignore
 from theme import theme  # type: ignore
 
 from Triumvirate.core.context import PluginContext
 from Triumvirate.lib.timer import Timer
+from Triumvirate.lib.ui_utils import AutohidingFrame
 
 
 class _Message(tk.Frame):

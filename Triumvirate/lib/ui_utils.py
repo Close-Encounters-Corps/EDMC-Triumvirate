@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import font as tk_font
 
-from Triumvirate.core.context import PluginContext
-
 from theme import theme  # type: ignore
+
+from Triumvirate.core.context import PluginContext
 
 
 class Table(tk.Frame):
