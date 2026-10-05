@@ -252,7 +252,11 @@ class JournalProcessor(Thread):
 
         # ПРОВЕРКА ЛОКАЦИИ
         system_data = self.update_location(entry, state)
-        if None in system_data and not self.warnings.incomplete_system_data.is_shown():
+        if (
+            None in system_data
+            and GameState.gamemode != GameMode.not_in_game
+            and not self.warnings.incomplete_system_data.is_shown()
+        ):
             PluginContext.logger.debug("System data incomplete, showing user warning.")
             self.warnings.incomplete_system_data.show()
         elif None not in system_data and self.warnings.incomplete_system_data.is_shown():
@@ -329,6 +333,10 @@ class JournalProcessor(Thread):
 
     def update_location(self, entry: dict, state: dict) -> tuple[str | None, int | None, Coords | None]:
         # Проверка локации - комплексная тема, тут может быть несколько сценариев.
+        # 0) Сброс локации вне игровой сессии
+        if GameState.gamemode == GameMode.not_in_game:
+            return None, None, None
+
         # 1) Обычный вход в игру или прыжок
         if entry["event"] in ("Location", "FSDJump", "CarrierJump"):
             system, address, coords = entry["StarSystem"], entry["SystemAddress"], Coords(*entry["StarPos"])
