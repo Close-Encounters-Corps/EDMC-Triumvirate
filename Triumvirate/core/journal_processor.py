@@ -332,7 +332,7 @@ class JournalProcessor(Thread):
         # 1) Обычный вход в игру или прыжок
         if entry["event"] in ("Location", "FSDJump", "CarrierJump"):
             system, address, coords = entry["StarSystem"], entry["SystemAddress"], Coords(*entry["StarPos"])
-            PluginContext.systems_cache.add_system(system, address, coords)
+            PluginContext.systems_cache.add_system(address, system, coords)
             GameState.pending_jump_system = None
             GameState.pending_jump_system_id = None
             PluginContext.logger.debug(
