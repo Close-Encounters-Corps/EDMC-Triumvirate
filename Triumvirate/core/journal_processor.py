@@ -36,7 +36,7 @@ class _WarningFrame(tk.Frame):
         super().__init__(parent)
         self.grid_columnconfigure(1, weight=1)
         self.__icon_label = tk.Label(self, image=self.warning_icon)
-        self.__text_label = tk.Label(self, text=text)
+        self.__text_label = tk.Label(self, text=text, justify='left')
         self.__icon_label.grid(row=0, column=0, pady=2, padx=5, sticky='W')
         self.__text_label.grid(row=0, column=1, pady=2, sticky='E')
 
@@ -45,6 +45,7 @@ class _WarningFrame(tk.Frame):
         if self.__shown:
             return
         self.__shown = True
+        self.__text_label.configure(wraplength=max(self.winfo_toplevel().winfo_width(), 460))
         self.grid(row=self.__row, column=0, sticky="NWSE")
 
     @mainthread
