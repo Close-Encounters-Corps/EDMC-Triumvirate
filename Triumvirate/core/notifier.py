@@ -59,8 +59,8 @@ class _Message(tk.Frame):
         self._notifier._pool.remove(self)
 
     @classmethod
-    def _set_images(cls):
-        size = int(14 * (tk._default_root.winfo_screenheight() / 1080))  # pyright: ignore[reportAttributeAccessIssue]
+    def _set_images(cls, parent: tk.Widget):
+        size = int(14 * (parent.winfo_toplevel().winfo_screenheight() / 1080))
         image = Image.open(PluginContext.paths.assets_dir / "icons" / "cross.png")
         image = image.resize((size, size))
         cls._cross_image = ImageTk.PhotoImage(image)
@@ -68,11 +68,9 @@ class _Message(tk.Frame):
         image_white = image_white.resize((size, size))
         cls._cross_image_white = ImageTk.PhotoImage(image_white)
 
-    @staticmethod
-    def _get_wraplength():
-        main_window: tk.Tk = tk._default_root  # pyright: ignore[reportAttributeAccessIssue]
-        main_window.update()
-        return max(main_window.winfo_width(), 300)
+    def _get_wraplength(self):
+        self.master.update()
+        return max(self.winfo_toplevel().winfo_width(), 300)
 
 
 class Notifier(AutohidingFrame):
@@ -86,7 +84,7 @@ class Notifier(AutohidingFrame):
 
     def __init__(self, parent: tk.Widget, row: int):
         super().__init__(parent, grid_options={'row': row, 'column': 0, 'sticky': 'NWSE'})
-        _Message._set_images()
+        _Message._set_images(parent)
         self._pool: list[_Message] = []
 
 

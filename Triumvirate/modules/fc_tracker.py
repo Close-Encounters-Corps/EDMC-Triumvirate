@@ -20,12 +20,10 @@ from Triumvirate.lib.thread import BasicThread
 from Triumvirate.modules.legacy import GoogleReporter
 
 
-# Эксперимент: декоратор для UI методов, чтобы везде tk.after не пихать
 def mainthread(func):
     @functools.wraps(func)
-    def wrapper(*args):
-        from tkinter import _default_root  # pyright: ignore[reportAttributeAccessIssue]
-        _default_root.after(0, func, *args)
+    def wrapper(self: tk.Misc, *args):
+        self.after(0, func, self, *args)
     return wrapper
 
 
