@@ -101,7 +101,7 @@ class SystemsCache:
     def _fetch_system_by_id(self, system_id: int) -> _SystemData | None:
         url = f"https://spansh.co.uk/api/system/{system_id}"
         try:
-            resp = requests.get(url)
+            resp = requests.get(url, timeout=5)
             resp.raise_for_status()
         except requests.RequestException as e:
             PluginContext.logger.error(f"Couldn't fetch system data for sid {system_id} from Spansh:", exc_info=e)
@@ -127,7 +127,7 @@ class SystemsCache:
         url = "https://spansh.co.uk/api/search"
         params = {"q": system_name}
         try:
-            resp = requests.get(url, params=params)
+            resp = requests.get(url, params=params, timeout=5)
             resp.raise_for_status()
         except requests.RequestException as e:
             PluginContext.logger.error(f"Couldn't fetch system data for {system_name} from Spansh:", exc_info=e)

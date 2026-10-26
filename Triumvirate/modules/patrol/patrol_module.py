@@ -515,7 +515,7 @@ class PatrolModule(Frame, Module):
         patrol = []
 
         url = "https://elitebgs.app/api/ebgs/v5/factions"
-        j = requests.get(url, params={"name": faction}).json()
+        j = requests.get(url, params={"name": faction}, timeout=10).json()
         if j:
             thread = UpdateCycle(j, patrol, name="patrol.faction_data_dowloader")
             thread.start()
@@ -652,9 +652,7 @@ class PatrolModule(Frame, Module):
         # autosubmit the form --
         # allowing for google forms
         if self.nearest.get("url"):
-            j = requests.get(
-                self.nearest.get("url").replace("viewform", "formResponse")
-            )
+            j = requests.get(self.nearest.get("url").replace("viewform", "formResponse"), timeout=5)
         self.next_patrol(None)
 
     def get_nearest(self, location):

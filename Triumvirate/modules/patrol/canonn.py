@@ -32,7 +32,7 @@ class CanonnPatrols(list):
     @classmethod
     def from_json(cls, url):
         patrols = []
-        resp = requests.get(url).json()
+        resp = requests.get(url, timeout=5).json()
         for row in resp:
             patrol = build_patrol(
                 type=row.get("type"),
@@ -49,7 +49,7 @@ class CanonnPatrols(list):
     @classmethod
     def from_tsv(cls, url):
         patrols = []
-        with closing(requests.get(url, stream=True)) as resp:
+        with closing(requests.get(url, stream=True, timeout=10)) as resp:
             reader = csv.reader(resp.raw, delimiter="\t")
             next(reader)
             for row in reader:

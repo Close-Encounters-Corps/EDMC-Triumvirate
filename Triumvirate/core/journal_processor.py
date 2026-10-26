@@ -69,7 +69,7 @@ class JPWarnings(AutohidingFrame):
         self.logs_desync = _WarningFrame(self, _translate("<WARNING_LOGS_DESYNC>"), 3)
 
 
-# Будем использовать threading.Thread вместо кастомного modules.lib.thread.Thread,
+# Будем использовать threading.Thread вместо кастомного lib.thread.Thread,
 # чтобы избежать остановки обработчика до того, как он закончит разбирать очередь.
 
 class JournalProcessor(Thread):

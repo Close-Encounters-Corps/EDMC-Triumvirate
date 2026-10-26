@@ -23,7 +23,7 @@ class Spreadsheet:
         self.data = None
 
     def download(self):
-        with closing(requests.get(self.url, stream=True)) as resp:
+        with closing(requests.get(self.url, stream=True, timeout=5)) as resp:
             if not resp.ok:
                 PluginContext.logger.debug(f"Original URL: {self.url}")
                 PluginContext.logger.debug(f"Spreadsheets response: {resp}:\n{resp.text}")

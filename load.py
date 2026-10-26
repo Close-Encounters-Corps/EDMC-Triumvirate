@@ -265,7 +265,7 @@ class Updater:
 
         # получаем список релизов
         try:
-            res = requests.get("https://api.github.com/repos/" + self.REPOSITORY_PATH + "/releases")
+            res = requests.get(f"https://api.github.com/repos/{self.REPOSITORY_PATH}/releases", timeout=5)
             res.raise_for_status()
         except requests.RequestException as e:
             logger.error("Couldn't get the list of versions from GitHub. Exception info:", exc_info=e)
@@ -319,7 +319,7 @@ class Updater:
         logger.info("Downloading the new version archive...")
         try:
             # https://stackoverflow.com/questions/16694907/download-large-file-in-python-with-requests
-            with requests.get(url, stream=True) as r:
+            with requests.get(url, timeout=60, stream=True) as r:
                 r.raise_for_status()
                 with open(version_zip, 'wb') as f:
                     for chunk in r.iter_content(chunk_size=65536):
@@ -490,7 +490,7 @@ class VersionFrame(tk.Frame):
 
         release_url = f"https://github.com/{Updater.REPOSITORY_PATH}/releases/{version}"
         try:
-            res = requests.get(release_url)
+            res = requests.get(release_url, timeout=5)
             res.raise_for_status()
         except requests.RequestException:
             release_url = None

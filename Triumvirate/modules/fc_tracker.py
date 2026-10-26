@@ -593,7 +593,7 @@ class FC_Tracker(Module):
         url = f"https://fleetcarrier.space/search?term={self.fc_data.callsign}"
 
         try:
-            res = requests.get(url, allow_redirects=False)
+            res = requests.get(url, allow_redirects=False, timeout=5)
         except requests.RequestException as e:
             error("Couldn't check for account on fleetcarrier.space. Exception info:", exc_info=e)
             fc_account_link = ""

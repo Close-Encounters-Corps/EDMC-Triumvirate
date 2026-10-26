@@ -27,7 +27,7 @@ class GoogleReporter(BasicThread):
         n_attempt = 1
         while n_attempt != self.MAX_ATTEMPTS + 1:
             try:
-                response = requests.post(self.url, self.params)
+                response = requests.post(self.url, self.params, timeout=10)
             except Exception as e:
                 error(f"Couldn't send data: url {self.url!r}, params {self.params!r}, exception info:", exc_info=e)
                 return
@@ -390,7 +390,7 @@ def fetch_squadron() -> tuple[str | None, str | None]:
         return None, None
     debug("Community Check started")
     url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTXE8HCavThmJt1Wshy3GyF2ZJ-264SbNRVucsPUe2rbEgpm-e3tqsX-8K2mwsG4ozBj6qUyOOd4RMe/pub?gid=1832580214&single=true&output=tsv"  # noqa: E501
-    with closing(requests.get(url, stream=True)) as r:
+    with closing(requests.get(url, stream=True, timeout=10)) as r:
         reader = csv.reader(r.content.decode('utf-8').splitlines(), delimiter='\t')
         next(reader)
         for row in reader:

@@ -44,7 +44,7 @@ class CanonnPOI(Module):
             "odyssey": GameState.odyssey
         }
         try:
-            res = requests.get(self.URL, params=params)
+            res = requests.get(self.URL, params=params, timeout=10)
             res.raise_for_status()
         except requests.RequestException as e:
             error("Couldn't fetch system POIs from Canonn. Exception info:", exc_info=e)

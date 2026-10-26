@@ -55,7 +55,7 @@ validtypes = [
 def get_edsm_patrol() -> list:
     patrol = PluginContext.patrol_module
 
-    r = requests.get(edsm_poi_url)
+    r = requests.get(edsm_poi_url, timeout=5)
     r.encoding = "utf-8"
     entries = r.json()
 

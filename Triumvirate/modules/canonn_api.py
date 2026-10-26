@@ -28,7 +28,8 @@ class CanonnReporter(BasicThread):
             res = requests.post(
                 self.url,
                 data=json.dumps(self.payload, ensure_ascii=False).encode('utf-8'),
-                headers={"content-type": "application/json"}
+                headers={"content-type": "application/json"},
+                timeout=5,
             )
             res.raise_for_status()
         except requests.RequestException as e:
@@ -342,7 +343,7 @@ class WhitelistUpdater(Thread):
             debug(f"Trying to retrieve the list of tracked events, attempt {attempts}")
             url = "https://api.github.com/gists/5b993467bf6be84b392418ddc9fcb6d3"
             try:
-                response = requests.get(url)
+                response = requests.get(url, timeout=5)
                 response.raise_for_status()
             except requests.RequestException as e:
                 error("Couldnt't get the list of tracked events from GitHub, exception info:", exc_info=e)
@@ -353,7 +354,7 @@ class WhitelistUpdater(Thread):
             # вторая попытка аналогично из другого источника
             url = "https://gitlab.com/api/v4/snippets/4888707/raw"
             try:
-                response = requests.get(url)
+                response = requests.get(url, timeout=5)
                 response.raise_for_status()
             except requests.RequestException as e:
                 error("Couldn't get the list of tracked events from GitLab either, expection info:", exc_info=e)
