@@ -377,7 +377,7 @@ class CZTracker(Module, BGSSubmodule):
             case "Shutdown" | "Died" | "SelfDestruct": self.end_conflict(raw, early=True)
 
 
-    def on_dashboard_entry(self, cmdr: str, is_beta: bool, entry: dict):
+    def on_dashboard_entry(self, cmdr: str | None, is_beta: bool, entry: dict):
         if GameState.gamemode != 'MainGame':
             return
         if self.conflict is None or self.conflict.conflict_type != "OnFoot":

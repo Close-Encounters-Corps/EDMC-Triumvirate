@@ -71,8 +71,8 @@ class CodexUIController(Module):
     def on_journal_entry(self, entry: JournalEntry):  # noqa: E301
         self.__model.update_system(entry.system)
 
-    def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool) -> tk.Frame:
+    def draw_settings(self, parent_widget: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
         return self.__model.draw_settings_frame(parent_widget)
 
-    def on_settings_changed(self, cmdr: str, is_beta: bool):
+    def on_settings_changed(self, cmdr: str | None, is_beta: bool):
         self.__model.update_user_settings()

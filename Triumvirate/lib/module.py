@@ -35,12 +35,12 @@ class Module(ABC, metaclass=ModuleMeta):
 
     enabled: bool
 
-    def draw_settings(self, parent_widget: 'tk.Misc', cmdr: str, is_beta: bool) -> tk.Frame | None:
+    def draw_settings(self, parent_widget: 'tk.Misc', cmdr: str | None, is_beta: bool) -> tk.Frame | None:
         """
         Вызывается при отрисовки окна настроек.
         """
 
-    def on_settings_changed(self, cmdr: str, is_beta: bool):
+    def on_settings_changed(self, cmdr: str | None, is_beta: bool):
         """
         Вызывается в момент, когда пользователь
         сохраняет настройки.
@@ -56,7 +56,7 @@ class Module(ABC, metaclass=ModuleMeta):
         Вызывается при появлении новых данных о командире.
         """
 
-    def on_dashboard_entry(self, cmdr: str, is_beta: bool, entry: dict):
+    def on_dashboard_entry(self, cmdr: str | None, is_beta: bool, entry: dict):
         """
         Вызывается при обновлении игрой status.json
         """

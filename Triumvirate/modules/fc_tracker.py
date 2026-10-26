@@ -377,12 +377,12 @@ class FC_Tracker(Module):
                     self.ui_frame.show_no_fc_info_screen()
 
 
-    def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool) -> tk.Frame:
+    def draw_settings(self, parent_widget: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
         self.settings_frame = SettingsFrame(parent_widget, self.fc_data, self.disable_access_warnings)
         return self.settings_frame
 
 
-    def on_settings_changed(self, cmdr: str, is_beta: bool):
+    def on_settings_changed(self, cmdr: str | None, is_beta: bool):
         self.disable_access_warnings, variant, role, comment = self.settings_frame.get_current_config()
         plugin_config.set(self.FC_ACCESS_WARNINGS_KEY, self.disable_access_warnings)
 

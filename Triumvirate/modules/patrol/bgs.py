@@ -88,7 +88,7 @@ def get_bgs_instructions(bgs, faction):
         update_text = ". Данные обновлены 1 день назад"
     elif last_updated < 7:
         update_text = ". Последнее обновление данных {} дней назад".format(last_updated)
-    elif last_updated > 6:
+    else:
         update_text = ". Последнее обновление данных {} дней назад. Пожалуйста, совершите прыжок в эту систему чтобы обновить данные".format(
             last_updated
         )

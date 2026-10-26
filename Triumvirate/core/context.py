@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 from pathlib import Path
 from semantic_version import Version
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Any, Callable, Protocol
 
 # АХТУНГ: ничто из того, что здесь импортируется, не должно использовать начальные параметры контекста!
 # См. load.py -> Updater.__use_local_version
@@ -37,11 +37,11 @@ class TranslateFunc(Protocol):
         ...
 
 
-class _ClassProperty:
+class _ClassProperty[T]:
     """
     Заменяет связку @classmethod и @property (depricated в Python 3.11).
     """
-    def __init__(self, func):
+    def __init__(self, func: Callable[[Any], T]):
         self.func = func
 
     def __get__(self, instance, owner):
