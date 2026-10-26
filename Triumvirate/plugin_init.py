@@ -11,7 +11,6 @@ from config import config as edmc_config  # type: ignore
 
 from Triumvirate.core.context import PluginContext, _PluginPaths
 from Triumvirate.lib import thread
-from Triumvirate.lib.module import Module
 
 
 def initialize(
@@ -97,8 +96,6 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
     """
     EDMC вызывает эту функцию для получения вкладки настроек плагина.
     """
-    # TODO: перейти на pack
-
     def rowgen():
         row = 0
         while True:
@@ -111,9 +108,9 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
     ttk.Separator(frame, orient="horizontal").grid(row=next(rg), column=0, pady=5, sticky="EW")
 
     for mod in PluginContext.active_modules:
-        # некоторые модули не имеют настроек, а лишние линии нам не нужны
-        if mod.__class__.draw_settings != Module.draw_settings:
-            mod.draw_settings(frame, cmdr, is_beta, next(rg))
+        mod_frame = mod.draw_settings(frame, cmdr, is_beta)
+        if mod_frame is not None:
+            mod_frame.grid(column=0, row=next(rg), sticky="NWSE")
             ttk.Separator(frame, orient="horizontal").grid(row=next(rg), column=0, pady=5, sticky="EW")
 
     nb.Label(

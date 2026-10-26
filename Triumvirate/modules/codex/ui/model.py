@@ -1,4 +1,5 @@
 import json
+import tkinter as tk
 
 from theme import theme  # type: ignore
 
@@ -66,7 +67,7 @@ class CodexUIModel:
             self.current_system = system
 
 
-    def draw_settings_frame(self, parent, row):
+    def draw_settings_frame(self, parent: tk.Misc) -> tk.Frame:
         shown = self.ui_shown
         config: list[tuple[str, str, bool]] = list()    # (Module.__qualname__, Module.localized_name, статус)
         for mod in self.registered_modules:
@@ -74,7 +75,8 @@ class CodexUIModel:
             name = mod.localized_name
             enabled = self.modules_display_status[qualname]
             config.append((qualname, name, enabled))
-        self.__settings_frame = SettingsFrame(parent, row, shown, config)
+        self.__settings_frame = SettingsFrame(parent, shown, config)
+        return self.__settings_frame
 
 
     def update_user_settings(self):

@@ -216,7 +216,7 @@ class PatrolModule(Frame, Module):
     # MODULE HOOKS #
     ################
 
-    def draw_settings(self, parent_widget, cmdr, is_beta, row):
+    def draw_settings(self, parent_widget, cmdr, is_beta) -> tk.Frame:
         "Called to get a tk Frame for the settings dialog."
 
         self.canonnbtn = tk.IntVar(value=plugin_config.getint("HidePatrol"))
@@ -233,7 +233,6 @@ class PatrolModule(Frame, Module):
 
         frame = nb.Frame(parent_widget)
         frame.columnconfigure(1, weight=1)
-        frame.grid(row=row, column=0, sticky="NSEW")
 
         nb.Label(frame, text="Настройки Патруля").grid(row=0, column=0, sticky="NW")
         nb.Checkbutton(frame, text="Скрыть Патруль", variable=self.canonnbtn).grid(
@@ -261,6 +260,8 @@ class PatrolModule(Frame, Module):
                 self.canonn, self.faction, self.HideMyShips, self.edsm
             )
         )
+
+        return frame
 
     def on_settings_changed(self, cmdr, is_beta):
         "Called when the user clicks OK on the settings dialog."

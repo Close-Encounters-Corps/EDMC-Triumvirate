@@ -57,7 +57,7 @@ class _ModuleSettingsGroup(ttk.Frame):
 
 
 class SettingsFrame(tk.Frame):
-    def __init__(self, parent: tk.Misc, row: int, vslz_shown: bool, modules_config: list[tuple[str, str, bool]]):
+    def __init__(self, parent: tk.Misc, vslz_shown: bool, modules_config: list[tuple[str, str, bool]]):
         super().__init__(parent, bg="white")
 
         self.module_name_label = nb.Label(self, text=_translate("Codex module settings:"))
@@ -84,7 +84,6 @@ class SettingsFrame(tk.Frame):
                 frame.pack(side='top', anchor='w')
 
         self.change_groups_state()
-        self.grid(column=0, row=row, sticky="NWSE")
 
 
     def change_groups_state(self):

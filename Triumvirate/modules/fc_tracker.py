@@ -158,7 +158,7 @@ class SettingsFrame(tk.Frame):
     Предоставляет пользователю информацию по флитаку, настройку уведомлений о небезопасном разрешении на стыковку,
     показывает пару предупреждений при необходимости.
     """
-    def __init__(self, parent: tk.Misc, row: int, config: FCData, disable_access_warnings: bool):
+    def __init__(self, parent: tk.Misc, config: FCData, disable_access_warnings: bool):
         super().__init__(parent, bg="white")
         decom_timestamp = config.decommission_timestamp.strftime("%x %X") if config.decommission_timestamp else ""
 
@@ -194,8 +194,6 @@ class SettingsFrame(tk.Frame):
                 self.access_warning_label.pack(side="top", anchor="w")
             if config.status == FCStatus.PENDING_DECOMMISSION:
                 self.decom_warning_label.pack(side="top", anchor="w")
-
-        self.grid(column=0, row=row, sticky="NWSE")
 
 
     def get_current_config(self) -> tuple[bool, FCVariant, str, str]:
@@ -379,8 +377,9 @@ class FC_Tracker(Module):
                     self.ui_frame.show_no_fc_info_screen()
 
 
-    def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool, row: int):
-        self.settings_frame = SettingsFrame(parent_widget, row, self.fc_data, self.disable_access_warnings)
+    def draw_settings(self, parent_widget: tk.Misc, cmdr: str, is_beta: bool) -> tk.Frame:
+        self.settings_frame = SettingsFrame(parent_widget, self.fc_data, self.disable_access_warnings)
+        return self.settings_frame
 
 
     def on_settings_changed(self, cmdr: str, is_beta: bool):
