@@ -554,7 +554,7 @@ class CZTracker(Module, BGSSubmodule):
         }
 
         # TODO: убрать после перехода на сервер. Фикс для совместимости со старыми данными таблицы
-        conflict_type = "Space" if conflict.conflict_type == 'Space' else 'Foot'
+        conflict_type = 'Foot' if conflict.conflict_type == 'OnFoot' else conflict.conflict_type
         params["entry.1671504189"] = conflict_type
 
         self.send_bgs_report(url, params, conflict.system)

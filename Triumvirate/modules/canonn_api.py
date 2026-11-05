@@ -41,12 +41,6 @@ class CanonnReporter(BasicThread):
 class HDDetector:
     """Отслеживает гиперперехваты таргоидами."""
 
-    _instance = None
-    def __new__(cls):       # noqa: E301
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
     # возможные состояния
     SAFE = 1
     MISJUMP = 2
@@ -108,7 +102,7 @@ class HDDetector:
 
 
     def _reportHD(self, journal_entry: JournalEntry):
-        if not self.status == self.HOSTILE:
+        if self.status != self.HOSTILE:
             debug("Aggression against the player not detected.")
         debug("Reporting the hyperdiction to Canonn.")
 
@@ -130,8 +124,8 @@ class HDDetector:
             dx, dy, dz = dest_coords
             url = f"{canonn_cloud_url_europe_west}/postHDDetected"
             params = {
-                "cmdr": journal_entry.cmdr,
-                "system": journal_entry.system,
+                "cmdr": GameState.cmdr,
+                "system": GameState.system,
                 "timestamp": journal_entry.data["timestamp"],
                 "x": x, "y": y, "z": z,
                 "destination": dest_name,
@@ -180,8 +174,6 @@ class HDDetector:
 
 class CanonnRealtimeAPI(Module):
     """Проверяет и отправляет интересные для Canonn-ов игровые события."""
-    _instance = None
-    _hdtracker = HDDetector()
     whitelist = dict()
 
     @property
@@ -189,74 +181,77 @@ class CanonnRealtimeAPI(Module):
         return _translate("Canonn API client")
 
     def __init__(self):
-        super().__init__()
-        self.fss_signals_batch = list()
-        self._batch_maxlen = 30         # каноны рекомендуют 40 во избежание таймаута, мы перестрахуемся
-        self.fss_signals_timer: Timer | None = None
+        self.hdtracker = HDDetector()
+        self.signals_batch = list()
+        self.batch_max_len = 40
+        self.current_sysid = GameState.system_address
         WhitelistUpdater().start()
 
 
     def on_journal_entry(self, entry: JournalEntry):
-        if entry.data["event"] == "Statistics":
-            self._hdtracker.check_last_encounter(entry)
-        if not entry.system:
+        if GameState.gamemode != 'MainGame':
             return
-        # проверяем:
-        # сигналы в системе
-        self._check_fss_signal(entry)
-        # таргоидские гиперперехваты
-        self._hdtracker.journal_entry(entry)
-        # всё остальное
-        if entry.data["event"] != "FSSSignalDiscovered":
-            self._check_whitelisted_events(entry)
+
+        event = entry.data["event"]
+        if event == "Statistics":
+            self.hdtracker.check_last_encounter(entry)
+
+        if GameState.system_address != self.current_sysid:
+            self._dump_batch()
+            self.current_sysid = GameState.system_address
+        if self.current_sysid is None:
+            return
+
+        self.hdtracker.journal_entry(entry)
+
+        # custom handling of stations to filter out CEC carriers and batch the events
+        # this rule is absent from our whitelist, so the generic check later won't affect it
+        if event == "FSSSignalDiscovered":
+            is_station = entry.data.get("IsStation", False)
+            is_cec_fc = entry.data.get("SignalType") == "FleetCarrier" and is_cec_fleetcarrier(entry.data.get("SignalName", ""))
+            if is_station and not is_cec_fc:
+                self.signals_batch.append(entry)
+        # same with body signals
+        elif event == "FSSBodySignals":
+            self.signals_batch.append(entry)
+        else:
+            self.check_whitelisted_events(entry)
+
+        self.check_batch_status(entry)
 
 
     def on_close(self):
-        if len(self.fss_signals_batch) > 0:
+        if len(self.signals_batch) > 0:
             self._dump_batch()
 
 
-    def _check_fss_signal(self, journalEntry: JournalEntry):
-        entry = journalEntry.data
-        event = entry["event"]
-
-        if event == "FSSSignalDiscovered":
-            isStation = entry.get("IsStation", False)
-            isCecFc = (
-                entry.get("SignalType") == "FleetCarrier"
-                and is_cec_fleetcarrier(entry.get("SignalName", ""))
-            )
-            if isStation and not isCecFc:
-                self.fss_signals_batch.append(journalEntry)
-
+    def check_batch_status(self, journal_entry: JournalEntry):
         """
         Отправлять FSS сигналы в системе будем при одном из следующих условий:
-        0) Очередь заполнена
-        1) Мы покинули систему
-        2) Мы вышли из игры
-        3) Мы закрываем плагин      <-- реализовано в on_close()
-        4) Прошло достаточно времени
+        1) Очередь заполнена
+        2) Мы покинули систему      <-- реализовано в on_journal_entry()
+        3) Мы вышли из игровой сессии
+        4) Мы закрываем плагин      <-- реализовано в on_close()
+        5) Прошло достаточно времени
         """
-        first_timestamp = datetime.fromisoformat(
-            self.fss_signals_batch[0].data["timestamp"]
-            if len(self.fss_signals_batch) > 0
-            else entry["timestamp"]
-        )
+        if len(self.signals_batch) == 0:
+            return
+        entry = journal_entry.data
+        event = entry["event"]
+        first_timestamp = datetime.fromisoformat(self.signals_batch[0].data["timestamp"])
         last_timestamp = datetime.fromisoformat(entry["timestamp"])
-        timestamp_diff: timedelta = last_timestamp - first_timestamp
+        timestamp_diff = last_timestamp - first_timestamp
         if (
-            len(self.fss_signals_batch) == self._batch_maxlen                               # 0
-            or (event == "StartJump" and entry["JumpType"] == "Hyperspace")                 # 1
-            or event in ("Died", "SelfDestruct", "Resurrect")                               # 1
-            or event == "Shutdown"                                                          # 2
-            or event == "Music" and entry["MusicTrack"] == "MainMenu"                       # 2
-            or (event != "FSSSignalDiscovered" and timestamp_diff > timedelta(minutes=1))   # 4
+            len(self.signals_batch) == self.batch_max_len                   # 1
+            or event in ("Shutdown", "Died", "SelfDestruct", "Resurrect")   # 3
+            or event == "Music" and entry["MusicTrack"] == "MainMenu"       # 3
+            or timestamp_diff > timedelta(minutes=1)                        # 5
         ):
             self._dump_batch()
 
 
-    def _check_whitelisted_events(self, journalEntry: JournalEntry):
-        entry = journalEntry.data
+    def check_whitelisted_events(self, journal_entry: JournalEntry):
+        entry = journal_entry.data
         valuable = False
         for accepted_event in self.whitelist:
             if all(entry.get(key) == value for key, value in accepted_event["definition"].items()):
@@ -267,44 +262,49 @@ class CanonnRealtimeAPI(Module):
         # если все пары ключей-значений совпадают, каноны в этом заинтересованы
         debug(f"Sending {entry['event']!r} event to Canonn.")
         url = f"{canonn_cloud_url_us_central}/postEvent"
-        gamestate = self._get_gamestate(journalEntry)
+        gamestate = self._get_gamestate(journal_entry)
         params = {
             "gameState": gamestate,
             "rawEvents": [entry],
-            "cmdrName": journalEntry.cmdr
+            "cmdrName": journal_entry.cmdr
         }
         CanonnReporter(url, params).start()
 
 
     def _dump_batch(self):
-        if len(self.fss_signals_batch) == 0:
+        if len(self.signals_batch) == 0:
             return
-        debug(f"Dumping the batch, len={len(self.fss_signals_batch)}.")
+        debug(f"Dumping the batch, len={len(self.signals_batch)}.")
         url = f"{canonn_cloud_url_us_central}/postEvent"
-        gamestate = self._get_gamestate(self.fss_signals_batch[0])
+        gamestate = self._get_gamestate(self.signals_batch[0])
+        if gamestate is None:
+            warning("Dropping the batch due to incomplete gamestate.")
+            self.signals_batch.clear()
+            return
         params = {
             "gameState": gamestate,
-            "rawEvents": [entry.data for entry in self.fss_signals_batch],
-            "cmdrName": self.fss_signals_batch[0].cmdr
+            "rawEvents": [entry.data for entry in self.signals_batch],
+            "cmdrName": self.signals_batch[0].cmdr
         }
         CanonnReporter(url, params.copy()).start()
-        self.fss_signals_batch.clear()
+        self.signals_batch.clear()
 
 
-    def _get_gamestate(self, journalEntry: JournalEntry):
-        entry = journalEntry.data
-
+    def _get_gamestate(self, journal_entry: JournalEntry) -> dict | None:
         # обязательные параметры
+        # null system_address фильтруется в on_journal_entry, поэтому можем смело допустить, что у нас он здесь есть
+        system_address: int = journal_entry.systemAddress  # pyright: ignore[reportAssignmentType]
+        system_name = PluginContext.systems_cache.get_system_name(system_address)
+        system_coords = PluginContext.systems_cache.get_system_coords(system_address)
+        if system_name is None or system_coords is None:
+            error("Cannot form gamestate: system name or coords unknown.")
+            return None
         gamestate = {
-            "systemName": journalEntry.system,
-            "systemAddress": journalEntry.systemAddress,
-            "systemCoordinates": [
-                journalEntry.coords.x,  # pyright: ignore[reportOptionalMemberAccess]
-                journalEntry.coords.y,  # pyright: ignore[reportOptionalMemberAccess]
-                journalEntry.coords.z,  # pyright: ignore[reportOptionalMemberAccess]
-            ],
+            "systemName": system_name,
+            "systemAddress": system_address,
+            "systemCoordinates": [system_coords.x, system_coords.y, system_coords.z],
             "clientVersion": PluginContext.user_agent,
-            "isBeta": journalEntry.is_beta
+            "isBeta": journal_entry.is_beta
         }
 
         # дополнительные, которые мы 100% знаем
@@ -313,8 +313,8 @@ class CanonnRealtimeAPI(Module):
         # дополнительные, которые мы, возможно, знаем
         if GameState.odyssey is not None:
             gamestate["odyssey"] = GameState.odyssey
-        if entry.get("BodyID"):
-            gamestate["bodyId"] = entry["BodyID"]
+        if (body_id := journal_entry.data.get("BodyID")) is not None:
+            gamestate["bodyId"] = body_id
         if GameState.body_name:
             gamestate["bodyName"] = GameState.body_name
         if GameState.temperature:
