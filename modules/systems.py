@@ -4,6 +4,7 @@ from .lib.cache import Cache
 from .lib.http import WebClient
 from .debug import debug
 
+
 class SystemsModule(WebClient, Module):
     def __init__(self):
         super().__init__(settings.galaxy_url)
@@ -26,7 +27,7 @@ class SystemsModule(WebClient, Module):
 
     def fetch_system(self, system):
         try:
-            resp = self.request("GET", "/api/v1/lookup", {"name": system})
+            resp = self.request(method="GET", url="/api/v1/lookup", params={"name": system}, timeout=5)
         except Exception as e:
             debug(f"fetch_systems failed: {e}")
         else:
