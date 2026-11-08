@@ -138,7 +138,16 @@ class JournalProcessor(Thread):
                 self.route_entry(entry)
                 return
 
-            elif (event in ('Shutdown', 'Died', 'SelfDestruct')
+            # https://issues.frontierstore.net/issue-detail/88244
+            elif event == "Music" and entry["MusicTrack"] == "MainMenu" and GameState.station is not None:
+                PluginContext.logger.debug(
+                    f"Got Music:MainMenu event while docked at {GameState.station}; "
+                    f"the player might have entered the Operations menu, leaving gamemode unchanged for now ({GameState.gamemode})."
+                )
+                self.route_entry(entry)
+                return
+
+            elif (event in ('Shutdown', 'Died', 'SelfDestruct', 'NewCommander')
                     or event == "Music" and data["MusicTrack"] == "MainMenu"):
                 text = "game" if event == 'Shutdown' else "session"
                 PluginContext.logger.debug(f"Detected exit from the {text} ({event} event).")
