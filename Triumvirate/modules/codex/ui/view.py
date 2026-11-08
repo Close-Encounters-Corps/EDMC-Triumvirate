@@ -1,6 +1,6 @@
 import tkinter as tk
 from collections.abc import Callable
-from tkinter import PhotoImage, ttk
+from tkinter import PhotoImage
 from typing import Any
 
 import myNotebook as nb  # type: ignore
@@ -30,25 +30,21 @@ categories_localized = {
 }
 
 
-class _ModuleSettingsGroup(ttk.Frame):
+class _ModuleSettingsGroup(nb.Frame):
     def __init__(self, parent: tk.Misc, qualname: str, localized_name: str, enabled: bool):
         super().__init__(parent)
         self.__m_localized_name = localized_name
         self.__m_qualname = qualname
 
-        self.__status_var = tk.BooleanVar(value=enabled)
-        self.__status_checkbox = nb.Checkbutton(self, variable=self.__status_var)
-        self.__status_checkbox.pack(side='left')
-
-        self.__name_label = nb.Label(self, text=self.__m_localized_name, justify='left')
-        self.__name_label.pack(side='left')
+        self.__status_var = tk.BooleanVar(self, value=enabled)
+        self.__status_checkbox = nb.Checkbutton(self, variable=self.__status_var, text=self.__m_localized_name)
+        self.__status_checkbox.grid(row=0, column=0, sticky="W")
 
     def change_state(self, new_state):
-        self.__name_label.configure(state=new_state)
         self.__status_checkbox.configure(state=new_state)
 
     @property
-    def enabled(self):
+    def is_enabled(self):
         return self.__status_var.get()
 
     @property
@@ -56,32 +52,29 @@ class _ModuleSettingsGroup(ttk.Frame):
         return self.__m_qualname
 
 
-class SettingsFrame(tk.Frame):
+class SettingsFrame(nb.Frame):
     def __init__(self, parent: tk.Misc, vslz_shown: bool, modules_config: list[tuple[str, str, bool]]):
-        super().__init__(parent, bg="white")
+        super().__init__(parent)
 
         self.module_name_label = nb.Label(self, text=_translate("Codex module settings:"))
-        self.module_name_label.pack(side="top", anchor="w")
+        self.module_name_label.grid(row=0, column=0, sticky="W")
 
-        # практически _ModuleSettingsGroup, только для визуализатора целиком
-        self.vis_frame = tk.Frame(self, bg="white")
-        self.vis_label = nb.Label(self.vis_frame, text=_translate("Display Codex data:"))
-        self.vis_checkbox_var = tk.BooleanVar(self.vis_frame, value=vslz_shown)
-        self.vis_checkbox = nb.Checkbutton(self.vis_frame, variable=self.vis_checkbox_var, command=self.change_groups_state)
-        self.vis_label.grid(column=0, row=0)
-        self.vis_checkbox.grid(column=1, row=0, padx=5)
-        self.vis_frame.pack(side='top', fill='x')
+        self.vis_checkbox_var = tk.BooleanVar(self, value=vslz_shown)
+        self.vis_checkbox = nb.Checkbutton(
+            self, text=_translate("Display Codex data"), variable=self.vis_checkbox_var, command=self.change_groups_state
+        )
+        self.vis_checkbox.grid(row=1, column=0, sticky="W")
 
         self.delimeter_label = nb.Label(self, text=_translate("Show output from selected modules only:"))
-        self.delimeter_label.pack(side='top', anchor='w')
+        self.delimeter_label.grid(row=2, column=0, sticky="W")
 
         self.module_frames = [_ModuleSettingsGroup(self, mod, name, enabled) for (mod, name, enabled) in modules_config]
         self.modules_dummy_label = nb.Label(self, text=_translate("[No registered modules found]"))
         if len(self.module_frames) == 0:
-            self.modules_dummy_label.pack(side='left', anchor='w')
+            self.modules_dummy_label.grid(row=3, column=0, sticky="W")
         else:
-            for frame in self.module_frames:
-                frame.pack(side='top', anchor='w')
+            for i, frame in enumerate(self.module_frames, start=3):
+                frame.grid(row=i, column=0, sticky="W")
 
         self.change_groups_state()
 
@@ -98,7 +91,7 @@ class SettingsFrame(tk.Frame):
         vslz_shown = self.vis_checkbox_var.get()
         modules_config = dict()
         for module in self.module_frames:
-            modules_config[module.module_qualname] = module.enabled
+            modules_config[module.module_qualname] = module.is_enabled
         return vslz_shown, modules_config
 
 

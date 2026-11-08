@@ -3,6 +3,8 @@ from abc import ABC, ABCMeta, abstractmethod
 
 from Triumvirate.lib.journal import JournalEntry
 
+import myNotebook as nb  # pyright: ignore[reportMissingImports]
+
 
 class ModuleMeta(ABCMeta):
     _instances = dict()
@@ -35,7 +37,7 @@ class Module(ABC, metaclass=ModuleMeta):
 
     enabled: bool
 
-    def draw_settings(self, parent_widget: 'tk.Misc', cmdr: str | None, is_beta: bool) -> tk.Frame | None:
+    def draw_settings(self, parent_widget: 'tk.Misc', cmdr: str | None, is_beta: bool) -> nb.Frame | None:
         """
         Вызывается при отрисовки окна настроек.
         """

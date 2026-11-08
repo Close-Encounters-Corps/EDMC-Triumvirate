@@ -8,6 +8,8 @@ from Triumvirate.lib.module import Module
 from .model import CodexUIModel
 from .view import CodexUIView
 
+import myNotebook as nb  # pyright: ignore[reportMissingImports]
+
 
 class CodexUIController(Module):
     """
@@ -71,7 +73,7 @@ class CodexUIController(Module):
     def on_journal_entry(self, entry: JournalEntry):  # noqa: E301
         self.__model.update_system(entry.system)
 
-    def draw_settings(self, parent_widget: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
+    def draw_settings(self, parent_widget: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
         return self.__model.draw_settings_frame(parent_widget)
 
     def on_settings_changed(self, cmdr: str | None, is_beta: bool):

@@ -1,9 +1,10 @@
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 from pathlib import Path
 from semantic_version import Version
-from typing import TYPE_CHECKING, Any, Callable, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 # АХТУНГ: ничто из того, что здесь импортируется, не должно использовать начальные параметры контекста!
 # См. load.py -> Updater.__use_local_version

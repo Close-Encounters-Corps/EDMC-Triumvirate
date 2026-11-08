@@ -92,7 +92,7 @@ def clear_old_config_keys():
     # edmc_config.delete("Triumvirate.EnableDebugging", supress=True)
 
 
-def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
+def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
     """
     EDMC вызывает эту функцию для получения вкладки настроек плагина.
     """
@@ -103,14 +103,13 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
             row += 1
     rg = rowgen()
 
-    frame = tk.Frame(parent, bg="white")
+    frame = nb.Frame(parent)
     frame.grid_columnconfigure(0, weight=1)
-    ttk.Separator(frame, orient="horizontal").grid(row=next(rg), column=0, pady=5, sticky="EW")
 
     for mod in PluginContext.active_modules:
         mod_frame = mod.draw_settings(frame, cmdr, is_beta)
         if mod_frame is not None:
-            mod_frame.grid(column=0, row=next(rg), sticky="NWSE")
+            mod_frame.grid(row=next(rg), column=0, sticky="NWSE")
             ttk.Separator(frame, orient="horizontal").grid(row=next(rg), column=0, pady=5, sticky="EW")
 
     nb.Label(

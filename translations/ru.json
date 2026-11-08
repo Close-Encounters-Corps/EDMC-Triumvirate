@@ -60,7 +60,7 @@
         "Tourist": "Туризм",
         "None": "Без категории",
         "Codex module settings:": "Настройки модуля Кодекса:",
-        "Display Codex data:": "Включить отображение данных Кодекса:",
+        "Display Codex data": "Включить отображение данных Кодекса",
         "Show output from selected modules only:": "Модули, для которых включено отображение:",
         "[No registered modules found]": "[Зарегистрированных модулей не найдено]",
         "Codex: No data yet.": "Кодекс: данных к отображению пока нет.",

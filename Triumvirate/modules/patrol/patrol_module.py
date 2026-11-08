@@ -216,7 +216,7 @@ class PatrolModule(Frame, Module):
     # MODULE HOOKS #
     ################
 
-    def draw_settings(self, parent_widget, cmdr, is_beta) -> tk.Frame:
+    def draw_settings(self, parent_widget, cmdr, is_beta) -> nb.Frame:
         "Called to get a tk Frame for the settings dialog."
 
         self.canonnbtn = tk.IntVar(value=plugin_config.getint("HidePatrol"))

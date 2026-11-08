@@ -83,12 +83,12 @@ class FCData:
 # КЛАССЫ GUI #
 ##############
 
-class FCInfoFrame(tk.Frame):
+class FCInfoFrame(nb.Frame):
     """
     Фрейм, отображающий информацию по флитаку и дающий возможность настройки необязательных полей (класс, роль, описание).
     """
     def __init__(self, parent, fc_data: FCData):
-        super().__init__(parent, bg="white")
+        super().__init__(parent)
 
         name = "[{}] {}".format(fc_data.callsign, fc_data.name or "???") if fc_data.callsign else _translate("unknown")
         self.name_label = nb.Label(self, text=_translate("Carrier name:"))
@@ -152,26 +152,26 @@ class FCInfoFrame(tk.Frame):
         return variant, role, comment
 
 
-class SettingsFrame(tk.Frame):
+class SettingsFrame(nb.Frame):
     """
     Фрейм настроек модуля.
     Предоставляет пользователю информацию по флитаку, настройку уведомлений о небезопасном разрешении на стыковку,
     показывает пару предупреждений при необходимости.
     """
     def __init__(self, parent: tk.Misc, config: FCData, disable_access_warnings: bool):
-        super().__init__(parent, bg="white")
+        super().__init__(parent)
         decom_timestamp = config.decommission_timestamp.strftime("%x %X") if config.decommission_timestamp else ""
 
         self.module_name_label = nb.Label(self, text=_translate("Fleet Carrier tracker settings:"))
-        self.module_name_label.pack(side="top", anchor="w")
+        self.module_name_label.grid(row=0, column=0, sticky="W")
 
-        self.disable_access_warnings_var = tk.BooleanVar(value=disable_access_warnings)
+        self.disable_access_warnings_var = tk.BooleanVar(self, value=disable_access_warnings)
         self.disable_access_warnings_checkbox = nb.Checkbutton(
             self,
             variable=self.disable_access_warnings_var,
             text=_translate("Disable unsafe docking access configuration warnings")
         )
-        self.disable_access_warnings_checkbox.pack(side="top", fill="x")
+        self.disable_access_warnings_checkbox.grid(row=1, column=0, sticky="NWSE")
 
         self.no_fc_label = nb.Label(self, justify="left", text=_translate("<FC_TRACKER_SETTINGS_NO_FC>"))
         self.fc_info_frame = FCInfoFrame(self, config)
@@ -183,17 +183,17 @@ class SettingsFrame(tk.Frame):
         )
 
         if config.status in (FCStatus.NOT_BOUGHT, FCStatus.DECOMMISSIONED):
-            self.no_fc_label.pack(side="top", anchor="w")
+            self.no_fc_label.grid(row=2, column=0, sticky="W")
 
         elif config.status == FCStatus.UNKNOWN:
-            self.info_missing_label.pack(side="top", anchor="w")
+            self.info_missing_label.grid(row=2, column=0, sticky="W")
 
         else:
-            self.fc_info_frame.pack(side="top", fill="x")
+            self.fc_info_frame.grid(row=3, column=0, sticky="NWSE")
             if config.docking_access == FCDockingAccess.ALL:
-                self.access_warning_label.pack(side="top", anchor="w")
+                self.access_warning_label.grid(row=4, column=0, sticky="W")
             if config.status == FCStatus.PENDING_DECOMMISSION:
-                self.decom_warning_label.pack(side="top", anchor="w")
+                self.decom_warning_label.grid(row=5, column=0, sticky="W")
 
 
     def get_current_config(self) -> tuple[bool, FCVariant, str, str]:
@@ -377,7 +377,7 @@ class FC_Tracker(Module):
                     self.ui_frame.show_no_fc_info_screen()
 
 
-    def draw_settings(self, parent_widget: tk.Misc, cmdr: str | None, is_beta: bool) -> tk.Frame:
+    def draw_settings(self, parent_widget: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
         self.settings_frame = SettingsFrame(parent_widget, self.fc_data, self.disable_access_warnings)
         return self.settings_frame
 

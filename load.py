@@ -510,11 +510,11 @@ class VersionFrame(tk.Frame):
         self.version_label.pack(side="left")
 
 
-class ReleaseTypeSettingFrame(tk.Frame):
+class ReleaseTypeSettingFrame(nb.Frame):
     """Фрейм с настройкой типа релиза."""
 
     def __init__(self, parent: tk.Misc):
-        super().__init__(parent, bg="white")
+        super().__init__(parent)
         reltypes_list = [ReleaseType.STABLE.value, ReleaseType.BETA.value]
         if (
             context.updater.release_type == ReleaseType._DEVELOPMENT
@@ -526,25 +526,25 @@ class ReleaseTypeSettingFrame(tk.Frame):
         ):
             reltypes_list.append(ReleaseType._DEVELOPMENT.value)
 
-        self.topframe = tk.Frame(self, bg="white")
-        self.reltype_label = tk.Label(self.topframe, bg="white", text=_translate("Release channel:"))
-        self.reltype_label.pack(side="left")
+        self.topframe = nb.Frame(self)
+        self.reltype_label = nb.Label(self.topframe, text=_translate("Release channel:"))
+        self.reltype_label.grid(row=0, column=0, sticky="W")
 
-        self.reltype_var = tk.StringVar(value=context.updater.release_type)
+        self.reltype_var = tk.StringVar(self.topframe, value=context.updater.release_type)
         self.reltype_var.trace_add('write', self._update_description)
         self.reltype_field = ttk.Combobox(self.topframe, values=reltypes_list, textvariable=self.reltype_var, state="readonly")
-        self.reltype_field.pack(side="left", padx=5)
+        self.reltype_field.grid(row=0, column=1, padx=5)
 
-        self.topframe.pack(side="top", anchor="w")
+        self.topframe.grid(row=0, column=0, sticky="W")
 
         self.rt_descriptions = {
             "Stable": _translate("<RELEASE_TYPE_DESCRIPTION_STABLE>"),
             "Beta": _translate("<RELEASE_TYPE_DESCRIPTION_BETA>"),
             "Development": _translate("<RELEASE_TYPE_DESCRIPTION_DEVELOPMENT>")
         }
-        self.description_var = tk.StringVar(value=self.rt_descriptions.get(self.reltype_var.get(), ""))
-        self.description_label = tk.Label(self, textvariable=self.description_var, justify="left", bg="white")
-        self.description_label.pack(side="top", anchor="w")
+        self.description_var = tk.StringVar(self, value=self.rt_descriptions.get(self.reltype_var.get(), ""))
+        self.description_label = nb.Label(self, textvariable=self.description_var, justify="left")
+        self.description_label.grid(row=1, column=0, sticky="W")
 
     def _update_description(self, varname, index, mode):
         self.description_var.set(self.rt_descriptions[self.reltype_var.get()])
@@ -620,9 +620,10 @@ def plugin_prefs(parent: tk.Misc, cmdr: str | None, is_beta: bool) -> nb.Frame:
     frame = nb.Frame(parent)
     frame.grid_columnconfigure(0, weight=1)
     context.settings_frame = ReleaseTypeSettingFrame(frame)
-    context.settings_frame.grid(row=0, column=0, sticky="NSWE")
+    context.settings_frame.grid(row=0, column=0, sticky="NSWE")  # pyright: ignore[reportOptionalMemberAccess]
     if context.plugin_loaded:
-        context.plugin_prefs_hook(frame, cmdr, is_beta).grid(row=1, column=0, sticky="NWSE")  # pyright: ignore[reportOptionalCall]
+        ttk.Separator(frame, orient="horizontal").grid(row=1, column=0, pady=5, sticky="EW")
+        context.plugin_prefs_hook(frame, cmdr, is_beta).grid(row=2, column=0, sticky="NWSE")  # pyright: ignore[reportOptionalCall]
     return frame
 
 

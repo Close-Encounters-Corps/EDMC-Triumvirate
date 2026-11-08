@@ -1,7 +1,8 @@
 import json
 import tkinter as tk
 
-from theme import theme  # type: ignore
+import myNotebook as nb  # pyright: ignore[reportMissingImports]
+from theme import theme  # pyright: ignore[reportMissingImports]
 
 from Triumvirate.core.plugin_config import plugin_config
 from Triumvirate.core.shortcuts import debug
@@ -67,7 +68,7 @@ class CodexUIModel:
             self.current_system = system
 
 
-    def draw_settings_frame(self, parent: tk.Misc) -> tk.Frame:
+    def draw_settings_frame(self, parent: tk.Misc) -> nb.Frame:
         shown = self.ui_shown
         config: list[tuple[str, str, bool]] = list()    # (Module.__qualname__, Module.localized_name, статус)
         for mod in self.registered_modules:
