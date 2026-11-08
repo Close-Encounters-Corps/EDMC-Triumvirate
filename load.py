@@ -490,9 +490,10 @@ class VersionFrame(tk.Frame):
 
         release_url = f"https://github.com/{Updater.REPOSITORY_PATH}/releases/{version}"
         try:
-            res = requests.get(release_url, timeout=5)
+            res = requests.get(release_url, timeout=3)
             res.raise_for_status()
-        except requests.RequestException:
+        except requests.RequestException as e:
+            logger.debug(f"Couldn't fetch current release page: {e}")
             release_url = None
 
         if release_url is not None:
