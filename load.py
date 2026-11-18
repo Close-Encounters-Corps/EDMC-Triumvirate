@@ -205,12 +205,13 @@ class Updater:
     REPOSITORY_PATH = "Close-Encounters-Corps/EDMC-Triumvirate"
 
     def __init__(self):
-        self.updater_thread: UpdateCycle = None
+        self.updater_thread: UpdateCycle | None = None
 
-        self.release_type: str = edmc_config.get_str(self.RELEASE_TYPE_KEY)
-        if self.release_type is None:
-            self.release_type = ReleaseType.BETA             # TODO: изменить на stable после выпуска 1.12.0
-            edmc_config.set(self.RELEASE_TYPE_KEY, self.release_type.value)
+        release_type: str | None = edmc_config.get_str(self.RELEASE_TYPE_KEY, default=None)
+        if release_type is None:
+            release_type = "Beta"   # TODO: изменить на stable после выпуска 1.12.0
+            edmc_config.set(self.RELEASE_TYPE_KEY, release_type)
+        self.release_type = ReleaseType(release_type)
 
         saved_version: str | None = edmc_config.get_str(self.LOCAL_VERSION_KEY)
         self.local_version = Version(saved_version or "0.0.0")
@@ -362,7 +363,8 @@ class Updater:
             self.__use_local_version()
         else:
             logger.info("load.py was modified. EDMC restart is required.")
-            self.updater_thread.stop()
+            if self.updater_thread:
+                self.updater_thread.stop()
             context.status_label.set_text(_translate("The update is installed. Please restart EDMC."))
 
 
@@ -545,7 +547,11 @@ class ReleaseTypeSettingFrame(tk.Frame):
         self.description_var.set(self.rt_descriptions[self.reltype_var.get()])
 
     def get_selected_reltype(self):
-        return ReleaseType(self.reltype_var.get())
+        if not (reltype := self.reltype_var.get()):
+            # TODO: изменить на stable после выпуска 1.12.0
+            logger.error("Empty release type in the settings frame! Setting the default value (Beta)")
+            reltype = "Beta"
+        return ReleaseType(reltype)
 
 
 # Функции управления поведением плагина, вызываемые EDMC
